@@ -50,6 +50,7 @@ MVP ใช้ scope จาก [`../MVP_SCOPE.md`](../MVP_SCOPE.md) เท่า�
 - `amount > 0`; receipt และ reversal เก็บ amount เป็นบวก.
 - ยอดสุทธิ invoice = `sum(receipt) - sum(reversal)`.
 - MariaDB/MySQL ไม่รองรับ PostgreSQL-style partial unique index. ให้ enforce receipt หนึ่ง reverse ได้ครั้งเดียวด้วย generated column เช่น `reversal_target_id = IF(entry_type = 'reversal', reversal_of_payment_id, NULL)` แล้วทำ `UNIQUE(org_id, reversal_target_id)`, หรือใช้ transaction lock + app validation ถ้า migration ทำ generated column ไม่ได้.
+- Phase 3 migration/test ต้อง verify generated column strategy บน MariaDB จริงก่อนปิดงาน; ถ้าใช้ fallback ต้องบันทึกเหตุผลและ test race/duplicate reversal ให้ครบ.
 - V1 ปฏิเสธ overpay. receipt ต้องไม่เกิน `balance_due` ภายใต้ transaction lock ของ invoice.
 - payment ที่ post แล้วแก้หรือลบไม่ได้. การยกเลิกสร้าง reversal entry พร้อม audit log.
 - reversal ใช้ `payment_date = CURRENT_DATE` ของวันที่ทำรายการ reversal จริง เพื่อไม่แก้งวดเดิมย้อนหลัง; Dashboard คำนวณ Cash In สุทธิตาม `payment_date` ของแต่ละ entry.
@@ -115,3 +116,4 @@ MVP ต้องใช้ Laravel policy + shared query scope/trait สำหร
 - Default query ต้อง filter `org_id` จาก authenticated session/context.
 - การ bypass scope ใช้ได้เฉพาะ system job ที่ระบุชัดและต้อง audit/log.
 - Child tables ที่ query ได้โดยตรงควรมี `org_id` เพื่อป้องกัน tenant leakage.
+

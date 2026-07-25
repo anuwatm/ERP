@@ -50,6 +50,23 @@
 - ตั้ง security headers: CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options`/`frame-ancestors`.
 - API error ห้ามเผย stack trace, SQL, token หรือข้อมูล tenant อื่น.
 
+
+### 4.1 Phase 1 dev/prod browser security notes
+
+Development (`http://localhost/ERP/`):
+
+- CSRF ใช้ Laravel middleware ของ web routes ทุก state-changing request.
+- Session cookie ใช้ `HttpOnly` และ `SameSite=Lax`.
+- `SESSION_SECURE_COOKIE=false` ได้เฉพาะ local HTTP เท่านั้น.
+- `APP_DEBUG=true` ใช้ได้เฉพาะเครื่อง dev; ห้ามใช้กับข้อมูลจริง.
+
+Production / UAT with real users:
+
+- ต้องใช้ HTTPS และ `SESSION_SECURE_COOKIE=true`.
+- ต้องใช้ `SESSION_ENCRYPT=true`, `SESSION_HTTP_ONLY=true`, `SESSION_SAME_SITE=lax`.
+- ต้องตั้ง `APP_DEBUG=false`, `APP_ENV=production`, `APP_KEY` จริง และ mail provider จริง.
+- ต้องเพิ่ม middleware/header layer สำหรับ CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, และ frame protection ก่อนเปิด public internet.
+
 ## 5. Files and exports (เมื่อ feature เปิดใช้)
 
 - allowlist MIME type + extension, จำกัดขนาด, เปลี่ยนชื่อไฟล์เป็น generated storage key.
@@ -86,5 +103,6 @@
 - payment post แล้ว `PATCH`/`DELETE` ไม่สำเร็จ; reversal ถูก audit.
 - upload file ผิด type/เกินขนาด/download โดยไม่มี permission ไม่สำเร็จ.
 - login/reset ถูก rate limit; export rate limit ใช้เมื่อเปิด feature export หลัง MVP; API ไม่เผย secret/stack trace.
+
 
 

@@ -95,15 +95,15 @@ validate input
 
 | Item | Status |
 | --- | --- |
-| Scaffold Laravel + Breeze (React/TS) | Not started |
-| Register creates org hierarchy + Owner + system roles + permissions | Not started |
-| Login active-only, last_login_at, audit `auth.login` | Not started |
-| Permission catalog + role defaults | Not started |
-| Middleware `permission:*` | Not started |
-| Invite user + signed accept link | Not started |
-| Disable user (status inactive) | Not started |
-| Admin Dashboard widgets | Not started |
-| Feature tests | Not started |
+| Scaffold Laravel + Breeze (React/TS) | Done |
+| Register creates org hierarchy + Owner + system roles + permissions | Done |
+| Login active-only, last_login_at, audit `auth.login` | Done |
+| Permission catalog + role defaults | Done |
+| Middleware `permission:*` | Done |
+| Invite user + one-time accept link | Done |
+| Disable user (status inactive) | Done |
+| Admin Dashboard widgets | Done |
+| Feature tests | Done: 51 tests / 235 assertions |
 
 ## Tests Before Release
 
@@ -143,4 +143,24 @@ backend/resources/js/
 ```
 
 TypeScript page props ต้องมี shared types สำหรับ Inertia props หลัก.
+
+
+## Current Implementation Status (2026-07-25)
+
+Phase 1 coding started and core foundation is implemented in `backend/`.
+
+Verified:
+
+- MariaDB migration passes with project `php.ini`
+- Root web URL `http://localhost/ERP/` returns 200
+- Login URL `http://localhost/ERP/login` returns 200
+- PHPUnit: 43 tests, 166 assertions
+- ESLint, Prettier check, TypeScript/Vite build pass
+
+Remaining Phase 1 checklist items are tracked in root [`../checklist.md`](../checklist.md). Do not treat this document as the source of truth for task completion.
+
+
+
+
+
 

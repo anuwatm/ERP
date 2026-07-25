@@ -1,0 +1,12 @@
+.pnpm-store/
+backend/.env
+backend/database/database.sqlite
+backend/node_modules/
+backend/vendor/
+backend/public/build/
+backend/storage/*.key
+backend/storage/framework/cache/data/
+backend/storage/framework/sessions/
+backend/storage/framework/testing/
+backend/storage/framework/views/
+backend/storage/logs/

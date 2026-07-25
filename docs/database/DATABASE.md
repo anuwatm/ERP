@@ -23,7 +23,7 @@
 
 | Column | Type | Notes |
 | --- | --- | --- |
-| `id` | UUID / BIGINT PK | ใช้ UUID แนะนำ |
+| `id` | UUID PK | ใช้ time-ordered UUID: UUID v7 หรือ Laravel ordered UUID (`Str::orderedUuid()`) |
 | `org_id` | UUID FK | ยกเว้นตารางระบบระดับ platform |
 | `created_at` | TIMESTAMP | default now() |
 | `updated_at` | TIMESTAMP | auto-update |
@@ -53,7 +53,7 @@
 | --- | --- | --- |
 | `*_code`, `*_no`, `code` ของ org hierarchy | CHAR(6) | numeric string, leading zero ได้ เช่น `000001`; unique ภายใน scope |
 
-> ไม่ใช่ primary key. Primary key `id` ยังใช้ UUID.
+> ไม่ใช่ primary key. Primary key `id` ใช้ time-ordered UUID: UUID v7 หรือ Laravel ordered UUID (`Str::orderedUuid()`).
 
 ### 1.6 สถานะ (Enums)
 
@@ -1048,7 +1048,7 @@ organizations
 | money | `amount`, `total`, `paid_amount`, `balance_due`, `price`, `cost` ต้อง `>= 0` |
 | payments | `amount > 0` |
 | payments reversal | one receipt can have only one reversal; MariaDB strategy = generated column `reversal_target_id = IF(entry_type = 'reversal', reversal_of_payment_id, NULL)` + `UNIQUE(org_id, reversal_target_id)` หรือ transaction lock + app validation |
-| number_sequences | `last_number BETWEEN 0 AND 999999`; ใช้ row lock/atomic increment; ถ้า `branch_id` nullable ให้ใช้ generated `branch_key = IFNULL(branch_id, sentinel)` สำหรับ unique strategy ใน MariaDB |
+| number_sequences | `last_number BETWEEN 0 AND 999999`; ใช้ row lock/atomic increment; Phase 1 ใช้ app-maintained `branch_key/year_key` เพื่อ enforce unique เมื่อ `branch_id/year` nullable บน MariaDB |
 | invoice totals | `balance_due >= 0`, `paid_amount >= 0`, `total >= 0`; `tax_mode IN (exclusive, inclusive, no_tax)` |
 | hierarchy | division must belong to branch/org; department must belong to division/branch/org; user assignment must validate chain in app service |
 | contacts primary | app-level transaction: เมื่อ set `is_primary=true` ต้อง unset primary เดิมใน customer เดียวกัน |
@@ -1126,6 +1126,9 @@ organizations
 รายละเอียด workflow / data flow ของแต่ละ module อยู่ที่:
 
 [`docs/modules/README.md`](../modules/README.md)
+
+
+
 
 
 

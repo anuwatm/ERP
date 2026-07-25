@@ -10,12 +10,34 @@
 - Login/logout/reset/verify email ใช้งานได้ผ่าน Laravel Breeze local.
 - Invite user และ accept invite ได้; invite token เป็น one-time และหมดอายุได้.
 - Disable inactive user แล้ว login ไม่ได้.
-- Owner/Admin จัดการ user, role, branch, division, department ได้ตาม permission.
+- Owner/Admin จัดการ user และ role ได้ตาม permission; branch/division/department CRUD ย้ายไป Phase 1.1.
 - ห้าม disable/lower role Owner คนสุดท้าย.
 - Server บังคับ `org_id` isolation ทุก query.
 - Admin Dashboard แสดง Organization Setup, Users Summary, Role Summary, Security Alerts, Recent Audit.
 - Audit log มี event: register, login, invite, accept invite, role change, user hierarchy change.
 
+
+## Phase 1.1: Admin Master Data & Access Management
+
+ผ่านเมื่อ:
+
+- Owner/Admin เพิ่ม/แก้/ปิดใช้งาน/delete-safe Branch ได้.
+- Owner/Admin เพิ่ม/แก้/ปิดใช้งาน/delete-safe Division ได้.
+- Owner/Admin เพิ่ม/แก้/ปิดใช้งาน/delete-safe Department ได้.
+- Code ของ Branch/Division/Department เป็น text 6 หลัก และ auto-generate จาก `number_sequences` เท่านั้น.
+- Head office branch มีได้หนึ่งรายการต่อ organization และการสลับ head office ต้องทำใน transaction เดียวพร้อม audit `branch.set_head_office`.
+- Owner/Admin แก้ user profile, hierarchy และ role ได้.
+- Owner/Admin disable/re-enable user ได้ตาม policy.
+- ระบบห้าม hard delete user ใน MVP.
+- Owner/Admin แก้ role-permission assignment ได้.
+- ระบบห้าม CRUD permission code จาก UI.
+- Server validate hierarchy: Branch -> Division -> Department -> User ทุกครั้ง.
+- Server บังคับ `org_id` isolation ทุก query.
+- Member ไม่มีสิทธิ create/edit/disable/delete structure, user หรือ role permission.
+- Strict delete/disable guard กันลบหรือปิด structure ที่มี active child, user หรือ future business reference พร้อม error message ชัดเจน.
+- Audit log ครบ create/update/disable/delete/access changes ของ branch/division/department/user/role permission.
+- UI ใช้ `docs/DESIGN_SYSTEM.md`.
+- Tests และ verification ผ่านครบก่อนเริ่ม Phase 2.
 ## Phase 2: CRM / Sales + Sales Dashboard
 
 ผ่านเมื่อ:
@@ -65,5 +87,4 @@
 - E2E tests ครอบ role isolation, payment reversal, invoice totals, dashboard metrics.
 - UAT seed data พร้อม demo.
 - ไม่มี critical/security bug เปิดค้าง.
-
 

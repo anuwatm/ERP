@@ -18,12 +18,39 @@
 | Invite Accept | `GET /invites/{token}` | signed |
 | Admin Dashboard | `GET /dashboard` | `dashboard.view` |
 | Organization Settings | `GET /settings/organization` | `settings.manage` |
-| Branch/Division/Department | `GET /settings/organization-structure` | `settings.manage` |
+| Branch/Division/Department read-only | `GET /settings/organization-structure` | `settings.structure.view` |
 | Users | `GET /users` | `users.view` |
 | Invite User | `POST /users/invite` | `users.invite` |
 | User Detail/Edit | `GET /users/{user}` | `users.view` |
 | Roles/Permissions | `GET /roles` | `roles.manage` |
 | Audit Log | `GET /audit-logs` | `audit.view` |
+
+
+## Phase 1.1: Admin Master Data & Access Management
+
+| Screen / Action | Route | Permission |
+| --- | --- | --- |
+| Organization Structure | `GET /settings/organization-structure` | `settings.structure.view` |
+| Create Branch | `POST /settings/branches` | `settings.structure.update` |
+| Update Branch | `PATCH /settings/branches/{branch}` | `settings.structure.update` |
+| Disable Branch | `PATCH /settings/branches/{branch}/disable` | `settings.structure.update` |
+| Set Head Office Branch | `PATCH /settings/branches/{branch}/head-office` | `settings.structure.update` |
+| Delete Branch | `DELETE /settings/branches/{branch}` | `settings.structure.update` |
+| Create Division | `POST /settings/divisions` | `settings.structure.update` |
+| Update Division | `PATCH /settings/divisions/{division}` | `settings.structure.update` |
+| Disable Division | `PATCH /settings/divisions/{division}/disable` | `settings.structure.update` |
+| Delete Division | `DELETE /settings/divisions/{division}` | `settings.structure.update` |
+| Create Department | `POST /settings/departments` | `settings.structure.update` |
+| Update Department | `PATCH /settings/departments/{department}` | `settings.structure.update` |
+| Disable Department | `PATCH /settings/departments/{department}/disable` | `settings.structure.update` |
+| Delete Department | `DELETE /settings/departments/{department}` | `settings.structure.update` |
+| Users List | `GET /users` | `users.view` |
+| Invite User | `POST /users/invite` | `users.invite` |
+| Update User | `PATCH /users/{user}` | `users.update` |
+| Disable User | `PATCH /users/{user}/disable` | `users.disable` |
+| Re-enable User | `PATCH /users/{user}/enable` | `users.disable` |
+| Roles / Permissions | `GET /roles` | `roles.manage` |
+| Update Role Permissions | `PATCH /roles/{role}/permissions` | `roles.manage` |
 
 ## Phase 2: CRM / Sales
 
@@ -99,3 +126,4 @@
 | Create expense | `POST /expenses` | `expenses.create` |
 | Create project | `POST /projects` | `projects.create` |
 | Create task | `POST /tasks` | `tasks.create` |
+

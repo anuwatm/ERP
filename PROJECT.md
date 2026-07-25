@@ -77,7 +77,7 @@ CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 | Org hierarchy | `organizations -> branches -> divisions -> departments -> users` |
 | Laravel model relation | map `org_id` → `organization()` ได้ แต่ column ชื่อ `org_id` |
 | Money | `DECIMAL(18,2)`; ห้าม `FLOAT`/`DOUBLE` |
-| Primary key | UUID แนะนำ (Laravel: UUID string / ordered UUID) |
+| Primary key | UUID v7 หรือ Laravel ordered UUID (`Str::orderedUuid()`) เป็นมาตรฐาน MVP; ใช้ตั้งแต่ migration แรก |
 | Business/display code | รหัสที่ user เห็น เช่น `branch.code`, `customer_code`, `project_code`, `invoice_no` ใช้ `CHAR(6)` เป็น text 6 หลัก เช่น `000001`; ไม่ใช่ primary key |
 | Soft delete | ตารางธุรกิจสำคัญมี `deleted_at` |
 | Permission code | `module.action` เช่น `invoices.create` |
@@ -203,9 +203,11 @@ ERP/
 | Hosting | VPS / Forge / cloud | ทีมเลือกตอน deploy |
 | Object storage | local disk (dev) → S3-compatible (prod) | ไฟล์แนบ payment |
 | Email provider | SMTP / SES / Resend | invite + reset |
-| UUID strategy | UUID v7 / ordered UUID | เลือกตอน migration แรก |
+| UUID implementation detail | Laravel ordered UUID หรือ UUID v7 package | ต้องคงรูปแบบ time-ordered UUID ตามมาตรฐาน Primary key |
 | Report module timing | หลัง MVP ทันที vs คู่ Phase 5 | ตาม AD-01 อยู่นอก MVP; Dashboard ตาม Phase อยู่ใน MVP |
 | External IdP | Auth0 / Keycloak / Google Workspace | หลัง MVP |
+
+
 
 
 

@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+    RewriteBase /ERP/
+
+    # Direct static asset requests to backend/public
+    RewriteRule ^build/(.*)$ backend/public/build/$1 [L]
+    RewriteRule ^favicon\.ico$ backend/public/favicon.ico [L]
+    RewriteRule ^robots\.txt$ backend/public/robots.txt [L]
+
+    # Handle all other non-file requests via root index.php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+DirectoryIndex index.php

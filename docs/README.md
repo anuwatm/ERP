@@ -13,6 +13,7 @@
 | [`ARCHITECTURE_DECISIONS.md`](./ARCHITECTURE_DECISIONS.md) | กฎ override schema/plan |
 | [`SECURITY_REQUIREMENTS.md`](./SECURITY_REQUIREMENTS.md) | ข้อกำหนด security |
 | [PHASE_1_LOGIN_IMPLEMENTATION.md](./PHASE_1_LOGIN_IMPLEMENTATION.md) | Phase 1 foundation (auth/RBAC/invite) |
+| [PHASE_1_1_MASTER_DATA.md](./PHASE_1_1_MASTER_DATA.md) | Phase 1.1 admin master data & access management scope |
 | [VALIDATION_RULES.md](./VALIDATION_RULES.md) | กฎ validation ฝั่ง server |
 | [PHASE_ACCEPTANCE_CRITERIA.md](./PHASE_ACCEPTANCE_CRITERIA.md) | DoD ราย Phase |
 | [ROUTES_AND_SCREENS.md](./ROUTES_AND_SCREENS.md) | หน้าและ route ราย Phase |
@@ -21,7 +22,7 @@
 | [`modules/README.md`](./modules/README.md) | ดัชนี module docs (31 ไฟล์) |
 | [`modules/*.md`](./modules/) | รายละเอียดต่อ module: หน้าที่, workflow, data flow, DB |
 | [`../ERP_FEATURE_PLAN.md`](../ERP_FEATURE_PLAN.md) | แผนยาว / backlog (authority ต่ำสุดเมื่อขัด MVP) |
-| [`../backend/`](../backend/) | Laravel app (ยังไม่ scaffold) |
+| [`../backend/`](../backend/) | Laravel app |
 
 ## กฎสำคัญ
 
@@ -36,7 +37,4 @@
 ```text
 CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 ```
-
-
-
 
