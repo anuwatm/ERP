@@ -10,7 +10,9 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -240,6 +242,39 @@ class Phase1AdminTest extends TestCase
 
         $this->assertSame('Updated Org', $owner->organization->refresh()->name);
         $this->assertTrue(AuditLog::where('action', 'organization.update')->where('entity_id', $owner->org_id)->exists());
+    }
+
+    public function test_organization_settings_update_accepts_company_logo_upload(): void
+    {
+        Storage::fake('public');
+        $owner = User::factory()->create();
+        $this->attachRole($owner, 'owner', ['settings.organization.update']);
+        $logo = UploadedFile::fake()->createWithContent(
+            'company-logo.png',
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/l7Y4JwAAAABJRU5ErkJggg==')
+        );
+
+        $this->actingAsOrgUser($owner)->withSession(['auth.password_confirmed_at' => time()])
+            ->post(route('settings.organization.update'), [
+                '_method' => 'patch',
+                'name' => $owner->organization->name,
+                'legal_name' => $owner->organization->legal_name,
+                'tax_id' => $owner->organization->tax_id,
+                'email' => $owner->organization->email,
+                'phone' => $owner->organization->phone,
+                'address' => $owner->organization->address,
+                'logo' => $logo,
+            ])->assertRedirect();
+
+        $organization = $owner->organization->refresh();
+        $this->assertStringStartsWith('/storage/org-logos/'.$organization->id.'/', $organization->logo_url);
+        Storage::disk('public')->assertExists(str_replace('/storage/', '', $organization->logo_url));
+        $this->assertTrue(
+            AuditLog::where('action', 'organization.update')
+                ->where('entity_id', $owner->org_id)
+                ->whereNotNull('after_json->logo_url')
+                ->exists()
+        );
     }
 
     public function test_user_structure_update_writes_hierarchy_change_audit_log(): void

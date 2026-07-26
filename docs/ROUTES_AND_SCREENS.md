@@ -20,7 +20,7 @@
 | Organization Settings | `GET /settings/organization` | `settings.manage` |
 | Branch/Division/Department read-only | `GET /settings/organization-structure` | `settings.structure.view` |
 | Users | `GET /users` | `users.view` |
-| Invite User | `POST /users/invite` | `users.invite` |
+| Invite User | `POST /users/invite` | `users.create` |
 | User Detail/Edit | `GET /users/{user}` | `users.view` |
 | Roles/Permissions | `GET /roles` | `roles.manage` |
 | Audit Log | `GET /audit-logs` | `audit.view` |
@@ -45,7 +45,7 @@
 | Disable Department | `PATCH /settings/departments/{department}/disable` | `settings.structure.update` |
 | Delete Department | `DELETE /settings/departments/{department}` | `settings.structure.update` |
 | Users List | `GET /users` | `users.view` |
-| Invite User | `POST /users/invite` | `users.invite` |
+| Invite User | `POST /users/invite` | `users.create` |
 | Update User | `PATCH /users/{user}` | `users.update` |
 | Disable User | `PATCH /users/{user}/disable` | `users.disable` |
 | Re-enable User | `PATCH /users/{user}/enable` | `users.disable` |
@@ -126,4 +126,5 @@
 | Create expense | `POST /expenses` | `expenses.create` |
 | Create project | `POST /projects` | `projects.create` |
 | Create task | `POST /tasks` | `tasks.create` |
+
 

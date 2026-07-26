@@ -4,7 +4,8 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { PageProps } from '@/Types/auth';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
 export default function Login({
@@ -14,6 +15,9 @@ export default function Login({
     status?: string;
     canResetPassword: boolean;
 }) {
+    const org = usePage<PageProps>().props.org;
+    const companyName = org?.name || 'Demo ERP Co., Ltd.';
+
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -38,13 +42,30 @@ export default function Login({
 
     return (
         <GuestLayout>
-            <Head title="Log in to ERP" />
+            <Head title={`Log in - ${companyName}`} />
 
             <div className="glass-card rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden group">
                 {/* Top Specular Glow Reflection Line */}
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
                 <div className="mb-6">
+                    {org?.logo_url && (
+                        <div className="mb-5 flex items-center gap-3 border-b border-white/10 pb-4">
+                            <img
+                                src={org.logo_url}
+                                alt={companyName}
+                                className="h-12 w-12 rounded-xl object-contain bg-white/10 p-1 shadow-md border border-white/15"
+                            />
+                            <div>
+                                <span className="block font-bold text-white text-sm leading-snug">
+                                    {companyName}
+                                </span>
+                                <span className="text-[11px] font-semibold text-indigo-300 uppercase tracking-wider">
+                                    {org?.legal_name || 'Enterprise ERP Portal'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-300 mb-3">
                         🔐 Secure Sign In
                     </div>
@@ -52,7 +73,8 @@ export default function Login({
                         Welcome Back
                     </h2>
                     <p className="mt-1.5 text-xs text-slate-300">
-                        Enter your credentials to access your Local Devine ERP workspace.
+                        Enter your credentials to access {companyName}{' '}
+                        workspace.
                     </p>
                 </div>
 
@@ -112,7 +134,9 @@ export default function Login({
                                 autoComplete="username"
                                 placeholder="owner@example.com"
                                 isFocused={true}
-                                onChange={(e) => setData('email', e.target.value)}
+                                onChange={(e) =>
+                                    setData('email', e.target.value)
+                                }
                             />
                         </div>
 
@@ -135,11 +159,16 @@ export default function Login({
                                 className="glass-input block w-full rounded-xl text-white placeholder-slate-500 text-sm py-2.5 px-3.5"
                                 autoComplete="current-password"
                                 placeholder="••••••••"
-                                onChange={(e) => setData('password', e.target.value)}
+                                onChange={(e) =>
+                                    setData('password', e.target.value)
+                                }
                             />
                         </div>
 
-                        <InputError message={errors.password} className="mt-1.5" />
+                        <InputError
+                            message={errors.password}
+                            className="mt-1.5"
+                        />
                     </div>
 
                     <div className="flex items-center justify-between pt-1">
@@ -179,12 +208,29 @@ export default function Login({
                             {/* Shimmer Effect */}
                             <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_20%,rgba(255,255,255,0.25)_45%,transparent_70%)] bg-[length:200%_100%] animate-pulse" />
                             {processing && (
-                                <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                <svg
+                                    className="h-4 w-4 animate-spin text-white"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    />
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    />
                                 </svg>
                             )}
-                            <span className="relative z-10">Sign in to ERP Dashboard</span>
+                            <span className="relative z-10">
+                                Sign in to ERP Dashboard
+                            </span>
                         </button>
                     </div>
                 </form>

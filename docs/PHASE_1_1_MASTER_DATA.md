@@ -36,6 +36,14 @@ Phase 1 สร้าง schema, auth, RBAC, invite และ default organizatio
 
 ## In Scope
 
+### Company Identity & Information
+
+- Edit organization display/legal name, tax id, email, phone, address
+- Upload company logo from `/settings/organization`
+- Logo file accepts JPG, PNG, WebP, max 2MB
+- Store logo in public storage and save display URL in `organizations.logo_url`
+- Organization update audit must include `logo_url` before/after when changed
+
 ### Branch
 
 - List branches
@@ -103,6 +111,7 @@ Permission code เป็น system-level config. เพิ่ม/ลบ/เป�
 
 - ใช้ design system กลางจาก `docs/DESIGN_SYSTEM.md`
 - ใช้ `PageHeader`, `Card`, `DataTable`, `Badge`
+- หน้า organization profile ต้องมี company logo preview และ upload control
 - หน้า organization structure ต้องใช้ Tab Navigation: Branches / Divisions / Departments
 - หน้า users ต้องแก้ profile, hierarchy และ role ได้ใน flow เดียว
 - หน้า roles ต้องแสดง permission matrix ที่อ่านง่าย
@@ -130,7 +139,7 @@ Phase 1.1 ยังไม่ทำ:
 - `settings.structure.view`
 - `settings.structure.update`
 - `users.view`
-- `users.invite`
+- `users.create`
 - `users.update`
 - `users.disable`
 - `roles.manage`
@@ -176,7 +185,7 @@ Decision สำหรับ Phase 1.1 MVP:
 | Disable Department | `/settings/departments/{department}/disable` | PATCH | `settings.structure.update` |
 | Delete Department | `/settings/departments/{department}` | DELETE | `settings.structure.update` |
 | Users List | `/users` | GET | `users.view` |
-| Invite User | `/users/invite` | POST | `users.invite` |
+| Invite User | `/users/invite` | POST | `users.create` |
 | Update User | `/users/{user}` | PATCH | `users.update` |
 | Disable User | `/users/{user}/disable` | PATCH | `users.disable` |
 | Re-enable User | `/users/{user}/enable` | PATCH | `users.disable` |
@@ -206,20 +215,23 @@ Sensitive write routes should use:
 - `code` unique per `org_id`
 - `is_head_office` boolean
 - ถ้าตั้ง head office ใหม่ ต้อง unset head office เดิมและ set head office ใหม่ใน transaction เดียว พร้อม audit `branch.set_head_office`
-- ห้าม disable/delete branch ถ้ายังมี active division, department หรือ user อยู่ใต้ branch และต้องแสดง error message ที่ชัดเจน
+- ห้าม disable branch ถ้ายังมี active division, department หรือ user อยู่ใต้ branch และต้องแสดง error message ที่ชัดเจน
+- ห้าม delete branch ถ้ายังมี division, department หรือ user อ้างอิง ไม่ว่าจะ active/inactive
 
 ### Division
 
 - `branch_id` required และต้องอยู่ใน org เดียวกัน
 - `code` unique per `org_id + branch_id`
-- ห้าม disable/delete division ถ้ายังมี active department หรือ user อยู่ใต้ division และต้องแสดง error message ที่ชัดเจน
+- ห้าม disable division ถ้ายังมี active department หรือ user อยู่ใต้ division และต้องแสดง error message ที่ชัดเจน
+- ห้าม delete division ถ้ายังมี department หรือ user อ้างอิง ไม่ว่าจะ active/inactive
 
 ### Department
 
 - `branch_id` required และต้องอยู่ใน org เดียวกัน
 - `division_id` required และต้องอยู่ใต้ branch เดียวกัน
 - `code` unique per `org_id + division_id`
-- ห้าม disable/delete department ถ้ายังมี active user อยู่ใต้ department และต้องแสดง error message ที่ชัดเจน
+- ห้าม disable department ถ้ายังมี active user อยู่ใต้ department และต้องแสดง error message ที่ชัดเจน
+- ห้าม delete department ถ้ายังมี user อ้างอิง ไม่ว่าจะ active/inactive
 
 ### User
 
@@ -243,7 +255,8 @@ Sensitive write routes should use:
 ใช้แนวทาง conservative:
 
 - ถ้าไม่มี reference ใด ๆ: delete master data ได้
-- ถ้ามี user, active sub-structure หรือ future business data อ้างอิง: ห้าม delete และห้าม disable ถ้าจะทำให้ active child/user ใช้งานไม่ได้ ให้แสดง error message ที่ชัดเจน
+- Delete guard ต้องตรวจทุก reference รวม inactive user/sub-structure/future business data
+- Disable guard ตรวจ active child/user เพื่อไม่ให้โครงสร้างที่ยังใช้งานอยู่ถูกปิด
 - User ห้าม hard delete ใน MVP; ใช้ disable เท่านั้น
 - Permission code ห้าม delete ผ่าน UI
 - Disable แล้วไม่ควรให้เลือกเป็นค่าใหม่ใน form แต่ยังแสดงใน historical data ได้
@@ -324,6 +337,8 @@ Admin Dashboard หลัง Phase 1.1 ควรแสดง:
 
 Phase 1.1 ผ่านเมื่อ:
 
+- Owner/Admin แก้ Company Identity & Information และ upload company logo ได้
+- ระบบ validate logo เฉพาะ JPG/PNG/WebP และขนาดไม่เกิน 2MB
 - Owner/Admin เพิ่ม/แก้/ปิดใช้งาน/delete-safe Branch ได้
 - Owner/Admin เพิ่ม/แก้/ปิดใช้งาน/delete-safe Division ได้
 - Owner/Admin เพิ่ม/แก้/ปิดใช้งาน/delete-safe Department ได้
@@ -333,7 +348,7 @@ Phase 1.1 ผ่านเมื่อ:
 - ระบบห้าม CRUD permission code จาก UI
 - Server validate hierarchy chain และ strict reference guard ทุกครั้ง
 - Server enforce tenant `org_id` ทุก query
-- Delete/disable guard กันลบหรือปิดข้อมูลที่มี active child/user/reference
+- Delete guard กันลบข้อมูลที่มี reference ทุกสถานะ และ disable guard กันปิดข้อมูลที่มี active child/user
 - Audit log ครบทุก create/update/disable/delete/access change
 - UI ใช้ design system กลาง
 - Tests ผ่านครบ
@@ -342,9 +357,11 @@ Phase 1.1 ผ่านเมื่อ:
 ## Implementation Notes
 
 - ใช้ table เดิมจาก Phase 1; ไม่ควรต้องเพิ่ม migration ใหญ่
+- `organizations.logo_url` รองรับ company logo อยู่แล้ว; upload ใช้ public storage path `/storage/org-logos/{org_id}/...`
 - อาจต้องเพิ่ม unique indexes ถ้า schema ปัจจุบันยังไม่ครอบ parent scope ตาม validation
 - Branch/Division/Department create ต้องใช้ `NumberSequence` service สร้าง code 6 หลักอัตโนมัติ
 - ถ้าต้องเพิ่ม column สำหรับ soft delete ให้พิจารณาก่อน coding; MVP สามารถใช้ `status = inactive` ก่อน
 - Permission code ต้องเพิ่มผ่าน migration/seeder เท่านั้น ไม่เปิด CRUD จาก UI
 - Phase 1.1 ต้องเสร็จก่อนเริ่ม Phase 2 CRM/Sales
+
 

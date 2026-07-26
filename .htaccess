@@ -8,6 +8,7 @@
 
     # Direct static asset requests to backend/public
     RewriteRule ^build/(.*)$ backend/public/build/$1 [L]
+    RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]
     RewriteRule ^favicon\.ico$ backend/public/favicon.ico [L]
     RewriteRule ^robots\.txt$ backend/public/robots.txt [L]
 

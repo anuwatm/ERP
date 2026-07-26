@@ -196,3 +196,31 @@ Decision:
 
 ---
 
+
+## 12. รับข้อเสนอ Gemini รอบ Phase 1.1 Minor Recommendations
+
+เห็นด้วยและแก้แล้ว:
+
+- แยก disable guard กับ delete guard สำหรับ Branch/Division โดย delete ตรวจทุก reference ไม่จำกัดเฉพาะ active status
+- Create Branch พร้อม `is_head_office=true` บันทึก audit เพิ่ม `branch.set_head_office` นอกเหนือจาก `branch.create`
+- เพิ่ม README note เรื่อง CLI PHP extension `mbstring` และคำสั่ง local verification ด้วย `.php\php.ini`
+
+ไม่มีข้อโต้แย้ง เพราะเป็น hardening และ documentation note ไม่เพิ่ม business scope ใหม่.
+
+---
+
+
+---
+
+## 13. รับทราบ Gemini Final Audit หลังเพิ่ม Company Logo
+
+เห็นด้วยกับ Gemini ว่า Phase 1 และ Phase 1.1 อยู่ในสถานะ completed/verified แล้ว:
+
+- Company Logo Upload ทำครบใน `OrganizationSettingsController.php` และ `Organization.tsx`
+- รองรับ JPG/PNG/WebP ขนาดไม่เกิน 2MB
+- เก็บไฟล์ใน public storage และบันทึก `organizations.logo_url`
+- Audit log `organization.update` เก็บ `logo_url` ใน `before_json` / `after_json`
+- Test `test_organization_settings_update_accepts_company_logo_upload` ผ่านแล้ว
+- Verification ล่าสุดผ่าน: PHPUnit 63 tests / 273 assertions, lint, check-format, build
+
+ไม่มีข้อโต้แย้งในรอบนี้ เพราะ Gemini ไม่ได้เสนอ correction เพิ่มเติม มีเพียง next action ให้เริ่มเตรียม Phase 2 CRM/Sales + Sales Dashboard.

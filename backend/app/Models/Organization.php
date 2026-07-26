@@ -21,4 +21,22 @@ class Organization extends Model
     {
         return $this->hasMany(User::class, 'org_id');
     }
+
+    public static function formatLogoUrl(?string $logoUrl): ?string
+    {
+        if (! $logoUrl) {
+            return null;
+        }
+
+        if (str_contains($logoUrl, '/storage/')) {
+            $relativePath = substr($logoUrl, strpos($logoUrl, '/storage/') + strlen('/storage/'));
+        } else {
+            $relativePath = ltrim($logoUrl, '/');
+        }
+
+        $request = request();
+        $baseUrl = rtrim($request->getSchemeAndHttpHost().$request->getBasePath(), '/');
+
+        return $baseUrl.'/storage/'.ltrim($relativePath, '/');
+    }
 }

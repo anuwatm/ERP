@@ -14,6 +14,7 @@ class PermissionCatalog
             ['code' => 'users.disable', 'module' => 'users', 'action' => 'disable', 'description' => 'Disable users'],
             ['code' => 'roles.view', 'module' => 'roles', 'action' => 'view', 'description' => 'View roles'],
             ['code' => 'roles.update', 'module' => 'roles', 'action' => 'update', 'description' => 'Update role assignments'],
+            ['code' => 'roles.manage', 'module' => 'roles', 'action' => 'manage', 'description' => 'Manage role permission assignments'],
             ['code' => 'settings.organization.view', 'module' => 'settings', 'action' => 'view', 'description' => 'View organization settings'],
             ['code' => 'settings.organization.update', 'module' => 'settings', 'action' => 'update', 'description' => 'Update organization settings'],
             ['code' => 'settings.structure.view', 'module' => 'settings', 'action' => 'view', 'description' => 'View organization structure'],

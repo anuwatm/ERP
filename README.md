@@ -8,7 +8,7 @@
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-สถานะตอนนี้: **Phase 1 Done / กำลังเตรียม Phase 1.1 Admin Master Data & Access Management ก่อน Phase 2**
+สถานะตอนนี้: **Phase 1.1 Done / พร้อมเตรียม Phase 2 CRM/Sales**
 
 ---
 
@@ -69,6 +69,11 @@ pnpm run check-format
 pnpm run build
 php -c .php\php.ini artisan migrate:fresh --force
 ```
+หมายเหตุ CLI PHP:
+
+- ถ้าต้องการใช้ `php artisan test` โดยตรง ให้เปิด extension `mbstring` ใน `php.ini`
+- ถ้าต้องการให้ company logo แสดงผ่าน web server ให้รัน `php -c .php\php.ini artisan storage:link` หลัง setup storage
+- โปรเจกต์นี้มี `.php\php.ini` สำหรับ local verification ด้วยคำสั่ง `php -c .php\php.ini vendor\phpunit\phpunit\phpunit`
 
 Phase 1 ที่ทำแล้ว:
 
@@ -78,9 +83,9 @@ Phase 1 ที่ทำแล้ว:
 - Organization hierarchy: company -> branch -> division -> department -> user
 - RBAC 7 roles + permission middleware
 - Invite/accept user พร้อม token one-time TTL 72 ชั่วโมง
-- Admin screens: organization, organization structure, users, roles, audit logs
+- Admin screens: organization profile with company logo upload, organization structure, users, roles, audit logs
 - Admin Dashboard สรุป org/users/roles/recent audit
-- Audit log: register, login, invite, accept invite, organization update
+- Audit log: register, login, invite, accept invite, organization update including company logo
 
 ---
 
@@ -90,7 +95,7 @@ Phase 1 ที่ทำแล้ว:
 | --- | --- | --- |
 | Phase 0 | Done | เอกสาร scope, schema, security, validation, phase criteria, routes/screens, review decisions |
 | Phase 1 | Done | Foundation, auth, org hierarchy, RBAC, invite, audit, Admin Dashboard |
-| Phase 1.1 | Planning | Admin Master Data & Access Management: Branch, Division, Department, User, Role-Permission |
+| Phase 1.1 | Done | Admin Master Data & Access Management: Company Identity/Logo, Branch, Division, Department, User, Role-Permission |
 | Phase 2 | Not started | CRM/Sales: customers, contacts, deals, activities, Sales Dashboard |
 | Phase 3 | Not started | Finance: products, invoices, payments/reversal, expenses, Finance Dashboard |
 | Phase 4 | Not started | Delivery: projects, tasks, project cost, Delivery Dashboard |
@@ -104,7 +109,7 @@ Phase 1 ที่ทำแล้ว:
 | --- | --- | --- |
 | Phase 0 | Documentation lock, MVP scope, schema/security/validation decisions, checklist, README | 2026-07-25 |
 | Phase 1 | Laravel/Breeze auth, MariaDB schema, org hierarchy, RBAC, permission middleware, invite/accept user, admin screens, audit log, Admin Dashboard, 51 PHPUnit tests / 235 assertions | 2026-07-25 |
-| Phase 1.1 | Not implemented yet; scope documented in `docs/PHASE_1_1_MASTER_DATA.md` ครอบ Master Data, auto-generated codes, User edit/disable, Role-Permission assignment | - |
+| Phase 1.1 | Master Data CRUD, auto-generated structure codes, head office switch, user edit/disable/enable, role-permission matrix, strict guards, audit logs, 63 PHPUnit tests / 273 assertions | 2026-07-26 |
 | Phase 2 | Not implemented yet | - |
 | Phase 3 | Not implemented yet | - |
 | Phase 4 | Not implemented yet | - |
@@ -112,6 +117,28 @@ Phase 1 ที่ทำแล้ว:
 
 ---
 
+## Phase 1.1 Features
+
+Phase 1.1 เพิ่ม Admin Master Data & Access Management ต่อจาก Phase 1:
+
+- Company Identity & Information edit + company logo upload
+- Branch / Division / Department create/edit/disable/delete-safe
+- Auto-generate code 6 หลักจาก `number_sequences`
+- Set Head Office แบบ transaction พร้อม audit `branch.set_head_office`
+- Strict delete/disable guard เมื่อมี active child/user/reference
+- User edit profile, hierarchy, role, disable และ re-enable
+- Role-Permission matrix สำหรับแก้ permission assignment
+- Permission code ยัง immutable ผ่าน UI; เพิ่ม/แก้ผ่าน migration/seeder เท่านั้น
+- Audit log ครบ master data, user และ role permission changes
+
+Verification:
+
+- PHPUnit: 63 tests / 273 assertions
+- `pnpm run lint`: passed
+- `pnpm run check-format`: passed
+- `pnpm run build`: passed
+
+---
 ## Phase 0 Features / Decisions
 
 Phase 0 เป็นงานเอกสารและ decision lock เท่านั้น ยังไม่มี source code application

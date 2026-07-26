@@ -3,9 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\AuditLog;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\OrganizationProvisioner;
+use App\Support\PermissionCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +17,8 @@ class Phase1DemoSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->syncPermissionCatalog();
+
         if (User::where('email', 'owner@example.com')->exists()) {
             return;
         }
@@ -64,6 +68,25 @@ class Phase1DemoSeeder extends Seeder
                 'dev_invite_url' => route('invites.accept', ['user' => $member->id, 'token' => $inviteToken], absolute: false),
             ],
         ]);
+    }
+
+    private function syncPermissionCatalog(): void
+    {
+        foreach (PermissionCatalog::permissions() as $permission) {
+            Permission::firstOrCreate(['code' => $permission['code']], $permission);
+        }
+
+        $permissions = Permission::whereIn('code', array_column(PermissionCatalog::permissions(), 'code'))->get()->keyBy('code');
+
+        foreach (Role::all() as $role) {
+            $defaultCodes = PermissionCatalog::defaults()[$role->code] ?? [];
+            $ids = collect($defaultCodes)
+                ->filter(fn (string $code) => $permissions->has($code))
+                ->map(fn (string $code) => $permissions[$code]->id)
+                ->all();
+
+            $role->permissions()->syncWithoutDetaching($ids);
+        }
     }
 
     private function createDemoUser(User $owner, string $name, string $email, string $position, string $status): User

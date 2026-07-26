@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | Phase 0 | Done | เอกสาร scope/schema/security/decision พร้อมเริ่ม Phase 1 |
 | Phase 1 | Done | Foundation + Admin Dashboard เสร็จและตรวจผ่าน |
-| Phase 1.1 | Planning | Admin Master Data & Access Management |
+| Phase 1.1 | Done | Admin Master Data & Access Management เสร็จและตรวจผ่าน |
 | Phase 2 | Not started | CRM/Sales + Sales Dashboard |
 | Phase 3 | Not started | Finance + Finance Dashboard |
 | Phase 4 | Not started | Delivery + Delivery Dashboard |
@@ -94,6 +94,7 @@ Exit criteria:
 - [x] Password reset token และ email verification token หมดอายุและ reuse ไม่ได้
 - [x] Disable inactive user แล้ว login ไม่ได้
 - [x] Organization settings read/update
+- [x] Organization settings upload company logo
 - [x] Organization structure UI: branch/division/department
 
 ### RBAC / Security
@@ -175,88 +176,91 @@ Exit criteria:
 
 ### Branch Master
 
-- [ ] UI list/create/edit branch
-- [ ] Disable branch
-- [ ] Delete-safe branch เฉพาะไม่มี reference
-- [ ] Auto-generate branch code text 6 หลักจาก `number_sequences`
-- [ ] Enforce head office มีได้หนึ่ง branch ต่อ organization
-- [ ] Set head office ใน transaction เดียว พร้อม audit `branch.set_head_office`
+- [x] UI list/create/edit branch
+- [x] Disable branch
+- [x] Delete-safe branch เฉพาะไม่มี reference
+- [x] Auto-generate branch code text 6 หลักจาก `number_sequences`
+- [x] Enforce head office มีได้หนึ่ง branch ต่อ organization
+- [x] Set head office ใน transaction เดียว พร้อม audit `branch.set_head_office`
 
 ### Division Master
 
-- [ ] UI list/create/edit division
-- [ ] Disable division
-- [ ] Delete-safe division เฉพาะไม่มี reference
-- [ ] Auto-generate division code text 6 หลักจาก `number_sequences`
-- [ ] Validate division อยู่ใต้ branch ใน org เดียวกัน
+- [x] UI list/create/edit division
+- [x] Disable division
+- [x] Delete-safe division เฉพาะไม่มี reference
+- [x] Auto-generate division code text 6 หลักจาก `number_sequences`
+- [x] Validate division อยู่ใต้ branch ใน org เดียวกัน
 
 ### Department Master
 
-- [ ] UI list/create/edit department
-- [ ] Disable department
-- [ ] Delete-safe department เฉพาะไม่มี reference
-- [ ] Auto-generate department code text 6 หลักจาก `number_sequences`
-- [ ] Validate chain: Branch -> Division -> Department
+- [x] UI list/create/edit department
+- [x] Disable department
+- [x] Delete-safe department เฉพาะไม่มี reference
+- [x] Auto-generate department code text 6 หลักจาก `number_sequences`
+- [x] Validate chain: Branch -> Division -> Department
 
 ### User Management
 
-- [ ] UI list/search users พร้อม filter status/role/branch
-- [ ] Invite user ใช้งานต่อจาก Phase 1
-- [ ] Edit user profile: name, email, phone, position, person_id
-- [ ] Edit user hierarchy: branch/division/department
-- [ ] Assign/change user roles
-- [ ] Disable user
-- [ ] Re-enable user ถ้า policy อนุญาต
-- [ ] ห้าม hard delete user ใน MVP
-- [ ] Validate user hierarchy chain
-- [ ] Mask `person_id` ใน UI/log/Inertia props ตาม permission
+- [x] UI list/search users พร้อม filter status/role/branch
+- [x] Invite user ใช้งานต่อจาก Phase 1
+- [x] Edit user profile: name, email, phone, position, person_id
+- [x] Edit user hierarchy: branch/division/department
+- [x] Assign/change user roles
+- [x] Disable user
+- [x] Re-enable user ถ้า policy อนุญาต
+- [x] ห้าม hard delete user ใน MVP
+- [x] Validate user hierarchy chain
+- [x] Mask `person_id` ใน UI/log/Inertia props ตาม permission
 
 ### Role / Permission Management
 
-- [ ] UI roles list
-- [ ] UI permission matrix ต่อ role
-- [ ] Update role-permission assignment
-- [ ] Owner role immutable
-- [ ] Last owner / last admin safety guard
-- [ ] ห้าม CRUD permission code จาก UI
-- [ ] Permission code เพิ่ม/ลบ/แก้ผ่าน migration/seeder เท่านั้น
+- [x] UI roles list
+- [x] UI permission matrix ต่อ role
+- [x] Update role-permission assignment
+- [x] Owner role immutable
+- [x] Last owner / last admin safety guard
+- [x] ห้าม CRUD permission code จาก UI
+- [x] Permission code เพิ่ม/ลบ/แก้ผ่าน migration/seeder เท่านั้น
 
 ### Security / Data Integrity
 
-- [ ] ใช้ `settings.structure.view` สำหรับหน้า structure read
-- [ ] ใช้ `settings.structure.update` สำหรับ branch/division/department create/edit/disable/delete
-- [ ] ใช้ `users.update` สำหรับแก้ user profile/hierarchy/role
-- [ ] ใช้ `users.disable` สำหรับ disable/re-enable user
-- [ ] ใช้ `roles.manage` สำหรับ role-permission assignment
-- [ ] Write routes ใช้ auth, verified, permission, password.confirm, throttle
-- [ ] Server derive `org_id`; ไม่รับจาก client
-- [ ] Cross-org access return 404
-- [ ] Audit log ครบ master data, user และ role permission changes
+- [x] ใช้ `settings.structure.view` สำหรับหน้า structure read
+- [x] ใช้ `settings.structure.update` สำหรับ branch/division/department create/edit/disable/delete
+- [x] ใช้ `users.update` สำหรับแก้ user profile/hierarchy/role
+- [x] ใช้ `users.disable` สำหรับ disable/re-enable user
+- [x] ใช้ `roles.manage` สำหรับ role-permission assignment
+- [x] Write routes ใช้ auth, verified, permission, password.confirm, throttle
+- [x] Server derive `org_id`; ไม่รับจาก client
+- [x] Cross-org access return 404
+- [x] Audit log ครบ master data, user และ role permission changes
 
 ### Tests / Verification
 
-- [ ] Owner/Admin CRUD master data ได้
-- [ ] Member create/edit/delete structure ไม่ได้
-- [ ] Validation code 6 หลักผ่าน
-- [ ] Invalid hierarchy ถูก reject
-- [ ] Strict delete/disable guard กันลบหรือปิดเมื่อมี active child/user/reference
-- [ ] Head office switch transaction test + audit `branch.set_head_office`
-- [ ] Owner/Admin update user profile/hierarchy/role ได้
-- [ ] Member update user คนอื่นไม่ได้
-- [ ] Disable user แล้ว login ไม่ได้
-- [ ] Re-enable user แล้ว login ได้ตาม policy
-- [ ] ห้าม disable owner คนสุดท้าย
-- [ ] ห้าม hard delete user
-- [ ] Owner/Admin update role-permission assignment ได้
-- [ ] Member/Admin ที่ไม่มี `roles.manage` update role permission ไม่ได้
-- [ ] ห้าม CRUD permission code จาก UI
-- [ ] Audit log ถูกสร้างทุก write action รวม `branch.set_head_office`
-- [ ] Sensitive write actions require password confirmation
-- [ ] `pnpm run lint` ผ่าน
-- [ ] `pnpm run check-format` ผ่าน
-- [ ] `pnpm run build` ผ่าน
-- [ ] PHPUnit tests ผ่าน
-- [ ] Update `README.md` with Phase 1.1 features หลัง coding เสร็จ
+- [x] Owner/Admin CRUD master data ได้
+- [x] Member create/edit/delete structure ไม่ได้
+- [x] Validation code 6 หลักผ่าน
+- [x] Invalid hierarchy ถูก reject
+- [x] Strict disable guard กันปิดเมื่อมี active child/user
+- [x] Strict delete guard กันลบเมื่อมี reference ทุกสถานะ รวม inactive user/sub-structure
+- [x] Head office switch transaction test + audit `branch.set_head_office`
+- [x] Create branch พร้อม `is_head_office=true` สร้าง audit `branch.create` และ `branch.set_head_office`
+- [x] Owner/Admin update user profile/hierarchy/role ได้
+- [x] Member update user คนอื่นไม่ได้
+- [x] Disable user แล้ว login ไม่ได้
+- [x] Re-enable user แล้ว login ได้ตาม policy
+- [x] ห้าม disable owner คนสุดท้าย
+- [x] ห้าม hard delete user
+- [x] Owner/Admin update role-permission assignment ได้
+- [x] Member/Admin ที่ไม่มี `roles.manage` update role permission ไม่ได้
+- [x] ห้าม CRUD permission code จาก UI
+- [x] Audit log ถูกสร้างทุก write action รวม `branch.set_head_office`
+- [x] Sensitive write actions require password confirmation
+- [x] `pnpm run lint` ผ่าน
+- [x] `pnpm run check-format` ผ่าน
+- [x] `pnpm run build` ผ่าน
+- [x] Test organization logo upload + audit log
+- [x] PHPUnit tests ผ่าน
+- [x] Update `README.md` with Phase 1.1 features หลัง coding เสร็จ
 
 ---
 ## Phase 2: CRM/Sales + Sales Dashboard
