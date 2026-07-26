@@ -185,7 +185,21 @@ export default function Organization({
                         <div className="flex justify-end pt-2">
                             <PrimaryButton
                                 disabled={processing}
-                                className="bg-indigo-600 hover:bg-indigo-700"
+                                icon={
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M5 13l4 4L19 7"
+                                        />
+                                    </svg>
+                                }
                             >
                                 Save Organization Profile
                             </PrimaryButton>

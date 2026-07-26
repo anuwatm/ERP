@@ -42,7 +42,7 @@ type Department = {
 type Tab = 'branches' | 'divisions' | 'departments';
 
 const inputClass =
-    'w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'w-full rounded-xl border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-medium shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-150';
 
 function StatusBadge({ status }: { status: string }) {
     return (
@@ -368,6 +368,21 @@ export default function OrganizationStructure({
                                 <div className="md:col-span-4 flex justify-end">
                                     <PrimaryButton
                                         disabled={branchForm.processing}
+                                        icon={
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                        }
                                     >
                                         Create Branch
                                     </PrimaryButton>
@@ -531,6 +546,21 @@ export default function OrganizationStructure({
                                 <div className="flex items-end">
                                     <PrimaryButton
                                         disabled={divisionForm.processing}
+                                        icon={
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                        }
                                     >
                                         Create Division
                                     </PrimaryButton>
@@ -721,6 +751,21 @@ export default function OrganizationStructure({
                                 <div className="flex items-end">
                                     <PrimaryButton
                                         disabled={departmentForm.processing}
+                                        icon={
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                        }
                                     >
                                         Create Department
                                     </PrimaryButton>

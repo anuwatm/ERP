@@ -8,7 +8,7 @@
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-สถานะตอนนี้: **Phase 1.1 Done / พร้อมเตรียม Phase 2 CRM/Sales**
+สถานะตอนนี้: **Phase 2 Done / พร้อมเตรียม Phase 3 Finance**
 
 ---
 
@@ -55,6 +55,7 @@ php artisan db:seed
 | --- | --- | --- | --- | --- |
 | **Owner** | `owner@example.com` | `password` | Active | สิทธิ์สูงสุด เข้าถึงได้ทุกเมนู (แนะนำสำหรับทดสอบ) |
 | **Admin** | `admin@example.com` | `password` | Active | สิทธิ์แอดมิน จัดการผู้ใช้และระบบ |
+| **Sales** | `sales@example.com` | `password` | Active | บัญชีทดสอบ Phase 2 เห็นเฉพาะ customer/deal ที่ตัวเองเป็น owner |
 | **Invited Member** | `member@example.com` | - | Invited | บัญชีทดสอบรับคำเชิญ (Accept Invite flow) |
 | **Inactive Viewer** | `viewer@example.com` | `password` | Inactive | บัญชีทดสอบสถานะถูกปิดใช้งาน *(Login ไม่ได้)* |
 
@@ -96,7 +97,7 @@ Phase 1 ที่ทำแล้ว:
 | Phase 0 | Done | เอกสาร scope, schema, security, validation, phase criteria, routes/screens, review decisions |
 | Phase 1 | Done | Foundation, auth, org hierarchy, RBAC, invite, audit, Admin Dashboard |
 | Phase 1.1 | Done | Admin Master Data & Access Management: Company Identity/Logo, Branch, Division, Department, User, Role-Permission |
-| Phase 2 | Not started | CRM/Sales: customers, contacts, deals, activities, Sales Dashboard |
+| Phase 2 | Done | CRM/Sales: customers, contacts, deals, activities, Sales Dashboard |
 | Phase 3 | Not started | Finance: products, invoices, payments/reversal, expenses, Finance Dashboard |
 | Phase 4 | Not started | Delivery: projects, tasks, project cost, Delivery Dashboard |
 | Phase 5 | Not started | Executive Dashboard, E2E tests, UAT |
@@ -110,13 +111,37 @@ Phase 1 ที่ทำแล้ว:
 | Phase 0 | Documentation lock, MVP scope, schema/security/validation decisions, checklist, README | 2026-07-25 |
 | Phase 1 | Laravel/Breeze auth, MariaDB schema, org hierarchy, RBAC, permission middleware, invite/accept user, admin screens, audit log, Admin Dashboard, 51 PHPUnit tests / 235 assertions | 2026-07-25 |
 | Phase 1.1 | Master Data CRUD, auto-generated structure codes, head office switch, user edit/disable/enable, role-permission matrix, strict guards, audit logs, 63 PHPUnit tests / 273 assertions | 2026-07-26 |
-| Phase 2 | Not implemented yet | - |
+| Phase 2 | CRM/Sales schema, customer/contact/deal/activity CRUD, customer code auto-generate, owner-only visibility, Sales Dashboard, Phase 2 demo seed, 68 PHPUnit tests / 318 assertions | 2026-07-26 |
 | Phase 3 | Not implemented yet | - |
 | Phase 4 | Not implemented yet | - |
 | Phase 5 | Not implemented yet | - |
 
 ---
 
+## Phase 2 Features
+
+Phase 2 เพิ่ม CRM/Sales + Sales Dashboard:
+
+- Customer CRUD พร้อม `customer_code` text 6 หลักจาก `number_sequences`
+- Contact CRUD ใต้ customer และ primary contact มีได้หนึ่งคนต่อ customer
+- Deal pipeline create/update พร้อม stage `new -> contacted -> qualified -> proposal -> negotiation -> won/lost`
+- Deal won/lost rules: won set `won_at`, lost ต้องมี `lost_reason`
+- Activity/follow-up create/update และ mark done ด้วย `completed_at`
+- Sales owner-only visibility: Sales เห็นเฉพาะ customer/deal ที่ตัวเองเป็น owner
+- Sales Dashboard: Customers, Deals Pipeline, Won/Lost Deals, Follow-ups Today, Stale Deals, Top Sales Owners
+- Stale deal definition: open deal ที่ไม่มี activity 7 วัน
+- Activity polymorphic allowlist เฉพาะ `customer`, `contact`, `deal` ใน Phase 2
+- Dashboard Phase 2 ยังไม่แสดง Cash In หรือ finance metrics
+- Demo seed เพิ่ม `sales@example.com`, sample customers, deals, activities
+
+Verification:
+
+- PHPUnit: 68 tests / 318 assertions
+- `pnpm run lint`: passed
+- `pnpm run check-format`: passed
+- `pnpm run build`: passed
+
+---
 ## Phase 1.1 Features
 
 Phase 1.1 เพิ่ม Admin Master Data & Access Management ต่อจาก Phase 1:

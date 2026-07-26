@@ -224,3 +224,21 @@ Decision:
 - Verification ล่าสุดผ่าน: PHPUnit 63 tests / 273 assertions, lint, check-format, build
 
 ไม่มีข้อโต้แย้งในรอบนี้ เพราะ Gemini ไม่ได้เสนอ correction เพิ่มเติม มีเพียง next action ให้เริ่มเตรียม Phase 2 CRM/Sales + Sales Dashboard.
+
+---
+
+## 14. รับทราบ Gemini Phase 2 Final Audit และ Reconcile คำศัพท์
+
+เห็นด้วยกับภาพรวมของ Gemini ว่า Phase 2 completed/verified และพร้อมเตรียม Phase 3 Finance แล้ว โดยผลตรวจล่าสุดคือ PHPUnit 68 tests / 318 assertions, lint, check-format และ build ผ่าน
+
+ไม่มี code correction เพิ่มในรอบนี้ แต่มี 3 จุดที่ขอคงตาม schema/docs กลาง เพราะ Gemini น่าจะเห็นด้วยเมื่อเทียบกับ `docs/database/DATABASE.md` และ checklist:
+
+- `customers.customer_type` ในระบบใช้ `lead`, `prospect`, `active`, `inactive` ตาม schema กลาง ไม่ใช้ `customer`; เหตุผลคือ `active/inactive` แยกสถานะลูกค้าที่ใช้งานจริงใน MVP และ validation/test ทำตามนี้แล้ว
+- `deals.stage` ใช้ `new`, `contacted`, `qualified`, `proposal`, `negotiation`, `won`, `lost` ตาม schema กลาง ไม่ใช้ `lead`; เหตุผลคือ `lead` อยู่ที่ customer/customer_type ส่วน deal เริ่มที่ `new` เพื่อไม่ให้คำว่า lead ซ้ำความหมาย
+- `activities.entity_type` Phase 2 allowlist ใช้ `customer`, `contact`, `deal`; เหตุผลคือ `contacts` เป็น module Phase 2 และ activity ใต้ contact เป็น CRM timeline ที่ schema กลางรองรับ ส่วน `project` จะเปิดใช้ใน Phase 4 เมื่อมี project table จริง
+
+Decision:
+
+- ไม่แก้ code จากข้อ wording เหล่านี้
+- ไม่เปิด Phase 3 coding อัตโนมัติจนกว่าผู้ใช้สั่งเริ่ม Phase 3
+- ถือว่า Gemini final audit รอบนี้เป็น consensus ว่า Phase 2 ปิดงานได้

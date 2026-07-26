@@ -32,7 +32,7 @@ type User = {
 };
 
 const inputClass =
-    'w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'w-full rounded-xl border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-medium shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-150';
 
 export default function Users({
     users,
@@ -161,7 +161,24 @@ export default function Users({
                             ))}
                         </select>
                         <div className="md:col-span-4 flex justify-end">
-                            <PrimaryButton disabled={processing}>
+                            <PrimaryButton
+                                disabled={processing}
+                                icon={
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                                        />
+                                    </svg>
+                                }
+                            >
                                 Send Invitation
                             </PrimaryButton>
                         </div>
@@ -289,6 +306,21 @@ export default function Users({
                                     <div className="flex gap-2">
                                         {user.status !== 'inactive' ? (
                                             <SecondaryButton
+                                                icon={
+                                                    <svg
+                                                        className="h-3.5 w-3.5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth="2"
+                                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                                                        />
+                                                    </svg>
+                                                }
                                                 onClick={() =>
                                                     router.patch(
                                                         route(
@@ -306,6 +338,21 @@ export default function Users({
                                             </SecondaryButton>
                                         ) : (
                                             <SecondaryButton
+                                                icon={
+                                                    <svg
+                                                        className="h-3.5 w-3.5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth="2"
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
+                                                    </svg>
+                                                }
                                                 onClick={() =>
                                                     router.patch(
                                                         route(

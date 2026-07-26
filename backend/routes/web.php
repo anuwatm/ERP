@@ -5,6 +5,11 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Sales\ActivityController;
+use App\Http\Controllers\Sales\ContactController;
+use App\Http\Controllers\Sales\CustomerController;
+use App\Http\Controllers\Sales\DealController;
+use App\Http\Controllers\Sales\SalesDashboardController;
 use App\Http\Controllers\Settings\OrganizationSettingsController;
 use App\Http\Controllers\Settings\OrganizationStructureController;
 use Illuminate\Foundation\Application;
@@ -12,12 +17,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', DashboardController::class)
@@ -29,6 +29,53 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+
+    Route::get('/sales-dashboard', SalesDashboardController::class)
+        ->middleware('permission:sales.dashboard.view')
+        ->name('sales.dashboard');
+
+    Route::get('/customers', [CustomerController::class, 'index'])
+        ->middleware('permission:customers.view')
+        ->name('customers.index');
+    Route::post('/customers', [CustomerController::class, 'store'])
+        ->middleware(['permission:customers.create', 'password.confirm', 'throttle:10,1'])
+        ->name('customers.store');
+    Route::patch('/customers/{customer}', [CustomerController::class, 'update'])
+        ->middleware(['permission:customers.update', 'password.confirm', 'throttle:10,1'])
+        ->name('customers.update');
+    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])
+        ->middleware(['permission:customers.delete', 'password.confirm', 'throttle:10,1'])
+        ->name('customers.destroy');
+
+    Route::post('/customers/{customer}/contacts', [ContactController::class, 'store'])
+        ->middleware(['permission:contacts.create', 'password.confirm', 'throttle:10,1'])
+        ->name('contacts.store');
+    Route::patch('/contacts/{contact}', [ContactController::class, 'update'])
+        ->middleware(['permission:contacts.update', 'password.confirm', 'throttle:10,1'])
+        ->name('contacts.update');
+    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])
+        ->middleware(['permission:contacts.delete', 'password.confirm', 'throttle:10,1'])
+        ->name('contacts.destroy');
+
+    Route::get('/deals', [DealController::class, 'index'])
+        ->middleware('permission:deals.view')
+        ->name('deals.index');
+    Route::post('/deals', [DealController::class, 'store'])
+        ->middleware(['permission:deals.create', 'password.confirm', 'throttle:10,1'])
+        ->name('deals.store');
+    Route::patch('/deals/{deal}', [DealController::class, 'update'])
+        ->middleware(['permission:deals.update', 'password.confirm', 'throttle:10,1'])
+        ->name('deals.update');
+
+    Route::post('/activities', [ActivityController::class, 'store'])
+        ->middleware(['permission:activities.create', 'password.confirm', 'throttle:10,1'])
+        ->name('activities.store');
+    Route::patch('/activities/{activity}', [ActivityController::class, 'update'])
+        ->middleware(['permission:activities.update', 'password.confirm', 'throttle:10,1'])
+        ->name('activities.update');
+    Route::patch('/activities/{activity}/complete', [ActivityController::class, 'complete'])
+        ->middleware(['permission:activities.update', 'password.confirm', 'throttle:10,1'])
+        ->name('activities.complete');
     Route::get('/settings/organization', [OrganizationSettingsController::class, 'edit'])
         ->middleware('permission:settings.organization.view')
         ->name('settings.organization.edit');

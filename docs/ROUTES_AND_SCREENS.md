@@ -54,16 +54,22 @@
 
 ## Phase 2: CRM / Sales
 
-| Screen | Route | Permission |
+| Screen / Action | Route | Permission |
 | --- | --- | --- |
-| Sales Dashboard | `GET /dashboard` | `dashboard.view` |
-| Customers List | `GET /customers` | `customers.view` |
-| Customer Create/Edit | `GET /customers/create`, `GET /customers/{customer}/edit` | `customers.create/update` |
-| Customer Detail | `GET /customers/{customer}` | `customers.view` |
-| Contacts | nested under customer | `contacts.view/create/update` |
-| Deals Pipeline | `GET /deals` | `deals.view` |
-| Deal Detail | `GET /deals/{deal}` | `deals.view` |
-| Activities/Follow-ups | nested under customer/deal | `activities.*` |
+| Sales Dashboard | `GET /sales-dashboard` | `sales.dashboard.view` |
+| Customers List / Form | `GET /customers` | `customers.view` |
+| Create Customer | `POST /customers` | `customers.create` |
+| Update Customer | `PATCH /customers/{customer}` | `customers.update` |
+| Delete-safe Customer | `DELETE /customers/{customer}` | `customers.delete` |
+| Create Contact under Customer | `POST /customers/{customer}/contacts` | `contacts.create` |
+| Update Contact | `PATCH /contacts/{contact}` | `contacts.update` |
+| Delete-safe Contact | `DELETE /contacts/{contact}` | `contacts.delete` |
+| Deals Pipeline / Form | `GET /deals` | `deals.view` |
+| Create Deal | `POST /deals` | `deals.create` |
+| Update Deal / Stage | `PATCH /deals/{deal}` | `deals.update` |
+| Create Activity / Follow-up | `POST /activities` | `activities.create` |
+| Update Activity | `PATCH /activities/{activity}` | `activities.update` |
+| Complete Follow-up | `PATCH /activities/{activity}/complete` | `activities.update` |
 
 ## Phase 3: Finance
 
@@ -116,9 +122,9 @@
 | Login | `POST /login` | public |
 | Logout | `POST /logout` | auth |
 | Create customer | `POST /customers` | `customers.create` |
-| Update customer | `PUT /customers/{customer}` | `customers.update` |
+| Update customer | `PATCH /customers/{customer}` | `customers.update` |
 | Create deal | `POST /deals` | `deals.create` |
-| Update deal / stage | `PUT /deals/{deal}` | `deals.update` |
+| Update deal / stage | `PATCH /deals/{deal}` | `deals.update` |
 | Create product | `POST /products` | `products.manage` |
 | Create invoice | `POST /invoices` | `invoices.create` |
 | Update invoice | `PUT /invoices/{invoice}` | `invoices.update` |

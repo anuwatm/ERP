@@ -184,7 +184,7 @@ export default function Login({
                                 }
                                 className="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-indigo-500"
                             />
-                            <span className="ms-2 text-xs font-medium text-slate-400 hover:text-slate-300 transition-colors">
+                            <span className="ms-2 text-xs font-semibold text-slate-200 hover:text-white transition-colors">
                                 Remember me
                             </span>
                         </label>

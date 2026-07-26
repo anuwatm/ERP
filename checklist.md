@@ -21,7 +21,7 @@
 | Phase 0 | Done | เอกสาร scope/schema/security/decision พร้อมเริ่ม Phase 1 |
 | Phase 1 | Done | Foundation + Admin Dashboard เสร็จและตรวจผ่าน |
 | Phase 1.1 | Done | Admin Master Data & Access Management เสร็จและตรวจผ่าน |
-| Phase 2 | Not started | CRM/Sales + Sales Dashboard |
+| Phase 2 | Done | CRM/Sales + Sales Dashboard เสร็จและตรวจผ่าน |
 | Phase 3 | Not started | Finance + Finance Dashboard |
 | Phase 4 | Not started | Delivery + Delivery Dashboard |
 | Phase 5 | Not started | Executive Dashboard + E2E/UAT |
@@ -265,32 +265,32 @@ Exit criteria:
 ---
 ## Phase 2: CRM/Sales + Sales Dashboard
 
-- [ ] Migration/model/policy: customers
-- [ ] Migration/model/policy: contacts
-- [ ] Migration/model/policy: deals
-- [ ] Migration/model/policy: activities
-- [ ] Customer CRUD
-- [ ] Generate `customer_code` จาก `number_sequences`
-- [ ] Contact CRUD under customer
-- [ ] Primary contact มีได้หนึ่งคนต่อ customer
-- [ ] Deal pipeline CRUD/stage transition
-- [ ] Deal won/lost rules
-- [ ] Activity/follow-up create/update
-- [ ] Follow-up `completed_at`
-- [ ] Sales owner-only visibility
-- [ ] Sales Dashboard: Customers
-- [ ] Sales Dashboard: Deals Pipeline
-- [ ] Sales Dashboard: Won/Lost Deals
-- [ ] Sales Dashboard: Follow-ups Today
-- [ ] Sales Dashboard: Stale Deals
-- [ ] Sales Dashboard: Top Sales Owners
-- [ ] Sales Dashboard ห้ามแสดง Cash In
-- [ ] Stale deal definition: ไม่มี activity 7 วัน
-- [ ] Activity polymorphic allowlist validation
-- [ ] Tests for owner visibility
-- [ ] Tests for deal stage rules
-- [ ] Tests for primary contact rule
-- [ ] Update `README.md` with Phase 2 features
+- [x] Migration/model/policy: customers
+- [x] Migration/model/policy: contacts
+- [x] Migration/model/policy: deals
+- [x] Migration/model/policy: activities
+- [x] Customer CRUD
+- [x] Generate `customer_code` จาก `number_sequences`
+- [x] Contact CRUD under customer
+- [x] Primary contact มีได้หนึ่งคนต่อ customer
+- [x] Deal pipeline CRUD/stage transition
+- [x] Deal won/lost rules
+- [x] Activity/follow-up create/update
+- [x] Follow-up `completed_at`
+- [x] Sales owner-only visibility
+- [x] Sales Dashboard: Customers
+- [x] Sales Dashboard: Deals Pipeline
+- [x] Sales Dashboard: Won/Lost Deals
+- [x] Sales Dashboard: Follow-ups Today
+- [x] Sales Dashboard: Stale Deals
+- [x] Sales Dashboard: Top Sales Owners
+- [x] Sales Dashboard ห้ามแสดง Cash In
+- [x] Stale deal definition: ไม่มี activity 7 วัน
+- [x] Activity polymorphic allowlist validation
+- [x] Tests for owner visibility
+- [x] Tests for deal stage rules
+- [x] Tests for primary contact rule
+- [x] Update `README.md` with Phase 2 features
 
 ---
 

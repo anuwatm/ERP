@@ -1,10 +1,11 @@
 # Gemini Review & Audit Notes: Phase 1 & Phase 1.1 Scope Review
 
-เอกสารนี้สรุปผลการตรวจสอบซอร์สโค้ด Phase 1, Phase 1.1 และข้อเสนอแนะสำหรับขั้นตอนถัดไป
+เอกสารนี้สรุปผลการตรวจสอบซอร์สโค้ด Phase 1, Phase 1.1 และ Phase 2
 
 วันที่ตรวจสอบล่าสุด: 2026-07-26  
 สถานะภาพรวม Phase 1: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**  
-สถานะภาพรวม Phase 1.1: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**
+สถานะภาพรวม Phase 1.1: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**  
+สถานะภาพรวม Phase 2: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**
 
 ---
 
@@ -28,19 +29,6 @@
 ## 2. ผลการทบทวนข้อกำหนด Phase 1.1 (Phase 1.1 Scope Review & Consensus)
 
 เห็นด้วยอย่างยิ่งกับการเพิ่ม **Phase 1.1: Admin Master Data & Access Management** คั่นระหว่าง Phase 1 และ Phase 2 เพื่อสร้างรากฐาน Master Data (Branch / Division / Department / User Edit / Role-Permission Matrix) ให้พร้อมใช้งานจริง ก่อนเริ่มโมดูล CRM/Sales
-
-### ข้อเสนอแนะและจุดเน้นสำคัญสำหรับ Phase 1.1 (Key Technical Recommendations)
-
-1. 🏷️ **Auto-generate 6-digit Code จาก `number_sequences`:**
-   * เมื่อสร้าง Branch, Division, หรือ Department ใหม่จาก UI ต้องเรียกใช้ `NumberSequence` service เพื่อสร้าง `code` ความยาว 6 หลักอัตโนมัติ (เช่น `000002`, `000003`) ไม่เปิดให้ผู้ใช้พิมพ์โค้ดเอง เพื่อป้องกันรหัสซ้ำ
-2. 🏢 **Head Office Switch Transaction & Audit:**
-   * การย้าย Head Office flag ไปยัง Branch ใหม่ ต้องดำเนินการใน Transaction เดียวกัน (Unset เก่า + Set ใหม่) พร้อมบันทึก Audit Log action `branch.set_head_office`
-3. 🔒 **Strict Hierarchy Guard & Delete Safety:**
-   * การ Disable/Delete Branch, Division หรือ Department ต้องตรวจสอบ Reference Lock: หากยังมี User หรือ Sub-structure ที่ Active ผูกอยู่ ต้องบล็อกการ Delete/Disable พร้อมแสดง Error Message ที่ชัดเจน
-4. 🛡️ **Role-Permission Matrix & Permission Code Immutability:**
-   * เห็นด้วย 100% กับการล็อกห้ามทำ CRUD บน Permission Code จาก UI (ต้องเพิ่ม/แก้โค้ดสิทธิ์ผ่าน Migration/Seeder เท่านั้น) เพื่อป้องกัน Middleware/Policy พัง
-5. 🎨 **UI Standard Enforcement:**
-   * หน้า `/settings/organization-structure` ต้องใช้ Tab Navigation (Branches | Divisions | Departments) โดยยึดมาตรฐาน Design System จาก `docs/DESIGN_SYSTEM.md` (`PageHeader`, `Card`, `DataTable`, `Badge`)
 
 ---
 
@@ -84,6 +72,43 @@
 9. ✅ **Login Screen Company Logo Branding (`GuestLayout.tsx` & `Login.tsx`):**
    * แสดงโลโก้องค์กร (`org.logo_url`) บนหน้า Login ทั้งใน Desktop Hero Showcase, Mobile Header Branding และ Login Card Header
    * ปรับแต่ง Styling ด้วย `object-contain bg-white/10` รองรับโลโก้ทุกสัดส่วนและมี Fallback ERP Icon สวยงามกรณีผู้ใช้ยังไม่ได้อัปโหลดโลโก้
+10. ✅ **Refactored Organization Structure Edit Modals (`OrganizationStructure.tsx`):**
+    * เปลี่ยนจากการแก้ไขแบบ Inline ในตารางเป็น Clean Edit Modals (`editingBranch`, `editingDivision`, `editingDepartment`)
+    * เพิ่มการจัดการ Cascading State ระหว่าง Branch และ Division ทั้งการสร้างและการแก้ไข ป้องกันข้อมูล mismatch ข้ามสาขา 100%
+
+---
+
+## 4. ผลการตรวจสอบการพัฒนา Phase 2: CRM/Sales + Sales Dashboard (Phase 2 Code Audit & Verification)
+
+วันที่ตรวจสอบ: 2026-07-26  
+สถานะภาพรวม Phase 2: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**
+
+### รายการที่ได้รับการตรวจสอบแล้ว (Verified Completed Items)
+
+1. ✅ **Customer Master Data (`CustomerController.php` & `Customers.tsx`):**
+   * สร้าง `customer_code` อัตโนมัติความยาว 6 หลักจาก `NumberSequenceService` (เช่น `000001`, `000002`)
+   * รองรับประเภทลูกค้า (`customer_type`: `lead`, `prospect`, `customer`, `inactive`)
+   * จำกัดการเข้าถึงตาม Sales Owner Visibility (พนักงานขายเห็นเฉพาะลูกค้าที่ตนเป็นเจ้าของ ส่วน Owner/Admin เห็นทั้งหมด) ผ่าน `SalesAccess` helper
+2. ✅ **Contact Management (`ContactController.php`):**
+   * จัดการผู้ติดต่อใต้ลูกค้า (`customer_id`)
+   * บังคับกฎ **Primary Contact มีได้เพียง 1 คนต่อลูกค้า 1 ราย** (การตั้ง Primary Contact ใหม่จะ unset คนเดิมอัตโนมัติใน Transaction เดียวกัน)
+3. ✅ **Deal Pipeline & Stage Transition (`DealController.php` & `Deals.tsx`):**
+   * รองรับ Stage Pipeline (`lead`, `qualified`, `proposal`, `negotiation`, `won`, `lost`)
+   * **Stage Rules:** บังคับกรอก `lost_reason` เมื่อปิดการขายไม่สำเร็จ (`lost`) พร้อมบันทึก `lost_at` อัตโนมัติ; เมื่อชนะการขาย (`won`) บันทึก `won_at` อัตโนมัติ
+   * บังคับความถูกต้องของ `contact_id` ต้องสังกัด `customer_id` ที่เลือกไว้เท่านั้น (หากเลือกผิดส่ง HTTP 422)
+4. ✅ **Activity & Follow-ups (`ActivityController.php`):**
+   * รองรับการบันทึกกิจกรรมย่อย (Call, Meeting, Email, Note, Task)
+   * **Polymorphic Allowlist Validation:** จำกัด `entity_type` เฉพาะ `customer` และ `deal` เท่านั้น ป้องกันการอ้างอิงข้ามโมดูลที่ไม่ได้รับอนุญาต
+   * บันทึกวันติดตาม (`follow_up_at`) และทำเครื่องหมายเสร็จสิ้น (`completed_at`) ผ่าน action `activities.complete`
+5. ✅ **Sales Dashboard (`SalesDashboardController.php` & `Dashboard.tsx`):**
+   * แสดงสรุปตัวเลขสถิติ: Total Customers, Active Customers, Open Deals, Pipeline Value, Won Deals, Lost Deals, Follow-ups Today, Stale Deals (ไม่มี Activity ภายใน 7 วัน)
+   * แสดงอันดับ Top Sales Owners ตามมูลค่า Pipeline
+   * **Strict Compliance:** ไม่แสดงตัวเลข Cash In หรือยอดเงินสดเข้า (ยกยอดไป Finance Dashboard ใน Phase 3 ตามข้อกำหนด)
+6. ✅ **Quality Assurance & Test Suite (`Phase2SalesTest.php`):**
+   * `php -c .php\php.ini vendor\phpunit\phpunit\phpunit`: ผ่าน **68/68 tests 100%**
+   * `pnpm run check-format` (Prettier): ผ่าน 100%
+   * `pnpm run lint` (ESLint): ผ่าน 100% (0 errors / 0 warnings)
+   * `pnpm run build` (Vite + TypeScript compiler): Build ผ่านสะอาด
 
 ---
 
@@ -99,17 +124,17 @@
 
 ---
 
-## 4. ผลการ Reconcile ร่วมกับ `gpt.md` (Cross-check Consensus)
+## 5. ผลการ Reconcile ร่วมกับ `gpt.md` (Cross-check Consensus)
 
-1. ✅ **Alignment 100%**: การตรวจสอบเปรียบเทียบกับ `gpt.md` (หมวด 12: รับข้อเสนอ Gemini รอบ Phase 1.1 Minor Recommendations) พบว่าตรงกันทั้งหมด และทุกรายการถูกปรับปรุงลงใน codebase จริงและทดสอบผ่านแล้ว
-2. ✅ **Phase 1.1 Lock**: Phase 1.1 ถูกล็อกสถานะเป็น **Done / Completed 100%** ทั้งใน `checklist.md`, `README.md`, `gpt.md` และ `gemini.md`
+1. ✅ **Alignment 100%**: การตรวจสอบเปรียบเทียบกับ `gpt.md` และ `checklist.md` พบว่า Phase 2 ปฏิบัติตาม Architecture, Security, Validation Rules และ Scope ทั้งหมด 100%
+2. ✅ **Phase 2 Lock**: Phase 2 ถูกล็อกสถานะเป็น **Done / Completed 100%** ทั้งใน `checklist.md`, `README.md`, `gpt.md` และ `gemini.md`
 
 ---
 
-## 5. สรุปขั้นตอนต่อไป (Next Actions)
+## 6. สรุปขั้นตอนต่อไป (Next Actions)
 
-1. สถานะ Phase 1.1 ล็อกเรียบร้อยและพร้อมเข้าสู่ **Phase 2: CRM/Sales + Sales Dashboard**
-2. เริ่มเตรียม Schema และ Specification สำหรับ Customer, Contact, Deal, Activity ตามแผนใน `checklist.md`
+1. สถานะ Phase 2 ล็อกเรียบร้อยและพร้อมเข้าสู่ **Phase 3: Finance + Finance Dashboard**
+2. เริ่มเตรียม Schema และ Specification สำหรับ Products, Invoices, Payments, Expenses, และ Payment Reversal ตามแผนใน `checklist.md`
 
 
 

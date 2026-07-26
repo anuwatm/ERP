@@ -1,21 +1,27 @@
-import { ButtonHTMLAttributes } from 'react';
+import { ButtonHTMLAttributes, ReactNode } from 'react';
+
+interface PrimaryButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+    icon?: ReactNode;
+}
 
 export default function PrimaryButton({
     className = '',
     disabled,
     children,
+    icon,
     ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
+}: PrimaryButtonProps) {
     return (
         <button
             {...props}
             className={
-                `inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900 ${
-                    disabled && 'opacity-25'
+                `inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-indigo-600/25 border border-indigo-400/30 transition-all duration-150 hover:from-indigo-500 hover:to-violet-500 hover:shadow-lg hover:shadow-indigo-600/35 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
+                    disabled && 'opacity-50'
                 } ` + className
             }
             disabled={disabled}
         >
+            {icon && <span className="h-4 w-4 shrink-0">{icon}</span>}
             {children}
         </button>
     );

@@ -1,4 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
+import ThemeToggle from '@/Components/UI/ThemeToggle';
 import { PageProps } from '@/Types/auth';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
@@ -37,6 +38,71 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                            />
+                        </svg>
+                    ),
+                },
+            ],
+        },
+        {
+            group: 'Sales',
+            items: [
+                {
+                    name: 'Sales Dashboard',
+                    href: route('sales.dashboard'),
+                    active: route().current('sales.dashboard'),
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M11 3v18m4-14H9.5a3.5 3.5 0 000 7H14a3.5 3.5 0 010 7H8"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Customers',
+                    href: route('customers.index'),
+                    active: route().current('customers.*'),
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m8-4a4 4 0 10-8 0 4 4 0 008 0z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Deals',
+                    href: route('deals.index'),
+                    active: route().current('deals.*'),
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12h6m-6 4h6M4 6h16M6 6v14h12V6"
                             />
                         </svg>
                     ),
@@ -156,29 +222,49 @@ export default function AuthenticatedLayout({
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200">
             {/* Desktop Sidebar */}
-            <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-slate-900 text-slate-300 z-30">
+            <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-slate-900 dark:bg-slate-950/90 backdrop-blur-xl border-r border-slate-800/70 text-slate-300 z-30 shadow-2xl">
                 {/* Brand Logo */}
-                <div className="flex h-16 items-center gap-3 px-6 bg-slate-950 border-b border-slate-800/80">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-600/30">
-                        ERP
-                    </div>
-                    <div>
-                        <div className="font-bold tracking-wider text-white text-sm">
-                            LOCAL DEVINE
+                <div className="flex h-16 items-center gap-3 px-5 bg-slate-950 border-b border-slate-800/80">
+                    {org?.logo_url ? (
+                        <img
+                            src={org.logo_url}
+                            alt={org.name}
+                            className="h-9 w-9 object-contain rounded-lg bg-white/10 p-1 border border-white/10 shadow-sm"
+                        />
+                    ) : (
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 font-bold text-white shadow-lg shadow-indigo-500/30 ring-1 ring-white/20">
+                            <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2.5"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                            </svg>
                         </div>
-                        <div className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase">
+                    )}
+                    <div>
+                        <div className="font-bold tracking-wider text-white text-sm font-sans flex items-center gap-1.5 truncate max-w-[140px]">
+                            {org?.name || 'ERP System'}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium tracking-widest uppercase">
                             Enterprise Suite
                         </div>
                     </div>
                 </div>
 
                 {/* Sidebar Nav */}
-                <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+                <div className="flex-1 overflow-y-auto px-3.5 py-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
                     {navItems.map((section, idx) => (
                         <div key={idx}>
-                            <div className="px-3 mb-2 text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                            <div className="px-3 mb-2.5 text-[10px] font-bold tracking-widest text-slate-300 uppercase">
                                 {section.group}
                             </div>
                             <div className="space-y-1">
@@ -186,22 +272,28 @@ export default function AuthenticatedLayout({
                                     <Link
                                         key={item.name}
                                         href={item.href}
-                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                                        className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
                                             item.active
-                                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                                                ? 'bg-gradient-to-r from-indigo-600/90 to-indigo-700/90 text-white shadow-lg shadow-indigo-600/25 ring-1 ring-indigo-400/30'
+                                                : 'text-slate-300 hover:bg-slate-900/90 hover:text-white hover:translate-x-0.5'
                                         }`}
                                     >
+                                        {/* Active Left Pill */}
+                                        {item.active && (
+                                            <span className="absolute left-0 top-2 bottom-2 w-1 bg-white rounded-r-full shadow-sm" />
+                                        )}
                                         <span
-                                            className={
+                                            className={`transition-colors duration-200 ${
                                                 item.active
                                                     ? 'text-white'
-                                                    : 'text-slate-400'
-                                            }
+                                                    : 'text-slate-300 group-hover:text-indigo-400'
+                                            }`}
                                         >
                                             {item.icon}
                                         </span>
-                                        {item.name}
+                                        <span className="truncate">
+                                            {item.name}
+                                        </span>
                                     </Link>
                                 ))}
                             </div>
@@ -210,11 +302,14 @@ export default function AuthenticatedLayout({
                 </div>
 
                 {/* Org Footer Info */}
-                <div className="p-4 bg-slate-950/60 border-t border-slate-800/60">
-                    <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="p-4 bg-slate-950 border-t border-slate-800/80">
+                    <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800/60">
+                        <div className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                        </div>
                         <div className="truncate text-xs text-slate-300 font-medium">
-                            {org?.name || 'Local Devine ERP'}
+                            {org?.name || 'ERP System'}
                         </div>
                     </div>
                 </div>
@@ -223,27 +318,30 @@ export default function AuthenticatedLayout({
             {/* Mobile Nav Backdrop */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm md:hidden"
+                    className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md md:hidden transition-opacity"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Mobile Drawer */}
             <div
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transition-transform duration-300 ease-in-out md:hidden ${
+                className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-950/95 backdrop-blur-2xl text-slate-300 border-r border-slate-800/80 transition-transform duration-300 ease-in-out md:hidden ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
-                <div className="flex h-16 items-center justify-between px-6 bg-slate-950 border-b border-slate-800">
-                    <div className="font-bold text-white text-sm">
-                        LOCAL DEVINE ERP
+                <div className="flex h-16 items-center justify-between px-6 bg-slate-950 border-b border-slate-800/80">
+                    <div className="font-bold text-white text-sm flex items-center gap-2 truncate">
+                        <span className="h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />
+                        <span className="truncate">
+                            {org?.name || 'ERP System'}
+                        </span>
                     </div>
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="text-slate-400 hover:text-white"
+                        className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900"
                     >
                         <svg
-                            className="h-6 w-6"
+                            className="h-5 w-5"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -260,7 +358,7 @@ export default function AuthenticatedLayout({
                 <div className="px-4 py-6 space-y-6 overflow-y-auto">
                     {navItems.map((section, idx) => (
                         <div key={idx}>
-                            <div className="px-3 mb-2 text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                            <div className="px-3 mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                 {section.group}
                             </div>
                             <div className="space-y-1">
@@ -269,10 +367,10 @@ export default function AuthenticatedLayout({
                                         key={item.name}
                                         href={item.href}
                                         onClick={() => setSidebarOpen(false)}
-                                        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${
+                                        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                                             item.active
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'text-slate-400 hover:bg-slate-800'
+                                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                                                : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
                                         }`}
                                     >
                                         {item.icon}
@@ -286,13 +384,13 @@ export default function AuthenticatedLayout({
             </div>
 
             {/* Main Layout Area */}
-            <div className="flex-1 md:ms-64 flex flex-col min-h-screen">
+            <div className="flex-1 md:ms-64 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
                 {/* Top Header */}
-                <header className="sticky top-0 z-20 h-16 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 md:px-8 flex items-center justify-between shadow-subtle">
+                <header className="sticky top-0 z-20 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 md:px-8 flex items-center justify-between shadow-sm transition-colors duration-200">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="md:hidden text-slate-600 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200"
+                            className="md:hidden text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60"
                         >
                             <svg
                                 className="h-5 w-5"
@@ -309,29 +407,32 @@ export default function AuthenticatedLayout({
                             </svg>
                         </button>
                         {org && (
-                            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200">
-                                <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                            <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900/80 text-xs font-bold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-800 shadow-inner">
+                                <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400 shadow-sm shadow-indigo-400/50" />
                                 {org.name}
                             </span>
                         )}
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        {/* Theme Switcher Toggle */}
+                        <ThemeToggle />
+
                         {/* User Dropdown */}
                         <Dropdown>
                             <Dropdown.Trigger>
                                 <button
                                     type="button"
-                                    className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all focus:outline-none"
+                                    className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 px-3.5 py-1.5 text-sm font-bold text-slate-800 dark:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/40 shadow-sm"
                                 >
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 font-bold text-xs text-indigo-700">
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 font-bold text-xs text-white shadow-sm shadow-indigo-500/30">
                                         {user.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <span className="max-w-[120px] truncate">
+                                    <span className="max-w-[120px] truncate text-xs font-bold">
                                         {user.name}
                                     </span>
                                     <svg
-                                        className="h-4 w-4 text-slate-400"
+                                        className="h-4 w-4 text-slate-400 dark:text-slate-200"
                                         fill="currentColor"
                                         viewBox="0 0 20 20"
                                     >
@@ -345,31 +446,61 @@ export default function AuthenticatedLayout({
                             </Dropdown.Trigger>
 
                             <Dropdown.Content align="right" width="48">
-                                <div className="px-4 py-2 border-b border-slate-100 text-xs">
-                                    <div className="font-semibold text-slate-800">
+                                <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950/60 text-xs">
+                                    <div className="font-bold text-slate-900 dark:text-white">
                                         {user.name}
                                     </div>
-                                    <div className="text-slate-500 truncate">
+                                    <div className="text-slate-600 dark:text-slate-200 truncate mt-0.5 font-medium">
                                         {user.email}
                                     </div>
                                 </div>
-                                <Dropdown.Link href={route('profile.edit')}>
-                                    Profile Settings
-                                </Dropdown.Link>
-                                <Dropdown.Link
-                                    href={route('logout')}
-                                    method="post"
-                                    as="button"
-                                >
-                                    Log Out
-                                </Dropdown.Link>
+                                <div className="py-1">
+                                    <Dropdown.Link href={route('profile.edit')}>
+                                        <svg
+                                            className="h-4 w-4 text-slate-400 group-hover:text-indigo-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                            />
+                                        </svg>
+                                        <span>Profile Settings</span>
+                                    </Dropdown.Link>
+                                    <Dropdown.Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                    >
+                                        <svg
+                                            className="h-4 w-4 text-rose-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                            />
+                                        </svg>
+                                        <span className="text-rose-600 dark:text-rose-400">
+                                            Log Out
+                                        </span>
+                                    </Dropdown.Link>
+                                </div>
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 p-4 sm:p-6 md:p-8">
+                <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6">
                     {header && <div className="mb-6">{header}</div>}
                     {children}
                 </main>
