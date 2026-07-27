@@ -210,7 +210,7 @@ export default function Customers({
                                     header: 'Customer',
                                     accessor: (row) => (
                                         <div>
-                                            <div className="font-semibold text-slate-900">
+                                            <div className="font-semibold text-slate-900 dark:text-white">
                                                 {row.company_name}
                                             </div>
                                             <div className="font-mono text-xs text-slate-500">

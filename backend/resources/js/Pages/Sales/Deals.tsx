@@ -201,7 +201,7 @@ export default function Deals({
                                     header: 'Deal',
                                     accessor: (row) => (
                                         <div>
-                                            <div className="font-semibold text-slate-900">
+                                            <div className="font-semibold text-slate-900 dark:text-white">
                                                 {row.title}
                                             </div>
                                             <div className="text-xs text-slate-500">

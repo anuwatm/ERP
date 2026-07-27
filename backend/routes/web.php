@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Finance\ProductController;
+use App\Http\Controllers\Finance\InvoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
 use App\Http\Controllers\Sales\ContactController;
@@ -76,6 +78,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/activities/{activity}/complete', [ActivityController::class, 'complete'])
         ->middleware(['permission:activities.update', 'password.confirm', 'throttle:10,1'])
         ->name('activities.complete');
+    Route::get('/products', [ProductController::class, 'index'])
+        ->middleware('permission:products.manage')
+        ->name('products.index');
+    Route::post('/products', [ProductController::class, 'store'])
+        ->middleware(['permission:products.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('products.store');
+    Route::patch('/products/{product}', [ProductController::class, 'update'])
+        ->middleware(['permission:products.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])
+        ->middleware(['permission:products.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('products.destroy');
+    Route::get('/invoices', [InvoiceController::class, 'index'])
+        ->middleware('permission:invoices.view')
+        ->name('invoices.index');
+    Route::post('/invoices', [InvoiceController::class, 'store'])
+        ->middleware(['permission:invoices.create', 'password.confirm', 'throttle:10,1'])
+        ->name('invoices.store');
+    Route::patch('/invoices/{invoice}', [InvoiceController::class, 'update'])
+        ->middleware(['permission:invoices.update', 'password.confirm', 'throttle:10,1'])
+        ->name('invoices.update');
+    Route::patch('/invoices/{invoice}/void', [InvoiceController::class, 'void'])
+        ->middleware(['permission:invoices.void', 'password.confirm', 'throttle:10,1'])
+        ->name('invoices.void');
     Route::get('/settings/organization', [OrganizationSettingsController::class, 'edit'])
         ->middleware('permission:settings.organization.view')
         ->name('settings.organization.edit');
@@ -163,8 +189,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::get('/storage/{path}', function (string $path) {
-    $fullPath = storage_path('app/public/'.$path);
-    abort_unless(file_exists($fullPath), 404);
+    $basePath = realpath(storage_path('app/public'));
+    $fullPath = realpath(storage_path('app/public/'.$path));
+
+    abort_unless($basePath && $fullPath && str_starts_with($fullPath, $basePath) && file_exists($fullPath), 404);
 
     return response()->file($fullPath);
 })->where('path', '.*')->name('storage.local');

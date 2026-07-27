@@ -874,7 +874,7 @@ export default function OrganizationStructure({
                 onClose={() => setEditingBranch(null)}
             >
                 <form onSubmit={updateBranchSubmit} className="p-6 space-y-4">
-                    <h3 className="text-lg font-bold text-slate-900 border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b pb-2">
                         Edit Branch - #{editingBranch?.code}
                     </h3>
 
@@ -962,7 +962,7 @@ export default function OrganizationStructure({
                 onClose={() => setEditingDivision(null)}
             >
                 <form onSubmit={updateDivisionSubmit} className="p-6 space-y-4">
-                    <h3 className="text-lg font-bold text-slate-900 border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b pb-2">
                         Edit Division - #{editingDivision?.code}
                     </h3>
 
@@ -1030,7 +1030,7 @@ export default function OrganizationStructure({
                     onSubmit={updateDepartmentSubmit}
                     className="p-6 space-y-4"
                 >
-                    <h3 className="text-lg font-bold text-slate-900 border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b pb-2">
                         Edit Department - #{editingDepartment?.code}
                     </h3>
 

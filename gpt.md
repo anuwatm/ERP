@@ -242,3 +242,81 @@ Decision:
 - ไม่แก้ code จากข้อ wording เหล่านี้
 - ไม่เปิด Phase 3 coding อัตโนมัติจนกว่าผู้ใช้สั่งเริ่ม Phase 3
 - ถือว่า Gemini final audit รอบนี้เป็น consensus ว่า Phase 2 ปิดงานได้
+
+---
+
+## 15. Phase 3 Products/Services Gemini Review
+
+รับข้อเสนอ Gemini บางส่วน และแยกเป็น decision ดังนี้:
+
+### รับและแก้ทันที: Empty String SKU Sanitization
+
+เห็นด้วย เพราะเป็น bug จริงได้ใน MVP:
+
+- UI ส่ง `sku` เป็น empty string ได้เมื่อผู้ใช้ไม่กรอก SKU
+- ถ้าบันทึก `""` ลง database จะชน `UNIQUE(org_id, sku)` เมื่อสร้างสินค้าหลายรายการที่ไม่มี SKU
+- แก้โดย normalize `sku: ""` เป็น `null` ก่อน save
+- เพิ่ม test ยืนยันว่าสร้าง product/service หลายรายการโดยไม่กรอก SKU ได้
+
+Verification:
+
+- `Phase3ProductsTest`: 5 tests / 33 assertions
+- Regression subset: 48 tests / 274 assertions
+
+### ยังไม่รับตอนนี้: `products.view`
+
+ยังไม่แยก `products.view` ออกจาก `products.manage` ในก้อน Products/Services แรก
+
+เหตุผล:
+
+- Scope ปัจจุบันตาม `docs/ROUTES_AND_SCREENS.md` ระบุ `/products` ใช้ `products.manage`
+- ยังไม่มีหน้า Invoice/Invoice Items ที่ต้องใช้ catalog แบบ read-only
+- ถ้าเพิ่มตอนนี้จะต้องแก้ PermissionCatalog, role defaults, UI visibility, tests และ route เพิ่ม โดยยังไม่มี workflow ที่ใช้จริง
+
+Decision gate:
+
+เพิ่ม `products.view` ตอนเริ่ม Invoice ถ้าต้องให้ Finance/Sales เลือกสินค้าใน invoice item โดยไม่มีสิทธิ์แก้ catalog
+
+### ยังไม่รับตอนนี้: SKU Recycling หลัง Soft Delete
+
+ยังไม่อนุญาตนำ SKU ของสินค้าที่ soft delete แล้วกลับมาใช้ใหม่
+
+เหตุผล:
+
+- SKU เป็น business identity; การ reuse อาจทำให้ invoice/history/report อ่านสับสน
+- ยังไม่มี requirement ว่าต้อง recycle SKU
+- Unique constraint ปัจจุบันช่วยกัน human error ได้ดีกว่าใน MVP
+
+Decision gate:
+
+ค่อยพิจารณาเมื่อมี requirement ชัด เช่น import catalog ใหม่, restore item, หรือ policy ว่า SKU ซ้ำกับสินค้าที่ถูกลบได้
+
+### ไม่ทำ refactor Ponytail ตอนนี้
+
+รับทราบข้อเสนอเรื่อง audit helper และ policy ที่ยังไม่ได้ใช้เต็มรูปแบบ แต่ยังไม่ refactor ระหว่าง Phase 3 Products เพราะ:
+
+- ตอนนี้ priority คือเดิน finance flow ทีละก้อนให้ครบ
+- Refactor audit/policy มี blast radius ข้ามหลาย controller
+- ควรทำหลัง Phase 3 core flow เสถียร หรือเมื่อมีเวลาทำ regression เต็มชุด
+
+---
+
+## 16. การอัปเดตระบบหลังทดสอบ / Debugging (2026-07-27)
+
+### รัน Migration สำหรับ Phase 3 (Products/Services Catalog)
+- ดำเนินการรันคำสั่ง `php -c .php\php.ini artisan migrate` เรียบร้อยแล้ว เพื่อสร้างตาราง `products` และ backfill สิทธิ์ `products.manage` ให้กับบทบาท Owner, Admin และ Finance
+- ปัญหา 403 Forbidden เมื่อเปิดหน้ารายการสินค้าได้รับการแก้ไขแล้ว (เกิดจากการที่ยังไม่ได้รัน migration บน local environment)
+
+### แก้ไขปัญหารายชื่อสินค้า/รายการในตารางไม่แสดงชื่อ (Dark Mode Text Color Invisible)
+- **ปัญหา:** รายการสินค้าในหน้า Catalog (รวมถึงรายชื่อลูกค้า ดีล สมาชิก ล็อก และหัวข้อ Modal ต่างๆ) ไม่แสดงชื่อเมื่อเปิดหน้าเว็บ
+- **สาเหตุ:** ตัวแอปเปิดใช้งานระบบ Dark Mode แต่โค้ดฝั่ง Frontend ในคอลัมน์ DataTable และ Modal Headings ใช้คลาส `text-slate-900` แบบ Hardcode โดยไม่มีคลาสครอบคลุม Dark Mode (เช่น `dark:text-white`) ทำให้แสดงผลเป็นตัวหนังสือสีเกือบดำบนพื้นหลังสีดำของเว็บ (กลมกลืนจนมองไม่เห็นด้วยตาเปล่า)
+- **การแก้ไข:** ได้ดำเนินการแก้ไขไฟล์และเพิ่ม `dark:text-white` บนชื่อ/หัวข้อในตารางและ Modal ทั้งหมดของโปรเจกต์ เรียบร้อยแล้ว:
+  1. `resources/js/Pages/Finance/Products.tsx` (รายชื่อสินค้าใน Item)
+  2. `resources/js/Pages/Sales/Customers.tsx` (รายชื่อลูกค้าใน Customer)
+  3. `resources/js/Pages/Sales/Deals.tsx` (ชื่อดีลใน Deal)
+  4. `resources/js/Pages/Admin/Users.tsx` (ชื่อสมาชิกใน Member)
+  5. `resources/js/Pages/Admin/Roles.tsx` (ชื่อบทบาทใน Role)
+  6. `resources/js/Pages/Admin/AuditLogs.tsx` (ชื่อผู้กระทำใน Actor User)
+  7. `resources/js/Pages/Settings/OrganizationStructure.tsx` (หัวข้อ Edit Branch, Division, Department Modals)
+- **คำสั่งสำหรับ GPT เฟสต่อไป:** ในการเขียน Frontend Component ของ Phase 3 และ 4 ในอนาคต ให้คำนึงถึงเรื่อง Dark Mode เสมอ โดยการเพิ่มคลาสคู่กัน เช่น `text-slate-900 dark:text-white` ทุกครั้งที่มีการใช้สีข้อความเข้ม
+

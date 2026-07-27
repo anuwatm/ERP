@@ -87,7 +87,7 @@ export default function Roles({
                                                 {role.code}
                                             </span>
                                         </Badge>
-                                        <span className="ml-3 font-semibold text-slate-900">
+                                        <span className="ml-3 font-semibold text-slate-900 dark:text-white">
                                             {role.name}
                                         </span>
                                     </button>

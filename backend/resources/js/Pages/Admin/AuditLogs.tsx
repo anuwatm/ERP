@@ -87,7 +87,7 @@ export default function AuditLogs({ auditLogs }: { auditLogs: Audit[] }) {
                                                     .toUpperCase()}
                                             </div>
                                             <div>
-                                                <div className="text-xs font-semibold text-slate-900">
+                                                <div className="text-xs font-semibold text-slate-900 dark:text-white">
                                                     {item.actor.name}
                                                 </div>
                                                 <div className="text-[11px] text-slate-500 font-mono">

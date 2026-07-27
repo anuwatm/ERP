@@ -248,7 +248,7 @@ export default function Users({
                                         }
                                         className="text-left"
                                     >
-                                        <span className="block font-semibold text-slate-900">
+                                        <span className="block font-semibold text-slate-900 dark:text-white">
                                             {user.name}
                                         </span>
                                         <span className="text-xs text-slate-500">

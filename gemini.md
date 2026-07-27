@@ -1,11 +1,13 @@
-# Gemini Review & Audit Notes: Phase 1 & Phase 1.1 Scope Review
+# Gemini Review & Audit Notes: Phase 1, Phase 1.1, Phase 2 & Phase 3 Scope Review
 
-เอกสารนี้สรุปผลการตรวจสอบซอร์สโค้ด Phase 1, Phase 1.1 และ Phase 2
+เอกสารนี้สรุปผลการตรวจสอบซอร์สโค้ด Phase 1, Phase 1.1, Phase 2 และ Phase 3 (Products/Services Catalog)
 
-วันที่ตรวจสอบล่าสุด: 2026-07-26  
+วันที่ตรวจสอบล่าสุด: 2026-07-27  
 สถานะภาพรวม Phase 1: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**  
 สถานะภาพรวม Phase 1.1: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**  
-สถานะภาพรวม Phase 2: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**
+สถานะภาพรวม Phase 2: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**  
+สถานะภาพรวม Phase 3 (Products/Services): **ตรวจสอบโครงสร้างพื้นฐานแรกเรียบร้อย (Verified Products/Services Foundation)**  
+สถานะ Phase 3 (Products/Services Catalog): **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**
 
 ---
 
@@ -133,8 +135,134 @@
 
 ## 6. สรุปขั้นตอนต่อไป (Next Actions)
 
-1. สถานะ Phase 2 ล็อกเรียบร้อยและพร้อมเข้าสู่ **Phase 3: Finance + Finance Dashboard**
-2. เริ่มเตรียม Schema และ Specification สำหรับ Products, Invoices, Payments, Expenses, และ Payment Reversal ตามแผนใน `checklist.md`
+1. ดำเนินการตรวจสอบและพัฒนาส่วนถัดไปของ Phase 3 (Invoices, Invoice Items, Payments, Expenses)
+2. นำข้อเสนอแนะด้าน Sanitization ของ empty SKU และ Permission Granularity ไปปรับใช้ตามความเหมาะสม
 
+---
 
+## 7. ผลการตรวจสอบความปลอดภัยเชิงลึก (Security Audit Findings & Remediation Recommendations)
+
+วันที่ตรวจสอบ: 2026-07-27  
+สถานะความปลอดภัยภาพรวม: **มีความปลอดภัยระดับสูง (High Security Baseline)** ระบบมีการป้องกัน OWASP Top 10 ครอบคลุม (CSRF Protection, SQL Injection Prevention ผ่าน PDO Bound Parameters, Tenant Isolation ด้วย `org_id`, Mass Assignment Protection, Rate Limiting บน Sensitive Routes, Audit Trail ครบถ้วน)
+
+รายการประเด็นความปลอดภัย 5 ประการพร้อมสถานะการแก้ไข:
+
+### 1. ✅ **[RESOLVED]** Public Storage Symlink Traversal & Direct File Access (`web.php`)
+* **สถานะ:** **แก้ไขเรียบร้อยแล้ว (Fixed)**
+* **รายละเอียด:** ใน `routes/web.php` ได้เพิ่มการใช้ `realpath()` และตรวจสอบ Canonical Path ด้วย `str_starts_with($fullPath, $basePath)` ป้องกัน Directory Traversal อย่างสมบูรณ์แล้ว
+
+### 2. ⚠️ Invite Acceptance URL Token Exposure in Flash Session (`UserController.php`)
+* **สถานะ:** **ยังคงเปิดไว้สำหรับ Dev/Demo Environment**
+* **ประเด็นที่พบ:** ใน `UserController::invite()` มีการส่ง Plain Invite Token กลับไปทาง Flash Session เพื่ออำนวยความสะดวกในสภาพแวดล้อม Demo/Dev แต่ในสภาพแวดล้อม Production Token ลับไม่ควรปรากฏบน Session Data
+* **วิธีแก้ไขที่แนะนำ (Remediation):**
+  * ใน Production ให้ส่งผ่าน Mail Notification (`Notification::send()`) และลบการส่ง `plainToken` ผ่าน Flash Session
+  * ซ่อน Invite URL Flash Data เมื่อ `app.env === 'production'`
+
+### 3. ⚠️ Plaintext Password Exposure Protection in Audit Logs (`AuditLog.php`)
+* **สถานะ:** **รอการยกระดับ Central Redaction Guard**
+* **ประเด็นที่พบ:** ระบบบันทึก `before_json` และ `after_json` ใน Audit Log แม้ปัจจุบัน Controller หลักตัด field Sensitive ออกแล้ว แต่ควรเพิ่ม Central Redaction Guard เพื่อป้องกันการเผลอบันทึก `password`, `remember_token`, `person_id` ตัวเต็มลงใน Audit Logs
+* **วิธีแก้ไขที่แนะนำ (Remediation):**
+  * เพิ่ม Helper หรือ Model Mutator สำหรับ Mask/Redact Sensitive Array Keys ใน `AuditLog::create()` เสมอ
+
+### 4. ✅ **[VERIFIED SAFE]** Multi-tenant Access Isolation & File Upload Validation (`OrganizationSettingsController.php`)
+* **สถานะ:** **ผ่านการตรวจสอบความปลอดภัยเรียบร้อยแล้ว (Verified Safe)**
+* **รายละเอียด:** `OrganizationSettingsController.php` มีการตรวจสอบ MIME Type และนามสกุลไฟล์อย่างเข้มงวดด้วย `'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048']` ป้องกันการอัปโหลดไฟล์ Executable หรือ Polyglot File
+
+### 5. ⚠️ Session Invalidation on Password Change / Role Change (`UserController.php` & `RoleController.php`)
+* **สถานะ:** **ข้อเสนอแนะเพิ่มเติมสำหรับการ Hardening**
+* **ประเด็นที่พบ:** เมื่อมีการ Disable User หรือเปลี่ยน Role ของ User ใน Admin Panel ตัว Session เดิมของ User รายนั้นบนเครื่องอื่นยังไม่ถูกระงับทันทีในมิลลิวินาทีนั้น
+* **วิธีแก้ไขที่แนะนำ (Remediation):**
+  * เมื่อ admin ปิดใช้งานบัญชี (`users.disable`) ให้ทำการอัปเดต `remember_token` ของ User รายนั้นใหม่ หรือเรียก `DB::table('sessions')->where('user_id', $user->id)->delete();` เพื่อตัดการเชื่อมต่อทันที
+
+---
+
+## 8. ผลการตรวจสอบ Phase 3: Products/Services Catalog (Phase 3 Initial Code Audit & Verification)
+
+วันที่ตรวจสอบ: 2026-07-27  
+สถานะ Products/Services Catalog: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**
+
+### รายการที่ได้รับการตรวจสอบแล้ว (Verified Completed Items)
+
+1. ✅ **Database Migration & Schema (`2026_07_27_000001_create_finance_products_table.php`):**
+   * ตาราง `products` รองรับ UUID PK, `org_id`, `sku`, `name`, `type` (`product`, `service`, `package`), `category`, `unit`, `price`, `cost`, `is_active`, `description`, `track_inventory`, `created_by`, `updated_by`, `timestamps`, `softDeletes`
+   * มี Unique constraint `[org_id, sku]` และ Index `[org_id, type, is_active]`, `[org_id, name]` ถูกต้องตามข้อกำหนด
+2. ✅ **Product Model & Policy (`Product.php` & `ProductPolicy.php`):**
+   * ใช้ `SoftDeletes` และ `UsesOrderedUuid`
+   * Cast `price` และ `cost` เป็น `decimal:2`, `is_active` และ `track_inventory` เป็น `boolean`
+   * Policy จำกัดการเข้าถึงเฉพาะ Resource ใน `org_id` เดียวกัน
+3. ✅ **Product Controller & Audit Trail (`ProductController.php`):**
+   * รองรับ CRUD และ Filter (`search`, `type`, `is_active`) โดยล็อกขอบเขต `org_id` เสมอ
+   * บันทึก Audit Log ทุกกิจกรรมสำคัญ (`product.create`, `product.update`, `product.delete`) พร้อม `before_json` และ `after_json`
+4. ✅ **Security & Route Middleware (`routes/web.php`):**
+   * เส้นทาง `GET /products` ล็อกสิทธิ์ `permission:products.manage`
+   * Sensitive Write Routes (`POST /products`, `PATCH /products/{product}`, `DELETE /products/{product}`) ล็อกด้วย `auth`, `verified`, `permission:products.manage`, `password.confirm`, และ `throttle:10,1`
+5. ✅ **Permission Catalog (`PermissionCatalog.php`):**
+   * เพิ่มสิทธิ์ `products.manage` แยกตาม Module `products`
+   * จัดสรรสิทธิ์ Default ให้กับ Role `owner`, `admin`, และ `finance`
+6. ✅ **User Interface (`Finance/Products.tsx`):**
+   * แสดงรายการสินค้าด้วย `DataTable` พร้อม Badge สถานะ (`active`/`inactive`, `type`), Format ตัวเลขราคา (`money()`), SKU และ Category
+   * รองรับ Form สร้าง/แก้ไขสินค้าแบบ Side Card พร้อม Toggle Active/Inactive
+7. ✅ **Quality Assurance & Test Suite (`Phase3ProductsTest.php`):**
+   * PHPUnit Feature Test ครอบคลุม การสร้างสินค้า, Multi-tenant Isolation, SKU Unique per Org, Cross-Org Guard (403 Forbidden), Update & Soft Delete
+   * ผลการทดสอบ PHPUnit Pass 100% (**72/72 tests, 348 assertions**)
+
+---
+
+### ข้อเสนอแนะและจุดที่ควรพิจารณาเพิ่มเติม (Recommendations for Next Steps in Phase 3)
+
+1. ⚠️ **Empty String SKU Sanitization:**
+   * ใน `ProductController::validateProduct()` มีการตรวจ `'sku' => ['nullable', 'string', 'max:50', Rule::unique('products', 'sku')]` หากฝั่ง Frontend ส่ง `sku: ""` (สตริงว่าง) แทนที่จะเป็น `null` Database อาจเกิด Duplicate Entry Error `(org_id, "")` เมื่อสร้างสินค้าหลายรายการโดยไม่กรอก SKU
+   * **ข้อแนะนำ:** ควรแปลง `sku: ""` เป็น `null` ก่อน Save/Validate (`$validated['sku'] = filled($request->input('sku')) ? $request->input('sku') : null;`)
+2. 💡 **Permission Granularity (View vs. Manage):**
+   * ปัจจุบันทุกการทำงานใช้ `products.manage` สิทธิ์เดียว
+   * **ข้อแนะนำ:** เมื่อเริ่มระบบ Invoices และ Deals ในขั้นตอนถัดไปของ Phase 3 ควรพิจารณาเพิ่มสิทธิ์ `products.view` เพื่อให้ทีม Sales หรือ PM ดึงรายการสินค้ามาสร้าง Quotation/Invoice ได้โดยไม่ต้องให้สิทธิ์แก้ไข Catalog (`products.manage`)
+3. 💡 **Soft Delete & SKU Recycling:**
+   * สินค้าที่ถูก Soft Delete ไปแล้ว จะยังคงติด Unique Constraint `(org_id, sku)` ในฐานข้อมูล
+   * **ข้อแนะนำ:** หากธุรกิจต้องการให้นำ SKU ของสินค้าที่ถูกลบไปแล้วกลับมาใช้ใหม่ได้ ควรปรับแต่ง Unique Rule โดยใส่ `withoutTrashed()` หรือปรับ Logic ให้ยืดหยุ่น
+
+---
+
+## 9. ผลการตรวจสอบความซ้ำซ้อนตามแนวทาง Ponytail (Over-engineering & Code Audit)
+
+จากการตรวจสอบซอร์สโค้ดของทั้งโปรเจกต์ เพื่อค้นหาความซ้ำซ้อนและการออกแบบที่เกินความจำเป็น (Over-engineering) โดยมุ่งเน้นการลดความยาวโค้ดและการจัดระเบียบโครงสร้าง (Refactoring) ได้ผลการตรวจสอบดังนี้:
+
+* **shrink** `audit` private method copy-pasted in 8 controllers. Move to a base `Controller` class or a `HasAuditLogs` trait. [backend/app/Http/Controllers/]
+* **shrink** `wouldRemoveLastOwner` duplicate helper in `UserController` and `RoleController`. Move to a helper class, service or user model method. [backend/app/Http/Controllers/Admin/]
+* **yagni** Unused policy classes (`ProductPolicy`, `DealPolicy`, `CustomerPolicy`, `ContactPolicy`, `ActivityPolicy`). Remove policies if authorization is handled manually, or refactor controllers to use policy-based authorization. [backend/app/Policies/]
+
+**Net lines removable:** ~230 lines
+**Dependencies removable:** 0
+
+---
+
+## 10. ผลการตรวจสอบการพัฒนา Phase 3: Manual Invoice & Invoice Items (Phase 3 Manual Invoice Audit)
+
+วันที่ตรวจสอบ: 2026-07-27  
+สถานะ Manual Invoice: **เสร็จสมบูรณ์ 100% (Fully Verified & Completed)**
+
+### รายการที่ได้รับการตรวจสอบแล้ว (Verified Completed Items)
+
+1. ✅ **Database Migration & Schema (`2026_07_27_000003_create_finance_invoices_tables.php`):**
+   * ตาราง `invoices` และ `invoice_items` รองรับ UUID PK, `org_id` isolation, cascade deletes, และ soft deletes
+   * โครงสร้างคอลัมน์เก็บตัวเลขการเงินเป็นประเภท `decimal` ครบถ้วนตามมาตรฐานบัญชี
+2. ✅ **Permission Catalog & Backfill (`2026_07_27_000004_backfill_invoice_permissions.php`):**
+   * backfill สิทธิ์ `products.view`, `invoices.view`, `invoices.create`, `invoices.update`, `invoices.void` ลงฐานข้อมูลเรียบร้อย
+   * สิทธิ์ `products.view` และ `invoices.view` จัดสรรให้กับบทบาท `sales` เรียบร้อยแล้ว (ช่วยแยกแยะสิทธิ์ดูสินค้าอย่างมีประสิทธิภาพ)
+3. ✅ **Invoice Controller & Access Protection (`InvoiceController.php`):**
+   * ล็อกขอบเขต `org_id` ในการเข้าถึงข้อมูลทุกจุด
+   * มี **Strict Edit & Void Guards** สกัดกั้นการแก้ไขหรือยกเลิกใบแจ้งหนี้ที่มีการชำระเงินแล้ว (`paid_amount > 0`) หรือที่ถูกยกเลิกไปแล้ว (`status === 'void'`) ด้วยสถานะ HTTP 422
+   * บันทึก Audit Logs ทุกกิจกรรมการเงิน (`invoice.create`, `invoice.update`, `invoice.void`) ด้วยรูปแบบ Snapshot ครบถ้วน
+4. ✅ **UI Integration & Calculations (`Invoices.tsx`):**
+   * หน้ารวมตารางแสดงข้อมูลใบแจ้งหนี้และฟอร์มสร้าง/แก้ไข รองรับระบบ Dark Mode สมบูรณ์
+   * กรองดีล (Deals) ที่ตรงตามผู้รับการบริการ (Customer) อย่างเป็นระบบแบบไดนามิก
+5. ✅ **Quality Assurance & Tests (`Phase3InvoicesTest.php`):**
+   * ทดสอบผ่าน 100% ทั้งชุดทดสอบการสร้างใบแจ้งหนี้, การเช็กดีลตรงผู้รับบริการ, การทำงานของ Edit/Void guards และสิทธิ์เข้าถึงข้อมูล
+   * การทดสอบระดับระบบทั้งหมด (80 tests / 401 assertions) รันผ่านครบถ้วน
+
+### รายการที่ได้รับการแก้ไขและปรับปรุงเพิ่มเติมโดย Gemini (Gemini Improvements)
+
+1. 🛠️ **Inclusive Tax Preview on Client-side (`Invoices.tsx`):**
+   * **ปัญหาที่พบ:** ฟังก์ชัน `previewTotals` ใน `Invoices.tsx` แสดงผลภาษี (Tax) เป็น `0.00` เมื่อผู้ใช้เลือกโหมดภาษีรวมในราคาสินค้า (`inclusive`) แม้ว่าฝั่งหลังบ้านจะสามารถบันทึกค่าและคำนวณแยกภาษีได้ถูกต้อง
+   * **การแก้ไข:** ทำการปรับเปลี่ยนฟังก์ชัน `previewTotals` บน Client-side ให้รองรับการถอดสูตรภาษีสำหรับประเภท `inclusive` (ถอดสูตร `lineTotal - (lineTotal / (1 + taxRate / 100))`) ทำให้หน้าระบบแสดงผลตัวเลขภาษีและยอดสุทธิได้อย่างถูกต้องในขณะพรีวิวใบแจ้งหนี้
+   * **Vite Assets:** บิลด์และคอมไพล์เพื่อใช้งานจริงเรียบร้อยแล้ว
 

@@ -15,6 +15,7 @@ export default function AuthenticatedLayout({
     const pageProps = usePage<PageProps>().props;
     const user = pageProps.auth.user;
     const org = pageProps.org;
+    const permissions = pageProps.auth.permissions ?? [];
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -26,6 +27,7 @@ export default function AuthenticatedLayout({
                     name: 'Dashboard',
                     href: route('dashboard'),
                     active: route().current('dashboard'),
+                    permission: 'dashboard.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -51,6 +53,7 @@ export default function AuthenticatedLayout({
                     name: 'Sales Dashboard',
                     href: route('sales.dashboard'),
                     active: route().current('sales.dashboard'),
+                    permission: 'sales.dashboard.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -71,6 +74,7 @@ export default function AuthenticatedLayout({
                     name: 'Customers',
                     href: route('customers.index'),
                     active: route().current('customers.*'),
+                    permission: 'customers.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -91,6 +95,7 @@ export default function AuthenticatedLayout({
                     name: 'Deals',
                     href: route('deals.index'),
                     active: route().current('deals.*'),
+                    permission: 'deals.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -110,12 +115,59 @@ export default function AuthenticatedLayout({
             ],
         },
         {
+            group: 'Finance',
+            items: [
+                {
+                    name: 'Invoices',
+                    href: route('invoices.index'),
+                    active: route().current('invoices.*'),
+                    permission: 'invoices.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 14h6m-6 4h6M7 4h10l2 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6l2-2z"
+                            />
+                        </svg>
+                    ),
+                },                {
+                    name: 'Products/Services',
+                    href: route('products.index'),
+                    active: route().current('products.*'),
+                    permission: 'products.manage',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            />
+                        </svg>
+                    ),
+                },
+            ],
+        },
+        {
             group: 'Administration',
             items: [
                 {
                     name: 'Users',
                     href: route('users.index'),
                     active: route().current('users.*'),
+                    permission: 'users.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -136,6 +188,7 @@ export default function AuthenticatedLayout({
                     name: 'Roles & Permissions',
                     href: route('roles.index'),
                     active: route().current('roles.*'),
+                    permission: 'roles.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -156,6 +209,7 @@ export default function AuthenticatedLayout({
                     name: 'Audit Logs',
                     href: route('audit-logs.index'),
                     active: route().current('audit-logs.*'),
+                    permission: 'audit.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -181,6 +235,7 @@ export default function AuthenticatedLayout({
                     name: 'Organization Profile',
                     href: route('settings.organization.edit'),
                     active: route().current('settings.organization.*'),
+                    permission: 'settings.organization.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -201,6 +256,7 @@ export default function AuthenticatedLayout({
                     name: 'Structure & Chain',
                     href: route('settings.structure.index'),
                     active: route().current('settings.structure.*'),
+                    permission: 'settings.structure.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -221,6 +277,14 @@ export default function AuthenticatedLayout({
         },
     ];
 
+    const visibleNavItems = navItems
+        .map((section) => ({
+            ...section,
+            items: section.items.filter((item) =>
+                permissions.includes(item.permission),
+            ),
+        }))
+        .filter((section) => section.items.length > 0);
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200">
             {/* Desktop Sidebar */}
@@ -262,7 +326,7 @@ export default function AuthenticatedLayout({
 
                 {/* Sidebar Nav */}
                 <div className="flex-1 overflow-y-auto px-3.5 py-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
-                    {navItems.map((section, idx) => (
+                    {visibleNavItems.map((section, idx) => (
                         <div key={idx}>
                             <div className="px-3 mb-2.5 text-[10px] font-bold tracking-widest text-slate-300 uppercase">
                                 {section.group}
@@ -356,7 +420,7 @@ export default function AuthenticatedLayout({
                     </button>
                 </div>
                 <div className="px-4 py-6 space-y-6 overflow-y-auto">
-                    {navItems.map((section, idx) => (
+                    {visibleNavItems.map((section, idx) => (
                         <div key={idx}>
                             <div className="px-3 mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                 {section.group}

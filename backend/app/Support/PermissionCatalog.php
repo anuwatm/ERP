@@ -32,6 +32,12 @@ class PermissionCatalog
             ['code' => 'deals.update', 'module' => 'deals', 'action' => 'update', 'description' => 'Update deals'],
             ['code' => 'activities.create', 'module' => 'activities', 'action' => 'create', 'description' => 'Create CRM activities'],
             ['code' => 'activities.update', 'module' => 'activities', 'action' => 'update', 'description' => 'Update CRM activities'],
+            ['code' => 'products.view', 'module' => 'products', 'action' => 'view', 'description' => 'View products and services'],
+            ['code' => 'products.manage', 'module' => 'products', 'action' => 'manage', 'description' => 'Manage products and services'],
+            ['code' => 'invoices.view', 'module' => 'invoices', 'action' => 'view', 'description' => 'View invoices'],
+            ['code' => 'invoices.create', 'module' => 'invoices', 'action' => 'create', 'description' => 'Create invoices'],
+            ['code' => 'invoices.update', 'module' => 'invoices', 'action' => 'update', 'description' => 'Update invoices'],
+            ['code' => 'invoices.void', 'module' => 'invoices', 'action' => 'void', 'description' => 'Void invoices'],
             ['code' => 'audit.view', 'module' => 'audit', 'action' => 'view', 'description' => 'View audit logs'],
             ['code' => 'person_id.view_full', 'module' => 'users', 'action' => 'view_full', 'description' => 'View full person_id'],
         ];
@@ -54,13 +60,15 @@ class PermissionCatalog
     {
         $all = array_column(self::permissions(), 'code');
         $sales = ['dashboard.view', 'sales.dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'contacts.create', 'contacts.update', 'contacts.delete', 'deals.view', 'deals.create', 'deals.update', 'activities.create', 'activities.update'];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void'];
+        $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [
             'owner' => $all,
             'admin' => array_values(array_diff($all, ['person_id.view_full'])),
             'sales' => $sales,
             'project_manager' => ['dashboard.view'],
-            'finance' => ['dashboard.view'],
+            'finance' => $finance,
             'member' => ['dashboard.view'],
             'viewer' => ['dashboard.view'],
         ];

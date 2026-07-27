@@ -296,17 +296,17 @@ Exit criteria:
 
 ## Phase 3: Finance + Finance Dashboard
 
-- [ ] Migration/model/policy: products
-- [ ] Migration/model/policy: invoices
-- [ ] Migration/model/policy: invoice_items
+- [x] Migration/model/policy: products
+- [x] Migration/model/policy: invoices
+- [x] Migration/model/policy: invoice_items
 - [ ] Migration/model/policy: payments
 - [ ] Migration/model/policy: expenses
 - [ ] Migration/model/policy: files limited subset
-- [ ] Product/service catalog
+- [x] Product/service catalog
 - [ ] Create invoice from deal
-- [ ] Create manual invoice
-- [ ] Server-side invoice calculation
-- [ ] `tax_mode`: exclusive/inclusive/no_tax
+- [x] Create manual invoice
+- [x] Server-side invoice calculation
+- [x] `tax_mode`: exclusive/inclusive/no_tax
 - [ ] Payment receipt
 - [ ] Idempotency-Key บน payment receipt/reversal
 - [ ] Partial payment
@@ -315,7 +315,7 @@ Exit criteria:
 - [ ] Reversal `payment_date = CURRENT_DATE`
 - [ ] One reversal per receipt
 - [ ] Migration/test generated column `reversal_target_id` + `UNIQUE(org_id, reversal_target_id)` บน MariaDB
-- [ ] Invoice void policy
+- [x] Invoice void policy
 - [ ] `needs_sales_review` derived flag
 - [ ] Expense draft/approve/pay/reject
 - [ ] Payment/expense attachment
@@ -331,15 +331,15 @@ Exit criteria:
 - [ ] Finance Dashboard: Payment Reversal
 - [ ] Cash In drilldown separates receipt/reversal
 - [ ] Mark overdue invoice job
-- [ ] Invoice numbering sequence
+- [x] Invoice numbering sequence
 - [ ] Expense `supplier_id` ไม่ FK / ไม่บังคับใน MVP
 - [ ] Re-auth: void invoice / reverse payment / approve-pay expense
-- [ ] Tests for invoice totals
+- [x] Tests for invoice totals
 - [ ] Tests for payment reversal
 - [ ] Tests for generated column/unique constraint กัน duplicate reversal
 - [ ] Tests for no overpay
 - [ ] Tests for concurrent payment no overpay
-- [ ] Tests for invoice edit guard after payment
+- [x] Tests for invoice edit guard after payment
 - [ ] Update `README.md` with Phase 3 features
 
 ---
