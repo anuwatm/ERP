@@ -204,10 +204,10 @@ function PermissionMatrix({
                                         className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                     />
                                     <span>
-                                        <span className="block font-mono text-xs font-semibold text-slate-800">
+                                        <span className="block font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
                                             {permission.code}
                                         </span>
-                                        <span className="text-xs text-slate-500">
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">
                                             {permission.description ??
                                                 permission.action}
                                         </span>

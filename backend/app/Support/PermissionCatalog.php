@@ -38,6 +38,23 @@ class PermissionCatalog
             ['code' => 'invoices.create', 'module' => 'invoices', 'action' => 'create', 'description' => 'Create invoices'],
             ['code' => 'invoices.update', 'module' => 'invoices', 'action' => 'update', 'description' => 'Update invoices'],
             ['code' => 'invoices.void', 'module' => 'invoices', 'action' => 'void', 'description' => 'Void invoices'],
+            ['code' => 'payments.view', 'module' => 'payments', 'action' => 'view', 'description' => 'View invoice payments'],
+            ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
+            ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
+            ['code' => 'expenses.view', 'module' => 'expenses', 'action' => 'view', 'description' => 'View expenses'],
+            ['code' => 'expenses.create', 'module' => 'expenses', 'action' => 'create', 'description' => 'Create expense drafts'],
+            ['code' => 'expenses.update', 'module' => 'expenses', 'action' => 'update', 'description' => 'Update expense drafts'],
+            ['code' => 'expenses.approve', 'module' => 'expenses', 'action' => 'approve', 'description' => 'Approve expenses'],
+            ['code' => 'expenses.pay', 'module' => 'expenses', 'action' => 'pay', 'description' => 'Mark approved expenses paid'],
+            ['code' => 'expenses.reject', 'module' => 'expenses', 'action' => 'reject', 'description' => 'Reject expenses'],
+            ['code' => 'projects.view', 'module' => 'projects', 'action' => 'view', 'description' => 'View delivery projects'],
+            ['code' => 'projects.create', 'module' => 'projects', 'action' => 'create', 'description' => 'Create delivery projects'],
+            ['code' => 'projects.update', 'module' => 'projects', 'action' => 'update', 'description' => 'Update delivery projects'],
+            ['code' => 'projects.reassign', 'module' => 'projects', 'action' => 'reassign', 'description' => 'Reassign project owner'],
+            ['code' => 'tasks.view', 'module' => 'tasks', 'action' => 'view', 'description' => 'View delivery tasks'],
+            ['code' => 'tasks.create', 'module' => 'tasks', 'action' => 'create', 'description' => 'Create delivery tasks'],
+            ['code' => 'tasks.update', 'module' => 'tasks', 'action' => 'update', 'description' => 'Update delivery tasks'],
+            ['code' => 'tasks.comment', 'module' => 'tasks', 'action' => 'comment', 'description' => 'Comment on delivery tasks'],
             ['code' => 'audit.view', 'module' => 'audit', 'action' => 'view', 'description' => 'View audit logs'],
             ['code' => 'person_id.view_full', 'module' => 'users', 'action' => 'view_full', 'description' => 'View full person_id'],
         ];
@@ -60,16 +77,17 @@ class PermissionCatalog
     {
         $all = array_column(self::permissions(), 'code');
         $sales = ['dashboard.view', 'sales.dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'contacts.create', 'contacts.update', 'contacts.delete', 'deals.view', 'deals.create', 'deals.update', 'activities.create', 'activities.update'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void'];
+        $projects = ['dashboard.view', 'projects.view', 'projects.create', 'projects.update', 'tasks.view', 'tasks.create', 'tasks.update', 'tasks.comment'];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'payments.view', 'payments.create', 'payments.reverse', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject'];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [
             'owner' => $all,
             'admin' => array_values(array_diff($all, ['person_id.view_full'])),
             'sales' => $sales,
-            'project_manager' => ['dashboard.view'],
+            'project_manager' => $projects,
             'finance' => $finance,
-            'member' => ['dashboard.view'],
+            'member' => ['dashboard.view', 'tasks.view', 'tasks.update', 'tasks.comment'],
             'viewer' => ['dashboard.view'],
         ];
     }

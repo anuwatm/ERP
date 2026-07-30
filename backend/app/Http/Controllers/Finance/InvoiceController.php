@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Deal;
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Models\Project;
 use App\Services\NumberSequenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,27 +22,48 @@ class InvoiceController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'status', 'customer_id']);
+        $filters = $request->only(['search', 'status', 'customer_id', 'project_id']);
+        $canViewPayments = $user->hasPermissionCode('payments.view');
+        $canRecordPayments = $user->hasPermissionCode('payments.create');
+        $canReversePayments = $user->hasPermissionCode('payments.reverse');
+        $relations = ['customer:id,company_name,customer_code', 'deal:id,title', 'project:id,project_code,name', 'items.product:id,name,sku'];
+
+        if ($canViewPayments) {
+            $relations[] = 'payments:id,invoice_id,entry_type,reversal_of_payment_id,amount,payment_date,payment_method,reference_no,attachment_file_id';
+            $relations[] = 'payments.attachment:id,file_name,mime_type,size_bytes';
+        }
+
         $invoices = Invoice::query()
             ->where('org_id', $user->org_id)
-            ->with(['customer:id,company_name,customer_code', 'deal:id,title', 'items.product:id,name,sku'])
+            ->with($relations)
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($inner) use ($search) {
                 $inner->where('invoice_no', 'like', "%{$search}%")
                     ->orWhereHas('customer', fn ($customer) => $customer->where('company_name', 'like', "%{$search}%"));
             }))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
+            ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
             ->latest()
             ->get();
+
+        $this->attachNeedsSalesReview($invoices, $user->org_id);
+
+        $sourceDeal = filled($request->query('deal_id'))
+            ? Deal::where('org_id', $user->org_id)->whereKey($request->query('deal_id'))->first(['id', 'title', 'customer_id'])
+            : null;
 
         return Inertia::render('Finance/Invoices', [
             'invoices' => $invoices,
             'customers' => Customer::where('org_id', $user->org_id)->orderBy('company_name')->get(['id', 'customer_code', 'company_name']),
             'deals' => Deal::where('org_id', $user->org_id)->whereIn('stage', ['won', 'proposal', 'negotiation'])->orderBy('title')->get(['id', 'title', 'customer_id']),
+            'projects' => Project::where('org_id', $user->org_id)->orderBy('name')->get(['id', 'project_code', 'name', 'customer_id']),
             'products' => Product::where('org_id', $user->org_id)->where('is_active', true)->orderBy('name')->get(['id', 'sku', 'name', 'unit', 'price']),
             'statuses' => Invoice::STATUSES,
             'taxModes' => Invoice::TAX_MODES,
             'filters' => $filters,
+            'canRecordPayments' => $canRecordPayments,
+            'canReversePayments' => $canReversePayments,
+            'sourceDeal' => $sourceDeal,
         ]);
     }
 
@@ -50,6 +72,7 @@ class InvoiceController extends Controller
         $user = $request->user();
         $validated = $this->validateInvoice($request);
         $this->assertDealMatchesCustomer($validated);
+        $this->assertProjectMatchesCustomer($validated);
         $totals = $this->calculateTotals($validated);
 
         $invoice = DB::transaction(function () use ($request, $user, $validated, $totals, $numbers): Invoice {
@@ -78,6 +101,7 @@ class InvoiceController extends Controller
 
         $validated = $this->validateInvoice($request, $invoice);
         $this->assertDealMatchesCustomer($validated);
+        $this->assertProjectMatchesCustomer($validated);
         $totals = $this->calculateTotals($validated);
         $before = $this->snapshot($invoice);
 
@@ -109,6 +133,29 @@ class InvoiceController extends Controller
         return back()->with('success', "Invoice {$invoice->invoice_no} voided.");
     }
 
+    private function attachNeedsSalesReview($invoices, string $orgId): void
+    {
+        $activeStatuses = ['sent', 'partially_paid', 'paid', 'overdue'];
+        $dealIds = $invoices->pluck('deal_id')->filter()->unique()->values();
+
+        if ($dealIds->isEmpty()) {
+            $invoices->each(fn ($invoice) => $invoice->setAttribute('needs_sales_review', false));
+
+            return;
+        }
+
+        $activeDealIds = Invoice::where('org_id', $orgId)
+            ->whereIn('deal_id', $dealIds)
+            ->whereIn('status', $activeStatuses)
+            ->pluck('deal_id')
+            ->unique();
+
+        $invoices->each(fn ($invoice) => $invoice->setAttribute(
+            'needs_sales_review',
+            (bool) $invoice->deal_id && $invoice->status === 'void' && ! $activeDealIds->contains($invoice->deal_id)
+        ));
+    }
+
     private function validateInvoice(Request $request, ?Invoice $invoice = null): array
     {
         $orgId = $request->user()->org_id;
@@ -116,6 +163,7 @@ class InvoiceController extends Controller
         return $request->validate([
             'customer_id' => ['required', 'uuid', Rule::exists('customers', 'id')->where('org_id', $orgId)],
             'deal_id' => ['nullable', 'uuid', Rule::exists('deals', 'id')->where('org_id', $orgId)],
+            'project_id' => ['nullable', 'uuid', Rule::exists('projects', 'id')->where('org_id', $orgId)],
             'status' => ['required', Rule::in(['draft', 'sent'])],
             'tax_mode' => ['required', Rule::in(Invoice::TAX_MODES)],
             'issue_date' => ['required', 'date'],
@@ -146,6 +194,20 @@ class InvoiceController extends Controller
 
         abort_unless($matches, 422, 'Deal must belong to selected customer.');
     }
+
+    private function assertProjectMatchesCustomer(array $validated): void
+    {
+        if (! filled($validated['project_id'] ?? null)) {
+            return;
+        }
+
+        $matches = Project::where('id', $validated['project_id'])
+            ->where('customer_id', $validated['customer_id'])
+            ->exists();
+
+        abort_unless($matches, 422, 'Project must belong to selected customer.');
+    }
+
     private function invoicePayload(array $validated, array $totals): array
     {
         $status = $validated['status'];
@@ -153,6 +215,7 @@ class InvoiceController extends Controller
         return [
             'customer_id' => $validated['customer_id'],
             'deal_id' => $validated['deal_id'] ?? null,
+            'project_id' => $validated['project_id'] ?? null,
             'status' => $status,
             'tax_mode' => $validated['tax_mode'],
             'issue_date' => $validated['issue_date'],
@@ -222,7 +285,7 @@ class InvoiceController extends Controller
 
     private function snapshot(Invoice $invoice): array
     {
-        return $invoice->fresh(['items'])->only(['invoice_no', 'customer_id', 'deal_id', 'status', 'tax_mode', 'issue_date', 'due_date', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'paid_amount', 'balance_due', 'currency', 'notes']);
+        return $invoice->fresh(['items'])->only(['invoice_no', 'customer_id', 'deal_id', 'project_id', 'status', 'tax_mode', 'issue_date', 'due_date', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'paid_amount', 'balance_due', 'currency', 'notes']);
     }
 
     private function audit(Request $request, string $action, Invoice $invoice, ?array $before, ?array $after): void

@@ -137,7 +137,29 @@ export default function AuthenticatedLayout({
                             />
                         </svg>
                     ),
-                },                {
+                },
+                {
+                    name: 'Expenses',
+                    href: route('expenses.index'),
+                    active: route().current('expenses.*'),
+                    permission: 'expenses.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m-6-6a6 6 0 1112 0 6 6 0 01-12 0z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Products/Services',
                     href: route('products.index'),
                     active: route().current('products.*'),
@@ -154,6 +176,53 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            />
+                        </svg>
+                    ),
+                },
+            ],
+        },
+        {
+            group: 'Delivery',
+            items: [
+                {
+                    name: 'Tasks',
+                    href: route('tasks.index'),
+                    active: route().current('tasks.*'),
+                    permission: 'tasks.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 11l3 3L22 4M7 5H4a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2v-5M7 12h1m-1 4h6"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Projects',
+                    href: route('projects.index'),
+                    active: route().current('projects.*'),
+                    permission: 'projects.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 5h6m-8 4h10M7 13h10M9 17h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"
                             />
                         </svg>
                     ),

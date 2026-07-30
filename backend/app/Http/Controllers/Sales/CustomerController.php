@@ -76,6 +76,7 @@ class CustomerController extends Controller
     {
         SalesAccess::assertCustomerVisible($customer, $request->user());
         abort_if($customer->deals()->exists(), 422, 'Cannot delete customer with deals.');
+        abort_if($customer->invoices()->exists(), 422, 'Cannot delete customer with invoices.');
         $before = $customer->only($this->trackedFields());
         $customer->delete();
         $this->audit($request, 'customer.delete', $customer, $before, null);

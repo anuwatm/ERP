@@ -4,8 +4,13 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Finance\ProductController;
+use App\Http\Controllers\Delivery\ProjectController;
+use App\Http\Controllers\Delivery\TaskController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\Finance\ExpenseController;
 use App\Http\Controllers\Finance\InvoiceController;
+use App\Http\Controllers\Finance\PaymentController;
+use App\Http\Controllers\Finance\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
 use App\Http\Controllers\Sales\ContactController;
@@ -14,9 +19,7 @@ use App\Http\Controllers\Sales\DealController;
 use App\Http\Controllers\Sales\SalesDashboardController;
 use App\Http\Controllers\Settings\OrganizationSettingsController;
 use App\Http\Controllers\Settings\OrganizationStructureController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -30,7 +33,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
 
     Route::get('/sales-dashboard', SalesDashboardController::class)
         ->middleware('permission:sales.dashboard.view')
@@ -102,6 +104,62 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/invoices/{invoice}/void', [InvoiceController::class, 'void'])
         ->middleware(['permission:invoices.void', 'password.confirm', 'throttle:10,1'])
         ->name('invoices.void');
+    Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store'])
+        ->middleware(['permission:payments.create', 'password.confirm', 'throttle:10,1'])
+        ->name('invoices.payments.store');
+    Route::post('/payments/{payment}/reverse', [PaymentController::class, 'reverse'])
+        ->middleware(['permission:payments.reverse', 'password.confirm', 'throttle:10,1'])
+        ->name('payments.reverse');
+    Route::get('/expenses', [ExpenseController::class, 'index'])
+        ->middleware('permission:expenses.view')
+        ->name('expenses.index');
+    Route::post('/expenses', [ExpenseController::class, 'store'])
+        ->middleware(['permission:expenses.create', 'password.confirm', 'throttle:10,1'])
+        ->name('expenses.store');
+    Route::patch('/expenses/{expense}', [ExpenseController::class, 'update'])
+        ->middleware(['permission:expenses.update', 'password.confirm', 'throttle:10,1'])
+        ->name('expenses.update');
+    Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])
+        ->middleware(['permission:expenses.approve', 'password.confirm', 'throttle:10,1'])
+        ->name('expenses.approve');
+    Route::post('/expenses/{expense}/pay', [ExpenseController::class, 'pay'])
+        ->middleware(['permission:expenses.pay', 'password.confirm', 'throttle:10,1'])
+        ->name('expenses.pay');
+    Route::post('/expenses/{expense}/reject', [ExpenseController::class, 'reject'])
+        ->middleware(['permission:expenses.reject', 'password.confirm', 'throttle:10,1'])
+        ->name('expenses.reject');
+    Route::get('/projects', [ProjectController::class, 'index'])
+        ->middleware('permission:projects.view')
+        ->name('projects.index');
+    Route::post('/projects', [ProjectController::class, 'store'])
+        ->middleware(['permission:projects.create', 'password.confirm', 'throttle:10,1'])
+        ->name('projects.store');
+    Route::patch('/projects/{project}', [ProjectController::class, 'update'])
+        ->middleware(['permission:projects.update', 'password.confirm', 'throttle:10,1'])
+        ->name('projects.update');
+    Route::post('/deals/{deal}/project', [ProjectController::class, 'storeFromDeal'])
+        ->middleware(['permission:projects.create', 'password.confirm', 'throttle:10,1'])
+        ->name('deals.projects.store');
+    Route::get('/tasks', [TaskController::class, 'index'])
+        ->middleware('permission:tasks.view')
+        ->name('tasks.index');
+    Route::post('/tasks', [TaskController::class, 'store'])
+        ->middleware(['permission:tasks.create', 'password.confirm', 'throttle:10,1'])
+        ->name('tasks.store');
+    Route::patch('/tasks/{task}', [TaskController::class, 'update'])
+        ->middleware(['permission:tasks.update', 'password.confirm', 'throttle:10,1'])
+        ->name('tasks.update');
+    Route::post('/tasks/{task}/checklists', [TaskController::class, 'storeChecklist'])
+        ->middleware(['permission:tasks.update', 'password.confirm', 'throttle:10,1'])
+        ->name('tasks.checklists.store');
+    Route::patch('/task-checklists/{checklist}', [TaskController::class, 'toggleChecklist'])
+        ->middleware(['permission:tasks.update', 'password.confirm', 'throttle:10,1'])
+        ->name('task-checklists.update');
+    Route::post('/tasks/{task}/comments', [TaskController::class, 'storeComment'])
+        ->middleware(['permission:tasks.comment', 'password.confirm', 'throttle:10,1'])
+        ->name('tasks.comments.store');
+    Route::get('/files/{file}/download', [FileController::class, 'download'])
+        ->name('files.download');
     Route::get('/settings/organization', [OrganizationSettingsController::class, 'edit'])
         ->middleware('permission:settings.organization.view')
         ->name('settings.organization.edit');

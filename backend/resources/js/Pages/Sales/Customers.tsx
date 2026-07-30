@@ -213,7 +213,7 @@ export default function Customers({
                                             <div className="font-semibold text-slate-900 dark:text-white">
                                                 {row.company_name}
                                             </div>
-                                            <div className="font-mono text-xs text-slate-500">
+                                            <div className="font-mono text-xs text-slate-500 dark:text-slate-400">
                                                 {row.customer_code}
                                             </div>
                                         </div>
@@ -298,14 +298,14 @@ export default function Customers({
                             {customers.map((customer) => (
                                 <div
                                     key={customer.id}
-                                    className="rounded-md border border-slate-200 p-3"
+                                    className="rounded-md border border-slate-200 dark:border-slate-800 p-3 bg-white/5"
                                 >
-                                    <div className="mb-2 text-sm font-semibold text-slate-800">
+                                    <div className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
                                         {customer.company_name} contacts
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {customer.contacts.length === 0 && (
-                                            <span className="text-sm text-slate-500">
+                                            <span className="text-sm text-slate-500 dark:text-slate-400">
                                                 No contacts
                                             </span>
                                         )}
@@ -319,13 +319,13 @@ export default function Customers({
                                                         contact,
                                                     )
                                                 }
-                                                className="rounded-md border border-slate-200 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                                                className="rounded-md border border-slate-200 dark:border-slate-800 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 transition-colors duration-150"
                                             >
-                                                <span className="font-semibold text-slate-800">
+                                                <span className="font-semibold text-slate-800 dark:text-white">
                                                     {contact.name}
                                                 </span>
                                                 {contact.is_primary && (
-                                                    <span className="ml-2 text-xs text-indigo-600">
+                                                    <span className="ml-2 text-xs text-indigo-600 dark:text-indigo-400 font-medium">
                                                         primary
                                                     </span>
                                                 )}

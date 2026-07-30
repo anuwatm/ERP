@@ -67,7 +67,7 @@ export default function AuditLogs({ auditLogs }: { auditLogs: Audit[] }) {
                                 header: 'Target Entity',
                                 accessor: (item) => (
                                     <div>
-                                        <div className="font-semibold capitalize text-slate-800">
+                                        <div className="font-semibold capitalize text-slate-800 dark:text-white">
                                             {item.entity_type}
                                         </div>
                                         <div className="font-mono text-[11px] text-slate-400 truncate max-w-[150px]">

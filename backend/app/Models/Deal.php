@@ -6,6 +6,7 @@ use App\Models\Concerns\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Deal extends Model
@@ -46,5 +47,15 @@ class Deal extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(Activity::class, 'entity_id')->where('entity_type', 'deal');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function project(): HasOne
+    {
+        return $this->hasOne(Project::class);
     }
 }

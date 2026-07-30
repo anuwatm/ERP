@@ -10,6 +10,7 @@ import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
+import { money } from '@/Utils/format';
 
 type Product = {
     id: string;
@@ -95,7 +96,10 @@ export default function Products({ products }: { products: Product[] }) {
                 />
 
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-                    <Card title="Catalog" description="Items available for billing">
+                    <Card
+                        title="Catalog"
+                        description="Items available for billing"
+                    >
                         <DataTable
                             data={products}
                             keyExtractor={(row) => row.id}
@@ -137,10 +141,16 @@ export default function Products({ products }: { products: Product[] }) {
                                     header: 'Status',
                                     accessor: (row) => (
                                         <Badge
-                                            variant={row.is_active ? 'success' : 'neutral'}
+                                            variant={
+                                                row.is_active
+                                                    ? 'success'
+                                                    : 'neutral'
+                                            }
                                             size="sm"
                                         >
-                                            {row.is_active ? 'active' : 'inactive'}
+                                            {row.is_active
+                                                ? 'active'
+                                                : 'inactive'}
                                         </Badge>
                                     ),
                                 },
@@ -158,8 +168,13 @@ export default function Products({ products }: { products: Product[] }) {
                                                 type="button"
                                                 onClick={() =>
                                                     router.delete(
-                                                        route('products.destroy', row.id),
-                                                        { preserveScroll: true },
+                                                        route(
+                                                            'products.destroy',
+                                                            row.id,
+                                                        ),
+                                                        {
+                                                            preserveScroll: true,
+                                                        },
                                                     )
                                                 }
                                             >
@@ -187,13 +202,17 @@ export default function Products({ products }: { products: Product[] }) {
                                 label="Name"
                                 value={form.data.name}
                                 error={form.errors.name}
-                                onChange={(value) => form.setData('name', value)}
+                                onChange={(value) =>
+                                    form.setData('name', value)
+                                }
                                 required
                             />
                             <SelectField
                                 label="Type"
                                 value={form.data.type}
-                                onChange={(value) => form.setData('type', value)}
+                                onChange={(value) =>
+                                    form.setData('type', value)
+                                }
                                 options={['service', 'product', 'package']}
                             />
                             <Field
@@ -208,14 +227,18 @@ export default function Products({ products }: { products: Product[] }) {
                                 label="Unit"
                                 value={form.data.unit}
                                 error={form.errors.unit}
-                                onChange={(value) => form.setData('unit', value)}
+                                onChange={(value) =>
+                                    form.setData('unit', value)
+                                }
                             />
                             <Field
                                 label="Price"
                                 type="number"
                                 value={form.data.price}
                                 error={form.errors.price}
-                                onChange={(value) => form.setData('price', value)}
+                                onChange={(value) =>
+                                    form.setData('price', value)
+                                }
                                 required
                             />
                             <Field
@@ -223,7 +246,9 @@ export default function Products({ products }: { products: Product[] }) {
                                 type="number"
                                 value={form.data.cost}
                                 error={form.errors.cost}
-                                onChange={(value) => form.setData('cost', value)}
+                                onChange={(value) =>
+                                    form.setData('cost', value)
+                                }
                             />
                             <label className="flex items-center gap-2 text-sm text-slate-700">
                                 <input
@@ -260,13 +285,6 @@ export default function Products({ products }: { products: Product[] }) {
             </div>
         </AuthenticatedLayout>
     );
-}
-
-function money(value: string) {
-    return Number(value).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
 }
 
 function Field({

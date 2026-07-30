@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Contact;
 use App\Models\Customer;
 use App\Models\Deal;
+use App\Models\Invoice;
 use App\Models\User;
 use App\Support\SalesAccess;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,7 @@ class DealController extends Controller
         $user = $request->user();
         $filters = $request->only(['search', 'stage', 'owner_id', 'customer_id']);
         $deals = SalesAccess::scopeDeals(Deal::query(), $user)
-            ->with(['customer:id,company_name,customer_code,owner_id', 'contact:id,name,email,phone', 'owner:id,name,email', 'activities' => fn ($query) => $query->latest()->limit(5)])
+            ->with(['customer:id,company_name,customer_code,owner_id', 'contact:id,name,email,phone', 'owner:id,name,email', 'project:id,deal_id,project_code,name', 'activities' => fn ($query) => $query->latest()->limit(5)])
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($inner) use ($search) {
                 $inner->where('title', 'like', "%{$search}%")
                     ->orWhereHas('customer', fn ($customer) => $customer->where('company_name', 'like', "%{$search}%"));
@@ -33,6 +34,8 @@ class DealController extends Controller
             ->latest()
             ->get();
 
+        $this->attachNeedsSalesReview($deals, $user->org_id);
+
         return Inertia::render('Sales/Deals', [
             'deals' => $deals,
             'customers' => SalesAccess::scopeCustomers(Customer::query(), $user)->with('contacts:id,customer_id,name,email,phone')->orderBy('company_name')->get(['id', 'customer_code', 'company_name', 'owner_id']),
@@ -40,6 +43,8 @@ class DealController extends Controller
             'stages' => Deal::STAGES,
             'filters' => $filters,
             'canSeeAllSales' => SalesAccess::canSeeAll($user),
+            'canCreateInvoice' => $user->hasPermissionCode('invoices.create') && $user->hasPermissionCode('invoices.view'),
+            'canCreateProject' => $user->hasPermissionCode('projects.create') && $user->hasPermissionCode('projects.view'),
         ]);
     }
 
@@ -78,6 +83,35 @@ class DealController extends Controller
         $this->audit($request, 'deal.update', $deal, $before, $deal->fresh()->only($this->trackedFields()));
 
         return back()->with('success', 'Deal updated.');
+    }
+
+    private function attachNeedsSalesReview($deals, string $orgId): void
+    {
+        $activeStatuses = ['sent', 'partially_paid', 'paid', 'overdue'];
+        $dealIds = $deals->pluck('id')->filter()->values();
+
+        if ($dealIds->isEmpty()) {
+            return;
+        }
+
+        $activeDealIds = Invoice::where('org_id', $orgId)
+            ->whereIn('deal_id', $dealIds)
+            ->whereIn('status', $activeStatuses)
+            ->pluck('deal_id')
+            ->unique();
+
+        $latestStatuses = Invoice::where('org_id', $orgId)
+            ->whereIn('deal_id', $dealIds)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get(['deal_id', 'status'])
+            ->unique('deal_id')
+            ->pluck('status', 'deal_id');
+
+        $deals->each(fn ($deal) => $deal->setAttribute(
+            'needs_sales_review',
+            ! $activeDealIds->contains($deal->id) && ($latestStatuses[$deal->id] ?? null) === 'void'
+        ));
     }
 
     private function validateDeal(Request $request): array

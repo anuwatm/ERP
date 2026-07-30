@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Contact;
 use App\Models\Customer;
 use App\Models\Deal;
+use App\Models\Invoice;
 use App\Models\NumberSequence;
 use App\Models\Permission;
 use App\Models\Role;
@@ -166,6 +167,19 @@ class Phase2SalesTest extends TestCase
                 ->has('summary')
                 ->missing('summary.cash_in')
             );
+    }
+
+    public function test_customer_with_invoice_cannot_be_deleted(): void
+    {
+        $owner = User::factory()->create();
+        $this->attachRole($owner, 'owner', ['customers.delete']);
+        $customer = Customer::create(['org_id' => $owner->org_id, 'customer_code' => '000001', 'company_name' => 'Invoice Customer', 'owner_id' => $owner->id]);
+        Invoice::create(['org_id' => $owner->org_id, 'invoice_no' => '000001', 'customer_id' => $customer->id, 'status' => 'sent', 'tax_mode' => 'no_tax', 'issue_date' => '2026-07-29', 'total' => 100, 'balance_due' => 100]);
+
+        $this->actingAsOrgUser($owner)->withSession(['auth.password_confirmed_at' => time()])
+            ->delete(route('customers.destroy', $customer))->assertStatus(422);
+
+        $this->assertFalse($customer->fresh()->trashed());
     }
 
     private function attachRole(User $user, string $code, array $permissions): Role

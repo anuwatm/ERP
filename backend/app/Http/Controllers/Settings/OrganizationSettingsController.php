@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,7 @@ class OrganizationSettingsController extends Controller
     {
         $organization = auth()->user()->organization;
         $data = $organization->only(['id', 'name', 'legal_name', 'tax_id', 'email', 'phone', 'address', 'currency', 'timezone', 'status']);
-        $data['logo_url'] = \App\Models\Organization::formatLogoUrl($organization->logo_url);
+        $data['logo_url'] = Organization::formatLogoUrl($organization->logo_url);
 
         return Inertia::render('Settings/Organization', [
             'organization' => $data,

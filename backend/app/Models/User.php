@@ -69,6 +69,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Role::class, 'user_roles')->withPivot(['assigned_at', 'assigned_by']);
     }
 
+    public function hasPermissionCode(string $permission): bool
+    {
+        return $this->roles()
+            ->whereHas('permissions', fn ($query) => $query->where('code', $permission))
+            ->exists();
+    }
+
     protected function casts(): array
     {
         return [

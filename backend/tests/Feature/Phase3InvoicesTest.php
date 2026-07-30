@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Models\Deal;
 use App\Models\Invoice;
 use App\Models\Permission;
 use App\Models\Product;
@@ -100,13 +101,33 @@ class Phase3InvoicesTest extends TestCase
             );
     }
 
+    public function test_invoice_list_keeps_soft_deleted_customer_and_product_history(): void
+    {
+        $finance = User::factory()->create();
+        $this->attachRole($finance, 'finance', ['invoices.view']);
+        $customer = Customer::create(['org_id' => $finance->org_id, 'customer_code' => '000001', 'company_name' => 'Historical Customer', 'owner_id' => $finance->id]);
+        $product = Product::create(['org_id' => $finance->org_id, 'sku' => 'OLD-001', 'name' => 'Historical Product', 'type' => 'service', 'price' => 100]);
+        $invoice = Invoice::create(['org_id' => $finance->org_id, 'invoice_no' => '000001', 'customer_id' => $customer->id, 'status' => 'sent', 'tax_mode' => 'no_tax', 'issue_date' => '2026-07-29', 'total' => 100, 'balance_due' => 100]);
+        $invoice->items()->create(['org_id' => $finance->org_id, 'product_id' => $product->id, 'description' => 'Historical Product', 'quantity' => 1, 'unit_price' => 100, 'line_total' => 100, 'sort_order' => 0]);
+        $customer->delete();
+        $product->delete();
+
+        $this->actingAsOrgUser($finance)->get(route('invoices.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Finance/Invoices')
+                ->where('invoices.0.customer.company_name', 'Historical Customer')
+                ->where('invoices.0.items.0.product.name', 'Historical Product')
+            );
+    }
+
     public function test_invoice_deal_must_belong_to_selected_customer(): void
     {
         $finance = User::factory()->create();
         $this->attachRole($finance, 'finance', ['invoices.create']);
         $customer = Customer::create(['org_id' => $finance->org_id, 'customer_code' => '000001', 'company_name' => 'Right Customer', 'owner_id' => $finance->id]);
         $otherCustomer = Customer::create(['org_id' => $finance->org_id, 'customer_code' => '000002', 'company_name' => 'Other Customer', 'owner_id' => $finance->id]);
-        $deal = \App\Models\Deal::create(['org_id' => $finance->org_id, 'title' => 'Other Deal', 'customer_id' => $otherCustomer->id, 'stage' => 'won', 'owner_id' => $finance->id]);
+        $deal = Deal::create(['org_id' => $finance->org_id, 'title' => 'Other Deal', 'customer_id' => $otherCustomer->id, 'stage' => 'won', 'owner_id' => $finance->id]);
 
         $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
             ->post(route('invoices.store'), [
@@ -124,6 +145,7 @@ class Phase3InvoicesTest extends TestCase
                 ]],
             ])->assertStatus(422);
     }
+
     public function test_invoice_update_is_blocked_after_payment_amount_exists(): void
     {
         $finance = User::factory()->create();

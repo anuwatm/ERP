@@ -1,322 +1,235 @@
-# GPT Decision Notes: ERP Phase 0
+# GPT Decision Log (Clean)
 
-**วันที่:** 2026-07-25  
-**สถานะ:** Phase 0 docs lock / ยังไม่เริ่ม coding  
-**หน้าที่:** บันทึกเหตุผลของ GPT เมื่อรับหรือไม่รับข้อเสนอจาก Grok/Gemini
+Last cleaned: 2026-07-30
 
----
-
-## 1. Consensus ล่าสุด
-
-เห็นด้วยกับ Grok/Gemini และอัปเดตแล้ว:
-
-- `checklist.md` ต้องเป็น source of truth สำหรับ tracking งาน
-- หลังจบแต่ละ Phase ต้องอัปเดต root `README.md`
-- Phase 1 checklist ต้องเพิ่ม security, PII, routes/screens, seed และ token tests
-- Phase 3 checklist ต้องเพิ่ม idempotency, reversal date, attachment permission และ finance re-auth
-- Phase 4 checklist ต้องเพิ่ม `progress_percent` manual-only, no `actual_cost`, blocked overdue rule, internal task และ `task_checklists.org_id`
-- Phase 5 checklist ต้องเพิ่ม log redaction, no Cash Balance leak, negative scope tests และ UAT expected values
-- README ต้องมี decision notes, quick start Phase 1, links เอกสารหลัก, out-of-scope และ implemented features template
+ไฟล์นี้เก็บเฉพาะ decision / rebuttal / active handoff ที่ยังมีผลต่อการพัฒนาต่อไป ส่วน audit notes ที่ผ่านแล้วถูกตัดออกเพื่อลด context หนัก
 
 ---
 
-## 2. ข้อเสนอที่ยังไม่รับเป็น implementation ตอนนี้
+## 1. Current Phase Status
 
-### 2.1 `project_members`
+- Phase 1: Done
+- Phase 1.1: Done
+- Phase 2: Done
+- Phase 3: Done
+- Phase 4: Done
+- Next: Phase 5 Executive Dashboard + E2E/UAT
 
-ยังไม่เพิ่มใน MVP ตอนนี้
+Phase 4 final state:
+
+- Projects core: done
+- Tasks core: done
+- Invoice/Expense project link: done
+- Dynamic project cost: done
+- Delivery Dashboard metrics: done
+- `project_members`: deferred Post-MVP/V2
+
+---
+
+## 2. Decisions That Still Matter
+
+### MVP Scope
+
+- ไม่มี Cash Balance ใน MVP ทั้ง UI และ JSON/Inertia props
+- ไม่มี export / notification / public API ใน MVP
+- Full tax invoice compliance, credit note, suppliers, PO, inventory เป็น Post-MVP/V2
+- `project_members` ไม่เปิดใน MVP; ใช้ owner/assignee-only ก่อน
+
+### Security / Permission
+
+- ใช้ `User::hasPermissionCode()` เป็น helper กลางสำหรับ permission checks
+- Finance Dashboard แสดงเฉพาะ user ที่มี `expenses.view`
+- Delivery Dashboard แสดงเฉพาะ user ที่มี `projects.view` หรือ `tasks.view`
+- Member ที่มีแค่ `tasks.view` เห็นเฉพาะ task scope ของตัวเอง และไม่เห็น project financial metrics
+- `person_id`, password, token, secrets ห้ามหลุดใน UI/log/Inertia props
+- Sensitive writes ใช้ `password.confirm` ตาม route ที่กำหนด
+
+### Sales / Invoice
+
+- Invoice จาก deal ที่ถูก void ไม่ auto-reopen deal
+- ใช้ derived flag `needs_sales_review` แทน auto state change ของ Deal
+- เหตุผล: void invoice เป็น finance correction ได้ ไม่ได้แปลว่า deal ยกเลิกเสมอ
+
+### Payments
+
+- Payment receipt/reversal ใช้ `idempotency_key`
+- ห้าม overpay ด้วย transaction + `lockForUpdate()`
+- Reversal amount เก็บเป็นบวก แต่ Cash In / Net Cash Flow ต้องหักด้วย `entry_type = reversal`
+- ห้ามใช้ `SUM(payments.amount)` ตรง ๆ สำหรับ cash-in report
+
+### Expenses / Files
+
+- Expense status: `draft`, `approved`, `paid`, `rejected`
+- Project cost นับเฉพาะ expenses status `approved` หรือ `paid`
+- Files MVP จำกัดเฉพาะ payment slip และ expense receipt
+- Generic files สำหรับ customer/deal/project/task เป็น Post-MVP/V2
+
+### Projects / Tasks
+
+- ไม่มี `projects.actual_cost`
+- Project actual cost เป็น derived value จาก approved/paid expenses เท่านั้น
+- Project progress เป็น manual `progress_percent`
+- Project Manager เห็น project ที่ตัวเองเป็น owner
+- Member เห็นเฉพาะ task ที่ assign ให้ตัวเอง
+- Member update task ได้เฉพาะ `status`
+- Internal task รองรับ `project_id = null`
+- `blocked` task ไม่นับเป็น overdue ใน MVP
+
+---
+
+## 3. Deferred / Not Implemented Now
+
+### `project_members`
+
+Decision: defer Post-MVP/V2
 
 เหตุผล:
 
-- Docs ปัจจุบันล็อก owner/assignee-only แล้ว
-- Member ใช้ `/tasks` เป็นหลัก และเห็น project/customer linked read-only จาก task detail
-- การเพิ่ม `project_members` ไม่ใช่แค่ migration 4 columns แต่รวม UI จัดทีม, policy, dashboard scope, audit, seed และ tests
+- Phase 4 ผ่านด้วย owner/assignee-only visibility แล้ว
+- `ProjectAccess` และ `TaskAccess` enforce scope ชัดเจนแล้ว
+- การเพิ่ม `project_members` จะกระทบ data model, permission matrix, UI assignment, dashboard scope, tests และ migration เพิ่ม
+- Gemini ตรวจ Phase 4 แล้วให้ `Fully Verified & Completed` ไม่มี blocker
 
-Decision gate:
+### Tax / Invoice Compliance
 
-เพิ่มก่อนปิด Phase 4 ถ้า UAT พบว่า:
+Deferred:
 
-- 1 project มีหลายคนต้องเห็น budget/progress/status ร่วมกันทุกวัน
-- Member ต้องเปิด Project Detail เพื่อทำงาน
-- PM ต้องแชร์ overview ให้ทีมโดยไม่ให้เห็น finance detail
-- task-only ทำให้ navigation/403 สับสนซ้ำ
-
-### 2.2 Auto-reopen deal หลัง invoice void
-
-ยังไม่ auto เปลี่ยน stage ตอนนี้
+- Inclusive VAT subtotal display แบบ net subtotal
+- Header discount VAT allocation
+- Credit note / full tax invoice compliance
 
 เหตุผล:
 
-- `won` เป็น sales history
-- `void invoice` เป็น finance correction
-- เคสปกติอาจเป็นออก invoice ผิดแล้ว void เพื่อออกใหม่ โดย deal ยัง won ถูกต้อง
-- Auto `won -> negotiation` อาจทำให้ sales history เพี้ยน
+- เป็น accounting/tax compliance รอบใหญ่
+- กระทบสูตร backend, UI preview, historical invoice expectations, tests และเอกสาร
 
-ทางเลือก MVP:
+### Number Format Expansion
 
-- ใช้ derived flag `needs_sales_review`
-- แสดงบน deal/invoice detail
-- ใช้ audit/manual review
-- ไม่ใช้ notifications module
+Deferred:
 
-Decision gate:
-
-ถ้า UAT พบว่า void invoice ใต้ deal ส่วนใหญ่คือ “ลูกค้ายกเลิกดีลจริง” ค่อยออกแบบ workflow/metric ใหม่หลังมีข้อมูลจริง
-
----
-
-## 3. ข้อที่ตรวจแล้วว่าทำไว้ใน docs แล้ว
-
-| ประเด็น | สถานะ |
-| --- | --- |
-| `contacts.supplier_id` ไม่มี FK ใน MVP | ทำแล้ว |
-| `task_checklists.org_id` | ทำแล้ว |
-| `number_sequences` row lock / atomic increment | ทำแล้ว |
-| invoice edit guard เมื่อ `paid_amount > 0` | ทำแล้ว |
-| `tax_mode` | ทำแล้ว |
-| `activities.completed_at` | ทำแล้ว |
-| `storage_key` server-generated | ทำแล้ว |
-| Cash In drilldown แยก receipt/reversal | ทำแล้ว |
-
----
-
-## 4. คำสั่งผู้ใช้ที่ต้องรักษา
-
-- ตอบและเอกสารหลักเป็นภาษาไทย
-- `person_id` เก็บ plaintext `CHAR(13)` ไม่ encrypt
-- `person_id` ต้อง mask ใน UI/log/export และจำกัดสิทธิ์เห็นเลขเต็ม
-- Business/display code ใช้ text 6 หลัก เช่น `000001`
-- Primary key ใช้ UUID ไม่ใช่รหัส 6 หลัก
-- Database target คือ MariaDB/MySQL-compatible
-- Phase 0 เป็นเอกสารเท่านั้น
----
-
-## 5. รับข้อเสนอ Gemini รอบ Phase 1 Readiness
-
-เห็นด้วยทั้งหมด และอัปเดต docs/checklist แล้ว:
-
-- Lock primary key strategy เป็น time-ordered UUID ตั้งแต่ migration แรก: UUID v7 หรือ Laravel ordered UUID (`Str::orderedUuid()`)
-- Phase 3 ต้องทดสอบ generated column `reversal_target_id` + `UNIQUE(org_id, reversal_target_id)` บน MariaDB เพื่อ enforce one reversal per receipt ระดับ database
-- Phase 1 ต้องเตรียม shared TypeScript definitions สำหรับ Inertia props: `auth.user`, `auth.permissions`, `org`, `flash`
-- Phase 1 ต้องมี tenant isolation test helper เช่น `actingAsOrgUser($user, $org)`
-- Phase 1 ต้องตั้งค่า Laravel Pint, ESLint และ Prettier ตั้งแต่ต้น
-
-เหตุผลที่ไม่โต้แย้ง:
-
-ข้อเสนอทั้งหมดลดความเสี่ยงตอนเริ่ม coding และไม่เพิ่ม scope business ของ MVP จึงเหมาะกับ Phase 1 readiness.
-
----
-
-## 6. Phase 1 Implementation Note: number_sequences
-
-ทดสอบ MariaDB 11.2 แล้ว generated column ที่อ้าง `branch_id` แบบ UUID nullable ไม่ผ่าน migration (`1901 Function or expression ... cannot be used in GENERATED ALWAYS AS`).
-
-Decision สำหรับ Phase 1:
-
-- ใช้ `branch_key` และ `year_key` เป็นคอลัมน์ปกติ
-- ให้ app/seed set ค่า sentinel เอง: branch null = `00000000-0000-0000-0000-000000000000`, year null = `0`
-- ยัง enforce unique ด้วย `UNIQUE(org_id, branch_key, doc_type, year_key)` ได้
-- ไม่กระทบ Phase 3 payment reversal generated column เพราะเป็นคนละ constraint และยังต้องทดสอบจริงตาม checklist
-
----
-
-## 7. รับข้อเสนอ Gemini รอบ Phase 1 Code Audit
-
-เห็นด้วยและแก้แล้ว:
-
-- เพิ่ม `Security Alerts` ใน Admin Dashboard แล้ว
-- เพิ่ม guard/test สำหรับ owner/last owner และ role immutable behavior แล้ว
-- เพิ่ม Audit Log payload/UI ให้แสดง actor name/email และ `before_json` / `after_json` diff details แล้ว
-- เพิ่ม Phase 1 demo seeder แล้ว
-- เพิ่ม tests: session regenerate, login rate limit, reset/verify token expire/replay แล้ว
-- เพิ่ม `throttle:10,1` บน management routes: invite, disable, structure update, role update
-- ปรับ `HandleInertiaRequests` ให้ cache effective permissions ใน request attributes เพื่อลด query ซ้ำใน request เดียว
-
-ไม่มีข้อโต้แย้งในรอบนี้ เพราะข้อเสนอทั้งหมดเป็น hardening/observability ของ Phase 1 และไม่เพิ่ม business scope ใหม่.
-
----
-
-## 8. รับข้อเสนอ Gemini รอบ Phase 1 Updated Audit
-
-เห็นด้วยและแก้เพิ่มแล้ว:
-
-- ยืนยัน `AuditLogController` โหลด `actorUser:id,name,email` และส่ง `before_json` / `after_json` ให้ Inertia props แล้ว
-- เพิ่ม `securityAlerts` prop ใน `DashboardController` และเพิ่ม Security Alerts widget ใน `Dashboard.tsx`
-- แยก demo seed เป็น `database/seeders/Phase1DemoSeeder.php` และให้ `DatabaseSeeder` call เฉพาะ seeder นี้
-- เพิ่ม test dashboard security alerts เพื่อกัน regression
-
-ไม่มีข้อโต้แย้งในรอบนี้ เพราะเป็นการทำให้ implementation ตรงกับเอกสารและ reviewer expectation มากขึ้น.
-
----
-
-## 9. Consensus เรื่อง UI Redesign & Enterprise Design System
-
-เห็นด้วยและล็อกมาตรฐาน UI ตาม `docs/DESIGN_SYSTEM.md`:
-
-- ล็อกโทนสีหลักเป็น Slate 900 / Slate 50 ร่วมกับ Indigo Accent (`#4F46E5`)
-- กำหนด App Shell เป็น **Left Sidebar Navigation + Sticky Header Topbar**
-- บังคับใช้ Reusable UI Components (`StatCard`, `Badge`, `PageHeader`, `Card`, `DataTable`) ในทุกๆ Phase เพื่อความสวยงามและเป็นมาตรฐานเดียวกัน
-
-
-## 10. Phase 1.1 Planning Decision
-
-เพิ่ม Phase 1.1 เป็นรอบเอกสารและเตรียม scope ก่อน coding เพื่อทำ Admin Master Data & Access Management: Branch, Division, Department, User edit/disable และ Role-Permission assignment ก่อนเริ่ม Phase 2 CRM/Sales.
+- `invoice_no` / `expense_no` จาก `char(6)` เป็น `varchar(30)`
 
 เหตุผล:
 
-- Phase 1 มี schema และ default organization structure แล้ว แต่ยังไม่ควรถือว่า master data CRUD ครบ
-- Phase 2 จะอ้างอิง Branch/Division/Department ใน user assignment, customer/deal ownership และ dashboard/report filtering
-- User edit/disable และ role-permission assignment ควรพร้อมก่อนเริ่มใช้งาน CRM/Sales เพราะเป็น access control พื้นฐาน
-- การทำ Phase 1.1 ก่อนช่วยลดการแก้ข้อมูลตรง database และเพิ่ม audit trail ให้ master data ตั้งแต่ต้น
-- ยังไม่เริ่ม coding ตามคำสั่งผู้ใช้; รอบนี้แก้เอกสารและ checklist เท่านั้น
+- ยังไม่เป็น blocker ของ MVP
+- ควรทำตอนเตรียม UAT/demo หรือก่อนปรับ numbering format จริง
 
-Decision:
+### Dashboard Date Filters
 
-- ใช้ permission เดิม `settings.structure.view` และ `settings.structure.update` สำหรับ structure CRUD ใน Phase 1.1 MVP
-- ใช้ `users.update`, `users.disable`, `roles.manage` สำหรับ user/access management
-- Delete ใช้แนวทาง delete-safe: ลบได้เฉพาะไม่มี reference; ถ้ามี reference ให้ disable
-- Business code ของ Branch/Division/Department ต้องเป็น text 6 หลัก
-- ไม่เปิด CRUD permission code จาก UI เพราะ permission code เป็น system config ที่ middleware/policy อ้างตรง ต้องแก้ผ่าน migration/seeder เท่านั้น
-- Phase 1.1 ต้องผ่านก่อนเริ่ม Phase 2
+Deferred:
 
----
-
-
-## 11. รับข้อเสนอ Gemini รอบ Phase 1.1 Scope Review
-
-เห็นด้วยและอัปเดต docs/checklist แล้ว:
-
-- Branch/Division/Department code ต้อง auto-generate 6 หลักจาก `number_sequences`; ไม่เปิดให้ผู้ใช้พิมพ์เอง
-- การสลับ Head Office ต้องทำใน transaction เดียว พร้อม audit `branch.set_head_office`
-- Disable/Delete structure ต้องมี strict reference guard ถ้ามี active child/user/reference ต้อง block พร้อม error message ชัดเจน
-- Permission code ยัง immutable ผ่าน UI; แก้ได้เฉพาะ migration/seeder
-- หน้า organization structure ต้องใช้ Tab Navigation ตาม `docs/DESIGN_SYSTEM.md`
-
-ไม่มีข้อโต้แย้ง เพราะข้อเสนอทั้งหมดช่วยลดความผิดพลาดของ master data และไม่เพิ่ม business scope ของ Phase 2.
-
----
-
-
-## 12. รับข้อเสนอ Gemini รอบ Phase 1.1 Minor Recommendations
-
-เห็นด้วยและแก้แล้ว:
-
-- แยก disable guard กับ delete guard สำหรับ Branch/Division โดย delete ตรวจทุก reference ไม่จำกัดเฉพาะ active status
-- Create Branch พร้อม `is_head_office=true` บันทึก audit เพิ่ม `branch.set_head_office` นอกเหนือจาก `branch.create`
-- เพิ่ม README note เรื่อง CLI PHP extension `mbstring` และคำสั่ง local verification ด้วย `.php\php.ini`
-
-ไม่มีข้อโต้แย้ง เพราะเป็น hardening และ documentation note ไม่เพิ่ม business scope ใหม่.
-
----
-
-
----
-
-## 13. รับทราบ Gemini Final Audit หลังเพิ่ม Company Logo
-
-เห็นด้วยกับ Gemini ว่า Phase 1 และ Phase 1.1 อยู่ในสถานะ completed/verified แล้ว:
-
-- Company Logo Upload ทำครบใน `OrganizationSettingsController.php` และ `Organization.tsx`
-- รองรับ JPG/PNG/WebP ขนาดไม่เกิน 2MB
-- เก็บไฟล์ใน public storage และบันทึก `organizations.logo_url`
-- Audit log `organization.update` เก็บ `logo_url` ใน `before_json` / `after_json`
-- Test `test_organization_settings_update_accepts_company_logo_upload` ผ่านแล้ว
-- Verification ล่าสุดผ่าน: PHPUnit 63 tests / 273 assertions, lint, check-format, build
-
-ไม่มีข้อโต้แย้งในรอบนี้ เพราะ Gemini ไม่ได้เสนอ correction เพิ่มเติม มีเพียง next action ให้เริ่มเตรียม Phase 2 CRM/Sales + Sales Dashboard.
-
----
-
-## 14. รับทราบ Gemini Phase 2 Final Audit และ Reconcile คำศัพท์
-
-เห็นด้วยกับภาพรวมของ Gemini ว่า Phase 2 completed/verified และพร้อมเตรียม Phase 3 Finance แล้ว โดยผลตรวจล่าสุดคือ PHPUnit 68 tests / 318 assertions, lint, check-format และ build ผ่าน
-
-ไม่มี code correction เพิ่มในรอบนี้ แต่มี 3 จุดที่ขอคงตาม schema/docs กลาง เพราะ Gemini น่าจะเห็นด้วยเมื่อเทียบกับ `docs/database/DATABASE.md` และ checklist:
-
-- `customers.customer_type` ในระบบใช้ `lead`, `prospect`, `active`, `inactive` ตาม schema กลาง ไม่ใช้ `customer`; เหตุผลคือ `active/inactive` แยกสถานะลูกค้าที่ใช้งานจริงใน MVP และ validation/test ทำตามนี้แล้ว
-- `deals.stage` ใช้ `new`, `contacted`, `qualified`, `proposal`, `negotiation`, `won`, `lost` ตาม schema กลาง ไม่ใช้ `lead`; เหตุผลคือ `lead` อยู่ที่ customer/customer_type ส่วน deal เริ่มที่ `new` เพื่อไม่ให้คำว่า lead ซ้ำความหมาย
-- `activities.entity_type` Phase 2 allowlist ใช้ `customer`, `contact`, `deal`; เหตุผลคือ `contacts` เป็น module Phase 2 และ activity ใต้ contact เป็น CRM timeline ที่ schema กลางรองรับ ส่วน `project` จะเปิดใช้ใน Phase 4 เมื่อมี project table จริง
-
-Decision:
-
-- ไม่แก้ code จากข้อ wording เหล่านี้
-- ไม่เปิด Phase 3 coding อัตโนมัติจนกว่าผู้ใช้สั่งเริ่ม Phase 3
-- ถือว่า Gemini final audit รอบนี้เป็น consensus ว่า Phase 2 ปิดงานได้
-
----
-
-## 15. Phase 3 Products/Services Gemini Review
-
-รับข้อเสนอ Gemini บางส่วน และแยกเป็น decision ดังนี้:
-
-### รับและแก้ทันที: Empty String SKU Sanitization
-
-เห็นด้วย เพราะเป็น bug จริงได้ใน MVP:
-
-- UI ส่ง `sku` เป็น empty string ได้เมื่อผู้ใช้ไม่กรอก SKU
-- ถ้าบันทึก `""` ลง database จะชน `UNIQUE(org_id, sku)` เมื่อสร้างสินค้าหลายรายการที่ไม่มี SKU
-- แก้โดย normalize `sku: ""` เป็น `null` ก่อน save
-- เพิ่ม test ยืนยันว่าสร้าง product/service หลายรายการโดยไม่กรอก SKU ได้
-
-Verification:
-
-- `Phase3ProductsTest`: 5 tests / 33 assertions
-- Regression subset: 48 tests / 274 assertions
-
-### ยังไม่รับตอนนี้: `products.view`
-
-ยังไม่แยก `products.view` ออกจาก `products.manage` ในก้อน Products/Services แรก
+- Finance/Delivery dashboard period filters รายเดือน/รายปี/custom range
 
 เหตุผล:
 
-- Scope ปัจจุบันตาม `docs/ROUTES_AND_SCREENS.md` ระบุ `/products` ใช้ `products.manage`
-- ยังไม่มีหน้า Invoice/Invoice Items ที่ต้องใช้ catalog แบบ read-only
-- ถ้าเพิ่มตอนนี้จะต้องแก้ PermissionCatalog, role defaults, UI visibility, tests และ route เพิ่ม โดยยังไม่มี workflow ที่ใช้จริง
+- ตอนนี้เป็น all-time aggregate ตาม MVP
+- ควรทำใน Phase 5 หรือ reporting enhancement
 
-Decision gate:
+### Demo Seeder Expansion
 
-เพิ่ม `products.view` ตอนเริ่ม Invoice ถ้าต้องให้ Finance/Sales เลือกสินค้าใน invoice item โดยไม่มีสิทธิ์แก้ catalog
+Deferred:
 
-### ยังไม่รับตอนนี้: SKU Recycling หลัง Soft Delete
-
-ยังไม่อนุญาตนำ SKU ของสินค้าที่ soft delete แล้วกลับมาใช้ใหม่
+- เพิ่ม demo seed สำหรับ products, invoices, payments, expenses, projects, tasks
 
 เหตุผล:
 
-- SKU เป็น business identity; การ reuse อาจทำให้ invoice/history/report อ่านสับสน
-- ยังไม่มี requirement ว่าต้อง recycle SKU
-- Unique constraint ปัจจุบันช่วยกัน human error ได้ดีกว่าใน MVP
-
-Decision gate:
-
-ค่อยพิจารณาเมื่อมี requirement ชัด เช่น import catalog ใหม่, restore item, หรือ policy ว่า SKU ซ้ำกับสินค้าที่ถูกลบได้
-
-### ไม่ทำ refactor Ponytail ตอนนี้
-
-รับทราบข้อเสนอเรื่อง audit helper และ policy ที่ยังไม่ได้ใช้เต็มรูปแบบ แต่ยังไม่ refactor ระหว่าง Phase 3 Products เพราะ:
-
-- ตอนนี้ priority คือเดิน finance flow ทีละก้อนให้ครบ
-- Refactor audit/policy มี blast radius ข้ามหลาย controller
-- ควรทำหลัง Phase 3 core flow เสถียร หรือเมื่อมีเวลาทำ regression เต็มชุด
+- เหมาะกับ Phase 5 UAT seed data
 
 ---
 
-## 16. การอัปเดตระบบหลังทดสอบ / Debugging (2026-07-27)
+## 4. Phase 3 Final Summary
 
-### รัน Migration สำหรับ Phase 3 (Products/Services Catalog)
-- ดำเนินการรันคำสั่ง `php -c .php\php.ini artisan migrate` เรียบร้อยแล้ว เพื่อสร้างตาราง `products` และ backfill สิทธิ์ `products.manage` ให้กับบทบาท Owner, Admin และ Finance
-- ปัญหา 403 Forbidden เมื่อเปิดหน้ารายการสินค้าได้รับการแก้ไขแล้ว (เกิดจากการที่ยังไม่ได้รัน migration บน local environment)
+Completed:
 
-### แก้ไขปัญหารายชื่อสินค้า/รายการในตารางไม่แสดงชื่อ (Dark Mode Text Color Invisible)
-- **ปัญหา:** รายการสินค้าในหน้า Catalog (รวมถึงรายชื่อลูกค้า ดีล สมาชิก ล็อก และหัวข้อ Modal ต่างๆ) ไม่แสดงชื่อเมื่อเปิดหน้าเว็บ
-- **สาเหตุ:** ตัวแอปเปิดใช้งานระบบ Dark Mode แต่โค้ดฝั่ง Frontend ในคอลัมน์ DataTable และ Modal Headings ใช้คลาส `text-slate-900` แบบ Hardcode โดยไม่มีคลาสครอบคลุม Dark Mode (เช่น `dark:text-white`) ทำให้แสดงผลเป็นตัวหนังสือสีเกือบดำบนพื้นหลังสีดำของเว็บ (กลมกลืนจนมองไม่เห็นด้วยตาเปล่า)
-- **การแก้ไข:** ได้ดำเนินการแก้ไขไฟล์และเพิ่ม `dark:text-white` บนชื่อ/หัวข้อในตารางและ Modal ทั้งหมดของโปรเจกต์ เรียบร้อยแล้ว:
-  1. `resources/js/Pages/Finance/Products.tsx` (รายชื่อสินค้าใน Item)
-  2. `resources/js/Pages/Sales/Customers.tsx` (รายชื่อลูกค้าใน Customer)
-  3. `resources/js/Pages/Sales/Deals.tsx` (ชื่อดีลใน Deal)
-  4. `resources/js/Pages/Admin/Users.tsx` (ชื่อสมาชิกใน Member)
-  5. `resources/js/Pages/Admin/Roles.tsx` (ชื่อบทบาทใน Role)
-  6. `resources/js/Pages/Admin/AuditLogs.tsx` (ชื่อผู้กระทำใน Actor User)
-  7. `resources/js/Pages/Settings/OrganizationStructure.tsx` (หัวข้อ Edit Branch, Division, Department Modals)
-- **คำสั่งสำหรับ GPT เฟสต่อไป:** ในการเขียน Frontend Component ของ Phase 3 และ 4 ในอนาคต ให้คำนึงถึงเรื่อง Dark Mode เสมอ โดยการเพิ่มคลาสคู่กัน เช่น `text-slate-900 dark:text-white` ทุกครั้งที่มีการใช้สีข้อความเข้ม
+- Products/Services catalog
+- Manual invoice + invoice items
+- Create invoice from deal with prefill
+- Server-side invoice totals
+- Payment receipt, partial payment, no overpay, reversal
+- Expenses draft/approve/pay/reject
+- Payment/expense attachments
+- Finance Dashboard
+- Overdue invoice command
+- `needs_sales_review` after void invoice from deal
+- Concurrent payment no-overpay test
 
+Important verification references:
+
+- Phase 3 final regression recorded: 55 Phase 3 tests / 401 assertions
+- Later Phase 3/4 regression subsets passed during Phase 4 work
+
+---
+
+## 5. Phase 4 Final Summary
+
+Completed:
+
+- Projects table/model/controller/UI
+- Create manual project
+- Create project from won deal, one project per deal
+- Project owner visibility and owner reassignment
+- Tasks, checklists, comments
+- Internal task with `project_id = null`
+- Member task visibility and status-only update
+- Invoice project link with customer match guard
+- Expense project link with org guard
+- Dynamic project cost from approved/paid expenses
+- Project list Actual Cost / Margin
+- Delivery Dashboard metrics
+- Phase 4 UAT gate closed: `project_members` deferred Post-MVP/V2
+
+Delivery Dashboard metrics:
+
+- Active Projects = `planning`, `active`, `on_hold`
+- Project Status breakdown
+- Overdue Tasks = `todo` / `in_progress` where `due_date < today`
+- Task Load = open tasks by assignee (`todo`, `in_progress`, `blocked`)
+- Budget vs Expense = budget vs approved/paid expenses
+- Project Profit = total budget - actual cost
+- Delivery Risk = distinct risk project count plus breakdown
+
+Important verification references:
+
+- `Phase4DeliveryDashboardTest`: 3 tests / 66 assertions
+- Phase 4 + Finance Dashboard regression: 23 tests / 250 assertions
+- Phase 4 finance/project cost regression: 28 tests / 178 assertions
+- `pnpm run check-format`: passed
+- `pnpm run lint`: passed
+- `pnpm run build`: passed
+- Laravel Pint: passed
+
+Gemini final Phase 4 audit:
+
+- Section 20 status: `Fully Verified & Completed`
+- No blocker / no code change required
+
+---
+
+## 6. Next Phase 5 Focus
+
+Start Phase 5 with:
+
+- Executive Dashboard aggregates Sales + Finance + Delivery
+- Widget visibility by permission
+- No Cash Balance shown
+- E2E flow: Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
+- E2E role isolation tests
+- E2E payment reversal tests
+- E2E invoice totals tests
+- E2E dashboard metrics tests
+- E2E multi-role UNION permission test
+- E2E `needs_sales_review` after invoice void
+- UAT seed data and expected dashboard values
+- Security review: no password/token/secret/full `person_id`
+- Negative scope test: no export/notifications/public API in MVP
+
+---
+
+## 7. Recent Operational Note
+
+Login route check on 2026-07-30:
+
+- Correct URL in local Apache setup: `http://localhost/ERP/login`
+- `http://localhost/login` returns 404 because app lives under `/ERP`
+- Laravel cache/views/routes cleared after check
+- Authentication + Dashboard regression passed: 7 tests / 74 assertions

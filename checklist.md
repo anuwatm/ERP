@@ -22,8 +22,8 @@
 | Phase 1 | Done | Foundation + Admin Dashboard เสร็จและตรวจผ่าน |
 | Phase 1.1 | Done | Admin Master Data & Access Management เสร็จและตรวจผ่าน |
 | Phase 2 | Done | CRM/Sales + Sales Dashboard เสร็จและตรวจผ่าน |
-| Phase 3 | Not started | Finance + Finance Dashboard |
-| Phase 4 | Not started | Delivery + Delivery Dashboard |
+| Phase 3 | Done | Finance + Finance Dashboard completed |
+| Phase 4 | Done | Delivery + Delivery Dashboard completed; project_members deferred Post-MVP |
 | Phase 5 | Not started | Executive Dashboard + E2E/UAT |
 
 ---
@@ -299,80 +299,80 @@ Exit criteria:
 - [x] Migration/model/policy: products
 - [x] Migration/model/policy: invoices
 - [x] Migration/model/policy: invoice_items
-- [ ] Migration/model/policy: payments
-- [ ] Migration/model/policy: expenses
-- [ ] Migration/model/policy: files limited subset
+- [x] Migration/model/policy: payments
+- [x] Migration/model/policy: expenses
+- [x] Migration/model/policy: files limited subset
 - [x] Product/service catalog
-- [ ] Create invoice from deal
+- [x] Create invoice from deal
 - [x] Create manual invoice
 - [x] Server-side invoice calculation
 - [x] `tax_mode`: exclusive/inclusive/no_tax
-- [ ] Payment receipt
-- [ ] Idempotency-Key บน payment receipt/reversal
-- [ ] Partial payment
-- [ ] Overpay prevention with transaction lock
-- [ ] Payment reversal
-- [ ] Reversal `payment_date = CURRENT_DATE`
-- [ ] One reversal per receipt
-- [ ] Migration/test generated column `reversal_target_id` + `UNIQUE(org_id, reversal_target_id)` บน MariaDB
+- [x] Payment receipt
+- [x] Idempotency-Key บน payment receipt/reversal
+- [x] Partial payment
+- [x] Overpay prevention with transaction lock
+- [x] Payment reversal
+- [x] Reversal `payment_date = CURRENT_DATE`
+- [x] One reversal per receipt
+- [x] Migration/test `UNIQUE(org_id, reversal_of_payment_id)` กัน duplicate reversal (ใช้แทน generated column ตาม Gemini)
 - [x] Invoice void policy
-- [ ] `needs_sales_review` derived flag
-- [ ] Expense draft/approve/pay/reject
-- [ ] Payment/expense attachment
-- [ ] Attachment download ตรวจ permission parent ทุกครั้ง
-- [ ] `storage_key` สร้างฝั่ง server เท่านั้น
-- [ ] Finance Dashboard: Invoiced Revenue
-- [ ] Finance Dashboard: Cash In
-- [ ] Finance Dashboard: Outstanding AR
-- [ ] Finance Dashboard: Overdue AR
-- [ ] Finance Dashboard: Expenses / Cash Out
-- [ ] Finance Dashboard: Net Cash Flow
-- [ ] Finance Dashboard: Invoice Status
-- [ ] Finance Dashboard: Payment Reversal
-- [ ] Cash In drilldown separates receipt/reversal
-- [ ] Mark overdue invoice job
+- [x] `needs_sales_review` derived flag
+- [x] Expense draft/approve/pay/reject
+- [x] Payment/expense attachment
+- [x] Attachment download ตรวจ permission parent ทุกครั้ง
+- [x] `storage_key` สร้างฝั่ง server เท่านั้น
+- [x] Finance Dashboard: Invoiced Revenue
+- [x] Finance Dashboard: Cash In
+- [x] Finance Dashboard: Outstanding AR
+- [x] Finance Dashboard: Overdue AR
+- [x] Finance Dashboard: Expenses / Cash Out
+- [x] Finance Dashboard: Net Cash Flow
+- [x] Finance Dashboard: Invoice Status
+- [x] Finance Dashboard: Payment Reversal
+- [x] Cash In drilldown separates receipt/reversal
+- [x] Mark overdue invoice job
 - [x] Invoice numbering sequence
-- [ ] Expense `supplier_id` ไม่ FK / ไม่บังคับใน MVP
-- [ ] Re-auth: void invoice / reverse payment / approve-pay expense
+- [x] Expense `supplier_id` ไม่ FK / ไม่บังคับใน MVP
+- [x] Re-auth: void invoice / reverse payment / approve-pay expense
 - [x] Tests for invoice totals
-- [ ] Tests for payment reversal
-- [ ] Tests for generated column/unique constraint กัน duplicate reversal
-- [ ] Tests for no overpay
-- [ ] Tests for concurrent payment no overpay
+- [x] Tests for payment reversal
+- [x] Tests for generated column/unique constraint กัน duplicate reversal
+- [x] Tests for no overpay
+- [x] Tests for concurrent payment no overpay
 - [x] Tests for invoice edit guard after payment
-- [ ] Update `README.md` with Phase 3 features
+- [x] Update `README.md` with Phase 3 features
 
 ---
 
 ## Phase 4: Delivery + Delivery Dashboard
 
-- [ ] Migration/model/policy: projects
-- [ ] Migration/model/policy: tasks
-- [ ] Migration/model/policy: task_checklists
-- [ ] Migration/model/policy: task_comments
-- [ ] Confirm `task_checklists.org_id` exists and tenant scope works
-- [ ] Create project from won deal
-- [ ] Create manual project
-- [ ] Internal task with `project_id = null`
-- [ ] Link invoice to project
-- [ ] Link expense to project
-- [ ] Project owner visibility
-- [ ] Owner/Admin reassign project owner
-- [ ] Member navigation defaults to Tasks
-- [ ] Task create/update/status/comment
-- [ ] Task assignee-only visibility for Member
-- [ ] Project cost derived from approved/paid expenses
-- [ ] Confirm schema has no `projects.actual_cost`
-- [ ] `progress_percent` manual only
-- [ ] Task `blocked` does not mark overdue in MVP
-- [ ] Delivery Dashboard metrics
-- [ ] Phase 4 UAT decision gate: evaluate `project_members`
-- [ ] Tests for PM/Member visibility
-- [ ] Tests for project cost aggregate
-- [ ] Tests for project owner reassignment
-- [ ] Tests for internal task
-- [ ] Tests for blocked overdue rule
-- [ ] Update `README.md` with Phase 4 features
+- [x] Migration/model/policy: projects
+- [x] Migration/model/policy: tasks
+- [x] Migration/model/policy: task_checklists
+- [x] Migration/model/policy: task_comments
+- [x] Confirm `task_checklists.org_id` exists and tenant scope works
+- [x] Create project from won deal
+- [x] Create manual project
+- [x] Internal task with `project_id = null`
+- [x] Link invoice to project
+- [x] Link expense to project
+- [x] Project owner visibility
+- [x] Owner/Admin reassign project owner
+- [x] Member navigation defaults to Tasks
+- [x] Task create/update/status/comment
+- [x] Task assignee-only visibility for Member
+- [x] Project cost derived from approved/paid expenses
+- [x] Confirm schema has no `projects.actual_cost`
+- [x] `progress_percent` manual only
+- [x] Task `blocked` does not mark overdue in MVP
+- [x] Delivery Dashboard metrics
+- [x] Phase 4 UAT decision gate: evaluate `project_members`
+- [x] Tests for PM/Member visibility
+- [x] Tests for project cost aggregate
+- [x] Tests for project owner reassignment
+- [x] Tests for internal task
+- [x] Tests for blocked overdue rule
+- [x] Update `README.md` with Phase 4 features
 
 ---
 
@@ -398,4 +398,5 @@ Exit criteria:
 - [ ] Negative scope test: no export/notifications/public API in MVP
 - [ ] Grok/Gemini review
 - [ ] Update `README.md` with Phase 5 features
+
 

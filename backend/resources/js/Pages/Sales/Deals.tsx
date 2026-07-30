@@ -53,7 +53,14 @@ type Deal = {
     customer?: Customer | null;
     contact?: Contact | null;
     owner?: Owner | null;
+    project?: {
+        id: string;
+        deal_id: string;
+        project_code: string;
+        name: string;
+    } | null;
     activities: Activity[];
+    needs_sales_review?: boolean;
 };
 
 type DealForm = {
@@ -116,6 +123,8 @@ export default function Deals({
     owners,
     stages,
     canSeeAllSales,
+    canCreateInvoice,
+    canCreateProject,
 }: {
     deals: Deal[];
     customers: Customer[];
@@ -123,6 +132,8 @@ export default function Deals({
     stages: string[];
     filters: Record<string, string | null>;
     canSeeAllSales: boolean;
+    canCreateInvoice: boolean;
+    canCreateProject: boolean;
 }) {
     const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
     const dealForm = useForm<DealForm>(emptyDeal);
@@ -207,6 +218,16 @@ export default function Deals({
                                             <div className="text-xs text-slate-500">
                                                 {row.customer?.company_name}
                                             </div>
+                                            {row.needs_sales_review && (
+                                                <div className="mt-1">
+                                                    <Badge
+                                                        variant="warning"
+                                                        size="sm"
+                                                    >
+                                                        needs sales review
+                                                    </Badge>
+                                                </div>
+                                            )}
                                         </div>
                                     ),
                                 },
@@ -263,6 +284,50 @@ export default function Deals({
                                             >
                                                 Activity
                                             </SecondaryButton>
+                                            {canCreateInvoice &&
+                                                [
+                                                    'proposal',
+                                                    'negotiation',
+                                                    'won',
+                                                ].includes(row.stage) && (
+                                                    <SecondaryButton
+                                                        type="button"
+                                                        onClick={() =>
+                                                            router.get(
+                                                                route(
+                                                                    'invoices.index',
+                                                                ),
+                                                                {
+                                                                    deal_id:
+                                                                        row.id,
+                                                                },
+                                                            )
+                                                        }
+                                                    >
+                                                        Create Invoice
+                                                    </SecondaryButton>
+                                                )}
+                                            {canCreateProject &&
+                                                row.stage === 'won' &&
+                                                !row.project && (
+                                                    <SecondaryButton
+                                                        type="button"
+                                                        onClick={() =>
+                                                            router.post(
+                                                                route(
+                                                                    'deals.projects.store',
+                                                                    row.id,
+                                                                ),
+                                                                {},
+                                                                {
+                                                                    preserveScroll: true,
+                                                                },
+                                                            )
+                                                        }
+                                                    >
+                                                        Create Project
+                                                    </SecondaryButton>
+                                                )}
                                         </div>
                                     ),
                                 },
@@ -273,30 +338,30 @@ export default function Deals({
                             {deals.map((deal) => (
                                 <div
                                     key={deal.id}
-                                    className="rounded-md border border-slate-200 p-3"
+                                    className="rounded-md border border-slate-200 dark:border-slate-800 p-3 bg-white/5"
                                 >
-                                    <div className="mb-2 text-sm font-semibold text-slate-800">
+                                    <div className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
                                         {deal.title} activities
                                     </div>
                                     <div className="space-y-2">
                                         {deal.activities.length === 0 && (
-                                            <div className="text-sm text-slate-500">
+                                            <div className="text-sm text-slate-500 dark:text-slate-400">
                                                 No recent activity
                                             </div>
                                         )}
                                         {deal.activities.map((activity) => (
                                             <div
                                                 key={activity.id}
-                                                className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-3 py-2 text-sm"
+                                                className="flex items-center justify-between gap-3 rounded-md bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm"
                                             >
                                                 <div>
-                                                    <span className="font-semibold text-slate-800">
+                                                    <span className="font-semibold text-slate-800 dark:text-white">
                                                         {activity.subject ||
                                                             activity.activity_type}
                                                     </span>
                                                     {activity.follow_up_at &&
                                                         !activity.completed_at && (
-                                                            <span className="ml-2 text-xs text-amber-700">
+                                                            <span className="ml-2 text-xs text-amber-700 dark:text-amber-500 font-medium">
                                                                 follow-up open
                                                             </span>
                                                         )}

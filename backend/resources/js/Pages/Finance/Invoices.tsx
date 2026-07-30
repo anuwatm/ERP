@@ -9,10 +9,19 @@ import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { money } from '@/Utils/format';
 
 type Customer = { id: string; customer_code: string; company_name: string };
 type Deal = { id: string; title: string; customer_id: string };
+type Project = {
+    id: string;
+    project_code: string;
+    name: string;
+    customer_id: string;
+};
+type SourceDeal = { id: string; title: string; customer_id: string };
+
 type Product = {
     id: string;
     sku?: string | null;
@@ -32,11 +41,30 @@ type InvoiceItem = {
     line_total?: string;
     product?: Product | null;
 };
+type AttachmentFile = {
+    id: string;
+    file_name: string;
+    mime_type?: string | null;
+    size_bytes?: number | null;
+};
+
+type Payment = {
+    id: string;
+    entry_type: string;
+    amount: string;
+    payment_date: string;
+    payment_method: string;
+    reference_no?: string | null;
+    reversal_of_payment_id?: string | null;
+    attachment_file_id?: string | null;
+    attachment?: AttachmentFile | null;
+};
 type Invoice = {
     id: string;
     invoice_no: string;
     customer_id: string;
     deal_id?: string | null;
+    project_id?: string | null;
     status: string;
     tax_mode: string;
     issue_date: string;
@@ -51,11 +79,15 @@ type Invoice = {
     notes?: string | null;
     customer?: Customer | null;
     deal?: Deal | null;
+    project?: Project | null;
     items: InvoiceItem[];
+    payments?: Payment[];
+    needs_sales_review?: boolean;
 };
 type InvoiceForm = {
     customer_id: string;
     deal_id: string;
+    project_id: string;
     status: string;
     tax_mode: string;
     issue_date: string;
@@ -64,6 +96,15 @@ type InvoiceForm = {
     currency: string;
     notes: string;
     items: InvoiceItem[];
+};
+type PaymentForm = {
+    amount: string;
+    payment_date: string;
+    payment_method: string;
+    reference_no: string;
+    note: string;
+    idempotency_key: string;
+    attachment: File | null;
 };
 
 const emptyItem: InvoiceItem = {
@@ -81,6 +122,7 @@ const today = new Date().toISOString().slice(0, 10);
 const emptyInvoice: InvoiceForm = {
     customer_id: '',
     deal_id: '',
+    project_id: '',
     status: 'draft',
     tax_mode: 'exclusive',
     issue_date: today,
@@ -91,28 +133,75 @@ const emptyInvoice: InvoiceForm = {
     items: [{ ...emptyItem }],
 };
 
+const paymentKey = () =>
+    globalThis.crypto?.randomUUID?.() ??
+    Date.now() + '-' + Math.random().toString(36).slice(2);
+
+const emptyPayment = (amount = '0.00'): PaymentForm => ({
+    amount,
+    payment_date: today,
+    payment_method: 'bank_transfer',
+    reference_no: '',
+    note: '',
+    idempotency_key: paymentKey(),
+    attachment: null,
+});
+
 export default function Invoices({
     invoices,
     customers,
     deals,
+    projects,
     products,
     taxModes,
+    canRecordPayments,
+    canReversePayments,
+    sourceDeal,
 }: {
     invoices: Invoice[];
     customers: Customer[];
     deals: Deal[];
+    projects: Project[];
     products: Product[];
     statuses: string[];
     taxModes: string[];
     filters: Record<string, string | null>;
+    canRecordPayments: boolean;
+    canReversePayments: boolean;
+    sourceDeal?: SourceDeal | null;
 }) {
     const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+    const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
     const form = useForm<InvoiceForm>(emptyInvoice);
+    const paymentForm = useForm<PaymentForm>(emptyPayment());
     const availableDeals = useMemo(
         () =>
             deals.filter((deal) => deal.customer_id === form.data.customer_id),
         [deals, form.data.customer_id],
     );
+    const availableProjects = useMemo(
+        () =>
+            projects.filter(
+                (project) => project.customer_id === form.data.customer_id,
+            ),
+        [projects, form.data.customer_id],
+    );
+
+    useEffect(() => {
+        if (!sourceDeal || editingInvoice) {
+            return;
+        }
+
+        form.setData((current) => ({
+            ...current,
+            customer_id: sourceDeal.customer_id,
+            deal_id: sourceDeal.id,
+            project_id: '',
+            status: 'sent',
+            notes: current.notes || `From deal: ${sourceDeal.title}`,
+        }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sourceDeal?.id]);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -131,11 +220,37 @@ export default function Invoices({
         }
     };
 
+    const submitPayment = (event: FormEvent) => {
+        event.preventDefault();
+
+        if (!payingInvoice) {
+            return;
+        }
+
+        paymentForm.post(route('invoices.payments.store', payingInvoice.id), {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setPayingInvoice(null);
+                paymentForm.setData(emptyPayment());
+            },
+        });
+    };
+
+    const reversePayment = (payment: Payment) => {
+        router.post(
+            route('payments.reverse', payment.id),
+            { idempotency_key: paymentKey() },
+            { preserveScroll: true },
+        );
+    };
+
     const editInvoice = (invoice: Invoice) => {
         setEditingInvoice(invoice);
         form.setData({
             customer_id: invoice.customer_id,
             deal_id: invoice.deal_id ?? '',
+            project_id: invoice.project_id ?? '',
             status: ['draft', 'sent'].includes(invoice.status)
                 ? invoice.status
                 : 'draft',
@@ -157,11 +272,12 @@ export default function Invoices({
         });
     };
 
-    const setItem = (
-        index: number,
-        key: keyof InvoiceItem,
-        value: string,
-    ) => {
+    const openPayment = (invoice: Invoice) => {
+        setPayingInvoice(invoice);
+        paymentForm.setData(emptyPayment(invoice.balance_due ?? '0.00'));
+    };
+
+    const setItem = (index: number, key: keyof InvoiceItem, value: string) => {
         const items = [...form.data.items];
         items[index] = { ...items[index], [key]: value };
 
@@ -190,7 +306,10 @@ export default function Invoices({
                 />
 
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
-                    <Card title="Invoice List" description="Manual billing documents">
+                    <Card
+                        title="Invoice List"
+                        description="Manual billing documents"
+                    >
                         <DataTable
                             data={invoices}
                             keyExtractor={(row) => row.id}
@@ -205,6 +324,22 @@ export default function Invoices({
                                             <div className="text-xs text-slate-500 dark:text-slate-300">
                                                 {row.customer?.company_name}
                                             </div>
+                                            {row.project && (
+                                                <div className="text-xs text-slate-500 dark:text-slate-300">
+                                                    {row.project.project_code} -{' '}
+                                                    {row.project.name}
+                                                </div>
+                                            )}
+                                            {row.needs_sales_review && (
+                                                <div className="mt-1">
+                                                    <Badge
+                                                        variant="warning"
+                                                        size="sm"
+                                                    >
+                                                        needs sales review
+                                                    </Badge>
+                                                </div>
+                                            )}
                                         </div>
                                     ),
                                 },
@@ -236,16 +371,32 @@ export default function Invoices({
                                         `${money(row.total)} ${row.currency}`,
                                 },
                                 {
+                                    header: 'Paid',
+                                    accessor: (row) => money(row.paid_amount),
+                                },
+                                {
                                     header: 'Balance',
-                                    accessor: (row) =>
-                                        money(row.balance_due),
+                                    accessor: (row) => money(row.balance_due),
                                 },
                                 {
                                     header: 'Actions',
                                     accessor: (row) => (
                                         <div className="flex flex-wrap gap-2">
+                                            {canRecordPayments &&
+                                                row.status !== 'void' &&
+                                                Number(row.balance_due) > 0 && (
+                                                    <SecondaryButton
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openPayment(row)
+                                                        }
+                                                    >
+                                                        Record Payment
+                                                    </SecondaryButton>
+                                                )}
                                             {row.status !== 'void' &&
-                                                Number(row.paid_amount) <= 0 && (
+                                                Number(row.paid_amount) <=
+                                                    0 && (
                                                     <SecondaryButton
                                                         type="button"
                                                         onClick={() =>
@@ -256,7 +407,8 @@ export default function Invoices({
                                                     </SecondaryButton>
                                                 )}
                                             {row.status !== 'void' &&
-                                                Number(row.paid_amount) <= 0 && (
+                                                Number(row.paid_amount) <=
+                                                    0 && (
                                                     <SecondaryButton
                                                         type="button"
                                                         onClick={() =>
@@ -267,8 +419,7 @@ export default function Invoices({
                                                                 ),
                                                                 {},
                                                                 {
-                                                                    preserveScroll:
-                                                                        true,
+                                                                    preserveScroll: true,
                                                                 },
                                                             )
                                                         }
@@ -283,226 +434,405 @@ export default function Invoices({
                         />
                     </Card>
 
-                    <Card
-                        title={editingInvoice ? 'Edit Invoice' : 'Create Invoice'}
-                        description="Totals are recalculated on save"
-                    >
-                        <form onSubmit={submit} className="space-y-3">
-                            <SelectField
-                                label="Customer"
-                                value={form.data.customer_id}
-                                onChange={(value) => {
-                                    form.setData({
-                                        ...form.data,
-                                        customer_id: value,
-                                        deal_id: '',
-                                    });
-                                }}
-                                options={customers.map((customer) => customer.id)}
-                                labels={Object.fromEntries(
-                                    customers.map((customer) => [
-                                        customer.id,
-                                        customer.company_name,
-                                    ]),
-                                )}
-                            />
-                            <SelectField
-                                label="Deal"
-                                value={form.data.deal_id}
-                                onChange={(value) => form.setData('deal_id', value)}
-                                options={availableDeals.map((deal) => deal.id)}
-                                labels={Object.fromEntries(
-                                    availableDeals.map((deal) => [
-                                        deal.id,
-                                        deal.title,
-                                    ]),
-                                )}
-                            />
-                            <SelectField
-                                label="Status"
-                                value={form.data.status}
-                                onChange={(value) => form.setData('status', value)}
-                                options={['draft', 'sent']}
-                            />
-                            <SelectField
-                                label="Tax Mode"
-                                value={form.data.tax_mode}
-                                onChange={(value) =>
-                                    form.setData('tax_mode', value)
+                    <div className="space-y-6">
+                        {payingInvoice && (
+                            <Card
+                                title="Record Payment"
+                                description={
+                                    'Invoice ' + payingInvoice.invoice_no
                                 }
-                                options={taxModes}
-                            />
-                            <Field
-                                label="Issue Date"
-                                type="date"
-                                value={form.data.issue_date}
-                                error={form.errors.issue_date}
-                                onChange={(value) =>
-                                    form.setData('issue_date', value)
-                                }
-                            />
-                            <Field
-                                label="Due Date"
-                                type="date"
-                                value={form.data.due_date}
-                                error={form.errors.due_date}
-                                onChange={(value) =>
-                                    form.setData('due_date', value)
-                                }
-                            />
-                            <Field
-                                label="Invoice Discount"
-                                type="number"
-                                value={form.data.discount_amount}
-                                error={form.errors.discount_amount}
-                                onChange={(value) =>
-                                    form.setData('discount_amount', value)
-                                }
-                            />
-
-                            <div className="space-y-3 rounded-md border border-slate-200 p-3 dark:border-slate-800">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm font-semibold text-slate-800 dark:text-white">
-                                        Items
+                            >
+                                <form
+                                    onSubmit={submitPayment}
+                                    className="space-y-3"
+                                >
+                                    <div className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-white">
+                                        <div>
+                                            Total: {money(payingInvoice.total)}{' '}
+                                            {payingInvoice.currency}
+                                        </div>
+                                        <div>
+                                            Paid:{' '}
+                                            {money(payingInvoice.paid_amount)}
+                                        </div>
+                                        <div>
+                                            Balance:{' '}
+                                            {money(payingInvoice.balance_due)}
+                                        </div>
                                     </div>
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() =>
-                                            form.setData('items', [
-                                                ...form.data.items,
-                                                { ...emptyItem },
-                                            ])
+                                    <Field
+                                        label="Amount"
+                                        type="number"
+                                        value={paymentForm.data.amount}
+                                        error={paymentForm.errors.amount}
+                                        onChange={(value) =>
+                                            paymentForm.setData('amount', value)
                                         }
-                                    >
-                                        Add
-                                    </SecondaryButton>
-                                </div>
-                                {form.data.items.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-slate-900"
-                                    >
-                                        <SelectField
-                                            label="Product"
-                                            value={item.product_id}
-                                            onChange={(value) =>
-                                                setItem(index, 'product_id', value)
-                                            }
-                                            options={products.map(
-                                                (product) => product.id,
-                                            )}
-                                            labels={Object.fromEntries(
-                                                products.map((product) => [
-                                                    product.id,
-                                                    product.name,
-                                                ]),
-                                            )}
-                                        />
-                                        <Field
-                                            label="Description"
-                                            value={item.description}
-                                            error={
-                                                form.errors[
-                                                    `items.${index}.description` as keyof typeof form.errors
-                                                ] as string
-                                            }
-                                            onChange={(value) =>
-                                                setItem(
-                                                    index,
-                                                    'description',
-                                                    value,
+                                    />
+                                    <Field
+                                        label="Payment Date"
+                                        type="date"
+                                        value={paymentForm.data.payment_date}
+                                        error={paymentForm.errors.payment_date}
+                                        onChange={(value) =>
+                                            paymentForm.setData(
+                                                'payment_date',
+                                                value,
+                                            )
+                                        }
+                                    />
+                                    <SelectField
+                                        label="Payment Method"
+                                        value={paymentForm.data.payment_method}
+                                        onChange={(value) =>
+                                            paymentForm.setData(
+                                                'payment_method',
+                                                value,
+                                            )
+                                        }
+                                        options={[
+                                            'bank_transfer',
+                                            'cash',
+                                            'credit_card',
+                                            'promptpay',
+                                            'other',
+                                        ]}
+                                    />
+                                    <Field
+                                        label="Reference No"
+                                        value={paymentForm.data.reference_no}
+                                        error={paymentForm.errors.reference_no}
+                                        onChange={(value) =>
+                                            paymentForm.setData(
+                                                'reference_no',
+                                                value,
+                                            )
+                                        }
+                                    />
+                                    <Field
+                                        label="Note"
+                                        value={paymentForm.data.note}
+                                        error={paymentForm.errors.note}
+                                        onChange={(value) =>
+                                            paymentForm.setData('note', value)
+                                        }
+                                    />
+                                    <div>
+                                        <InputLabel value="Attachment" />
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                            onChange={(event) =>
+                                                paymentForm.setData(
+                                                    'attachment',
+                                                    event.target.files?.[0] ??
+                                                        null,
                                                 )
                                             }
+                                            className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                                         />
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <Field
-                                                label="Qty"
-                                                type="number"
-                                                value={item.quantity}
-                                                onChange={(value) =>
-                                                    setItem(
-                                                        index,
-                                                        'quantity',
-                                                        value,
-                                                    )
-                                                }
-                                            />
-                                            <Field
-                                                label="Unit Price"
-                                                type="number"
-                                                value={item.unit_price}
-                                                onChange={(value) =>
-                                                    setItem(
-                                                        index,
-                                                        'unit_price',
-                                                        value,
-                                                    )
-                                                }
-                                            />
-                                            <Field
-                                                label="Unit"
-                                                value={item.unit}
-                                                onChange={(value) =>
-                                                    setItem(index, 'unit', value)
-                                                }
-                                            />
-                                            <Field
-                                                label="Tax Rate"
-                                                type="number"
-                                                value={item.tax_rate}
-                                                onChange={(value) =>
-                                                    setItem(
-                                                        index,
-                                                        'tax_rate',
-                                                        value,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                        {form.data.items.length > 1 && (
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() =>
-                                                    form.setData(
-                                                        'items',
-                                                        form.data.items.filter(
-                                                            (_, itemIndex) =>
-                                                                itemIndex !== index,
-                                                        ),
-                                                    )
-                                                }
-                                            >
-                                                Remove
-                                            </SecondaryButton>
-                                        )}
+                                        <InputError
+                                            message={
+                                                paymentForm.errors.attachment
+                                            }
+                                            className="mt-1"
+                                        />
                                     </div>
-                                ))}
-                            </div>
+                                    {payingInvoice.payments &&
+                                        payingInvoice.payments.length > 0 && (
+                                            <PaymentHistory
+                                                payments={
+                                                    payingInvoice.payments
+                                                }
+                                                canReversePayments={
+                                                    canReversePayments
+                                                }
+                                                onReverse={reversePayment}
+                                            />
+                                        )}
+                                    <div className="flex justify-end gap-2">
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() =>
+                                                setPayingInvoice(null)
+                                            }
+                                        >
+                                            Cancel
+                                        </SecondaryButton>
+                                        <PrimaryButton
+                                            disabled={paymentForm.processing}
+                                        >
+                                            Save Payment
+                                        </PrimaryButton>
+                                    </div>
+                                </form>
+                            </Card>
+                        )}
 
-                            <div className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-white">
-                                <div>Subtotal: {money(totals.subtotal)}</div>
-                                <div>Tax: {money(totals.tax)}</div>
-                                <div>Total: {money(totals.total)}</div>
-                            </div>
+                        <Card
+                            title={
+                                editingInvoice
+                                    ? 'Edit Invoice'
+                                    : 'Create Invoice'
+                            }
+                            description="Totals are recalculated on save"
+                        >
+                            <form onSubmit={submit} className="space-y-3">
+                                <SelectField
+                                    label="Customer"
+                                    value={form.data.customer_id}
+                                    onChange={(value) => {
+                                        form.setData({
+                                            ...form.data,
+                                            customer_id: value,
+                                            deal_id: '',
+                                            project_id: '',
+                                        });
+                                    }}
+                                    options={customers.map(
+                                        (customer) => customer.id,
+                                    )}
+                                    labels={Object.fromEntries(
+                                        customers.map((customer) => [
+                                            customer.id,
+                                            customer.company_name,
+                                        ]),
+                                    )}
+                                />
+                                <SelectField
+                                    label="Deal"
+                                    value={form.data.deal_id}
+                                    onChange={(value) =>
+                                        form.setData('deal_id', value)
+                                    }
+                                    options={availableDeals.map(
+                                        (deal) => deal.id,
+                                    )}
+                                    labels={Object.fromEntries(
+                                        availableDeals.map((deal) => [
+                                            deal.id,
+                                            deal.title,
+                                        ]),
+                                    )}
+                                />
+                                <SelectField
+                                    label="Project"
+                                    value={form.data.project_id}
+                                    onChange={(value) =>
+                                        form.setData('project_id', value)
+                                    }
+                                    options={availableProjects.map(
+                                        (project) => project.id,
+                                    )}
+                                    labels={Object.fromEntries(
+                                        availableProjects.map((project) => [
+                                            project.id,
+                                            `${project.project_code} - ${project.name}`,
+                                        ]),
+                                    )}
+                                />
+                                <SelectField
+                                    label="Status"
+                                    value={form.data.status}
+                                    onChange={(value) =>
+                                        form.setData('status', value)
+                                    }
+                                    options={['draft', 'sent']}
+                                />
+                                <SelectField
+                                    label="Tax Mode"
+                                    value={form.data.tax_mode}
+                                    onChange={(value) =>
+                                        form.setData('tax_mode', value)
+                                    }
+                                    options={taxModes}
+                                />
+                                <Field
+                                    label="Issue Date"
+                                    type="date"
+                                    value={form.data.issue_date}
+                                    error={form.errors.issue_date}
+                                    onChange={(value) =>
+                                        form.setData('issue_date', value)
+                                    }
+                                />
+                                <Field
+                                    label="Due Date"
+                                    type="date"
+                                    value={form.data.due_date}
+                                    error={form.errors.due_date}
+                                    onChange={(value) =>
+                                        form.setData('due_date', value)
+                                    }
+                                />
+                                <Field
+                                    label="Invoice Discount"
+                                    type="number"
+                                    value={form.data.discount_amount}
+                                    error={form.errors.discount_amount}
+                                    onChange={(value) =>
+                                        form.setData('discount_amount', value)
+                                    }
+                                />
 
-                            <div className="flex justify-end gap-2">
-                                {editingInvoice && (
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() => {
-                                            setEditingInvoice(null);
-                                            form.setData(emptyInvoice);
-                                        }}
-                                    >
-                                        Cancel
-                                    </SecondaryButton>
-                                )}
-                                <PrimaryButton disabled={form.processing}>
-                                    Save Invoice
-                                </PrimaryButton>
-                            </div>
-                        </form>
-                    </Card>
+                                <div className="space-y-3 rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm font-semibold text-slate-800 dark:text-white">
+                                            Items
+                                        </div>
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() =>
+                                                form.setData('items', [
+                                                    ...form.data.items,
+                                                    { ...emptyItem },
+                                                ])
+                                            }
+                                        >
+                                            Add
+                                        </SecondaryButton>
+                                    </div>
+                                    {form.data.items.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-slate-900"
+                                        >
+                                            <SelectField
+                                                label="Product"
+                                                value={item.product_id}
+                                                onChange={(value) =>
+                                                    setItem(
+                                                        index,
+                                                        'product_id',
+                                                        value,
+                                                    )
+                                                }
+                                                options={products.map(
+                                                    (product) => product.id,
+                                                )}
+                                                labels={Object.fromEntries(
+                                                    products.map((product) => [
+                                                        product.id,
+                                                        product.name,
+                                                    ]),
+                                                )}
+                                            />
+                                            <Field
+                                                label="Description"
+                                                value={item.description}
+                                                error={
+                                                    form.errors[
+                                                        `items.${index}.description` as keyof typeof form.errors
+                                                    ] as string
+                                                }
+                                                onChange={(value) =>
+                                                    setItem(
+                                                        index,
+                                                        'description',
+                                                        value,
+                                                    )
+                                                }
+                                            />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Field
+                                                    label="Qty"
+                                                    type="number"
+                                                    value={item.quantity}
+                                                    onChange={(value) =>
+                                                        setItem(
+                                                            index,
+                                                            'quantity',
+                                                            value,
+                                                        )
+                                                    }
+                                                />
+                                                <Field
+                                                    label="Unit Price"
+                                                    type="number"
+                                                    value={item.unit_price}
+                                                    onChange={(value) =>
+                                                        setItem(
+                                                            index,
+                                                            'unit_price',
+                                                            value,
+                                                        )
+                                                    }
+                                                />
+                                                <Field
+                                                    label="Unit"
+                                                    value={item.unit}
+                                                    onChange={(value) =>
+                                                        setItem(
+                                                            index,
+                                                            'unit',
+                                                            value,
+                                                        )
+                                                    }
+                                                />
+                                                <Field
+                                                    label="Tax Rate"
+                                                    type="number"
+                                                    value={item.tax_rate}
+                                                    onChange={(value) =>
+                                                        setItem(
+                                                            index,
+                                                            'tax_rate',
+                                                            value,
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                            {form.data.items.length > 1 && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        form.setData(
+                                                            'items',
+                                                            form.data.items.filter(
+                                                                (
+                                                                    _,
+                                                                    itemIndex,
+                                                                ) =>
+                                                                    itemIndex !==
+                                                                    index,
+                                                            ),
+                                                        )
+                                                    }
+                                                >
+                                                    Remove
+                                                </SecondaryButton>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-white">
+                                    <div>
+                                        Subtotal: {money(totals.subtotal)}
+                                    </div>
+                                    <div>Tax: {money(totals.tax)}</div>
+                                    <div>Total: {money(totals.total)}</div>
+                                </div>
+
+                                <div className="flex justify-end gap-2">
+                                    {editingInvoice && (
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() => {
+                                                setEditingInvoice(null);
+                                                form.setData(emptyInvoice);
+                                            }}
+                                        >
+                                            Cancel
+                                        </SecondaryButton>
+                                    )}
+                                    <PrimaryButton disabled={form.processing}>
+                                        Save Invoice
+                                    </PrimaryButton>
+                                </div>
+                            </form>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
@@ -525,7 +855,8 @@ function previewTotals(form: InvoiceForm) {
             ? form.items.reduce((sum, item) => {
                   const line = Math.max(
                       0,
-                      Number(item.quantity || 0) * Number(item.unit_price || 0) -
+                      Number(item.quantity || 0) *
+                          Number(item.unit_price || 0) -
                           Number(item.discount_amount || 0),
                   );
 
@@ -535,11 +866,14 @@ function previewTotals(form: InvoiceForm) {
               ? form.items.reduce((sum, item) => {
                     const line = Math.max(
                         0,
-                        Number(item.quantity || 0) * Number(item.unit_price || 0) -
+                        Number(item.quantity || 0) *
+                            Number(item.unit_price || 0) -
                             Number(item.discount_amount || 0),
                     );
                     const rate = Number(item.tax_rate || 0);
-                    return sum + (rate > 0 ? line - (line / (1 + rate / 100)) : 0);
+                    return (
+                        sum + (rate > 0 ? line - line / (1 + rate / 100) : 0)
+                    );
                 }, 0)
               : 0;
     const total = Math.max(
@@ -552,11 +886,70 @@ function previewTotals(form: InvoiceForm) {
     return { subtotal, tax, total };
 }
 
-function money(value: string | number) {
-    return Number(value || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
+function PaymentHistory({
+    payments,
+    canReversePayments,
+    onReverse,
+}: {
+    payments: Payment[];
+    canReversePayments: boolean;
+    onReverse: (payment: Payment) => void;
+}) {
+    const reversedIds = new Set(
+        payments
+            .filter((payment) => payment.entry_type === 'reversal')
+            .map((payment) => payment.reversal_of_payment_id),
+    );
+
+    return (
+        <div className="space-y-2 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800">
+            <div className="font-semibold text-slate-800 dark:text-white">
+                Payment history
+            </div>
+            {payments.map((payment) => {
+                const isReversal = payment.entry_type === 'reversal';
+                const isReversed = reversedIds.has(payment.id);
+
+                return (
+                    <div
+                        key={payment.id}
+                        className="flex items-center justify-between gap-3 text-slate-600 dark:text-slate-300"
+                    >
+                        <div>
+                            <div className="font-medium text-slate-800 dark:text-white">
+                                {isReversal ? 'Reversal' : 'Receipt'}{' '}
+                                {money(payment.amount)}
+                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                                {payment.payment_date?.slice(0, 10)}{' '}
+                                {payment.payment_method}
+                            </div>
+                            {payment.attachment && (
+                                <a
+                                    href={route(
+                                        'files.download',
+                                        payment.attachment.id,
+                                    )}
+                                    className="text-xs font-semibold text-indigo-700 hover:underline dark:text-indigo-300"
+                                >
+                                    {payment.attachment.file_name}
+                                </a>
+                            )}
+                        </div>
+                        {!isReversal && canReversePayments && (
+                            <SecondaryButton
+                                type="button"
+                                disabled={isReversed}
+                                onClick={() => onReverse(payment)}
+                            >
+                                {isReversed ? 'Reversed' : 'Reverse'}
+                            </SecondaryButton>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
 }
 
 function Field({

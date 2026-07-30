@@ -262,17 +262,17 @@ export default function OrganizationStructure({
                     description="Branch, division, and department master data management"
                 />
 
-                <div className="flex flex-wrap gap-2 border-b border-slate-200">
+                <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800">
                     {(['branches', 'divisions', 'departments'] as Tab[]).map(
                         (item) => (
                             <button
                                 key={item}
                                 type="button"
                                 onClick={() => setTab(item)}
-                                className={`px-4 py-2 text-sm font-semibold ${
+                                className={`px-4 py-2 text-sm font-semibold transition-colors duration-150 ${
                                     tab === item
-                                        ? 'border-b-2 border-indigo-600 text-indigo-700'
-                                        : 'text-slate-500 hover:text-slate-800'
+                                        ? 'border-b-2 border-indigo-600 text-indigo-700 dark:text-indigo-400'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                                 }`}
                             >
                                 {item[0].toUpperCase() + item.slice(1)}
@@ -409,7 +409,7 @@ export default function OrganizationStructure({
                                     {
                                         header: 'Branch Name',
                                         accessor: (branch) => (
-                                            <span className="font-semibold text-slate-800">
+                                            <span className="font-semibold text-slate-800 dark:text-white">
                                                 {branch.name}
                                             </span>
                                         ),
@@ -587,7 +587,7 @@ export default function OrganizationStructure({
                                     {
                                         header: 'Division Name',
                                         accessor: (division) => (
-                                            <span className="font-semibold text-slate-800">
+                                            <span className="font-semibold text-slate-800 dark:text-white">
                                                 {division.name}
                                             </span>
                                         ),
@@ -792,7 +792,7 @@ export default function OrganizationStructure({
                                     {
                                         header: 'Department Name',
                                         accessor: (department) => (
-                                            <span className="font-semibold text-slate-800">
+                                            <span className="font-semibold text-slate-800 dark:text-white">
                                                 {department.name}
                                             </span>
                                         ),

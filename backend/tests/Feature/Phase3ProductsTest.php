@@ -39,6 +39,7 @@ class Phase3ProductsTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Finance/Products'));
     }
+
     public function test_finance_user_can_create_product_service_catalog_item(): void
     {
         $finance = User::factory()->create();
@@ -84,6 +85,7 @@ class Phase3ProductsTest extends TestCase
         $this->assertSame(2, Product::where('org_id', $finance->org_id)->whereNull('sku')->count());
         $this->assertSame('0.00', Product::where('name', 'First Service')->firstOrFail()->cost);
     }
+
     public function test_products_are_listed_only_inside_current_organization(): void
     {
         $finance = User::factory()->create();
