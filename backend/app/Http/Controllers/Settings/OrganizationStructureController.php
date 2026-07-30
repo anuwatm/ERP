@@ -26,6 +26,7 @@ class OrganizationStructureController extends Controller
             'branches' => Branch::where('org_id', $orgId)->orderBy('code')->get(['id', 'code', 'name', 'address', 'phone', 'is_head_office', 'status']),
             'divisions' => Division::where('org_id', $orgId)->orderBy('code')->get(['id', 'branch_id', 'code', 'name', 'status']),
             'departments' => Department::where('org_id', $orgId)->orderBy('code')->get(['id', 'branch_id', 'division_id', 'code', 'name', 'status']),
+            'users' => User::where('org_id', $orgId)->orderBy('name')->get(['id', 'branch_id', 'division_id', 'department_id', 'name', 'email', 'position', 'status']),
         ]);
     }
 

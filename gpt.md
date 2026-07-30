@@ -233,3 +233,24 @@ Login route check on 2026-07-30:
 - `http://localhost/login` returns 404 because app lives under `/ERP`
 - Laravel cache/views/routes cleared after check
 - Authentication + Dashboard regression passed: 7 tests / 74 assertions
+---
+
+## 8. Pre-Phase 5 UX Addition: Organization Chart
+
+Added before starting Phase 5:
+
+- Organization Structure page now shows an Organization Chart above the tabs
+- Chart uses existing org hierarchy data:
+  - Branch
+  - Division
+  - Department
+  - Users
+- Backend sends `users` to `Settings/OrganizationStructure`
+- No new database table or migration
+- Verification:
+  - PHP syntax: passed
+  - `Phase11AdminMasterDataTest|test_member_cannot_access_admin_pages`: 11 tests / 34 assertions passed
+  - `pnpm run check-format`: passed
+  - `pnpm run lint`: passed
+  - `pnpm run build`: passed
+  - Laravel Pint: passed
