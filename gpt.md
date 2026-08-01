@@ -1,8 +1,8 @@
 # GPT Decision Log (Clean)
 
-Last cleaned: 2026-07-30
+Last cleaned: 2026-08-01
 
-ไฟล์นี้เก็บเฉพาะ decision / rebuttal / active handoff ที่ยังมีผลต่อการพัฒนาต่อไป ส่วน audit notes ที่ผ่านแล้วถูกตัดออกเพื่อลด context หนัก
+Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, deferred scope, security guardrails และสถานะล่าสุด. รายละเอียด audit ที่แก้จบแล้วให้ดู `gemini.md`, `checklist.md`, `README.md` แทน.
 
 ---
 
@@ -13,16 +13,21 @@ Last cleaned: 2026-07-30
 - Phase 2: Done
 - Phase 3: Done
 - Phase 4: Done
-- Next: Phase 5 Executive Dashboard + E2E/UAT
+- Phase 5: Done / closed after Gemini review
+- Phase 6: In progress
 
-Phase 4 final state:
+Latest verified baseline:
 
-- Projects core: done
-- Tasks core: done
-- Invoice/Expense project link: done
-- Dynamic project cost: done
-- Delivery Dashboard metrics: done
-- `project_members`: deferred Post-MVP/V2
+- Full PHPUnit suite: 154 tests / 1200 assertions passed
+- Laravel Pint: passed
+- `pnpm run check-format`: passed
+- `pnpm run lint`: passed
+- `pnpm run build`: passed
+
+Test command note for local Windows:
+
+- Use PHP with required extensions enabled, e.g. `fileinfo`, `mbstring`, `openssl`, `intl`, `pdo_sqlite`, `sqlite3`, `pdo_mysql`.
+- Previous working full-suite command used `C:\AppServ\php8\php.exe` with `-d extension_dir=C:\AppServ\php8\ext` and explicit `-d extension=...` flags.
 
 ---
 
@@ -30,50 +35,54 @@ Phase 4 final state:
 
 ### MVP Scope
 
-- ไม่มี Cash Balance ใน MVP ทั้ง UI และ JSON/Inertia props
-- ไม่มี export / notification / public API ใน MVP
-- Full tax invoice compliance, credit note, suppliers, PO, inventory เป็น Post-MVP/V2
-- `project_members` ไม่เปิดใน MVP; ใช้ owner/assignee-only ก่อน
+- No Cash Balance in MVP: no UI widget, no JSON/Inertia prop, no API field.
+- No export / notifications / public API in MVP.
+- Full tax invoice compliance, credit note, suppliers, PO, inventory: Post-MVP/V2.
+- Generic file module for customer/deal/project/task: Post-MVP/V2.
+- `project_members`: deferred Post-MVP/V2; MVP uses owner/assignee scope.
 
 ### Security / Permission
 
-- ใช้ `User::hasPermissionCode()` เป็น helper กลางสำหรับ permission checks
-- Finance Dashboard แสดงเฉพาะ user ที่มี `expenses.view`
-- Delivery Dashboard แสดงเฉพาะ user ที่มี `projects.view` หรือ `tasks.view`
-- Member ที่มีแค่ `tasks.view` เห็นเฉพาะ task scope ของตัวเอง และไม่เห็น project financial metrics
-- `person_id`, password, token, secrets ห้ามหลุดใน UI/log/Inertia props
-- Sensitive writes ใช้ `password.confirm` ตาม route ที่กำหนด
+- Use `User::hasPermissionCode()` as central permission helper.
+- Sensitive writes require `password.confirm` where already scoped.
+- `person_id`, password, token, secrets must not leak in UI/log/Inertia props.
+- AuditLog must keep central recursive redaction:
+  - any key containing `password`
+  - any key containing `token`
+  - any key containing `secret`
+  - `person_id` is masked after type-safe string/null casting
+- Production invite flow must not flash plain invite token or `invite_url`.
+- User disable, role change, and role permission changes must invalidate affected sessions and rotate/clear `remember_token` where implemented.
+- Executive Dashboard data is visible only to `executive.dashboard.view` or owner/admin fallback.
+- Department dashboards stay permission scoped:
+  - Finance Dashboard: `expenses.view`
+  - Delivery Dashboard: `projects.view` or `tasks.view`
+- Member with only `tasks.view` sees own task scope and no project financial metrics.
 
 ### Sales / Invoice
 
-- Invoice จาก deal ที่ถูก void ไม่ auto-reopen deal
-- ใช้ derived flag `needs_sales_review` แทน auto state change ของ Deal
-- เหตุผล: void invoice เป็น finance correction ได้ ไม่ได้แปลว่า deal ยกเลิกเสมอ
+- Void invoice from deal does not auto-reopen or auto-change deal state.
+- Use derived `needs_sales_review` flag instead.
+- Reason: void invoice can be a finance correction, not necessarily deal cancellation.
 
-### Payments
+### Payments / Finance
 
-- Payment receipt/reversal ใช้ `idempotency_key`
-- ห้าม overpay ด้วย transaction + `lockForUpdate()`
-- Reversal amount เก็บเป็นบวก แต่ Cash In / Net Cash Flow ต้องหักด้วย `entry_type = reversal`
-- ห้ามใช้ `SUM(payments.amount)` ตรง ๆ สำหรับ cash-in report
-
-### Expenses / Files
-
-- Expense status: `draft`, `approved`, `paid`, `rejected`
-- Project cost นับเฉพาะ expenses status `approved` หรือ `paid`
-- Files MVP จำกัดเฉพาะ payment slip และ expense receipt
-- Generic files สำหรับ customer/deal/project/task เป็น Post-MVP/V2
+- Payment receipt/reversal uses `idempotency_key`.
+- No overpay is enforced with transaction + `lockForUpdate()`.
+- Reversal amount is stored positive, but reports must subtract by `entry_type = reversal`.
+- Do not use raw `SUM(payments.amount)` for cash-in or net cash flow.
+- Project actual cost is derived from expenses with status `approved` or `paid` only.
 
 ### Projects / Tasks
 
-- ไม่มี `projects.actual_cost`
-- Project actual cost เป็น derived value จาก approved/paid expenses เท่านั้น
-- Project progress เป็น manual `progress_percent`
-- Project Manager เห็น project ที่ตัวเองเป็น owner
-- Member เห็นเฉพาะ task ที่ assign ให้ตัวเอง
-- Member update task ได้เฉพาะ `status`
-- Internal task รองรับ `project_id = null`
-- `blocked` task ไม่นับเป็น overdue ใน MVP
+- No `projects.actual_cost` column.
+- Project progress is manual `progress_percent`.
+- Project Manager sees projects they own.
+- Member sees tasks assigned to them.
+- Member can update task `status` only.
+- Internal tasks support `project_id = null`.
+- `blocked` tasks do not count as overdue in MVP.
+- Delivery Risk count uses distinct project IDs, not duplicated risk rows.
 
 ---
 
@@ -81,176 +90,163 @@ Phase 4 final state:
 
 ### `project_members`
 
-Decision: defer Post-MVP/V2
+Decision: defer Post-MVP/V2.
 
-เหตุผล:
+Reason:
 
-- Phase 4 ผ่านด้วย owner/assignee-only visibility แล้ว
-- `ProjectAccess` และ `TaskAccess` enforce scope ชัดเจนแล้ว
-- การเพิ่ม `project_members` จะกระทบ data model, permission matrix, UI assignment, dashboard scope, tests และ migration เพิ่ม
-- Gemini ตรวจ Phase 4 แล้วให้ `Fully Verified & Completed` ไม่มี blocker
+- Phase 4 passed with owner/assignee-only visibility.
+- Adding it affects data model, permission matrix, UI assignment, dashboard scope, tests, and migrations.
+- Gemini Phase 4 audit marked current model as completed.
 
 ### Tax / Invoice Compliance
 
 Deferred:
 
-- Inclusive VAT subtotal display แบบ net subtotal
-- Header discount VAT allocation
-- Credit note / full tax invoice compliance
+- Inclusive VAT subtotal display as net subtotal.
+- Header discount VAT allocation.
+- Credit note / full tax invoice compliance.
 
-เหตุผล:
+Reason:
 
-- เป็น accounting/tax compliance รอบใหญ่
-- กระทบสูตร backend, UI preview, historical invoice expectations, tests และเอกสาร
+- Larger accounting compliance scope.
+- Impacts backend formula, UI preview, historical expectations, tests, and docs.
 
 ### Number Format Expansion
 
 Deferred:
 
-- `invoice_no` / `expense_no` จาก `char(6)` เป็น `varchar(30)`
+- `invoice_no` / `expense_no` from `char(6)` to `varchar(30)`.
 
-เหตุผล:
+Reason:
 
-- ยังไม่เป็น blocker ของ MVP
-- ควรทำตอนเตรียม UAT/demo หรือก่อนปรับ numbering format จริง
+- Not an MVP blocker.
+- Do when preparing real UAT/demo numbering format.
 
 ### Dashboard Date Filters
 
 Deferred:
 
-- Finance/Delivery dashboard period filters รายเดือน/รายปี/custom range
+- Dashboard Date Filters are now implemented for Finance/Delivery/Executive metrics: all-time/month/year/custom range.
 
-เหตุผล:
+### Code Optimization / Refactor
 
-- ตอนนี้เป็น all-time aggregate ตาม MVP
-- ควรทำใน Phase 5 หรือ reporting enhancement
+Decision: do not do broad dedup/refactor inside closed Phase 5.
 
-### Demo Seeder Expansion
+Reason:
 
-Deferred:
-
-- เพิ่ม demo seed สำหรับ products, invoices, payments, expenses, projects, tasks
-
-เหตุผล:
-
-- เหมาะกับ Phase 5 UAT seed data
+- Phase 5 hardening is security-sensitive and green.
+- Broad refactor should be Phase 6 cleanup or a dedicated branch with full regression.
 
 ---
 
-## 4. Phase 3 Final Summary
+## 4. Phase Reference Summary
 
-Completed:
+### Phase 3: Finance
 
-- Products/Services catalog
-- Manual invoice + invoice items
-- Create invoice from deal with prefill
-- Server-side invoice totals
-- Payment receipt, partial payment, no overpay, reversal
-- Expenses draft/approve/pay/reject
-- Payment/expense attachments
-- Finance Dashboard
-- Overdue invoice command
-- `needs_sales_review` after void invoice from deal
-- Concurrent payment no-overpay test
+Completed and important behavior:
 
-Important verification references:
+- Products/Services catalog.
+- Manual invoice + invoice items.
+- Invoice from deal with prefill.
+- Server-side invoice totals.
+- Payment receipt, partial payment, no overpay, reversal.
+- Expenses draft/approve/pay/reject.
+- Payment/expense attachments.
+- Finance Dashboard.
+- Overdue invoice command.
+- `needs_sales_review` after void invoice from deal.
+- Concurrent payment no-overpay test.
 
-- Phase 3 final regression recorded: 55 Phase 3 tests / 401 assertions
-- Later Phase 3/4 regression subsets passed during Phase 4 work
+### Phase 4: Delivery
+
+Completed and important behavior:
+
+- Projects + tasks + task_checklists + task_comments.
+- Manual project and project from won deal.
+- One project per deal.
+- Project owner visibility and reassignment guard.
+- Internal task with `project_id = null`.
+- Member task visibility and status-only update.
+- Invoice project link guarded by customer match.
+- Expense project link guarded by org.
+- Dynamic project cost from approved/paid expenses.
+- Delivery Dashboard metrics.
+- `project_members` deferred Post-MVP/V2.
+
+### Pre-Phase 5 UX Addition
+
+Organization Structure page includes Organization Chart.
+
+- Uses existing Branch -> Division -> Department -> Users data.
+- No new database table/migration.
+
+### Phase 5: Executive Dashboard + E2E/UAT
+
+Completed and important behavior:
+
+- Executive Dashboard aggregates Sales + Finance + Delivery.
+- `executive.dashboard.view` permission added.
+- Owner/admin fallback can see executive summary.
+- No Cash Balance in UI/props/API.
+- UAT seed data added in `Phase1DemoSeeder`.
+- Expected UAT dashboard values documented in `docs/SEED_DATA.md`.
+- E2E coverage added:
+  - Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
+  - Role isolation
+  - Multi-role UNION permission
+  - Payment reversal metrics
+  - Invoice totals
+  - Dashboard metrics
+  - `needs_sales_review` after invoice void
+  - No export/notifications/public API scope
+  - Audit log redaction and session invalidation
+  - Production invite does not flash plain token
+
+Gemini final review:
+
+- Phase 5 marked fully audited/secured in `gemini.md`.
+- No new actionable code changes after latest review.
 
 ---
 
-## 5. Phase 4 Final Summary
+## 5. Operational Notes
 
-Completed:
+Local URL:
 
-- Projects table/model/controller/UI
-- Create manual project
-- Create project from won deal, one project per deal
-- Project owner visibility and owner reassignment
-- Tasks, checklists, comments
-- Internal task with `project_id = null`
-- Member task visibility and status-only update
-- Invoice project link with customer match guard
-- Expense project link with org guard
-- Dynamic project cost from approved/paid expenses
-- Project list Actual Cost / Margin
-- Delivery Dashboard metrics
-- Phase 4 UAT gate closed: `project_members` deferred Post-MVP/V2
+- Correct local Apache URL: `http://localhost/ERP/login`.
+- `http://localhost/login` returns 404 because app lives under `/ERP`.
 
-Delivery Dashboard metrics:
+When Gemini reviews:
 
-- Active Projects = `planning`, `active`, `on_hold`
-- Project Status breakdown
-- Overdue Tasks = `todo` / `in_progress` where `due_date < today`
-- Task Load = open tasks by assignee (`todo`, `in_progress`, `blocked`)
-- Budget vs Expense = budget vs approved/paid expenses
-- Project Profit = total budget - actual cost
-- Delivery Risk = distinct risk project count plus breakdown
+- Gemini should read this file for current decisions only.
+- Historical full details are intentionally removed to reduce context weight.
+- If Gemini suggests broad optimization/refactor, ask for a scoped target and risk/test plan before implementation.
+---
 
-Important verification references:
+## 6. Phase 6 Started: Dashboard Date Filters
 
-- `Phase4DeliveryDashboardTest`: 3 tests / 66 assertions
-- Phase 4 + Finance Dashboard regression: 23 tests / 250 assertions
-- Phase 4 finance/project cost regression: 28 tests / 178 assertions
+Implemented on 2026-08-01:
+
+- Added `dashboardFilters` query handling to `DashboardController`.
+- Supported periods:
+  - `all_time` default
+  - `month` via `month=YYYY-MM`
+  - `year` via `year=YYYY`
+  - `custom` via `from=YYYY-MM-DD&to=YYYY-MM-DD`
+- Applied selected range to Executive, Finance, and Delivery metrics while keeping default all-time behavior unchanged.
+- Added Dashboard UI filter bar with Apply/Reset controls.
+- Added `Phase6DashboardFiltersTest` covering month filter behavior across sales, finance, delivery, and returned filter props.
+
+Verification:
+
+- Phase 5 + Phase 6 dashboard tests: 11 tests / 299 assertions passed
+- Full PHPUnit suite: 154 tests / 1200 assertions passed
+- Laravel Pint: passed
 - `pnpm run check-format`: passed
 - `pnpm run lint`: passed
 - `pnpm run build`: passed
-- Laravel Pint: passed
 
-Gemini final Phase 4 audit:
+Remaining Phase 6:
 
-- Section 20 status: `Fully Verified & Completed`
-- No blocker / no code change required
-
----
-
-## 6. Next Phase 5 Focus
-
-Start Phase 5 with:
-
-- Executive Dashboard aggregates Sales + Finance + Delivery
-- Widget visibility by permission
-- No Cash Balance shown
-- E2E flow: Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
-- E2E role isolation tests
-- E2E payment reversal tests
-- E2E invoice totals tests
-- E2E dashboard metrics tests
-- E2E multi-role UNION permission test
-- E2E `needs_sales_review` after invoice void
-- UAT seed data and expected dashboard values
-- Security review: no password/token/secret/full `person_id`
-- Negative scope test: no export/notifications/public API in MVP
-
----
-
-## 7. Recent Operational Note
-
-Login route check on 2026-07-30:
-
-- Correct URL in local Apache setup: `http://localhost/ERP/login`
-- `http://localhost/login` returns 404 because app lives under `/ERP`
-- Laravel cache/views/routes cleared after check
-- Authentication + Dashboard regression passed: 7 tests / 74 assertions
----
-
-## 8. Pre-Phase 5 UX Addition: Organization Chart
-
-Added before starting Phase 5:
-
-- Organization Structure page now shows an Organization Chart above the tabs
-- Chart uses existing org hierarchy data:
-  - Branch
-  - Division
-  - Department
-  - Users
-- Backend sends `users` to `Settings/OrganizationStructure`
-- No new database table or migration
-- Verification:
-  - PHP syntax: passed
-  - `Phase11AdminMasterDataTest|test_member_cannot_access_admin_pages`: 11 tests / 34 assertions passed
-  - `pnpm run check-format`: passed
-  - `pnpm run lint`: passed
-  - `pnpm run build`: passed
-  - Laravel Pint: passed
+- Number format expansion: `invoice_no` / `expense_no` from `char(6)` to `varchar(30)`.
+- Tax / Invoice Compliance first pass: inclusive VAT display and header discount VAT allocation.

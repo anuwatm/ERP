@@ -9,6 +9,7 @@ class PermissionCatalog
         return [
             ['code' => 'dashboard.view', 'module' => 'dashboard', 'action' => 'view', 'description' => 'View admin dashboard'],
             ['code' => 'sales.dashboard.view', 'module' => 'sales', 'action' => 'view', 'description' => 'View sales dashboard'],
+            ['code' => 'executive.dashboard.view', 'module' => 'executive', 'action' => 'view', 'description' => 'View executive dashboard'],
             ['code' => 'users.view', 'module' => 'users', 'action' => 'view', 'description' => 'View users'],
             ['code' => 'users.create', 'module' => 'users', 'action' => 'create', 'description' => 'Invite users'],
             ['code' => 'users.update', 'module' => 'users', 'action' => 'update', 'description' => 'Update users'],

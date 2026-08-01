@@ -52,9 +52,44 @@
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-- มี user ทุก role.
-- มีข้อมูลที่ทดสอบ permission visibility ได้.
-- มี expected dashboard numbers สำหรับ automated test.
+- Demo users ครบ role หลัก:
+  - `owner@example.com`
+  - `admin@example.com`
+  - `sales@example.com`
+  - `finance@example.com`
+  - `pm@example.com`
+  - `member@example.com`
+  - `viewer@example.com`
+- UAT records เพิ่มจาก Phase 1/2 seed:
+  - Customer: `UAT Executive Co., Ltd.`
+  - Open deal: `UAT Pipeline Deal` = `120000`
+  - Won deal: `UAT Won Delivery Deal` = `100000`
+  - Products/services: `UAT-SVC-001`, `UAT-SVC-002`, `UAT-SVC-003`, `UAT-PRD-001`, `UAT-PRD-002`
+  - Invoice: `000001`, `partially_paid`, total `100000`, paid `25000`, balance due `75000`
+  - Payment receipt `30000` and reversal `5000`, expected Cash In `25000`
+  - Project: `UAT Delivery Project`, active, budget `100000`
+  - Expenses: approved `15000`, paid `10000`, draft/rejected excluded from recognized cost
+  - Tasks: 1 overdue urgent task, 1 blocked overdue-excluded task, 1 done task
+- Expected Executive Dashboard numbers from `Phase1DemoSeeder`:
+  - Customers = `3`
+  - Open Deals = `2`
+  - Pipeline Value = `300000`
+  - Won Deals = `2`
+  - Won Value = `195000`
+  - Invoiced Revenue = `100000`
+  - Cash In = `25000`
+  - Outstanding AR = `75000`
+  - Overdue AR = `0`
+  - Recognized Expense = `25000`
+  - Gross Profit = `75000`
+  - Active Projects = `1`
+  - Overdue Tasks = `1`
+  - Project Profit = `75000`
+  - Delivery Risk Count = `1`
+  - Net Cash Flow = `15000`
+- UAT decision gate:
+  - Keep `needs_sales_review` after invoice void.
+  - Do not auto-create or auto-reopen deal workflow in MVP.
 
 ## Number sequence algorithm
 
@@ -62,7 +97,3 @@ Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dash
 - ถ้ายังไม่มี record ของ doc_type นั้น ให้ตั้ง `last_number=0`.
 - เวลา generate: lock row, 
 - `next = last_number + 1`, code = `LPAD(next, 6, '0')`, update `last_number = next`.
-
-
-
-

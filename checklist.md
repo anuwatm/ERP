@@ -24,7 +24,8 @@
 | Phase 2 | Done | CRM/Sales + Sales Dashboard เสร็จและตรวจผ่าน |
 | Phase 3 | Done | Finance + Finance Dashboard completed |
 | Phase 4 | Done | Delivery + Delivery Dashboard completed; project_members deferred Post-MVP |
-| Phase 5 | Not started | Executive Dashboard + E2E/UAT |
+| Phase 5 | Done | Executive Dashboard + E2E/UAT completed and Gemini review closed |
+| Phase 6 | In Progress | Reporting/filters/operational polish started; Dashboard Date Filters completed |
 
 ---
 
@@ -378,25 +379,36 @@ Exit criteria:
 
 ## Phase 5: Executive Dashboard + E2E/UAT
 
-- [ ] Executive Dashboard aggregates Sales + Finance + Delivery
-- [ ] Widget visibility by permission
-- [ ] No Cash Balance shown
-- [ ] End-to-end flow test: Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
-- [ ] E2E role isolation tests
-- [ ] E2E payment reversal tests
-- [ ] E2E invoice totals tests
-- [ ] E2E dashboard metrics tests
-- [ ] E2E multi-role UNION permission test
-- [ ] E2E `needs_sales_review` after invoice void
-- [ ] UAT seed data
-- [ ] UAT dashboard expected values
-- [ ] UAT expected numbers จาก `docs/SEED_DATA.md`
-- [ ] Phase 5 UAT decision gate: evaluate auto deal workflow vs `needs_sales_review`
-- [ ] Security review
-- [ ] Log/audit ไม่มี password, token, secret, `person_id` เต็ม
-- [ ] ไม่มี Cash Balance ใน UI และ JSON props/API
-- [ ] Negative scope test: no export/notifications/public API in MVP
-- [ ] Grok/Gemini review
-- [ ] Update `README.md` with Phase 5 features
+- [x] Executive Dashboard aggregates Sales + Finance + Delivery
+- [x] Widget visibility by permission
+- [x] No Cash Balance shown
+- [x] End-to-end flow test: Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
+- [x] E2E role isolation tests
+- [x] E2E payment reversal tests
+- [x] E2E invoice totals tests
+- [x] E2E dashboard metrics tests
+- [x] E2E multi-role UNION permission test
+- [x] E2E `needs_sales_review` after invoice void
+- [x] UAT seed data
+- [x] UAT dashboard expected values
+- [x] UAT expected numbers จาก `docs/SEED_DATA.md`
+- [x] Phase 5 UAT decision gate: evaluate auto deal workflow vs `needs_sales_review`
+- [x] Security review
+- [x] Log/audit ไม่มี password, token, secret, `person_id` เต็ม
+- [x] ไม่มี Cash Balance ใน UI และ JSON props/API
+- [x] Negative scope test: no export/notifications/public API in MVP
+- [x] Grok/Gemini review
+- [x] Update `README.md` with Phase 5 features
+---
 
+## Phase 6: Reporting / Filters / Operational Polish
 
+- [x] Dashboard Date Filters: all-time/month/year/custom range
+- [x] Finance Dashboard metrics respect selected date range
+- [x] Delivery Dashboard metrics respect selected date range
+- [x] Executive Dashboard metrics respect selected date range
+- [x] Dashboard filter UI with Apply/Reset controls
+- [x] Tests for dashboard date filter behavior
+- [ ] Number format expansion: `invoice_no` / `expense_no` from `char(6)` to `varchar(30)`
+- [ ] Tax / Invoice Compliance first pass: inclusive VAT display and header discount VAT allocation
+- [x] Update `README.md` with Phase 6 completed features

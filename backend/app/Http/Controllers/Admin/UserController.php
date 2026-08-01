@@ -13,6 +13,7 @@ use App\Support\PersonIdMask;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -93,6 +94,10 @@ class UserController extends Controller
             return $user;
         });
 
+        if (app()->environment('production')) {
+            return back()->with('success', 'Invite created.');
+        }
+
         return back()->with('success', 'Invite created. Accept token: '.$plainToken)->with('invite_url', route('invites.accept', ['user' => $invited->id, 'token' => $plainToken], absolute: false));
     }
 
@@ -138,6 +143,14 @@ class UserController extends Controller
             ]);
             $user->roles()->sync([$newRole->id => ['assigned_at' => now(), 'assigned_by' => $actor->id]]);
 
+            $roleChanged = count($oldRoleIds) !== 1 || ! in_array($newRole->id, $oldRoleIds);
+            if ($roleChanged) {
+                $user->forceFill(['remember_token' => Str::random(60)])->save();
+                if (Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+            }
+
             $this->audit($actor, 'user.update', 'user', $user->id, $before + ['role_ids' => $oldRoleIds], $user->fresh()->only(['name', 'email', 'position', 'phone', 'person_id', 'branch_id', 'division_id', 'department_id']) + ['role_ids' => [$newRole->id]]);
         });
 
@@ -173,7 +186,14 @@ class UserController extends Controller
         abort_if($this->isLastOwner($user), 422, 'Cannot disable last owner.');
 
         $before = $user->only(['status']);
-        $user->update(['status' => 'inactive', 'updated_by' => $actor->id]);
+
+        DB::transaction(function () use ($user, $actor): void {
+            $user->update(['status' => 'inactive', 'updated_by' => $actor->id]);
+            $user->forceFill(['remember_token' => Str::random(60)])->save();
+            if (Schema::hasTable('sessions')) {
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+            }
+        });
 
         $this->audit($actor, 'user.disable', 'user', $user->id, $before, ['status' => 'inactive']);
 

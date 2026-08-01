@@ -7,7 +7,7 @@
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-สถานะปัจจุบัน: **Phase 4 เสร็จสมบูรณ์แล้ว 100% (ผ่าน UAT Decision Gate / รอรันเฟส 5 Executive Dashboard & E2E)**
+สถานะปัจจุบัน: **Phase 6 เริ่มแล้ว: Dashboard Date Filters เสร็จและตรวจผ่าน**
 
 ---
 
@@ -41,7 +41,8 @@ Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dash
 | **Phase 2** | **Done** | โมดูล CRM & ดีลการขาย (Customers, Contacts, Deals, Activity Timeline, Sales Dashboard) |
 | **Phase 3** | **Done** | โมดูลระบบการเงิน แคตตาล็อกสินค้า ใบแจ้งหนี้ การจ่ายเงิน/คืนเงิน ใบเบิกค่าใช้จ่าย และระบบไฟล์แนบที่ปลอดภัย |
 | **Phase 4** | **Done** | โมดูลระบบการส่งมอบงานและโครงการ (Projects, Tasks, Checklists, Comments, Finance-Project Link, Delivery Dashboard) |
-| **Phase 5** | **Not started** | โมดูลระบบผู้บริหาร (Executive Dashboard) และการทดสอบระบบแบบ End-to-End (E2E) พร้อมจำลอง UAT |
+| **Phase 5** | **Done** | Executive Dashboard, E2E tests, UAT seed expected values และ Security Review ผ่าน Gemini review แล้ว |
+| **Phase 6** | **In Progress** | Reporting / Filters / Operational Polish: Dashboard Date Filters เสร็จแล้ว |
 
 ### สรุปความคืบหน้าของฟีเจอร์ที่สร้างแล้ว (Implemented Features)
 
@@ -53,6 +54,8 @@ Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dash
 | **Phase 2** | ระบบ CRM: จัดการลูกค้าพร้อมผู้ติดต่อหลัก (Primary Contact), ดีลการขายพร้อมประวัติการนัดหมาย/อีเมล (Polymorphic Activity Timeline) และ Sales Dashboard | 2026-07-26 |
 | **Phase 3** | แคตตาล็อกสินค้า, ใบแจ้งหนี้, การชำระเงินจำกัดยอดไม่ให้จ่ายเกิน (Overpay Guard), การคืนเงิน (Reversal), ใบเบิกค่าใช้จ่ายพร้อมอัปโหลดไฟล์/ดาวน์โหลดไฟล์ตรวจสอบสิทธิ์ และ Finance Dashboard | 2026-07-29 |
 | **Phase 4** | โปรเจกต์ส่งมอบงานผูกกับดีลการชนะ, งานย่อย (Tasks) พร้อม Checklist/Comments, ลิงก์ Invoice/Expense เข้าโครงการ, Derived Project Cost (ราคาทุนจริงคำนวณสะสมสดจาก Expense ที่ผ่านการอนุมัติ) และ Delivery Dashboard | 2026-07-30 |
+| **Phase 5** | Executive Dashboard รวมค่า Sales pipeline/won, Finance revenue/cash-in/AR/profit และ Delivery active/risk/project profit โดยไม่แสดง Cash Balance | 2026-08-01 |
+| **Phase 6** | Dashboard Date Filters สำหรับ Executive / Finance / Delivery metrics รองรับ All-time, Month, Year และ Custom Range | 2026-08-01 |
 
 ---
 
@@ -110,6 +113,17 @@ ERP/
 
 ## 5. รายละเอียดคุณสมบัติเด่นของแต่ละเฟส (Phase Features & Implementation Details)
 
+
+### Phase 6: Reporting / Filters / Operational Polish
+*   **Dashboard Date Filters:** หน้า Dashboard หลักรองรับการกรองช่วงเวลาแบบ All-time, Month, Year และ Custom Range โดยส่งค่า filter ผ่าน query params (`period`, `month`, `year`, `from`, `to`)
+*   **Scoped Metrics:** ตัวกรองช่วงเวลาถูกใช้กับ Executive, Finance และ Delivery metrics โดยค่าเริ่มต้นยังเป็น All-time เพื่อรักษาพฤติกรรมเดิม
+*   **Filter UI:** เพิ่มแถบ Apply/Reset สำหรับเลือกช่วงเวลาใน Dashboard หลัก
+*   *สถานะทดสอบ:* เพิ่ม `Phase6DashboardFiltersTest`; Full PHPUnit suite ผ่าน 154 tests / 1200 assertions พร้อม Pint, Prettier, ESLint และ Vite Build
+### Phase 5: ระบบ Dashboard ผู้บริหาร (Executive Dashboard)
+*   **Executive Summary:** รวมภาพธุรกิจจาก Sales, Finance และ Delivery ในหน้า Dashboard หลักสำหรับ Owner/Admin ได้แก่ Pipeline Value, Won Value, Cash In, Outstanding AR, Gross Profit, Active Projects, Delivery Risk และ Project Profit
+*   **Permission Guard:** `executiveSummary` ส่งเฉพาะผู้มี `executive.dashboard.view` หรือบทบาท `owner/admin`; ผู้ใช้บทบาทเฉพาะแผนกยังเห็นเฉพาะ dashboard ย่อยตามสิทธิ์เดิม
+*   **No Cash Balance Rule:** ไม่ส่งและไม่แสดงค่า Cash Balance ทั้งใน UI และ Inertia props ของ Executive Dashboard
+*   *สถานะทดสอบ:* เพิ่ม `Phase5ExecutiveDashboardTest`, `Phase5EndToEndTest`, และ `Phase5UatSeedDataTest` ผ่านรวม 8 tests / 228 assertions
 ### Phase 4: ระบบส่งมอบโครงการและตารางงาน (Delivery & Project Management)
 *   **การสร้างโครงการ (Projects):** สามารถสร้างโครงการจากยอดมูลค่าของดีลขายที่ชนะ (`won_stage`) เพื่อดึงงบประมาณและข้อมูลลูกค้ามาตั้งต้นอัตโนมัติ 1 ดีลผูกได้สูงสุด 1 โครงการ และมีระบบป้องกันเปลี่ยนเจ้าของโครงการข้ามบุคคลหากไม่มีสิทธิ์ `projects.reassign`
 *   **งานย่อยและเช็คลิสต์ (Tasks, Checklists & Comments):** ระบบติดตามงานย่อยใต้โครงการ รองรับ Checklist แยกย่อย (โดยตาราง `task_checklists` มีการสลักคอลัมน์ `org_id` แยก Tenant ป้องกันข้อมูลรั่วไหล) และเว็บบอร์ดเขียนคอมเมนต์อัปเดตงาน
@@ -262,5 +276,4 @@ pnpm run build
 *   **ระบบสมาชิกโครงการ (`project_members`):** เลื่อนไปเป็นสิทธิ์ทีมในรุ่นถัดไป (V2) โดยใน MVP ปัจจุบันใช้ระบบควบคุมสิทธิ์และความปลอดภัยผ่านเจ้าของโครงการ (Project Owner) และผู้ได้รับมอบหมายงาน (Assignee) ซึ่งผ่านการตรวจสอบความปลอดภัยของสิทธิ์เรียบร้อยแล้ว
 *   **ระบบไฟล์แนบส่วนกลาง (Generic Files):** ใน MVP นี้การอัปโหลดไฟล์จะจำกัดเฉพาะสลิปโอนเงิน (Payment slip) และใบเสร็จค่าใช้จ่าย (Expense receipt) เท่านั้น ส่วนระบบแชร์ไฟล์บน Customer, Deal, Project, Task ทั่วไปจะถูกจัดเตรียมในรุ่น V2
 *   **การจัดการภาษีขั้นสูง (Advanced Tax Compliance):** ระบบปันส่วนส่วนลดระดับหัวเอกสาร (Header Discount allocation), การทำเอกสารใบลดหนี้ (Credit Note) และเอกสารกำกับภาษีแบบเต็มรูปแบบ
-*   **ตัวกรองช่วงเวลาบน Dashboard (Dashboard Date Filters):** การกรองข้อมูลแดชบอร์ดสรุปผลรายเดือน/รายปี หรือแบบกำหนดช่วงเวลาเอง (ปัจจุบันแสดงยอดสะสมแบบ All-time)
 *   **ระบบส่งออกและแจ้งเตือน (Export / Notifications):** การส่งออกรายงานเป็น Excel/CSV และการส่งอีเมล/ไลน์แจ้งเตือนอัติโนมัติเมื่อเกิดกิจกรรมใหม่ (จะถูกจัดทำใน V2)

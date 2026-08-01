@@ -9,6 +9,9 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,7 +46,17 @@ class RoleController extends Controller
 
         abort_if($this->wouldRemoveLastOwner($user, $oldRoleIds, $newRole->id), 422, 'Cannot remove last owner.');
 
-        $user->roles()->sync([$newRole->id => ['assigned_at' => now(), 'assigned_by' => $actor->id]]);
+        DB::transaction(function () use ($user, $newRole, $actor, $oldRoleIds): void {
+            $user->roles()->sync([$newRole->id => ['assigned_at' => now(), 'assigned_by' => $actor->id]]);
+
+            $roleChanged = count($oldRoleIds) !== 1 || ! in_array($newRole->id, $oldRoleIds);
+            if ($roleChanged) {
+                $user->forceFill(['remember_token' => Str::random(60)])->save();
+                if (Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+            }
+        });
 
         $this->audit($actor, 'user.role_change', 'user', $user->id, ['role_ids' => $oldRoleIds], ['role_ids' => [$newRole->id]]);
 
@@ -63,7 +76,19 @@ class RoleController extends Controller
 
         $permissionIds = $validated['permission_ids'] ?? [];
         $before = $role->permissions()->pluck('permissions.code')->sort()->values()->all();
-        $role->permissions()->sync($permissionIds);
+
+        DB::transaction(function () use ($role, $permissionIds): void {
+            $role->permissions()->sync($permissionIds);
+
+            $userIds = $role->users()->pluck('users.id')->all();
+            if (! empty($userIds)) {
+                User::whereIn('id', $userIds)->update(['remember_token' => null]);
+                if (Schema::hasTable('sessions')) {
+                    DB::table('sessions')->whereIn('user_id', $userIds)->delete();
+                }
+            }
+        });
+
         $after = $role->fresh()->permissions()->pluck('permissions.code')->sort()->values()->all();
 
         $this->audit($actor, 'role.permission_update', 'role', $role->id, ['permission_codes' => $before], ['permission_codes' => $after]);

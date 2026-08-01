@@ -227,8 +227,7 @@ export default function OrganizationStructure({
                 });
 
                 const divisionUsers = users.filter(
-                    (u) =>
-                        u.division_id === division.id && !u.department_id,
+                    (u) => u.division_id === division.id && !u.department_id,
                 );
                 const divUserMatches = divisionUsers.some(
                     (u) =>
@@ -273,14 +272,17 @@ export default function OrganizationStructure({
             e.preventDefault();
             const zoomFactor = 0.05;
             setScale((s) => {
-                const newScale = e.deltaY < 0 
-                    ? Math.min(s + zoomFactor, 2.0) 
-                    : Math.max(s - zoomFactor, 0.3);
+                const newScale =
+                    e.deltaY < 0
+                        ? Math.min(s + zoomFactor, 2.0)
+                        : Math.max(s - zoomFactor, 0.3);
                 return newScale;
             });
         };
 
-        viewport.addEventListener('wheel', handleWheelEvent, { passive: false });
+        viewport.addEventListener('wheel', handleWheelEvent, {
+            passive: false,
+        });
         return () => {
             viewport.removeEventListener('wheel', handleWheelEvent);
         };
@@ -516,7 +518,9 @@ export default function OrganizationStructure({
         <AuthenticatedLayout>
             <Head title="Organization Structure" />
 
-            <style dangerouslySetInnerHTML={{__html: `
+            <style
+                dangerouslySetInnerHTML={{
+                    __html: `
                 @media print {
                     /* Enforce landscape layout and narrow margins to support wider diagrams */
                     @page {
@@ -578,7 +582,9 @@ export default function OrganizationStructure({
                         visibility: hidden !important;
                     }
                 }
-            `}} />
+            `,
+                }}
+            />
 
             <div className="space-y-6">
                 <PageHeader
@@ -595,8 +601,18 @@ export default function OrganizationStructure({
                         {/* Search input */}
                         <div className="relative w-full xl:w-96">
                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                <svg
+                                    className="h-5 w-5 text-slate-400"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                    />
                                 </svg>
                             </span>
                             <input
@@ -611,8 +627,18 @@ export default function OrganizationStructure({
                                     onClick={() => setSearchQuery('')}
                                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                                 >
-                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    <svg
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
                                     </svg>
                                 </button>
                             )}
@@ -630,8 +656,18 @@ export default function OrganizationStructure({
                                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                                     }`}
                                 >
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2l5.447 2.724A1 1 0 0115 5.618v10.764a1 1 0 01-.553.894L9 20z" />
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2l5.447 2.724A1 1 0 0115 5.618v10.764a1 1 0 01-.553.894L9 20z"
+                                        />
                                     </svg>
                                     Interactive Canvas
                                 </button>
@@ -643,8 +679,18 @@ export default function OrganizationStructure({
                                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                                     }`}
                                 >
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 6h16M4 12h16M4 18h16"
+                                        />
                                     </svg>
                                     Classic Columns
                                 </button>
@@ -678,48 +724,114 @@ export default function OrganizationStructure({
                         <div className="overflow-x-auto pb-4 -mx-6 px-6">
                             <div className="flex gap-6 pb-2 min-w-max">
                                 {filteredBranches.map((branch) => {
-                                    const isBranchCollapsed = collapsed[branch.id] && !isSearchActive;
+                                    const isBranchCollapsed =
+                                        collapsed[branch.id] && !isSearchActive;
 
-                                    const branchDivisions = divisions.filter((division) => {
-                                        if (division.branch_id !== branch.id) return false;
-                                        if (!isSearchActive) return true;
+                                    const branchDivisions = divisions.filter(
+                                        (division) => {
+                                            if (
+                                                division.branch_id !== branch.id
+                                            )
+                                                return false;
+                                            if (!isSearchActive) return true;
 
-                                        const q = searchQuery.toLowerCase();
-                                        const divMatches = division.name.toLowerCase().includes(q) || division.code.toLowerCase().includes(q);
+                                            const q = searchQuery.toLowerCase();
+                                            const divMatches =
+                                                division.name
+                                                    .toLowerCase()
+                                                    .includes(q) ||
+                                                division.code
+                                                    .toLowerCase()
+                                                    .includes(q);
 
-                                        const divDepts = departments.filter((dept) => dept.division_id === division.id);
-                                        const deptMatches = divDepts.some((dept) => {
-                                            const dMatches = dept.name.toLowerCase().includes(q) || dept.code.toLowerCase().includes(q);
-                                            const deptUsers = users.filter((u) => u.department_id === dept.id);
-                                            const uMatches = deptUsers.some((u) =>
-                                                u.name.toLowerCase().includes(q) ||
-                                                u.email.toLowerCase().includes(q) ||
-                                                u.position?.toLowerCase().includes(q)
+                                            const divDepts = departments.filter(
+                                                (dept) =>
+                                                    dept.division_id ===
+                                                    division.id,
                                             );
-                                            return dMatches || uMatches;
-                                        });
+                                            const deptMatches = divDepts.some(
+                                                (dept) => {
+                                                    const dMatches =
+                                                        dept.name
+                                                            .toLowerCase()
+                                                            .includes(q) ||
+                                                        dept.code
+                                                            .toLowerCase()
+                                                            .includes(q);
+                                                    const deptUsers =
+                                                        users.filter(
+                                                            (u) =>
+                                                                u.department_id ===
+                                                                dept.id,
+                                                        );
+                                                    const uMatches =
+                                                        deptUsers.some(
+                                                            (u) =>
+                                                                u.name
+                                                                    .toLowerCase()
+                                                                    .includes(
+                                                                        q,
+                                                                    ) ||
+                                                                u.email
+                                                                    .toLowerCase()
+                                                                    .includes(
+                                                                        q,
+                                                                    ) ||
+                                                                u.position
+                                                                    ?.toLowerCase()
+                                                                    .includes(
+                                                                        q,
+                                                                    ),
+                                                        );
+                                                    return dMatches || uMatches;
+                                                },
+                                            );
 
-                                        const divUsers = users.filter((u) => u.division_id === division.id && !u.department_id);
-                                        const uMatches = divUsers.some((u) =>
-                                            u.name.toLowerCase().includes(q) ||
-                                            u.email.toLowerCase().includes(q) ||
-                                            u.position?.toLowerCase().includes(q)
-                                        );
+                                            const divUsers = users.filter(
+                                                (u) =>
+                                                    u.division_id ===
+                                                        division.id &&
+                                                    !u.department_id,
+                                            );
+                                            const uMatches = divUsers.some(
+                                                (u) =>
+                                                    u.name
+                                                        .toLowerCase()
+                                                        .includes(q) ||
+                                                    u.email
+                                                        .toLowerCase()
+                                                        .includes(q) ||
+                                                    u.position
+                                                        ?.toLowerCase()
+                                                        .includes(q),
+                                            );
 
-                                        return divMatches || deptMatches || uMatches;
-                                    });
-
-                                    const branchDirectUsers = users.filter(
-                                        (user) => user.branch_id === branch.id && !user.division_id && !user.department_id
+                                            return (
+                                                divMatches ||
+                                                deptMatches ||
+                                                uMatches
+                                            );
+                                        },
                                     );
 
-                                    const totalBranchStaffCount = users.filter((u) => u.branch_id === branch.id).length;
+                                    const branchDirectUsers = users.filter(
+                                        (user) =>
+                                            user.branch_id === branch.id &&
+                                            !user.division_id &&
+                                            !user.department_id,
+                                    );
+
+                                    const totalBranchStaffCount = users.filter(
+                                        (u) => u.branch_id === branch.id,
+                                    ).length;
 
                                     return (
                                         <div
                                             key={branch.id}
                                             className={`w-88 shrink-0 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/40 dark:bg-slate-950/20 shadow-sm transition-all duration-200 ${
-                                                branch.status !== 'active' ? 'opacity-65' : ''
+                                                branch.status !== 'active'
+                                                    ? 'opacity-65'
+                                                    : ''
                                             }`}
                                         >
                                             {/* Branch Node Card */}
@@ -729,55 +841,105 @@ export default function OrganizationStructure({
                                                     <div className="flex items-start justify-between gap-3">
                                                         <div className="flex items-start gap-2.5 min-w-0">
                                                             <div className="mt-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 p-1.5 shrink-0">
-                                                                <svg className="h-5 w-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                                <svg
+                                                                    className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                                                    />
                                                                 </svg>
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <div className="flex items-center gap-1.5">
                                                                     <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded">
-                                                                        {branch.code}
+                                                                        {
+                                                                            branch.code
+                                                                        }
                                                                     </span>
                                                                     {branch.is_head_office && (
                                                                         <span className="inline-flex items-center text-[9px] font-bold text-purple-700 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-400 px-1.5 py-0.5 rounded">
                                                                             HQ
                                                                         </span>
                                                                     )}
-                                                                    {totalBranchStaffCount > 0 && (
+                                                                    {totalBranchStaffCount >
+                                                                        0 && (
                                                                         <span className="text-[9px] font-semibold text-slate-400">
-                                                                            ({totalBranchStaffCount} Staff)
+                                                                            (
+                                                                            {
+                                                                                totalBranchStaffCount
+                                                                            }{' '}
+                                                                            Staff)
                                                                         </span>
                                                                     )}
                                                                 </div>
                                                                 <h4 className="mt-1 text-sm font-extrabold text-slate-800 dark:text-white truncate">
-                                                                    {branch.name}
+                                                                    {
+                                                                        branch.name
+                                                                    }
                                                                 </h4>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex items-center gap-1.5 shrink-0">
-                                                            <StatusBadge status={branch.status} />
+                                                            <StatusBadge
+                                                                status={
+                                                                    branch.status
+                                                                }
+                                                            />
                                                             <button
-                                                                onClick={() => toggleNode(branch.id)}
+                                                                onClick={() =>
+                                                                    toggleNode(
+                                                                        branch.id,
+                                                                    )
+                                                                }
                                                                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                                             >
                                                                 <svg
                                                                     className={`h-4.5 w-4.5 transform transition-transform duration-200 ${
-                                                                        isBranchCollapsed ? '' : 'rotate-90'
+                                                                        isBranchCollapsed
+                                                                            ? ''
+                                                                            : 'rotate-90'
                                                                     }`}
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
                                                                     stroke="currentColor"
                                                                 >
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2.5
+                                                                        }
+                                                                        d="M9 5l7 7-7 7"
+                                                                    />
                                                                 </svg>
                                                             </button>
                                                         </div>
                                                     </div>
                                                     {branch.phone && (
                                                         <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                                            <svg className="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                            <svg
+                                                                className="h-3 w-3 text-slate-400"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={
+                                                                        2
+                                                                    }
+                                                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                                                />
                                                             </svg>
                                                             {branch.phone}
                                                         </div>
@@ -787,202 +949,405 @@ export default function OrganizationStructure({
 
                                             {!isBranchCollapsed && (
                                                 <div className="mt-3 ml-5 pl-4 border-l-2 border-dashed border-slate-200 dark:border-slate-800/80 space-y-4">
-                                                    {branchDirectUsers.length > 0 && (
+                                                    {branchDirectUsers.length >
+                                                        0 && (
                                                         <div className="relative">
                                                             <div className="absolute -left-[21px] top-4 w-4 border-t-2 border-dashed border-slate-200 dark:border-slate-800/80" />
                                                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
-                                                                Direct Branch Staff
+                                                                Direct Branch
+                                                                Staff
                                                             </span>
-                                                            <UserList users={branchDirectUsers} />
+                                                            <UserList
+                                                                users={
+                                                                    branchDirectUsers
+                                                                }
+                                                            />
                                                         </div>
                                                     )}
 
-                                                    {branchDivisions.length === 0 && branchDirectUsers.length === 0 && (
-                                                        <div className="relative">
-                                                            <div className="absolute -left-[21px] top-4.5 w-4 border-t-2 border-dashed border-slate-200 dark:border-slate-800/80" />
-                                                            <EmptyNode label="No active departments" />
-                                                        </div>
-                                                    )}
-
-                                                    {branchDivisions.map((division) => {
-                                                        const isDivisionCollapsed = collapsed[division.id] && !isSearchActive;
-
-                                                        const divisionDepartments = departments.filter((department) => {
-                                                            if (department.division_id !== division.id) return false;
-                                                            if (!isSearchActive) return true;
-
-                                                            const q = searchQuery.toLowerCase();
-                                                            const deptMatches = department.name.toLowerCase().includes(q) || department.code.toLowerCase().includes(q);
-
-                                                            const deptUsers = users.filter((u) => u.department_id === department.id);
-                                                            const uMatches = deptUsers.some((u) =>
-                                                                u.name.toLowerCase().includes(q) ||
-                                                                u.email.toLowerCase().includes(q) ||
-                                                                u.position?.toLowerCase().includes(q)
-                                                            );
-
-                                                            return deptMatches || uMatches;
-                                                        });
-
-                                                        const divisionDirectUsers = users.filter(
-                                                            (user) => user.division_id === division.id && !user.department_id
-                                                        );
-
-                                                        const totalDivStaffCount = users.filter((u) => u.division_id === division.id).length;
-
-                                                        return (
-                                                            <div key={division.id} className="relative">
-                                                                <div className="absolute -left-[21px] top-5 w-4 border-t-2 border-dashed border-slate-200 dark:border-slate-800/80" />
-
-                                                                <div
-                                                                    className={`rounded-xl border-l-4 border-violet-500 border-t border-r border-b border-slate-100 bg-white dark:border-slate-800/50 dark:bg-slate-900/60 shadow-sm overflow-hidden p-3 transition-all duration-200 ${
-                                                                        division.status !== 'active' ? 'opacity-65' : ''
-                                                                    }`}
-                                                                >
-                                                                    <div className="flex items-center justify-between gap-2.5">
-                                                                        <div className="flex items-center gap-2 min-w-0">
-                                                                            <div className="rounded-lg bg-violet-50 dark:bg-violet-950/60 p-1.5 shrink-0">
-                                                                                <svg className="h-4 w-4 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                                                </svg>
-                                                                            </div>
-                                                                            <div className="min-w-0">
-                                                                                <div className="flex items-center gap-1.5">
-                                                                                    <span className="font-mono text-[9px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/60 px-1.5 py-0.5 rounded">
-                                                                                        {division.code}
-                                                                                    </span>
-                                                                                    {totalDivStaffCount > 0 && (
-                                                                                        <span className="text-[9px] font-semibold text-slate-400">
-                                                                                            {totalDivStaffCount} Staff
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                                <h5 className="mt-0.5 text-xs font-extrabold text-slate-800 dark:text-slate-100 truncate">
-                                                                                    {division.name}
-                                                                                </h5>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <div className="flex items-center gap-1 shrink-0">
-                                                                            <button
-                                                                                onClick={() => toggleNode(division.id)}
-                                                                                className="rounded p-0.5 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                                                                            >
-                                                                                <svg
-                                                                                    className={`h-3.5 w-3.5 transform transition-transform duration-200 ${
-                                                                                        isDivisionCollapsed ? '' : 'rotate-90'
-                                                                                    }`}
-                                                                                    fill="none"
-                                                                                    viewBox="0 0 24 24"
-                                                                                    stroke="currentColor"
-                                                                                >
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                {!isDivisionCollapsed && (
-                                                                    <div className="mt-3 ml-4.5 pl-3.5 border-l border-dashed border-slate-200 dark:border-slate-800/80 space-y-3.5">
-                                                                        {divisionDirectUsers.length > 0 && (
-                                                                            <div className="relative">
-                                                                                <div className="absolute -left-[18px] top-4 w-3.5 border-t border-dashed border-slate-200 dark:border-slate-800/80" />
-                                                                                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
-                                                                                    Direct Division Staff
-                                                                                </span>
-                                                                                <UserList users={divisionDirectUsers} />
-                                                                            </div>
-                                                                        )}
-
-                                                                        {divisionDepartments.length === 0 && divisionDirectUsers.length === 0 && (
-                                                                            <div className="relative">
-                                                                                <div className="absolute -left-[18px] top-4 w-3.5 border-t border-dashed border-slate-200 dark:border-slate-800/80" />
-                                                                                <EmptyNode label="No active departments" />
-                                                                            </div>
-                                                                        )}
-
-                                                                        {divisionDepartments.map((department) => {
-                                                                            const isDeptCollapsed = collapsed[department.id] && !isSearchActive;
-
-                                                                            const departmentUsers = users.filter((u) => {
-                                                                                if (u.department_id !== department.id) return false;
-                                                                                if (!isSearchActive) return true;
-
-                                                                                const q = searchQuery.toLowerCase();
-                                                                                return (
-                                                                                    u.name.toLowerCase().includes(q) ||
-                                                                                    u.email.toLowerCase().includes(q) ||
-                                                                                    u.position?.toLowerCase().includes(q)
-                                                                                );
-                                                                            });
-
-                                                                            return (
-                                                                                <div key={department.id} className="relative">
-                                                                                    <div className="absolute -left-[18px] top-5 w-3.5 border-t border-dashed border-slate-200 dark:border-slate-800/80" />
-
-                                                                                    <div
-                                                                                        className={`rounded-xl border-l-4 border-amber-500 border-t border-r border-b border-slate-100 bg-slate-50/40 p-2.5 dark:border-slate-800/40 dark:bg-slate-900/30 shadow-xs transition-all duration-200 ${
-                                                                                            department.status !== 'active' ? 'opacity-65' : ''
-                                                                                        }`}
-                                                                                    >
-                                                                                        <div className="flex items-center justify-between gap-2.5">
-                                                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                                                <div className="rounded bg-amber-50 dark:bg-amber-950/40 p-1 shrink-0">
-                                                                                                    <svg className="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                                                                                    </svg>
-                                                                                                </div>
-                                                                                                <div className="min-w-0">
-                                                                                                    <div className="flex items-center gap-1.5">
-                                                                                                        <span className="font-mono text-[8px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1 rounded">
-                                                                                                            {department.code}
-                                                                                                        </span>
-                                                                                                        {departmentUsers.length > 0 && (
-                                                                                                            <span className="text-[8.5px] font-semibold text-slate-400">
-                                                                                                                {departmentUsers.length} Staff
-                                                                                                            </span>
-                                                                                                        )}
-                                                                                                    </div>
-                                                                                                    <h6 className="mt-0.5 text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
-                                                                                                        {department.name}
-                                                                                                    </h6>
-                                                                                                </div>
-                                                                                            </div>
-
-                                                                                            <div className="flex items-center gap-1 shrink-0">
-                                                                                                <button
-                                                                                                    onClick={() => toggleNode(department.id)}
-                                                                                                    className="rounded p-0.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                                                                                                >
-                                                                                                    <svg
-                                                                                                        className={`h-3 w-3 transform transition-transform duration-200 ${
-                                                                                                            isDeptCollapsed ? '' : 'rotate-90'
-                                                                                                        }`}
-                                                                                                        fill="none"
-                                                                                                        viewBox="0 0 24 24"
-                                                                                                        stroke="currentColor"
-                                                                                                    >
-                                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                                                                                                    </svg>
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                    {!isDeptCollapsed && (
-                                                                                        <div className="mt-2 ml-4.5 pl-3 border-l border-dashed border-slate-200 dark:border-slate-800/80">
-                                                                                            <UserList users={departmentUsers} />
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                )}
+                                                    {branchDivisions.length ===
+                                                        0 &&
+                                                        branchDirectUsers.length ===
+                                                            0 && (
+                                                            <div className="relative">
+                                                                <div className="absolute -left-[21px] top-4.5 w-4 border-t-2 border-dashed border-slate-200 dark:border-slate-800/80" />
+                                                                <EmptyNode label="No active departments" />
                                                             </div>
-                                                        );
-                                                    })}
+                                                        )}
+
+                                                    {branchDivisions.map(
+                                                        (division) => {
+                                                            const isDivisionCollapsed =
+                                                                collapsed[
+                                                                    division.id
+                                                                ] &&
+                                                                !isSearchActive;
+
+                                                            const divisionDepartments =
+                                                                departments.filter(
+                                                                    (
+                                                                        department,
+                                                                    ) => {
+                                                                        if (
+                                                                            department.division_id !==
+                                                                            division.id
+                                                                        )
+                                                                            return false;
+                                                                        if (
+                                                                            !isSearchActive
+                                                                        )
+                                                                            return true;
+
+                                                                        const q =
+                                                                            searchQuery.toLowerCase();
+                                                                        const deptMatches =
+                                                                            department.name
+                                                                                .toLowerCase()
+                                                                                .includes(
+                                                                                    q,
+                                                                                ) ||
+                                                                            department.code
+                                                                                .toLowerCase()
+                                                                                .includes(
+                                                                                    q,
+                                                                                );
+
+                                                                        const deptUsers =
+                                                                            users.filter(
+                                                                                (
+                                                                                    u,
+                                                                                ) =>
+                                                                                    u.department_id ===
+                                                                                    department.id,
+                                                                            );
+                                                                        const uMatches =
+                                                                            deptUsers.some(
+                                                                                (
+                                                                                    u,
+                                                                                ) =>
+                                                                                    u.name
+                                                                                        .toLowerCase()
+                                                                                        .includes(
+                                                                                            q,
+                                                                                        ) ||
+                                                                                    u.email
+                                                                                        .toLowerCase()
+                                                                                        .includes(
+                                                                                            q,
+                                                                                        ) ||
+                                                                                    u.position
+                                                                                        ?.toLowerCase()
+                                                                                        .includes(
+                                                                                            q,
+                                                                                        ),
+                                                                            );
+
+                                                                        return (
+                                                                            deptMatches ||
+                                                                            uMatches
+                                                                        );
+                                                                    },
+                                                                );
+
+                                                            const divisionDirectUsers =
+                                                                users.filter(
+                                                                    (user) =>
+                                                                        user.division_id ===
+                                                                            division.id &&
+                                                                        !user.department_id,
+                                                                );
+
+                                                            const totalDivStaffCount =
+                                                                users.filter(
+                                                                    (u) =>
+                                                                        u.division_id ===
+                                                                        division.id,
+                                                                ).length;
+
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        division.id
+                                                                    }
+                                                                    className="relative"
+                                                                >
+                                                                    <div className="absolute -left-[21px] top-5 w-4 border-t-2 border-dashed border-slate-200 dark:border-slate-800/80" />
+
+                                                                    <div
+                                                                        className={`rounded-xl border-l-4 border-violet-500 border-t border-r border-b border-slate-100 bg-white dark:border-slate-800/50 dark:bg-slate-900/60 shadow-sm overflow-hidden p-3 transition-all duration-200 ${
+                                                                            division.status !==
+                                                                            'active'
+                                                                                ? 'opacity-65'
+                                                                                : ''
+                                                                        }`}
+                                                                    >
+                                                                        <div className="flex items-center justify-between gap-2.5">
+                                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                                <div className="rounded-lg bg-violet-50 dark:bg-violet-950/60 p-1.5 shrink-0">
+                                                                                    <svg
+                                                                                        className="h-4 w-4 text-violet-600 dark:text-violet-400"
+                                                                                        fill="none"
+                                                                                        viewBox="0 0 24 24"
+                                                                                        stroke="currentColor"
+                                                                                    >
+                                                                                        <path
+                                                                                            strokeLinecap="round"
+                                                                                            strokeLinejoin="round"
+                                                                                            strokeWidth={
+                                                                                                2
+                                                                                            }
+                                                                                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                                                                        />
+                                                                                    </svg>
+                                                                                </div>
+                                                                                <div className="min-w-0">
+                                                                                    <div className="flex items-center gap-1.5">
+                                                                                        <span className="font-mono text-[9px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/60 px-1.5 py-0.5 rounded">
+                                                                                            {
+                                                                                                division.code
+                                                                                            }
+                                                                                        </span>
+                                                                                        {totalDivStaffCount >
+                                                                                            0 && (
+                                                                                            <span className="text-[9px] font-semibold text-slate-400">
+                                                                                                {
+                                                                                                    totalDivStaffCount
+                                                                                                }{' '}
+                                                                                                Staff
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <h5 className="mt-0.5 text-xs font-extrabold text-slate-800 dark:text-slate-100 truncate">
+                                                                                        {
+                                                                                            division.name
+                                                                                        }
+                                                                                    </h5>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div className="flex items-center gap-1 shrink-0">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        toggleNode(
+                                                                                            division.id,
+                                                                                        )
+                                                                                    }
+                                                                                    className="rounded p-0.5 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                                                                >
+                                                                                    <svg
+                                                                                        className={`h-3.5 w-3.5 transform transition-transform duration-200 ${
+                                                                                            isDivisionCollapsed
+                                                                                                ? ''
+                                                                                                : 'rotate-90'
+                                                                                        }`}
+                                                                                        fill="none"
+                                                                                        viewBox="0 0 24 24"
+                                                                                        stroke="currentColor"
+                                                                                    >
+                                                                                        <path
+                                                                                            strokeLinecap="round"
+                                                                                            strokeLinejoin="round"
+                                                                                            strokeWidth={
+                                                                                                2.5
+                                                                                            }
+                                                                                            d="M9 5l7 7-7 7"
+                                                                                        />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {!isDivisionCollapsed && (
+                                                                        <div className="mt-3 ml-4.5 pl-3.5 border-l border-dashed border-slate-200 dark:border-slate-800/80 space-y-3.5">
+                                                                            {divisionDirectUsers.length >
+                                                                                0 && (
+                                                                                <div className="relative">
+                                                                                    <div className="absolute -left-[18px] top-4 w-3.5 border-t border-dashed border-slate-200 dark:border-slate-800/80" />
+                                                                                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                                                                                        Direct
+                                                                                        Division
+                                                                                        Staff
+                                                                                    </span>
+                                                                                    <UserList
+                                                                                        users={
+                                                                                            divisionDirectUsers
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                            )}
+
+                                                                            {divisionDepartments.length ===
+                                                                                0 &&
+                                                                                divisionDirectUsers.length ===
+                                                                                    0 && (
+                                                                                    <div className="relative">
+                                                                                        <div className="absolute -left-[18px] top-4 w-3.5 border-t border-dashed border-slate-200 dark:border-slate-800/80" />
+                                                                                        <EmptyNode label="No active departments" />
+                                                                                    </div>
+                                                                                )}
+
+                                                                            {divisionDepartments.map(
+                                                                                (
+                                                                                    department,
+                                                                                ) => {
+                                                                                    const isDeptCollapsed =
+                                                                                        collapsed[
+                                                                                            department
+                                                                                                .id
+                                                                                        ] &&
+                                                                                        !isSearchActive;
+
+                                                                                    const departmentUsers =
+                                                                                        users.filter(
+                                                                                            (
+                                                                                                u,
+                                                                                            ) => {
+                                                                                                if (
+                                                                                                    u.department_id !==
+                                                                                                    department.id
+                                                                                                )
+                                                                                                    return false;
+                                                                                                if (
+                                                                                                    !isSearchActive
+                                                                                                )
+                                                                                                    return true;
+
+                                                                                                const q =
+                                                                                                    searchQuery.toLowerCase();
+                                                                                                return (
+                                                                                                    u.name
+                                                                                                        .toLowerCase()
+                                                                                                        .includes(
+                                                                                                            q,
+                                                                                                        ) ||
+                                                                                                    u.email
+                                                                                                        .toLowerCase()
+                                                                                                        .includes(
+                                                                                                            q,
+                                                                                                        ) ||
+                                                                                                    u.position
+                                                                                                        ?.toLowerCase()
+                                                                                                        .includes(
+                                                                                                            q,
+                                                                                                        )
+                                                                                                );
+                                                                                            },
+                                                                                        );
+
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={
+                                                                                                department.id
+                                                                                            }
+                                                                                            className="relative"
+                                                                                        >
+                                                                                            <div className="absolute -left-[18px] top-5 w-3.5 border-t border-dashed border-slate-200 dark:border-slate-800/80" />
+
+                                                                                            <div
+                                                                                                className={`rounded-xl border-l-4 border-amber-500 border-t border-r border-b border-slate-100 bg-slate-50/40 p-2.5 dark:border-slate-800/40 dark:bg-slate-900/30 shadow-xs transition-all duration-200 ${
+                                                                                                    department.status !==
+                                                                                                    'active'
+                                                                                                        ? 'opacity-65'
+                                                                                                        : ''
+                                                                                                }`}
+                                                                                            >
+                                                                                                <div className="flex items-center justify-between gap-2.5">
+                                                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                                                        <div className="rounded bg-amber-50 dark:bg-amber-950/40 p-1 shrink-0">
+                                                                                                            <svg
+                                                                                                                className="h-3.5 w-3.5 text-amber-500"
+                                                                                                                fill="none"
+                                                                                                                viewBox="0 0 24 24"
+                                                                                                                stroke="currentColor"
+                                                                                                            >
+                                                                                                                <path
+                                                                                                                    strokeLinecap="round"
+                                                                                                                    strokeLinejoin="round"
+                                                                                                                    strokeWidth={
+                                                                                                                        2
+                                                                                                                    }
+                                                                                                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                                                                                                />
+                                                                                                            </svg>
+                                                                                                        </div>
+                                                                                                        <div className="min-w-0">
+                                                                                                            <div className="flex items-center gap-1.5">
+                                                                                                                <span className="font-mono text-[8px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1 rounded">
+                                                                                                                    {
+                                                                                                                        department.code
+                                                                                                                    }
+                                                                                                                </span>
+                                                                                                                {departmentUsers.length >
+                                                                                                                    0 && (
+                                                                                                                    <span className="text-[8.5px] font-semibold text-slate-400">
+                                                                                                                        {
+                                                                                                                            departmentUsers.length
+                                                                                                                        }{' '}
+                                                                                                                        Staff
+                                                                                                                    </span>
+                                                                                                                )}
+                                                                                                            </div>
+                                                                                                            <h6 className="mt-0.5 text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
+                                                                                                                {
+                                                                                                                    department.name
+                                                                                                                }
+                                                                                                            </h6>
+                                                                                                        </div>
+                                                                                                    </div>
+
+                                                                                                    <div className="flex items-center gap-1 shrink-0">
+                                                                                                        <button
+                                                                                                            onClick={() =>
+                                                                                                                toggleNode(
+                                                                                                                    department.id,
+                                                                                                                )
+                                                                                                            }
+                                                                                                            className="rounded p-0.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                                                                        >
+                                                                                                            <svg
+                                                                                                                className={`h-3 w-3 transform transition-transform duration-200 ${
+                                                                                                                    isDeptCollapsed
+                                                                                                                        ? ''
+                                                                                                                        : 'rotate-90'
+                                                                                                                }`}
+                                                                                                                fill="none"
+                                                                                                                viewBox="0 0 24 24"
+                                                                                                                stroke="currentColor"
+                                                                                                            >
+                                                                                                                <path
+                                                                                                                    strokeLinecap="round"
+                                                                                                                    strokeLinejoin="round"
+                                                                                                                    strokeWidth={
+                                                                                                                        2.5
+                                                                                                                    }
+                                                                                                                    d="M9 5l7 7-7 7"
+                                                                                                                />
+                                                                                                            </svg>
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+
+                                                                                            {!isDeptCollapsed && (
+                                                                                                <div className="mt-2 ml-4.5 pl-3 border-l border-dashed border-slate-200 dark:border-slate-800/80">
+                                                                                                    <UserList
+                                                                                                        users={
+                                                                                                            departmentUsers
+                                                                                                        }
+                                                                                                    />
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    );
+                                                                                },
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        },
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1004,8 +1369,8 @@ export default function OrganizationStructure({
                             <div
                                 className="absolute inset-0 transition-none pointer-events-none"
                                 style={{
-                                    backgroundImage: searchQuery.trim() 
-                                        ? undefined 
+                                    backgroundImage: searchQuery.trim()
+                                        ? undefined
                                         : 'radial-gradient(#cbd5e1 1.2px, transparent 1.2px), radial-gradient(#e2e8f0 1.2px, transparent 1.2px)',
                                     backgroundColor: 'transparent',
                                     backgroundSize: '24px 24px',
@@ -1016,8 +1381,8 @@ export default function OrganizationStructure({
                             <div
                                 className="absolute inset-0 dark:block hidden transition-none pointer-events-none"
                                 style={{
-                                    backgroundImage: searchQuery.trim() 
-                                        ? undefined 
+                                    backgroundImage: searchQuery.trim()
+                                        ? undefined
                                         : 'radial-gradient(#334155 1.2px, transparent 1.2px)',
                                     backgroundColor: 'transparent',
                                     backgroundSize: '24px 24px',
@@ -1034,59 +1399,147 @@ export default function OrganizationStructure({
                             >
                                 <div className="p-12 flex flex-col items-center gap-16">
                                     {filteredBranches.map((branch) => {
-                                        const isBranchCollapsed = collapsed[branch.id] && !isSearchActive;
+                                        const isBranchCollapsed =
+                                            collapsed[branch.id] &&
+                                            !isSearchActive;
 
-                                        const branchDivisions = divisions.filter((division) => {
-                                            if (division.branch_id !== branch.id) return false;
-                                            if (!isSearchActive) return true;
+                                        const branchDivisions =
+                                            divisions.filter((division) => {
+                                                if (
+                                                    division.branch_id !==
+                                                    branch.id
+                                                )
+                                                    return false;
+                                                if (!isSearchActive)
+                                                    return true;
 
-                                            const q = searchQuery.toLowerCase();
-                                            const divMatches = division.name.toLowerCase().includes(q) || division.code.toLowerCase().includes(q);
+                                                const q =
+                                                    searchQuery.toLowerCase();
+                                                const divMatches =
+                                                    division.name
+                                                        .toLowerCase()
+                                                        .includes(q) ||
+                                                    division.code
+                                                        .toLowerCase()
+                                                        .includes(q);
 
-                                            const divDepts = departments.filter((dept) => dept.division_id === division.id);
-                                            const deptMatches = divDepts.some((dept) => {
-                                                const dMatches = dept.name.toLowerCase().includes(q) || dept.code.toLowerCase().includes(q);
-                                                const deptUsers = users.filter((u) => u.department_id === dept.id);
-                                                const uMatches = deptUsers.some((u) =>
-                                                    u.name.toLowerCase().includes(q) ||
-                                                    u.email.toLowerCase().includes(q) ||
-                                                    u.position?.toLowerCase().includes(q)
+                                                const divDepts =
+                                                    departments.filter(
+                                                        (dept) =>
+                                                            dept.division_id ===
+                                                            division.id,
+                                                    );
+                                                const deptMatches =
+                                                    divDepts.some((dept) => {
+                                                        const dMatches =
+                                                            dept.name
+                                                                .toLowerCase()
+                                                                .includes(q) ||
+                                                            dept.code
+                                                                .toLowerCase()
+                                                                .includes(q);
+                                                        const deptUsers =
+                                                            users.filter(
+                                                                (u) =>
+                                                                    u.department_id ===
+                                                                    dept.id,
+                                                            );
+                                                        const uMatches =
+                                                            deptUsers.some(
+                                                                (u) =>
+                                                                    u.name
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            q,
+                                                                        ) ||
+                                                                    u.email
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            q,
+                                                                        ) ||
+                                                                    u.position
+                                                                        ?.toLowerCase()
+                                                                        .includes(
+                                                                            q,
+                                                                        ),
+                                                            );
+                                                        return (
+                                                            dMatches || uMatches
+                                                        );
+                                                    });
+
+                                                const divUsers = users.filter(
+                                                    (u) =>
+                                                        u.division_id ===
+                                                            division.id &&
+                                                        !u.department_id,
                                                 );
-                                                return dMatches || uMatches;
+                                                const uMatches = divUsers.some(
+                                                    (u) =>
+                                                        u.name
+                                                            .toLowerCase()
+                                                            .includes(q) ||
+                                                        u.email
+                                                            .toLowerCase()
+                                                            .includes(q) ||
+                                                        u.position
+                                                            ?.toLowerCase()
+                                                            .includes(q),
+                                                );
+
+                                                return (
+                                                    divMatches ||
+                                                    deptMatches ||
+                                                    uMatches
+                                                );
                                             });
 
-                                            const divUsers = users.filter((u) => u.division_id === division.id && !u.department_id);
-                                            const uMatches = divUsers.some((u) =>
-                                                u.name.toLowerCase().includes(q) ||
-                                                u.email.toLowerCase().includes(q) ||
-                                                u.position?.toLowerCase().includes(q)
-                                            );
-
-                                            return divMatches || deptMatches || uMatches;
-                                        });
-
                                         const branchDirectUsers = users.filter(
-                                            (user) => user.branch_id === branch.id && !user.division_id && !user.department_id
+                                            (user) =>
+                                                user.branch_id === branch.id &&
+                                                !user.division_id &&
+                                                !user.department_id,
                                         );
 
-                                        const totalBranchStaffCount = users.filter((u) => u.branch_id === branch.id).length;
+                                        const totalBranchStaffCount =
+                                            users.filter(
+                                                (u) =>
+                                                    u.branch_id === branch.id,
+                                            ).length;
 
                                         return (
-                                            <div key={branch.id} className="flex flex-col items-center interactive-node">
+                                            <div
+                                                key={branch.id}
+                                                className="flex flex-col items-center interactive-node"
+                                            >
                                                 {/* Branch card */}
                                                 <div className="w-80 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg p-4 relative">
                                                     <div className="absolute top-0 inset-x-0 h-1 bg-indigo-600 rounded-t-2xl" />
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex gap-2 min-w-0">
                                                             <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/60 p-1.5 shrink-0 mt-0.5">
-                                                                <svg className="h-5 w-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                                <svg
+                                                                    className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                                                    />
                                                                 </svg>
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <div className="flex items-center gap-1.5">
                                                                     <span className="font-mono text-[9px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded">
-                                                                        {branch.code}
+                                                                        {
+                                                                            branch.code
+                                                                        }
                                                                     </span>
                                                                     {branch.is_head_office && (
                                                                         <span className="text-[8px] font-bold text-purple-700 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-400 px-1.5 rounded">
@@ -1095,207 +1548,451 @@ export default function OrganizationStructure({
                                                                     )}
                                                                 </div>
                                                                 <h4 className="mt-1 text-sm font-extrabold text-slate-800 dark:text-white truncate">
-                                                                    {branch.name}
+                                                                    {
+                                                                        branch.name
+                                                                    }
                                                                 </h4>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex items-center gap-1.5 shrink-0">
                                                             <button
-                                                                onClick={() => toggleNode(branch.id)}
+                                                                onClick={() =>
+                                                                    toggleNode(
+                                                                        branch.id,
+                                                                    )
+                                                                }
                                                                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                                             >
-                                                                <svg className={`h-4.5 w-4.5 transform transition-transform duration-200 ${isBranchCollapsed ? '' : 'rotate-90'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                                                <svg
+                                                                    className={`h-4.5 w-4.5 transform transition-transform duration-200 ${isBranchCollapsed ? '' : 'rotate-90'}`}
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2.5
+                                                                        }
+                                                                        d="M9 5l7 7-7 7"
+                                                                    />
                                                                 </svg>
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    
-                                                    {totalBranchStaffCount > 0 && (
+
+                                                    {totalBranchStaffCount >
+                                                        0 && (
                                                         <div className="mt-3 text-[10px] font-semibold text-slate-400 text-center border-t border-slate-50 dark:border-slate-800/60 pt-2.5">
-                                                            Branch Total: {totalBranchStaffCount} staff members
+                                                            Branch Total:{' '}
+                                                            {
+                                                                totalBranchStaffCount
+                                                            }{' '}
+                                                            staff members
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {/* Branch Children Connector */}
-                                                {!isBranchCollapsed && (branchDivisions.length > 0 || branchDirectUsers.length > 0) && (
-                                                    <>
-                                                        <div className="h-8 w-0.5 bg-slate-300 dark:bg-slate-700" />
-                                                        
-                                                        {/* Divisions wrapper with tree lines */}
-                                                        <div className="flex gap-16 items-start justify-center relative">
-                                                            {/* Horizontal connecting line bridge */}
-                                                            {branchDivisions.length > 1 && (
-                                                                <div className="absolute top-0 left-[calc(50%/var(--cols))] right-[calc(50%/var(--cols))] h-0.5 bg-slate-300 dark:bg-slate-700"
-                                                                    style={{
-                                                                        left: 'calc(100% / ' + (branchDivisions.length * 2) + ')',
-                                                                        right: 'calc(100% / ' + (branchDivisions.length * 2) + ')',
-                                                                    }}
-                                                                />
-                                                            )}
+                                                {!isBranchCollapsed &&
+                                                    (branchDivisions.length >
+                                                        0 ||
+                                                        branchDirectUsers.length >
+                                                            0) && (
+                                                        <>
+                                                            <div className="h-8 w-0.5 bg-slate-300 dark:bg-slate-700" />
 
-                                                            {branchDivisions.map((division) => {
-                                                                const isDivisionCollapsed = collapsed[division.id] && !isSearchActive;
+                                                            {/* Divisions wrapper with tree lines */}
+                                                            <div className="flex gap-16 items-start justify-center relative">
+                                                                {/* Horizontal connecting line bridge */}
+                                                                {branchDivisions.length >
+                                                                    1 && (
+                                                                    <div
+                                                                        className="absolute top-0 left-[calc(50%/var(--cols))] right-[calc(50%/var(--cols))] h-0.5 bg-slate-300 dark:bg-slate-700"
+                                                                        style={{
+                                                                            left:
+                                                                                'calc(100% / ' +
+                                                                                branchDivisions.length *
+                                                                                    2 +
+                                                                                ')',
+                                                                            right:
+                                                                                'calc(100% / ' +
+                                                                                branchDivisions.length *
+                                                                                    2 +
+                                                                                ')',
+                                                                        }}
+                                                                    />
+                                                                )}
 
-                                                                const divisionDepartments = departments.filter((department) => {
-                                                                    if (department.division_id !== division.id) return false;
-                                                                    if (!isSearchActive) return true;
+                                                                {branchDivisions.map(
+                                                                    (
+                                                                        division,
+                                                                    ) => {
+                                                                        const isDivisionCollapsed =
+                                                                            collapsed[
+                                                                                division
+                                                                                    .id
+                                                                            ] &&
+                                                                            !isSearchActive;
 
-                                                                    const q = searchQuery.toLowerCase();
-                                                                    const deptMatches = department.name.toLowerCase().includes(q) || department.code.toLowerCase().includes(q);
+                                                                        const divisionDepartments =
+                                                                            departments.filter(
+                                                                                (
+                                                                                    department,
+                                                                                ) => {
+                                                                                    if (
+                                                                                        department.division_id !==
+                                                                                        division.id
+                                                                                    )
+                                                                                        return false;
+                                                                                    if (
+                                                                                        !isSearchActive
+                                                                                    )
+                                                                                        return true;
 
-                                                                    const deptUsers = users.filter((u) => u.department_id === department.id);
-                                                                    const uMatches = deptUsers.some((u) =>
-                                                                        u.name.toLowerCase().includes(q) ||
-                                                                        u.email.toLowerCase().includes(q) ||
-                                                                        u.position?.toLowerCase().includes(q)
-                                                                    );
+                                                                                    const q =
+                                                                                        searchQuery.toLowerCase();
+                                                                                    const deptMatches =
+                                                                                        department.name
+                                                                                            .toLowerCase()
+                                                                                            .includes(
+                                                                                                q,
+                                                                                            ) ||
+                                                                                        department.code
+                                                                                            .toLowerCase()
+                                                                                            .includes(
+                                                                                                q,
+                                                                                            );
 
-                                                                    return deptMatches || uMatches;
-                                                                });
+                                                                                    const deptUsers =
+                                                                                        users.filter(
+                                                                                            (
+                                                                                                u,
+                                                                                            ) =>
+                                                                                                u.department_id ===
+                                                                                                department.id,
+                                                                                        );
+                                                                                    const uMatches =
+                                                                                        deptUsers.some(
+                                                                                            (
+                                                                                                u,
+                                                                                            ) =>
+                                                                                                u.name
+                                                                                                    .toLowerCase()
+                                                                                                    .includes(
+                                                                                                        q,
+                                                                                                    ) ||
+                                                                                                u.email
+                                                                                                    .toLowerCase()
+                                                                                                    .includes(
+                                                                                                        q,
+                                                                                                    ) ||
+                                                                                                u.position
+                                                                                                    ?.toLowerCase()
+                                                                                                    .includes(
+                                                                                                        q,
+                                                                                                    ),
+                                                                                        );
 
-                                                                const divisionDirectUsers = users.filter(
-                                                                    (user) => user.division_id === division.id && !user.department_id
-                                                                );
+                                                                                    return (
+                                                                                        deptMatches ||
+                                                                                        uMatches
+                                                                                    );
+                                                                                },
+                                                                            );
 
-                                                                const totalDivStaffCount = users.filter((u) => u.division_id === division.id).length;
+                                                                        const divisionDirectUsers =
+                                                                            users.filter(
+                                                                                (
+                                                                                    user,
+                                                                                ) =>
+                                                                                    user.division_id ===
+                                                                                        division.id &&
+                                                                                    !user.department_id,
+                                                                            );
 
-                                                                return (
-                                                                    <div key={division.id} className="flex flex-col items-center relative">
-                                                                        {/* Vertical line up from division node to bridge */}
-                                                                        <div className="absolute top-0 h-8 w-0.5 bg-slate-300 dark:bg-slate-700 -translate-y-full" />
+                                                                        const totalDivStaffCount =
+                                                                            users.filter(
+                                                                                (
+                                                                                    u,
+                                                                                ) =>
+                                                                                    u.division_id ===
+                                                                                    division.id,
+                                                                            ).length;
 
-                                                                        {/* Division Card Node */}
-                                                                        <div className="w-72 rounded-2xl border-l-4 border-violet-500 border-t border-r border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md p-3 relative z-10">
-                                                                            <div className="flex items-center justify-between gap-2.5">
-                                                                                <div className="flex items-center gap-2 min-w-0">
-                                                                                    <div className="rounded-lg bg-violet-50 dark:bg-violet-950/60 p-1.5 shrink-0">
-                                                                                        <svg className="h-4 w-4 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                                                        </svg>
-                                                                                    </div>
-                                                                                    <div className="min-w-0">
-                                                                                        <div className="flex items-center gap-1.5">
-                                                                                            <span className="font-mono text-[9px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 px-1.5 py-0.5 rounded">
-                                                                                                {division.code}
-                                                                                            </span>
-                                                                                            {totalDivStaffCount > 0 && (
-                                                                                                <span className="text-[9px] font-semibold text-slate-400">
-                                                                                                    {totalDivStaffCount} Staff
-                                                                                                </span>
-                                                                                            )}
+                                                                        return (
+                                                                            <div
+                                                                                key={
+                                                                                    division.id
+                                                                                }
+                                                                                className="flex flex-col items-center relative"
+                                                                            >
+                                                                                {/* Vertical line up from division node to bridge */}
+                                                                                <div className="absolute top-0 h-8 w-0.5 bg-slate-300 dark:bg-slate-700 -translate-y-full" />
+
+                                                                                {/* Division Card Node */}
+                                                                                <div className="w-72 rounded-2xl border-l-4 border-violet-500 border-t border-r border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md p-3 relative z-10">
+                                                                                    <div className="flex items-center justify-between gap-2.5">
+                                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                                            <div className="rounded-lg bg-violet-50 dark:bg-violet-950/60 p-1.5 shrink-0">
+                                                                                                <svg
+                                                                                                    className="h-4 w-4 text-violet-600 dark:text-violet-400"
+                                                                                                    fill="none"
+                                                                                                    viewBox="0 0 24 24"
+                                                                                                    stroke="currentColor"
+                                                                                                >
+                                                                                                    <path
+                                                                                                        strokeLinecap="round"
+                                                                                                        strokeLinejoin="round"
+                                                                                                        strokeWidth={
+                                                                                                            2
+                                                                                                        }
+                                                                                                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                                                                                    />
+                                                                                                </svg>
+                                                                                            </div>
+                                                                                            <div className="min-w-0">
+                                                                                                <div className="flex items-center gap-1.5">
+                                                                                                    <span className="font-mono text-[9px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 px-1.5 py-0.5 rounded">
+                                                                                                        {
+                                                                                                            division.code
+                                                                                                        }
+                                                                                                    </span>
+                                                                                                    {totalDivStaffCount >
+                                                                                                        0 && (
+                                                                                                        <span className="text-[9px] font-semibold text-slate-400">
+                                                                                                            {
+                                                                                                                totalDivStaffCount
+                                                                                                            }{' '}
+                                                                                                            Staff
+                                                                                                        </span>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                                <h5 className="mt-0.5 text-xs font-extrabold text-slate-800 dark:text-slate-100 truncate">
+                                                                                                    {
+                                                                                                        division.name
+                                                                                                    }
+                                                                                                </h5>
+                                                                                            </div>
                                                                                         </div>
-                                                                                        <h5 className="mt-0.5 text-xs font-extrabold text-slate-800 dark:text-slate-100 truncate">
-                                                                                            {division.name}
-                                                                                        </h5>
+                                                                                        <button
+                                                                                            onClick={() =>
+                                                                                                toggleNode(
+                                                                                                    division.id,
+                                                                                                )
+                                                                                            }
+                                                                                            className="rounded p-0.5 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0"
+                                                                                        >
+                                                                                            <svg
+                                                                                                className={`h-3.5 w-3.5 transform transition-transform duration-200 ${isDivisionCollapsed ? '' : 'rotate-90'}`}
+                                                                                                fill="none"
+                                                                                                viewBox="0 0 24 24"
+                                                                                                stroke="currentColor"
+                                                                                            >
+                                                                                                <path
+                                                                                                    strokeLinecap="round"
+                                                                                                    strokeLinejoin="round"
+                                                                                                    strokeWidth={
+                                                                                                        2.5
+                                                                                                    }
+                                                                                                    d="M9 5l7 7-7 7"
+                                                                                                />
+                                                                                            </svg>
+                                                                                        </button>
                                                                                     </div>
                                                                                 </div>
-                                                                                <button
-                                                                                    onClick={() => toggleNode(division.id)}
-                                                                                    className="rounded p-0.5 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0"
-                                                                                >
-                                                                                    <svg className={`h-3.5 w-3.5 transform transition-transform duration-200 ${isDivisionCollapsed ? '' : 'rotate-90'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                                                                                    </svg>
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
 
-                                                                        {/* Division Children Connector */}
-                                                                        {!isDivisionCollapsed && (divisionDepartments.length > 0 || divisionDirectUsers.length > 0) && (
-                                                                            <>
-                                                                                <div className="h-8 w-0.5 bg-slate-300 dark:bg-slate-700" />
-                                                                                
-                                                                                <div className="flex gap-10 items-start justify-center relative">
-                                                                                    {/* Horizontal connecting line bridge */}
-                                                                                    {divisionDepartments.length > 1 && (
-                                                                                        <div className="absolute top-0 left-[calc(50%/var(--cols))] right-[calc(50%/var(--cols))] h-0.5 bg-slate-300 dark:bg-slate-700"
-                                                                                            style={{
-                                                                                                left: 'calc(100% / ' + (divisionDepartments.length * 2) + ')',
-                                                                                                right: 'calc(100% / ' + (divisionDepartments.length * 2) + ')',
-                                                                                            }}
-                                                                                        />
-                                                                                    )}
+                                                                                {/* Division Children Connector */}
+                                                                                {!isDivisionCollapsed &&
+                                                                                    (divisionDepartments.length >
+                                                                                        0 ||
+                                                                                        divisionDirectUsers.length >
+                                                                                            0) && (
+                                                                                        <>
+                                                                                            <div className="h-8 w-0.5 bg-slate-300 dark:bg-slate-700" />
 
-                                                                                    {divisionDepartments.map((department) => {
-                                                                                        const isDeptCollapsed = collapsed[department.id] && !isSearchActive;
+                                                                                            <div className="flex gap-10 items-start justify-center relative">
+                                                                                                {/* Horizontal connecting line bridge */}
+                                                                                                {divisionDepartments.length >
+                                                                                                    1 && (
+                                                                                                    <div
+                                                                                                        className="absolute top-0 left-[calc(50%/var(--cols))] right-[calc(50%/var(--cols))] h-0.5 bg-slate-300 dark:bg-slate-700"
+                                                                                                        style={{
+                                                                                                            left:
+                                                                                                                'calc(100% / ' +
+                                                                                                                divisionDepartments.length *
+                                                                                                                    2 +
+                                                                                                                ')',
+                                                                                                            right:
+                                                                                                                'calc(100% / ' +
+                                                                                                                divisionDepartments.length *
+                                                                                                                    2 +
+                                                                                                                ')',
+                                                                                                        }}
+                                                                                                    />
+                                                                                                )}
 
-                                                                                        const departmentUsers = users.filter((u) => {
-                                                                                            if (u.department_id !== department.id) return false;
-                                                                                            if (!isSearchActive) return true;
+                                                                                                {divisionDepartments.map(
+                                                                                                    (
+                                                                                                        department,
+                                                                                                    ) => {
+                                                                                                        const isDeptCollapsed =
+                                                                                                            collapsed[
+                                                                                                                department
+                                                                                                                    .id
+                                                                                                            ] &&
+                                                                                                            !isSearchActive;
 
-                                                                                            const q = searchQuery.toLowerCase();
-                                                                                            return (
-                                                                                                u.name.toLowerCase().includes(q) ||
-                                                                                                u.email.toLowerCase().includes(q) ||
-                                                                                                u.position?.toLowerCase().includes(q)
-                                                                                            );
-                                                                                        });
+                                                                                                        const departmentUsers =
+                                                                                                            users.filter(
+                                                                                                                (
+                                                                                                                    u,
+                                                                                                                ) => {
+                                                                                                                    if (
+                                                                                                                        u.department_id !==
+                                                                                                                        department.id
+                                                                                                                    )
+                                                                                                                        return false;
+                                                                                                                    if (
+                                                                                                                        !isSearchActive
+                                                                                                                    )
+                                                                                                                        return true;
 
-                                                                                        return (
-                                                                                            <div key={department.id} className="flex flex-col items-center relative">
-                                                                                                {/* Vertical line up to division bridge */}
-                                                                                                <div className="absolute top-0 h-8 w-0.5 bg-slate-300 dark:bg-slate-700 -translate-y-full" />
+                                                                                                                    const q =
+                                                                                                                        searchQuery.toLowerCase();
+                                                                                                                    return (
+                                                                                                                        u.name
+                                                                                                                            .toLowerCase()
+                                                                                                                            .includes(
+                                                                                                                                q,
+                                                                                                                            ) ||
+                                                                                                                        u.email
+                                                                                                                            .toLowerCase()
+                                                                                                                            .includes(
+                                                                                                                                q,
+                                                                                                                            ) ||
+                                                                                                                        u.position
+                                                                                                                            ?.toLowerCase()
+                                                                                                                            .includes(
+                                                                                                                                q,
+                                                                                                                            )
+                                                                                                                    );
+                                                                                                                },
+                                                                                                            );
 
-                                                                                                {/* Department Card Node */}
-                                                                                                <div className="w-60 rounded-2xl border-l-4 border-amber-500 border-t border-r border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 p-2.5 shadow-sm relative z-10">
-                                                                                                    <div className="flex items-center justify-between gap-2">
-                                                                                                        <div className="flex items-center gap-2 min-w-0">
-                                                                                                            <div className="rounded bg-amber-50 dark:bg-amber-950/40 p-1 shrink-0">
-                                                                                                                <svg className="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                                                                                                </svg>
-                                                                                                            </div>
-                                                                                                            <div className="min-w-0">
-                                                                                                                <div className="flex items-center gap-1">
-                                                                                                                    <span className="font-mono text-[8px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1 rounded">
-                                                                                                                        {department.code}
-                                                                                                                    </span>
-                                                                                                                    {departmentUsers.length > 0 && (
-                                                                                                                        <span className="text-[8.5px] font-semibold text-slate-400">
-                                                                                                                            {departmentUsers.length} Staff
-                                                                                                                        </span>
-                                                                                                                    )}
+                                                                                                        return (
+                                                                                                            <div
+                                                                                                                key={
+                                                                                                                    department.id
+                                                                                                                }
+                                                                                                                className="flex flex-col items-center relative"
+                                                                                                            >
+                                                                                                                {/* Vertical line up to division bridge */}
+                                                                                                                <div className="absolute top-0 h-8 w-0.5 bg-slate-300 dark:bg-slate-700 -translate-y-full" />
+
+                                                                                                                {/* Department Card Node */}
+                                                                                                                <div className="w-60 rounded-2xl border-l-4 border-amber-500 border-t border-r border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 p-2.5 shadow-sm relative z-10">
+                                                                                                                    <div className="flex items-center justify-between gap-2">
+                                                                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                                                                            <div className="rounded bg-amber-50 dark:bg-amber-950/40 p-1 shrink-0">
+                                                                                                                                <svg
+                                                                                                                                    className="h-3.5 w-3.5 text-amber-500"
+                                                                                                                                    fill="none"
+                                                                                                                                    viewBox="0 0 24 24"
+                                                                                                                                    stroke="currentColor"
+                                                                                                                                >
+                                                                                                                                    <path
+                                                                                                                                        strokeLinecap="round"
+                                                                                                                                        strokeLinejoin="round"
+                                                                                                                                        strokeWidth={
+                                                                                                                                            2
+                                                                                                                                        }
+                                                                                                                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                                                                                                                    />
+                                                                                                                                </svg>
+                                                                                                                            </div>
+                                                                                                                            <div className="min-w-0">
+                                                                                                                                <div className="flex items-center gap-1">
+                                                                                                                                    <span className="font-mono text-[8px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1 rounded">
+                                                                                                                                        {
+                                                                                                                                            department.code
+                                                                                                                                        }
+                                                                                                                                    </span>
+                                                                                                                                    {departmentUsers.length >
+                                                                                                                                        0 && (
+                                                                                                                                        <span className="text-[8.5px] font-semibold text-slate-400">
+                                                                                                                                            {
+                                                                                                                                                departmentUsers.length
+                                                                                                                                            }{' '}
+                                                                                                                                            Staff
+                                                                                                                                        </span>
+                                                                                                                                    )}
+                                                                                                                                </div>
+                                                                                                                                <h6 className="mt-0.5 text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
+                                                                                                                                    {
+                                                                                                                                        department.name
+                                                                                                                                    }
+                                                                                                                                </h6>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                        <button
+                                                                                                                            onClick={() =>
+                                                                                                                                toggleNode(
+                                                                                                                                    department.id,
+                                                                                                                                )
+                                                                                                                            }
+                                                                                                                            className="rounded p-0.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+                                                                                                                        >
+                                                                                                                            <svg
+                                                                                                                                className={`h-3 w-3 transform transition-transform duration-200 ${isDeptCollapsed ? '' : 'rotate-90'}`}
+                                                                                                                                fill="none"
+                                                                                                                                viewBox="0 0 24 24"
+                                                                                                                                stroke="currentColor"
+                                                                                                                            >
+                                                                                                                                <path
+                                                                                                                                    strokeLinecap="round"
+                                                                                                                                    strokeLinejoin="round"
+                                                                                                                                    strokeWidth={
+                                                                                                                                        2.5
+                                                                                                                                    }
+                                                                                                                                    d="M9 5l7 7-7 7"
+                                                                                                                                />
+                                                                                                                            </svg>
+                                                                                                                        </button>
+                                                                                                                    </div>
                                                                                                                 </div>
-                                                                                                                <h6 className="mt-0.5 text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
-                                                                                                                    {department.name}
-                                                                                                                </h6>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                        <button
-                                                                                                            onClick={() => toggleNode(department.id)}
-                                                                                                            className="rounded p-0.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-                                                                                                        >
-                                                                                                            <svg className={`h-3 w-3 transform transition-transform duration-200 ${isDeptCollapsed ? '' : 'rotate-90'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                                                                                                            </svg>
-                                                                                                        </button>
-                                                                                                    </div>
-                                                                                                </div>
 
-                                                                                                {/* Department Staff List */}
-                                                                                                {!isDeptCollapsed && departmentUsers.length > 0 && (
-                                                                                                    <>
-                                                                                                        <div className="h-6 w-0.5 bg-slate-300 dark:bg-slate-700" />
-                                                                                                        <div className="w-56 bg-slate-100/50 dark:bg-slate-950/40 p-2 rounded-2xl border border-slate-100 dark:border-slate-900/60 shadow-inner">
-                                                                                                            <UserList users={departmentUsers} />
-                                                                                                        </div>
-                                                                                                    </>
+                                                                                                                {/* Department Staff List */}
+                                                                                                                {!isDeptCollapsed &&
+                                                                                                                    departmentUsers.length >
+                                                                                                                        0 && (
+                                                                                                                        <>
+                                                                                                                            <div className="h-6 w-0.5 bg-slate-300 dark:bg-slate-700" />
+                                                                                                                            <div className="w-56 bg-slate-100/50 dark:bg-slate-950/40 p-2 rounded-2xl border border-slate-100 dark:border-slate-900/60 shadow-inner">
+                                                                                                                                <UserList
+                                                                                                                                    users={
+                                                                                                                                        departmentUsers
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                            </div>
+                                                                                                                        </>
+                                                                                                                    )}
+                                                                                                            </div>
+                                                                                                        );
+                                                                                                    },
                                                                                                 )}
                                                                                             </div>
-                                                                                        );
-                                                                                    })}
-                                                                                </div>
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </>
-                                                )}
+                                                                                        </>
+                                                                                    )}
+                                                                            </div>
+                                                                        );
+                                                                    },
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )}
                                             </div>
                                         );
                                     })}
@@ -1341,8 +2038,18 @@ export default function OrganizationStructure({
                                     className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-750 dark:bg-indigo-600 dark:hover:bg-indigo-700 rounded-xl transition-all border border-indigo-500 shadow-sm flex items-center gap-1.5"
                                     title="Print organization chart"
                                 >
-                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                    <svg
+                                        className="h-3.5 w-3.5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                                        />
                                     </svg>
                                     Print
                                 </button>
