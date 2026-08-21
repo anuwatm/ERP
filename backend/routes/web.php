@@ -28,6 +28,15 @@ Route::get('/', function () {
 Route::get('/dashboard', DashboardController::class)
     ->middleware(['auth', 'verified', 'permission:dashboard.view'])
     ->name('dashboard');
+Route::get('/executive-dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified', 'permission:dashboard.view'])
+    ->name('executive.dashboard');
+Route::get('/finance-dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified', 'permission:expenses.view'])
+    ->name('finance.dashboard');
+Route::get('/delivery-dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified', 'permission:dashboard.view'])
+    ->name('delivery.dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

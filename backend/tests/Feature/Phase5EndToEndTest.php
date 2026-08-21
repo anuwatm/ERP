@@ -232,8 +232,8 @@ class Phase5EndToEndTest extends TestCase
 
         $this->assertSame('2000.00', $invoice->subtotal);
         $this->assertSame('100.00', $invoice->discount_amount);
-        $this->assertSame('140.00', $invoice->tax_amount);
-        $this->assertSame('2040.00', $invoice->total);
+        $this->assertSame('133.00', $invoice->tax_amount);
+        $this->assertSame('2033.00', $invoice->total);
 
         $this->actingAsOrgUser($owner)->withSession(['auth.password_confirmed_at' => time()])
             ->patch(route('invoices.void', $invoice))

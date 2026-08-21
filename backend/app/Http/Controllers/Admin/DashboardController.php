@@ -29,6 +29,17 @@ class DashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         $user = auth()->user();
+        $scope = match ($request->route()?->getName()) {
+            'executive.dashboard' => 'executive',
+            'finance.dashboard' => 'finance',
+            'delivery.dashboard' => 'delivery',
+            default => 'admin',
+        };
+
+        abort_if($scope === 'executive' && ! $this->canViewExecutiveDashboard($user), 403);
+        abort_if($scope === 'finance' && ! $this->canViewFinanceDashboard($user), 403);
+        abort_if($scope === 'delivery' && ! $this->canViewDeliveryDashboard($user), 403);
+
         $orgId = $user->org_id;
         $filters = $this->dashboardFilters($request);
         $inactiveUsers = User::where('org_id', $orgId)->where('status', 'inactive')->count();
@@ -43,6 +54,7 @@ class DashboardController extends Controller
             ->count();
 
         return Inertia::render('Dashboard', [
+            'dashboardScope' => $scope,
             'summary' => [
                 'branches' => Branch::where('org_id', $orgId)->count(),
                 'divisions' => Division::where('org_id', $orgId)->count(),
@@ -61,9 +73,9 @@ class DashboardController extends Controller
                 'total' => $inactiveUsers + $expiredInvites + $sensitiveAuditEvents,
             ],
             'dashboardFilters' => $filters,
-            'executiveSummary' => $this->canViewExecutiveDashboard($user) ? $this->executiveSummary($user, $filters) : null,
-            'financeSummary' => $this->canViewFinanceDashboard($user) ? $this->financeSummary($orgId, $filters) : null,
-            'deliverySummary' => $this->canViewDeliveryDashboard($user) ? $this->deliverySummary($user, $filters) : null,
+            'executiveSummary' => in_array($scope, ['admin', 'executive'], true) && $this->canViewExecutiveDashboard($user) ? $this->executiveSummary($user, $filters) : null,
+            'financeSummary' => in_array($scope, ['admin', 'finance'], true) && $this->canViewFinanceDashboard($user) ? $this->financeSummary($orgId, $filters) : null,
+            'deliverySummary' => in_array($scope, ['admin', 'delivery'], true) && $this->canViewDeliveryDashboard($user) ? $this->deliverySummary($user, $filters) : null,
             'recentAudits' => AuditLog::where('org_id', $orgId)->latest()->limit(8)->get(['action', 'entity_type', 'created_at']),
         ]);
     }
@@ -148,6 +160,18 @@ class DashboardController extends Controller
 
     private function financeSummary(string $orgId, array $filters): array
     {
+        $summary = $this->financeMetricSummary($orgId, $filters);
+        $previousFilters = $this->previousDashboardFilters($filters);
+
+        $summary['previous'] = $previousFilters
+            ? $this->financeMetricSummary($orgId, $previousFilters, false)
+            : null;
+
+        return $summary;
+    }
+
+    private function financeMetricSummary(string $orgId, array $filters, bool $includeDetails = true): array
+    {
         $invoiceRevenueStatuses = ['sent', 'partially_paid', 'paid', 'overdue'];
         $openInvoiceStatuses = ['sent', 'partially_paid', 'overdue'];
 
@@ -177,7 +201,7 @@ class DashboardController extends Controller
             ->whereNotNull('paid_at'), 'paid_at', $filters)
             ->sum('amount');
 
-        return [
+        $summary = [
             'invoiced_revenue' => round($invoicedRevenue, 2),
             'cash_in' => round($cashIn, 2),
             'cash_in_receipts' => round($receiptTotal, 2),
@@ -188,6 +212,14 @@ class DashboardController extends Controller
             'cash_out' => round($cashOut, 2),
             'net_cash_flow' => round($cashIn - $cashOut, 2),
             'gross_profit' => round($invoicedRevenue - $recognizedExpense, 2),
+        ];
+
+        if (! $includeDetails) {
+            return $summary;
+        }
+
+        return [
+            ...$summary,
             'invoice_status' => $this->applyDateRange(Invoice::where('org_id', $orgId), 'issue_date', $filters)
                 ->select('status', DB::raw('count(*) as count'), DB::raw('sum(total) as total'))
                 ->groupBy('status')
@@ -327,6 +359,25 @@ class DashboardController extends Controller
             'to' => $to,
             'start_date' => $start?->toDateString(),
             'end_date' => $end?->toDateString(),
+        ];
+    }
+
+    private function previousDashboardFilters(array $filters): ?array
+    {
+        if (empty($filters['start_date']) || empty($filters['end_date'])) {
+            return null;
+        }
+
+        $start = CarbonImmutable::parse($filters['start_date'])->startOfDay();
+        $end = CarbonImmutable::parse($filters['end_date'])->endOfDay();
+        $days = $start->diffInDays($end) + 1;
+        $previousEnd = $start->subDay()->endOfDay();
+        $previousStart = $previousEnd->subDays($days - 1)->startOfDay();
+
+        return [
+            ...$filters,
+            'start_date' => $previousStart->toDateString(),
+            'end_date' => $previousEnd->toDateString(),
         ];
     }
 

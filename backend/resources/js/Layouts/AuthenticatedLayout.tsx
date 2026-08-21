@@ -47,6 +47,32 @@ export default function AuthenticatedLayout({
             ],
         },
         {
+            group: 'Executive',
+            items: [
+                {
+                    name: 'Executive Dashboard',
+                    href: route('executive.dashboard'),
+                    active: route().current('executive.dashboard'),
+                    permission: 'executive.dashboard.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 19V5m0 14h16M8 16V9m4 7V7m4 9v-4"
+                            />
+                        </svg>
+                    ),
+                },
+            ],
+        },
+        {
             group: 'Sales',
             items: [
                 {
@@ -118,6 +144,27 @@ export default function AuthenticatedLayout({
             group: 'Finance',
             items: [
                 {
+                    name: 'Finance Dashboard',
+                    href: route('finance.dashboard'),
+                    active: route().current('finance.dashboard'),
+                    permission: 'expenses.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2m-7 4h14"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Invoices',
                     href: route('invoices.index'),
                     active: route().current('invoices.*'),
@@ -185,6 +232,27 @@ export default function AuthenticatedLayout({
         {
             group: 'Delivery',
             items: [
+                {
+                    name: 'Delivery Dashboard',
+                    href: route('delivery.dashboard'),
+                    active: route().current('delivery.dashboard'),
+                    permission: ['projects.view', 'tasks.view'],
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 17H7a2 2 0 01-2-2V5a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8m-4-4v8"
+                            />
+                        </svg>
+                    ),
+                },
                 {
                     name: 'Tasks',
                     href: route('tasks.index'),
@@ -350,7 +418,11 @@ export default function AuthenticatedLayout({
         .map((section) => ({
             ...section,
             items: section.items.filter((item) =>
-                permissions.includes(item.permission),
+                Array.isArray(item.permission)
+                    ? item.permission.some((permission) =>
+                          permissions.includes(permission),
+                      )
+                    : permissions.includes(item.permission),
             ),
         }))
         .filter((section) => section.items.length > 0);

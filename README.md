@@ -1,279 +1,612 @@
 # Company OS / Lightweight ERP
 
-ระบบ ERP (Enterprise Resource Planning) และระบบบริหารจัดการภายในองค์กรขนาดเล็ก (Company OS) ที่ออกแบบมาเป็นพิเศษสำหรับ SME, ทีมบริการ, ซอฟต์แวร์เอเจนซี, สตูดิโอ และหน่วยงานบริการทั่วไป ด้วยการเน้นย้ำความเรียบง่าย ประสิทธิภาพสูง ความปลอดภัยระดับสูง และความสมบูรณ์ของข้อมูลทางการเงินและการส่งมอบงาน
+ระบบ ERP ขนาดเบาสำหรับ SME, บริษัทบริการ, software agency, studio และทีมส่งมอบงานภายในองค์กร
 
-เป้าหมาย MVP:
+ระบบนี้ออกแบบให้ครอบคลุม flow หลักของธุรกิจบริการ:
+
 ```text
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-สถานะปัจจุบัน: **Phase 6 เริ่มแล้ว: Dashboard Date Filters เสร็จและตรวจผ่าน**
+สถานะล่าสุด: **Phase 6 Done**  
+ฟีเจอร์หลักถึงตอนนี้เสร็จแล้วตั้งแต่ Auth, Admin, CRM, Finance, Delivery, Executive Dashboard และ Dashboard Date Filters
+
+เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 
 ---
 
-## 1. หลักการออกแบบและสถาปัตยกรรม (Design Principles & Architecture)
+## ใช้ทำงานอะไร
 
-โปรเจกต์นี้ได้รับการพัฒนาขึ้นโดยยึดมั่นในหลักการทางวิศวกรรมซอฟต์แวร์ที่เข้มงวด:
+โปรเจกต์นี้ใช้เป็นระบบบริหารบริษัทแบบรวมศูนย์ ตั้งแต่จัดการผู้ใช้ ลูกค้า งานขาย ใบแจ้งหนี้ การรับเงิน ค่าใช้จ่าย โครงการ งานย่อย และ dashboard ผู้บริหาร
 
-*   **Multi-tenant Isolation:** ป้องกันความปลอดภัยของข้อมูลแยกตามองค์กร (`org_id`) ในทุกๆ ตารางหลัก คิวรีทั้งหมดจะถูกจำกัดขอบเขตในระดับ Row-level เพื่อไม่ให้เกิดการรั่วไหลของข้อมูลระหว่างบริษัท/องค์กรผู้ใช้งาน
-*   **High Security Baseline:**
-    *   ป้องกันภัยคุกคามตามมาตรฐาน OWASP Top 10 (CSRF Protection, SQL Injection Prevention ผ่าน PDO Bound Parameters เสมอ)
-    *   ระบบการเข้ารหัสและบันทึกรหัสผ่านด้วย Secure Hashing (Laravel Breeze) ไม่มี plaintext password ในตารางระบบ
-    *   Rate Limiting (`throttle:10,1`) ในเส้นทางที่เปราะบาง เช่น การเชิญผู้ใช้, การระงับสิทธิ์, และการเปลี่ยนสิทธิ์
-    *   **Strict Re-authentication:** การบันทึกธุรกรรมทางการเงินและคำสั่งสำคัญ เช่น การรับชำระเงิน, การคืนเงิน (Reverse), การปฏิเสธใบเบิกค่าใช้จ่าย จะต้องได้รับการยืนยันรหัสผ่านใหม่ก่อนทำรายการเสมอ
-*   **Auditability & State Snapshot:** ทุกๆ การสร้าง แก้ไข หรือทำลาย Master Data และเอกสารทางการเงิน จะถูกบันทึกไว้ในตาราง `audit_logs` พร้อมสลักข้อมูลภาพถ่ายสถานะก่อนและหลังแก้ไข (`before_json` และ `after_json`) เพื่อความโปร่งใสสูงสุด
-*   **QA Integrity & Robust Tests:** การันตีคุณภาพโค้ดด้วยชุดทดสอบ Feature Test ครอบคลุมเคสการเข้าถึง (Access Matrix), กติกาความปลอดภัย, และความถูกต้องของข้อมูลทางการเงิน พร้อมระบบจัดรูปแบบโค้ด (Prettier & Laravel Pint) และตรวจไวยากรณ์ (ESLint) เป็นระเบียบ 100%
+เหมาะกับองค์กรที่ต้องการเห็นภาพเดียวกันทั้งทีม:
 
----
-
-## 2. สถานะและประวัติการพัฒนาโครงการ (Project Status & Phase Tracking)
-
-- งานทั้งหมดถูกบันทึกและติดตามอย่างเป็นทางการใน [checklist.md](file:///c:/LocalDevine/www/ERP/checklist.md)
-- [checklist.md](file:///c:/LocalDevine/www/ERP/checklist.md) เป็น Source of Truth สำหรับสถานะการทำงานของระบบ
-
-### สรุปสถานะโครงการตามประวัติแต่ละเฟส (Phase Summary)
-
-| เฟส (Phase) | สถานะ (Status) | รายละเอียดคุณสมบัติโดยย่อ |
-| :--- | :--- | :--- |
-| **Phase 0** | **Done** | ออกแบบเอกสารสถาปัตยกรรม ข้อกำหนดความปลอดภัย กฎการตรวจสอบความถูกต้อง และการออกแบบฐานข้อมูลระบบ |
-| **Phase 1** | **Done** | Scaffold โครงสร้างระบบหลัก, ระบบสมัคร/เข้าใช้งาน (Auth), โครงสร้างแผนกผู้ใช้งาน และระบบ Audit Log |
-| **Phase 1.1** | **Done** | ระบบจัดการข้อมูลหลักองค์กร (Master Data CRUD), ระบบกำหนดสิทธิ์และบทบาท (Role-Permission Matrix) |
-| **Phase 2** | **Done** | โมดูล CRM & ดีลการขาย (Customers, Contacts, Deals, Activity Timeline, Sales Dashboard) |
-| **Phase 3** | **Done** | โมดูลระบบการเงิน แคตตาล็อกสินค้า ใบแจ้งหนี้ การจ่ายเงิน/คืนเงิน ใบเบิกค่าใช้จ่าย และระบบไฟล์แนบที่ปลอดภัย |
-| **Phase 4** | **Done** | โมดูลระบบการส่งมอบงานและโครงการ (Projects, Tasks, Checklists, Comments, Finance-Project Link, Delivery Dashboard) |
-| **Phase 5** | **Done** | Executive Dashboard, E2E tests, UAT seed expected values และ Security Review ผ่าน Gemini review แล้ว |
-| **Phase 6** | **In Progress** | Reporting / Filters / Operational Polish: Dashboard Date Filters เสร็จแล้ว |
-
-### สรุปความคืบหน้าของฟีเจอร์ที่สร้างแล้ว (Implemented Features)
-
-| เฟส (Phase) | ฟีเจอร์ที่ได้รับการพัฒนาและตรวจสอบความถูกต้องเรียบร้อยแล้ว | วันที่ตรวจสอบล่าสุด |
-| :--- | :--- | :--- |
-| **Phase 0** | ล็อกเอกสารความต้องการ ขอบเขต MVP, โครงสร้าง Schema ฐานข้อมูล และข้อกำหนดความปลอดภัยระบบ | 2026-07-25 |
-| **Phase 1** | ระบบสิทธิ์ RBAC 7 Roles, บัญชีเชิญสมาชิกพร้อม Token วันหมดอายุ 72 ชั่วโมง, หน้าจอย้อนดู Audit Log และ Admin Dashboard | 2026-07-25 |
-| **Phase 1.1** | การบันทึกโปรไฟล์บริษัทพร้อมอัปโหลดโลโก้, สร้าง/แก้ไข/ปิดใช้งาน Branch, Division, Department, User และแก้ไข Role-Permission Matrix | 2026-07-26 |
-| **Phase 2** | ระบบ CRM: จัดการลูกค้าพร้อมผู้ติดต่อหลัก (Primary Contact), ดีลการขายพร้อมประวัติการนัดหมาย/อีเมล (Polymorphic Activity Timeline) และ Sales Dashboard | 2026-07-26 |
-| **Phase 3** | แคตตาล็อกสินค้า, ใบแจ้งหนี้, การชำระเงินจำกัดยอดไม่ให้จ่ายเกิน (Overpay Guard), การคืนเงิน (Reversal), ใบเบิกค่าใช้จ่ายพร้อมอัปโหลดไฟล์/ดาวน์โหลดไฟล์ตรวจสอบสิทธิ์ และ Finance Dashboard | 2026-07-29 |
-| **Phase 4** | โปรเจกต์ส่งมอบงานผูกกับดีลการชนะ, งานย่อย (Tasks) พร้อม Checklist/Comments, ลิงก์ Invoice/Expense เข้าโครงการ, Derived Project Cost (ราคาทุนจริงคำนวณสะสมสดจาก Expense ที่ผ่านการอนุมัติ) และ Delivery Dashboard | 2026-07-30 |
-| **Phase 5** | Executive Dashboard รวมค่า Sales pipeline/won, Finance revenue/cash-in/AR/profit และ Delivery active/risk/project profit โดยไม่แสดง Cash Balance | 2026-08-01 |
-| **Phase 6** | Dashboard Date Filters สำหรับ Executive / Finance / Delivery metrics รองรับ All-time, Month, Year และ Custom Range | 2026-08-01 |
+- ฝ่ายขายเห็นลูกค้า ดีล และ follow-up
+- ฝ่ายบัญชีเห็น invoice, payment, expense และ cash flow
+- ฝ่ายส่งมอบเห็น project, task, workload และ delivery risk
+- ผู้บริหารเห็น pipeline, revenue, AR, profit, project status และ risk รวม
+- Admin จัดการ organization, user, role, permission และ audit log
 
 ---
 
-## 3. เทคโนโลยีและภาษาที่ใช้ (Technology Stack)
+## Technology Stack
 
-การพัฒนาแบบ Hybrid ที่รวมเอาประสิทธิภาพของ Backend และความยืดหยุ่นของ Modern SPA Frontend เข้าไว้ด้วยกัน:
-
-*   **Backend Layer:** PHP 8.3 + Laravel Framework 11/13
-*   **Frontend Layer:** React 18 + TypeScript + Tailwind CSS (จัดทำสไตล์ Dark Mode คลอบคลุม)
-*   **SPA Bridge:** Inertia.js (เชื่อมต่อ Laravel Controllers ไปหา React Pages ได้โดยตรงโดยไม่ต้องมี API overhead)
-*   **Asset Bundler:** Vite
-*   **Database:** MariaDB / MySQL (รองรับการทำ Row Locking ด้วย `lockForUpdate()`)
-*   **Testing & Quality Tools:** PHPUnit 12, Prettier, ESLint (TypeScript-ESLint), Laravel Pint
+| Layer | Technology |
+| --- | --- |
+| Backend | PHP 8.3, Laravel 13 |
+| Frontend | React 18, TypeScript |
+| SPA Bridge | Inertia.js |
+| Styling | Tailwind CSS |
+| Build Tool | Vite |
+| Database | MariaDB / MySQL |
+| Auth | Laravel Breeze |
+| Test | PHPUnit |
+| Quality | Laravel Pint, ESLint, Prettier |
 
 ---
 
-## 4. โครงสร้างของโปรเจกต์ (Project Structure)
+## Module Overview
 
-โครงสร้างโฟลเดอร์แบบ Monorepo/Laravel App:
+| Module | หน้าที่ |
+| --- | --- |
+| Organization | เก็บข้อมูลบริษัท, branch, division, department |
+| User & Role | จัดการผู้ใช้, invite, role, permission, disable/enable |
+| Auth | สมัคร, login, logout, reset password, email verification, accept invite |
+| Audit Log | บันทึก action สำคัญพร้อม before/after snapshot |
+| CRM | จัดการ customer, contact, primary contact |
+| Sales | จัดการ deal pipeline, won/lost, activity, follow-up |
+| Product Catalog | จัดการสินค้า/บริการสำหรับออก invoice |
+| Invoice | สร้าง invoice จาก deal หรือ manual invoice |
+| Payment | รับชำระเงิน, partial/full payment, reversal, overpay guard |
+| Expense | บันทึกค่าใช้จ่าย, approve, pay, reject, แนบ receipt |
+| File Attachment | จัดเก็บไฟล์ payment/expense แบบตรวจ permission จาก parent |
+| Project | สร้าง project จาก won deal หรือ manual project |
+| Task | งานย่อย, checklist, comment, assignee visibility |
+| Dashboard | Admin, Executive, Finance, Delivery, Sales dashboard |
+| Reporting Filters | filter dashboard แบบ all-time, month, year, custom range |
+
+---
+
+## Module Details
+
+### 1. Organization
+
+ใช้เก็บโครงสร้างบริษัทแบบ tenant เดียวต่อองค์กร
+
+- `organizations`
+- `branches`
+- `divisions`
+- `departments`
+
+โครงสร้าง hierarchy:
+
+```text
+Organization
+└── Branch
+    └── Division
+        └── Department
+            └── User
+```
+
+ระบบ validate chain ทุกครั้ง เช่น department ต้องอยู่ใต้ division และ branch เดียวกัน
+
+### 2. User, Role, Permission
+
+ระบบสิทธิ์เป็น RBAC
+
+Default roles:
+
+- `owner`
+- `admin`
+- `sales`
+- `project_manager`
+- `finance`
+- `member`
+- `viewer`
+
+Permission ใช้รูปแบบ code เช่น:
+
+- `customers.view`
+- `deals.create`
+- `invoices.update`
+- `payments.reverse`
+- `projects.reassign`
+- `executive.dashboard.view`
+
+ผู้ใช้มีได้หลาย role และ effective permission คือ union ของทุก role
+
+### 3. CRM & Sales
+
+ดูแลตั้งแต่ลูกค้าจนถึง deal
+
+- Customer มี owner
+- Contact อยู่ใต้ customer
+- Primary contact มีได้ 1 คนต่อ customer
+- Deal มี stage: `new`, `contacted`, `qualified`, `proposal`, `negotiation`, `won`, `lost`
+- ถ้า deal เป็น `lost` ต้องมี `lost_reason`
+- ถ้า deal เป็น `won` ระบบบันทึก `won_at`
+- Activity ใช้ polymorphic timeline สำหรับ customer/deal
+
+### 4. Finance
+
+ดูแลสินค้า ใบแจ้งหนี้ การรับเงิน ค่าใช้จ่าย และรายงานการเงิน
+
+ฟีเจอร์หลัก:
+
+- Product/service catalog
+- Manual invoice
+- Invoice from deal
+- Server-side invoice calculation
+- Tax mode: `exclusive`, `inclusive`, `no_tax`
+- Partial payment
+- Full payment
+- Overpay prevention ด้วย DB transaction/lock
+- Payment reversal
+- Expense draft/approve/pay/reject
+- Attachment สำหรับ payment slip และ expense receipt
+
+กฎสำคัญ:
+
+- Payment ห้ามลบทิ้ง ใช้ reversal เท่านั้น
+- Invoice ที่มี payment แล้ว ห้ามแก้ยอด
+- Receipt download ต้องตรวจ permission ผ่าน parent entity
+- `storage_key` สร้างฝั่ง server เท่านั้น
+
+### 5. Delivery
+
+ดูแล project และ task หลังปิดการขาย
+
+ฟีเจอร์หลัก:
+
+- สร้าง project จาก won deal
+- 1 won deal สร้าง project ได้ 1 อัน
+- Manual project
+- Internal task ที่ไม่มี project ได้
+- Task มี assignee, status, priority, due date
+- Checklist และ comment ใต้ task
+- Member เห็นเฉพาะ task ที่ assign ให้ตัวเอง
+- Blocked task ไม่นับเป็น overdue
+
+Project cost:
+
+```text
+actual_cost = sum(expenses.amount)
+where expense.project_id = project.id
+and expense.status in approved, paid
+```
+
+ระบบไม่เก็บ `projects.actual_cost` เพื่อกันข้อมูลไม่ sync
+
+### 6. Dashboard
+
+Dashboard แยกตาม scope:
+
+- Admin Dashboard
+- Executive Dashboard
+- Finance Dashboard
+- Delivery Dashboard
+- Sales Dashboard
+
+Dashboard filter รองรับ:
+
+- `all_time`
+- `month`
+- `year`
+- `custom`
+
+Query params:
+
+```text
+period=month
+month=2026-08
+year=2026
+from=2026-08-01
+to=2026-08-31
+```
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart TD
+    Browser[Browser] --> React[React + TypeScript Pages]
+    React --> Inertia[Inertia.js]
+    Inertia --> Routes[Laravel Web Routes]
+    Routes --> Middleware[Auth + Verified + Permission + Password Confirm]
+    Middleware --> Controllers[Laravel Controllers]
+    Controllers --> Models[Eloquent Models]
+    Controllers --> Support[Support Services and Access Scopes]
+    Models --> DB[(MariaDB / MySQL)]
+    Controllers --> Audit[Audit Logs]
+    Controllers --> Files[Storage / Attachments]
+    Controllers --> InertiaResponse[Inertia Response Props]
+    InertiaResponse --> React
+```
+
+หลักการ:
+
+- Laravel เป็น backend และ route owner
+- React เป็น page UI
+- Inertia ส่ง props จาก controller ไป React โดยไม่ต้องทำ public API แยก
+- ทุก query ธุรกิจต้อง scope ด้วย `org_id`
+- ทุก write action สำคัญต้องผ่าน permission และบางจุดต้อง re-auth
+
+---
+
+## Business Workflow Diagram
+
+```mermaid
+flowchart LR
+    Invite[Invite User] --> User[Active User]
+    User --> Customer[Customer]
+    Customer --> Contact[Contact]
+    Customer --> Deal[Deal Pipeline]
+    Deal -->|Won| Invoice[Invoice]
+    Invoice --> Payment[Payment]
+    Payment --> FinanceDashboard[Finance Dashboard]
+    Deal -->|Won| Project[Project]
+    Project --> Task[Task]
+    Task --> DeliveryDashboard[Delivery Dashboard]
+    Deal --> SalesDashboard[Sales Dashboard]
+    FinanceDashboard --> ExecutiveDashboard[Executive Dashboard]
+    DeliveryDashboard --> ExecutiveDashboard
+    SalesDashboard --> ExecutiveDashboard
+```
+
+---
+
+## Data Relationship Diagram
+
+```mermaid
+erDiagram
+    ORGANIZATIONS ||--o{ BRANCHES : has
+    BRANCHES ||--o{ DIVISIONS : has
+    DIVISIONS ||--o{ DEPARTMENTS : has
+    ORGANIZATIONS ||--o{ USERS : has
+    USERS }o--o{ ROLES : user_roles
+    ROLES }o--o{ PERMISSIONS : role_permissions
+
+    ORGANIZATIONS ||--o{ CUSTOMERS : has
+    CUSTOMERS ||--o{ CONTACTS : has
+    CUSTOMERS ||--o{ DEALS : has
+    USERS ||--o{ DEALS : owns
+
+    DEALS ||--o{ INVOICES : creates
+    CUSTOMERS ||--o{ INVOICES : billed_to
+    INVOICES ||--o{ INVOICE_ITEMS : has
+    INVOICES ||--o{ PAYMENTS : paid_by
+    PRODUCTS ||--o{ INVOICE_ITEMS : item
+
+    DEALS ||--o| PROJECTS : becomes
+    CUSTOMERS ||--o{ PROJECTS : owns
+    PROJECTS ||--o{ TASKS : has
+    TASKS ||--o{ TASK_CHECKLISTS : has
+    TASKS ||--o{ TASK_COMMENTS : has
+    USERS ||--o{ TASKS : assigned
+
+    PROJECTS ||--o{ EXPENSES : costs
+    PAYMENTS ||--o| FILES : attachment
+    EXPENSES ||--o| FILES : receipt
+    ORGANIZATIONS ||--o{ AUDIT_LOGS : records
+```
+
+---
+
+## Request Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant R as React Page
+    participant I as Inertia
+    participant L as Laravel Route
+    participant M as Middleware
+    participant C as Controller
+    participant D as Database
+    participant A as Audit Log
+
+    U->>R: Submit form
+    R->>I: Inertia request
+    I->>L: HTTP request
+    L->>M: auth / verified / permission
+    M->>C: allowed request
+    C->>D: validate org_id scoped data
+    C->>D: create / update business record
+    C->>A: write audit snapshot
+    C->>I: redirect or render props
+    I->>R: update page state
+```
+
+---
+
+## Security Model
+
+ระบบวาง baseline ความปลอดภัยไว้แบบนี้:
+
+- Multi-tenant isolation ด้วย `org_id`
+- Cross-org access ต้องได้ `404` หรือถูก block
+- RBAC ผ่าน permission middleware
+- Sensitive write ใช้ `password.confirm`
+- Write routes หลายจุดมี `throttle:10,1`
+- Password เก็บแบบ hash เท่านั้น
+- ไม่ expose `password`, `remember_token`, token, secret ใน Inertia props
+- `person_id` ถูก mask เว้นแต่มี permission เฉพาะ
+- Payment ใช้ transaction lock กัน overpay
+- Attachment download ตรวจ permission จาก parent entity
+- Audit log ไม่ควรเก็บ secret หรือข้อมูล sensitive เต็ม
+
+---
+
+## Project Structure
 
 ```text
 ERP/
-├── backend/                             # โฟลเดอร์หลักของ Laravel + React Application
-│   ├── app/                             # โค้ด Backend หลัก
-│   │   ├── Http/Controllers/            # ตัวควบคุมคำสั่งแยกตามแผนก (Admin, Sales, Finance, Delivery)
-│   │   ├── Models/                      # Eloquent Models (User, Invoice, Project, Task, Expense ฯลฯ)
-│   │   ├── Support/                     # Helper Classes สำหรับตรวจสอบสิทธิ์ (ProjectAccess, SalesAccess ฯลฯ)
-│   │   └── Policies/                    # นโยบายความปลอดภัยการเข้าถึง
+├── backend/
+│   ├── app/
+│   │   ├── Http/
+│   │   │   ├── Controllers/
+│   │   │   └── Middleware/
+│   │   ├── Models/
+│   │   ├── Policies/
+│   │   ├── Providers/
+│   │   ├── Services/
+│   │   └── Support/
+│   ├── bootstrap/
+│   ├── config/
 │   ├── database/
-│   │   ├── migrations/                  # โครงสร้างตารางฐานข้อมูลแยกตามวันเวลาการบันทึก
-│   │   └── seeders/                     # ตัวจำลองข้อมูลทดสอบ (Phase1DemoSeeder)
+│   │   ├── migrations/
+│   │   ├── factories/
+│   │   └── seeders/
+│   ├── public/
 │   ├── resources/
-│   │   └── js/                          # โค้ด Frontend ฝั่ง React + TypeScript
-│   │       ├── Components/              # UI Components ส่วนกลาง (Card, StatCard, Badge, DataTable ฯลฯ)
-│   │       ├── Layouts/                 # เทมเพลตหน้าจอ (AuthenticatedLayout, GuestLayout)
-│   │       ├── Pages/                   # หน้าจอหลักแยกตามแผนก
-│   │       │   ├── Admin/               # หน้าตั้งค่าระบบ, ประวัติการบันทึก Audit
-│   │       │   ├── Sales/               # ลูกค้า, ดีลการขาย
-│   │       │   ├── Finance/             # แคตตาล็อกสินค้า, ใบแจ้งหนี้, ค่าใช้จ่าย
-│   │       │   ├── Delivery/            # โครงการส่งมอบงาน, ตารางงานย่อย
-│   │       │   └── Dashboard.tsx        # แดชบอร์ดสรุปผลรวมและส่วนย่อย
-│   │       └── Utils/                   # ตัวช่วยจัดรูปแบบและการเงิน (Format, Money)
-│   ├── tests/
-│   │   └── Feature/                     # Feature Tests อัตโนมัติแบ่งตาม Phase
-│   ├── vite.config.js                   # ตั้งค่า Vite Asset compiler
-│   └── package.json                     # รายการ TypeScript / React dependencies
-├── checklist.md                         # รายการความคืบหน้าของฟีเจอร์ MVP ทั้งหมด
-├── gemini.md                            # บันทึกผลการตรวจสอบซอร์สโค้ดและประเด็นความปลอดภัย
-├── grok.md                              # บันทึกตรวจความสอดคล้องสถานะและ checklist จาก Grok
-├── gpt.md                               # บันทึกการตัดสินใจทางสถาปัตยกรรมของบอท
-└── MVP_SCOPE.md                         # ขอบเขตระบบรุ่นทดสอบแรกสุด (MVP)
+│   │   ├── css/
+│   │   ├── js/
+│   │   │   ├── Components/
+│   │   │   ├── Layouts/
+│   │   │   ├── Pages/
+│   │   │   ├── Types/
+│   │   │   └── Utils/
+│   │   └── views/
+│   ├── routes/
+│   ├── storage/
+│   └── tests/
+├── docs/
+│   ├── database/
+│   └── modules/
+├── checklist.md
+├── ERP_FEATURE_PLAN.md
+├── MVP_SCOPE.md
+├── PROJECT.md
+└── README.md
 ```
 
 ---
 
-## 5. รายละเอียดคุณสมบัติเด่นของแต่ละเฟส (Phase Features & Implementation Details)
+## Important Backend Paths
 
-
-### Phase 6: Reporting / Filters / Operational Polish
-*   **Dashboard Date Filters:** หน้า Dashboard หลักรองรับการกรองช่วงเวลาแบบ All-time, Month, Year และ Custom Range โดยส่งค่า filter ผ่าน query params (`period`, `month`, `year`, `from`, `to`)
-*   **Scoped Metrics:** ตัวกรองช่วงเวลาถูกใช้กับ Executive, Finance และ Delivery metrics โดยค่าเริ่มต้นยังเป็น All-time เพื่อรักษาพฤติกรรมเดิม
-*   **Filter UI:** เพิ่มแถบ Apply/Reset สำหรับเลือกช่วงเวลาใน Dashboard หลัก
-*   *สถานะทดสอบ:* เพิ่ม `Phase6DashboardFiltersTest`; Full PHPUnit suite ผ่าน 154 tests / 1200 assertions พร้อม Pint, Prettier, ESLint และ Vite Build
-### Phase 5: ระบบ Dashboard ผู้บริหาร (Executive Dashboard)
-*   **Executive Summary:** รวมภาพธุรกิจจาก Sales, Finance และ Delivery ในหน้า Dashboard หลักสำหรับ Owner/Admin ได้แก่ Pipeline Value, Won Value, Cash In, Outstanding AR, Gross Profit, Active Projects, Delivery Risk และ Project Profit
-*   **Permission Guard:** `executiveSummary` ส่งเฉพาะผู้มี `executive.dashboard.view` หรือบทบาท `owner/admin`; ผู้ใช้บทบาทเฉพาะแผนกยังเห็นเฉพาะ dashboard ย่อยตามสิทธิ์เดิม
-*   **No Cash Balance Rule:** ไม่ส่งและไม่แสดงค่า Cash Balance ทั้งใน UI และ Inertia props ของ Executive Dashboard
-*   *สถานะทดสอบ:* เพิ่ม `Phase5ExecutiveDashboardTest`, `Phase5EndToEndTest`, และ `Phase5UatSeedDataTest` ผ่านรวม 8 tests / 228 assertions
-### Phase 4: ระบบส่งมอบโครงการและตารางงาน (Delivery & Project Management)
-*   **การสร้างโครงการ (Projects):** สามารถสร้างโครงการจากยอดมูลค่าของดีลขายที่ชนะ (`won_stage`) เพื่อดึงงบประมาณและข้อมูลลูกค้ามาตั้งต้นอัตโนมัติ 1 ดีลผูกได้สูงสุด 1 โครงการ และมีระบบป้องกันเปลี่ยนเจ้าของโครงการข้ามบุคคลหากไม่มีสิทธิ์ `projects.reassign`
-*   **งานย่อยและเช็คลิสต์ (Tasks, Checklists & Comments):** ระบบติดตามงานย่อยใต้โครงการ รองรับ Checklist แยกย่อย (โดยตาราง `task_checklists` มีการสลักคอลัมน์ `org_id` แยก Tenant ป้องกันข้อมูลรั่วไหล) และเว็บบอร์ดเขียนคอมเมนต์อัปเดตงาน
-*   **ข้อจำกัดบทบาทพนักงานส่งมอบ (Member Guard):** พนักงานที่มีเพียงสิทธิ์ `tasks.view` (ไม่มีสิทธิ์บริหารโครงการ) สามารถปรับปรุงได้เฉพาะสถานะงานย่อยของตนเอง (`status`) เท่านั้น ไม่สามารถเปลี่ยนรายละเอียดหรือผู้รับผิดชอบได้ เพื่อวินัยข้อมูลการส่งมอบ
-*   **การผูกข้อมูลการเงินเข้าโครงการ (Finance-Delivery Project Link):** เชื่อมโยง Invoice และ Expense เข้ากับโครงการส่งมอบงาน โดยฝั่ง Invoice มีการบล็อกไม่ให้เชื่อมโยงโครงการของลูกค้าต่างรายกัน (Customer match guard)
-*   **คำนวณราคาทุนจริงแบบไร้ฟิลด์ฐานข้อมูล (Dynamic Project Cost - AD-05):** ตารางโครงการจะไม่มีฟิลด์ `actual_cost` เพื่อหลีกเลี่ยงสถานะข้อมูลไม่ตรงกัน โดยจะถูกประมวลผลสดบน Memory จากผลรวมยอด Expense ภายใต้โครงการที่มีสถานะผ่านการอนุมัติ (`approved`) หรือจ่ายเงินแล้ว (`paid`) เท่านั้น
-*   **การยกเว้นงานล่าช้า (Blocked Task Exemption):** งานที่มีสถานะเป็น `blocked` แม้เลยกำหนดส่งจะไม่ถูกนับรวมเป็นงานสะสมล่าช้า (Overdue Tasks)
-*   **การปกป้องข้อมูลการเงินของพนักงาน (Member Financial Shield):** บัญชีผู้ใช้งานบทบาทพนักงานทั่วไป (Member) จะถูกลดทอนข้อมูลทางการเงิน (Budget, Profit, Actual Cost) บน Delivery Dashboard ให้แสดงผลเป็น `0` เสมอ เพื่อความปลอดภัย
-*   *การรันทดสอบตรวจรับเฟส 4:* ผ่านการทดสอบ Feature Tests 23 เคสย่อย / 250 assertions (ครอบคลุม `Phase4DeliveryDashboardTest`, `Phase4ProjectsTest`, `Phase4TasksTest`, และ `Phase4FinanceProjectLinkTest`)
-
-### Phase 3: ระบบการเงินและเอกสารใบแจ้งหนี้ (Finance & Billing)
-*   **แคตตาล็อกสินค้า (Product Catalog):** แยกสิทธิ์พนักงานขายดูรายการได้อย่างเดียว กับฝ่ายบัญชีที่จัดการข้อมูลได้ พร้อมการันตีคีย์ SKU ไม่ซ้ำในหน่วยงาน
-*   **การชำระเงินและการกู้ข้อมูล (Payments & Reversals):** รองรับการจ่ายเงินแบบบางส่วน (Partial) และเต็มจำนวน (Full) ป้องกันการจ่ายเงินเกินยอดค้างจ่าย (Overpay Guard) ด้วย Row-Level DB Locking และรองรับการทำรายการกู้เงินคืน (Reversal) พร้อมป้องกัน Double Reversal
-*   **การจัดการค่าใช้จ่าย (Expenses & Attachment Files):** บันทึกค่าใช้จ่ายในบริษัทแนบใบเสร็จหลักฐาน โดยใบเสร็จจะถูกบันทึกแบบสุ่มชื่อ UUID เพื่อป้องกัน Directory Traversal และจำกัดสิทธิ์ดาวน์โหลดไฟล์เฉพาะบิลที่ผู้ใช้มีสิทธิ์เข้าถึง (ID harvesting protection)
-*   *การรันทดสอบตรวจรับเฟส 3:* ผ่านการทดสอบ Feature Tests 55 เคสย่อย / 401 assertions (ครอบคลุม `Phase3PaymentsTest`, `Phase3ExpensesTest`, `Phase3FilesTest`, `Phase3OverdueInvoicesTest` และ `Phase3FinanceDashboardTest`)
-
-### Phase 2: โมดูล CRM & ดีลการขาย (CRM & Sales Pipeline)
-*   **ข้อมูลลูกค้าและผู้ติดต่อ:** บันทึกข้อมูลบริษัทลูกค้า คู่ไปกับผู้ติดต่อใต้สังกัด โดยบังคับกฎ "Primary Contact มีได้เพียง 1 คนต่อลูกค้า 1 ราย"
-*   **ไพป์ไลน์การขาย (Deals Stage):** ติดตามดีลตามกระบวนการ บังคับกรอกเหตุผลที่แพ้การขาย (`lost_reason`) เมื่อปิดดีลไม่สำเร็จ และบันทึกวันที่สำเร็จอัตโนมัติเมื่อปิดการขายได้ (`won`)
-*   **ปฏิทินกิจกรรมกิจกรรมย่อย (Polymorphic Activity Timeline):** บันทึกการโทร, นัดประชุม, อีเมล และโน้ตติดตามงาน ภายใต้ดีลหรือลูกค้าอย่างเป็นระเบียบ
-*   *การรันทดสอบตรวจรับเฟส 2:* ผ่านการทดสอบ Feature Tests 68 เคสย่อย / 318 assertions
-
-### Phase 1.1: ระบบจัดการข้อมูลหลักและสิทธิ์ความปลอดภัย (Master Data & Access Control)
-*   **โครงสร้างองค์กร 4 ระดับ:** รองรับโครงสร้างบริษัทย่อย `Branch` -> `Division` -> `Department` -> `User` พร้อมระบบย้ายสังกัดและตรวจสอบความถูกต้องแบบลำดับขั้น (Hierarchy Validation Guard)
-*   **การควบคุมสิทธิ์ผ่าน UI:** หน้าจอ Role-Permission Matrix อนุญาตให้ปรับเปลี่ยนจับคู่นโยบายสิทธิ์ตามบทบาทผู้ใช้ และระบบ Last Owner Guard ป้องกันการปลด Owner คนสุดท้าย
-*   *การรันทดสอบตรวจรับเฟส 1.1:* ผ่านการทดสอบ Feature Tests 63 เคสย่อย / 273 assertions
-
-### Phase 0: สรุปเอกสารและการออกแบบระบบ (Architecture Decisions - Lock)
-*   ล็อกเอกสารหลักที่เตรียมไว้สำหรับการขึ้นฐานระบบใน [docs/README.md](file:///c:/LocalDevine/www/ERP/docs/README.md) และแคตตาล็อกฐานข้อมูลใน [docs/database/DATABASE.md](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md)
-*   บันทึกข้อตกลงสำคัญทางความปลอดภัยใน [docs/security_requirements.md](file:///c:/LocalDevine/www/ERP/docs/SECURITY_REQUIREMENTS.md) และประเด็นข้อตกลงในการลบข้อมูลอย่างปลอดภัย
+| Path | หน้าที่ |
+| --- | --- |
+| `backend/routes/web.php` | web routes ทั้งหมด |
+| `backend/app/Http/Controllers/Admin/DashboardController.php` | Admin/Executive/Finance/Delivery dashboard |
+| `backend/app/Http/Controllers/Sales/` | Customer, Contact, Deal, Activity |
+| `backend/app/Http/Controllers/Finance/` | Product, Invoice, Payment, Expense |
+| `backend/app/Http/Controllers/Delivery/` | Project, Task |
+| `backend/app/Support/PermissionCatalog.php` | permission และ default role map |
+| `backend/app/Support/SalesAccess.php` | sales visibility scope |
+| `backend/app/Support/ProjectAccess.php` | project visibility scope |
+| `backend/app/Support/TaskAccess.php` | task visibility scope |
+| `backend/app/Services/NumberSequenceService.php` | running number generator |
+| `backend/app/Services/OrganizationProvisioner.php` | create organization bootstrap |
 
 ---
 
-## 6. สถาปัตยกรรมและโครงสร้างฐานข้อมูล (Database Schema)
+## Important Frontend Paths
 
-### หลักการตารางข้อมูล (Conventions)
-1.  **Primary Keys:** ตารางหลักทั้งหมดใช้ UUID v7 หรือ Ordered UUID เพื่อความยืดหยุ่นและการจอง ID บนฝั่ง Client ได้ปลอดภัย
-2.  **Tenant Isolation:** ทุกตารางข้อมูลเกี่ยวกับธุรกิจจะมีฟิลด์ `org_id` (FK → `organizations.id`) และมีการประมวลผล filter บน Controllers เสมอ
-3.  **Audit Columns:** ทุกตารางจะมีฟิลด์ `created_at`, `updated_at`, `created_by`, `updated_by`, และ `deleted_at` (กรณีเปิดใช้ Soft Delete)
-4.  **Financial Fields:** ยอดเงินทั้งหมดจะถูกเก็บเป็นประเภท `DECIMAL(18,2)` ร่วมกับฟิลด์ระบุสกุลเงิน `currency CHAR(3)` (เช่น 'THB')
-
-### แผนผังความสัมพันธ์ (Entity Relationship Overview)
-```text
-organizations (Tenant Root)
-  ├── branches ── divisions ── departments (โครงสร้างองค์กร)
-  ├── users ── user_roles ── roles ── role_permissions ── permissions (ระบบสิทธิ์)
-  ├── customers ── contacts
-  │     └── deals ── invoices ── invoice_items ── payments (การขายและการเงิน)
-  │           └── projects ── tasks ── task_checklists & task_comments (การส่งมอบ)
-  ├── expenses (ค่าใช้จ่ายองค์กร ผูกกับ projects.id ได้แบบ Nullable)
-  ├── files (ไฟล์แนบระบบความปลอดภัยสูง)
-  └── audit_logs (ประวัติการทำธุรกรรมและคำสั่ง)
-```
+| Path | หน้าที่ |
+| --- | --- |
+| `backend/resources/js/app.tsx` | React/Inertia entrypoint |
+| `backend/resources/js/Layouts/AuthenticatedLayout.tsx` | layout หลัง login |
+| `backend/resources/js/Layouts/GuestLayout.tsx` | layout หน้า auth |
+| `backend/resources/js/Pages/Dashboard.tsx` | dashboard หลัก |
+| `backend/resources/js/Pages/Sales/` | CRM/Sales pages |
+| `backend/resources/js/Pages/Finance/` | Finance pages |
+| `backend/resources/js/Pages/Delivery/` | Delivery pages |
+| `backend/resources/js/Pages/Admin/` | Admin pages |
+| `backend/resources/js/Components/UI/` | shared UI components |
+| `backend/resources/js/Types/` | TypeScript shared types |
 
 ---
 
-## 7. การตั้งค่าและการใช้งานระบบเบื้องต้น (Quick Start & Setup)
+## Database Conventions
 
-### 1. ความต้องการของระบบ (Prerequisites)
-*   PHP 8.3 ขึ้นไป (พร้อมเปิดใช้งาน extension: `PDO`, `sqlite3`, `mbstring`)
-*   Node.js (LTS v20 ขึ้นไป)
-*   Composer (สำหรับ PHP package management)
-*   pnpm (สำหรับ JavaScript package management)
+- Primary key ใช้ UUID / ordered UUID
+- ตารางธุรกิจหลักมี `org_id`
+- ยอดเงินใช้ `DECIMAL(18,2)`
+- รหัสธุรกิจเดิมใช้เลข 6 หลัก เช่น `000001`
+- `created_by`, `updated_by`, `created_at`, `updated_at` ใช้กับตารางหลัก
+- Soft delete ใช้กับ entity ที่ลบได้
+- Financial records ไม่ลบง่าย ใช้ void/reversal/status แทน
 
-### 2. การติดตั้ง (Installation)
-เปิด Terminal และทำตามขั้นตอนดังนี้:
+รายละเอียด schema ดูที่ [`docs/database/DATABASE.md`](docs/database/DATABASE.md)
+
+---
+
+## Routes Summary
+
+| Route | Module |
+| --- | --- |
+| `/dashboard` | Admin dashboard |
+| `/executive-dashboard` | Executive dashboard |
+| `/finance-dashboard` | Finance dashboard |
+| `/delivery-dashboard` | Delivery dashboard |
+| `/sales-dashboard` | Sales dashboard |
+| `/customers` | CRM customers |
+| `/deals` | Sales deals |
+| `/products` | Product catalog |
+| `/invoices` | Invoices |
+| `/expenses` | Expenses |
+| `/projects` | Delivery projects |
+| `/tasks` | Delivery tasks |
+| `/users` | User management |
+| `/roles` | Role/permission management |
+| `/audit-logs` | Audit log |
+| `/settings/organization` | Organization settings |
+| `/settings/organization-structure` | Branch/division/department |
+
+---
+
+## Setup
+
+เข้า backend:
 
 ```powershell
-# 1. เข้าไปยังโฟลเดอร์ backend
 cd backend
-
-# 2. คัดลอกการตั้งค่าสภาพแวดล้อม
-copy .env.example .env
-
-# 3. ติดตั้ง Dependencies ของระบบ Backend
-composer install
-
-# 4. ติดตั้ง Dependencies ของระบบ Frontend
-pnpm install
-
-# 5. สร้าง Application Key
-php artisan key:generate
-
-# 6. ลิงก์ Storage เพื่อแสดงโลโก้
-php -c .php\php.ini artisan storage:link
 ```
 
-### 3. การเตรียมฐานข้อมูลและจำลองข้อมูลทดสอบ (Migration & Seeding)
-ระบบมาพร้อมกับ `Phase1DemoSeeder` ที่เตรียมชุดข้อมูลจำลองตั้งแต่โครงสร้างองค์กร, บทบาทสิทธิ์, ลูกค้า, ดีลขาย, ใบแจ้งหนี้, และตารางโปรเจกต์ไว้ให้ทดสอบเรียบร้อยแล้ว:
+ติดตั้ง dependency:
 
 ```powershell
-# สั่งสร้างตารางและใส่ข้อมูล Seeder
+composer install
+pnpm install
+```
+
+ตั้งค่า environment:
+
+```powershell
+copy .env.example .env
+php artisan key:generate
+```
+
+สร้าง database และ seed:
+
+```powershell
 php artisan migrate:fresh --seed
 ```
 
-### 4. บัญชีทดสอบที่จัดเตรียมไว้ (Demo Test Accounts)
-คุณสามารถลงชื่อเข้าใช้งานระบบได้จาก URL `/login` ด้วยรหัสผ่านเริ่มต้นคือ `password` ดังนี้:
-
-| บทบาท (Role) | อีเมลสำหรับเข้าสู่ระบบ (Email) | สิทธิ์และการเข้าถึงข้อมูล |
-| :--- | :--- | :--- |
-| **Owner** | `owner@example.com` | **สิทธิ์สูงสุดขององค์กร** เข้าถึงได้ทุกเมนูและข้อมูลทางการเงินทั้งหมด (แนะนำสำหรับใช้สาธิต) |
-| **Admin** | `admin@example.com` | จัดการผู้ใช้, สร้าง Master Data, ปิดการใช้งานสมาชิก และดูระบบโครงสร้างสาขา |
-| **Sales** | `sales@example.com` | ฝ่ายขาย เห็นและเข้าจัดการเฉพาะลูกค้า/ดีลการขายที่ตนเองเป็นผู้ดูแล |
-| **Project Manager** | `pm@example.com` | ผู้จัดส่งงาน เห็นและจัดการเฉพาะโปรเจกต์และบิลการเงินที่ระบุตนเองเป็นเจ้าของโครงการ |
-| **Member** | `member@example.com` | พนักงานส่งมอบงานทั่วไป เห็นเฉพาะรายการงานย่อย (Tasks) ที่มอบหมายให้ตนเองเท่านั้น |
-| **Viewer** | `viewer@example.com` | บัญชีผู้เข้ามาตรวจสอบข้อมูลเฉยๆ สิทธิ์การเข้าถึงแบบ Read-only |
-
-### 5. การรันระบบในโหมดพัฒนา (Running Locally)
-เปิด Terminal สองหน้าต่างคู่กันภายใต้โฟลเดอร์ `backend`:
-
-*   **หน้าต่างที่ 1 (Backend Dev Server):**
-    ```powershell
-    php artisan serve
-    ```
-*   **หน้าต่างที่ 2 (Vite Frontend compiler):**
-    ```powershell
-    pnpm run dev
-    ```
-เข้าดูผลลัพธ์ผ่านเว็บเบราว์เซอร์ได้ที่: `http://127.0.0.1:8000`
-
----
-
-## 8. การตรวจสอบคุณภาพและรันทดสอบอัตโนมัติ (Verification Commands)
-
-ก่อนทำการส่งมอบโค้ดขึ้น GitHub ทุกครั้ง สามารถรันคำสั่งเหล่านี้เพื่อตรวจสอบความสะอาดเรียบร้อย:
+สร้าง storage link:
 
 ```powershell
-# 1. รันการทดสอบ Feature Tests ทั้งหมด (143 Tests, 901 Assertions)
-php -c .php\php.ini vendor\phpunit\phpunit\phpunit
-
-# 2. ตรวจสอบความสะอาดไวยากรณ์ React/JS
-pnpm run lint
-
-# 3. ตรวจสอบการจัดฟอร์แมต Prettier
-pnpm run check-format
-
-# 4. ทดสอบความถูกต้องของสไตล์และการเขียน PHP
-composer run pint
-
-# 5. ทดสอบบิลด์ Frontend Bundle สำหรับ Production
-pnpm run build
+php artisan storage:link
 ```
 
 ---
 
-## 9. ขอบเขตนอกเหนือจาก MVP (Deferred / Out of Scope for MVP)
+## Run Locally
 
-เพื่อรักษาโครงสร้างระบบให้เบาและรวดเร็วสำหรับรุ่นแรกสุด (MVP) รายการฟีเจอร์ต่อไปนี้ได้รับการพิจารณาเลื่อน (Defer) ไปพัฒนาในรุ่นถัดไป (Post-MVP/V2) ตามมติการตรวจรับ UAT:
+เปิด terminal 2 หน้าต่าง
 
-*   **ระบบสมาชิกโครงการ (`project_members`):** เลื่อนไปเป็นสิทธิ์ทีมในรุ่นถัดไป (V2) โดยใน MVP ปัจจุบันใช้ระบบควบคุมสิทธิ์และความปลอดภัยผ่านเจ้าของโครงการ (Project Owner) และผู้ได้รับมอบหมายงาน (Assignee) ซึ่งผ่านการตรวจสอบความปลอดภัยของสิทธิ์เรียบร้อยแล้ว
-*   **ระบบไฟล์แนบส่วนกลาง (Generic Files):** ใน MVP นี้การอัปโหลดไฟล์จะจำกัดเฉพาะสลิปโอนเงิน (Payment slip) และใบเสร็จค่าใช้จ่าย (Expense receipt) เท่านั้น ส่วนระบบแชร์ไฟล์บน Customer, Deal, Project, Task ทั่วไปจะถูกจัดเตรียมในรุ่น V2
-*   **การจัดการภาษีขั้นสูง (Advanced Tax Compliance):** ระบบปันส่วนส่วนลดระดับหัวเอกสาร (Header Discount allocation), การทำเอกสารใบลดหนี้ (Credit Note) และเอกสารกำกับภาษีแบบเต็มรูปแบบ
-*   **ระบบส่งออกและแจ้งเตือน (Export / Notifications):** การส่งออกรายงานเป็น Excel/CSV และการส่งอีเมล/ไลน์แจ้งเตือนอัติโนมัติเมื่อเกิดกิจกรรมใหม่ (จะถูกจัดทำใน V2)
+Backend:
+
+```powershell
+cd backend
+php artisan serve
+```
+
+Frontend:
+
+```powershell
+cd backend
+pnpm run dev
+```
+
+เปิดเว็บ:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+## Demo Accounts
+
+หลัง seed แล้ว login ได้ด้วย password:
+
+```text
+password
+```
+
+| Role | Email |
+| --- | --- |
+| Owner | `owner@example.com` |
+| Admin | `admin@example.com` |
+| Sales | `sales@example.com` |
+| Project Manager | `pm@example.com` |
+| Finance | `finance@example.com` |
+| Member | `member@example.com` |
+| Viewer | `viewer@example.com` |
+
+---
+
+## Verification
+
+รัน test backend:
+
+```powershell
+php artisan test
+```
+
+ตรวจ frontend:
+
+```powershell
+pnpm run lint
+pnpm run check-format
+pnpm run build
+```
+
+ตรวจ style PHP:
+
+```powershell
+vendor\bin\pint
+```
+
+ผลทดสอบล่าสุดที่รันในเครื่องนี้:
+
+```text
+php artisan test
+155 passed, 1216 assertions
+```
+
+---
+
+## Current Phase Status
+
+| Phase | Status | Summary |
+| --- | --- | --- |
+| Phase 0 | Done | Documentation lock |
+| Phase 1 | Done | Foundation, Auth, Admin Dashboard |
+| Phase 1.1 | Done | Master Data, User, Role, Permission |
+| Phase 2 | Done | CRM/Sales |
+| Phase 3 | Done | Finance |
+| Phase 4 | Done | Delivery |
+| Phase 5 | Done | Executive Dashboard, E2E, UAT |
+| Phase 6 | Done | Reporting filters, dashboard polish, document number expansion, invoice VAT compliance |
+
+---
+
+## Deferred / Post-MVP
+
+รายการที่ยังไม่อยู่ใน MVP:
+
+- `project_members`
+- Generic file attachment ทุก module
+- Export Excel/CSV
+- Notifications
+- Public API
+- Advanced tax compliance
+- Accounting integration
+- Payroll
+- Inventory
+- Customer portal
+- AI assistant
+
+---
+
+## Development Notes
+
+- `checklist.md` คือ source of truth ของสถานะงาน
+- `docs/database/DATABASE.md` คือ source of truth ของ schema
+- ก่อนเพิ่ม module ใหม่ควรแก้ docs และ checklist ก่อน
+- ห้ามรับ `org_id` จาก client สำหรับ business write
+- ห้าม expose secret/token/password ใน Inertia props
+- Write action สำคัญควรมี audit log

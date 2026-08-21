@@ -76,6 +76,11 @@ class Phase6DashboardFiltersTest extends TestCase
                 ->where('executiveSummary.delivery.project_profit', 800)
                 ->where('financeSummary.cash_in_receipts', 400)
                 ->where('financeSummary.cash_in_reversals', 50)
+                ->where('financeSummary.previous.invoiced_revenue', 900)
+                ->where('financeSummary.previous.cash_in', 900)
+                ->where('financeSummary.previous.outstanding_ar', 900)
+                ->where('financeSummary.previous.recognized_expense', 1000)
+                ->where('financeSummary.previous.gross_profit', -100)
                 ->where('deliverySummary.total_budget', 1000)
                 ->where('deliverySummary.actual_cost', 200)
             );

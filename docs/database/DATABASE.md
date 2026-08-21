@@ -471,7 +471,7 @@ organizations
 | id | UUID | PK | |
 | org_id | UUID | FK organizations NOT NULL | |
 | branch_id | UUID | FK branches NULL | optional numbering per branch |
-| invoice_no | CHAR(6) | UNIQUE(org_id, invoice_no) | text 6 หลัก เช่น `000001` |
+| invoice_no | VARCHAR(30) | UNIQUE(org_id, invoice_no) | เลขเอกสาร เช่น `000001`, `INV-2026-000001` |
 | customer_id | UUID | FK customers NOT NULL | |
 | project_id | UUID | FK projects NULL | |
 | quotation_id | UUID | FK quotations NULL | |
@@ -537,7 +537,7 @@ organizations
 | --- | --- | --- | --- |
 | id | UUID | PK | |
 | org_id | UUID | FK organizations NOT NULL | |
-| expense_no | CHAR(6) | UNIQUE(org_id, expense_no) | text 6 หลัก เช่น `000001` |
+| expense_no | VARCHAR(30) | UNIQUE(org_id, expense_no) | เลขเอกสาร เช่น `000001`, `EXP-2026-000001` |
 | category | VARCHAR(50) | NOT NULL | salary, software, marketing, travel, office, contractor, hosting, misc |
 | title | VARCHAR(255) | NOT NULL | |
 | amount | DECIMAL(18,2) | NOT NULL | |

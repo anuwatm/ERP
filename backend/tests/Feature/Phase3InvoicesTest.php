@@ -75,11 +75,43 @@ class Phase3InvoicesTest extends TestCase
         $this->assertSame('000001', $invoice->invoice_no);
         $this->assertSame('2000.00', $invoice->subtotal);
         $this->assertSame('100.00', $invoice->discount_amount);
-        $this->assertSame('140.00', $invoice->tax_amount);
-        $this->assertSame('2040.00', $invoice->total);
-        $this->assertSame('2040.00', $invoice->balance_due);
+        $this->assertSame('133.00', $invoice->tax_amount);
+        $this->assertSame('2033.00', $invoice->total);
+        $this->assertSame('2033.00', $invoice->balance_due);
         $this->assertSame(1, $invoice->items()->count());
         $this->assertTrue(AuditLog::where('action', 'invoice.create')->where('entity_id', $invoice->id)->exists());
+    }
+
+    public function test_header_discount_is_allocated_before_inclusive_vat_display(): void
+    {
+        $finance = User::factory()->create();
+        $this->attachRole($finance, 'finance', ['invoices.create']);
+        $customer = Customer::create(['org_id' => $finance->org_id, 'customer_code' => '000001', 'company_name' => 'VAT Customer', 'owner_id' => $finance->id]);
+
+        $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
+            ->post(route('invoices.store'), [
+                'customer_id' => $customer->id,
+                'deal_id' => '',
+                'status' => 'draft',
+                'tax_mode' => 'inclusive',
+                'issue_date' => '2026-07-27',
+                'discount_amount' => '107.00',
+                'currency' => 'THB',
+                'items' => [[
+                    'description' => 'VAT inclusive service',
+                    'quantity' => '1',
+                    'unit_price' => '1070.00',
+                    'discount_amount' => '0.00',
+                    'tax_rate' => '7.00',
+                ]],
+            ])->assertRedirect();
+
+        $invoice = Invoice::where('org_id', $finance->org_id)->firstOrFail();
+        $this->assertSame('1070.00', $invoice->subtotal);
+        $this->assertSame('107.00', $invoice->discount_amount);
+        $this->assertSame('63.00', $invoice->tax_amount);
+        $this->assertSame('963.00', $invoice->total);
+        $this->assertSame('963.00', $invoice->balance_due);
     }
 
     public function test_invoice_list_is_org_scoped(): void

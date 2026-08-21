@@ -234,20 +234,39 @@ class InvoiceController extends Controller
     {
         $subtotal = 0.0;
         $taxAmount = 0.0;
+        $lines = [];
 
         foreach ($validated['items'] as $item) {
             $lineTotal = max(0, round(((float) $item['quantity'] * (float) $item['unit_price']) - (float) ($item['discount_amount'] ?? 0), 2));
             $subtotal += $lineTotal;
-            $taxRate = (float) ($item['tax_rate'] ?? 0);
-
-            if ($validated['tax_mode'] === 'exclusive') {
-                $taxAmount += round($lineTotal * $taxRate / 100, 2);
-            } elseif ($validated['tax_mode'] === 'inclusive' && $taxRate > 0) {
-                $taxAmount += round($lineTotal - ($lineTotal / (1 + ($taxRate / 100))), 2);
-            }
+            $lines[] = [
+                'total' => $lineTotal,
+                'tax_rate' => (float) ($item['tax_rate'] ?? 0),
+            ];
         }
 
         $discountAmount = min(round((float) ($validated['discount_amount'] ?? 0), 2), round($subtotal, 2));
+        $allocatedDiscount = 0.0;
+
+        foreach ($lines as $index => $line) {
+            $lineDiscount = 0.0;
+
+            if ($discountAmount > 0 && $subtotal > 0) {
+                $lineDiscount = $index === array_key_last($lines)
+                    ? round($discountAmount - $allocatedDiscount, 2)
+                    : round($discountAmount * ($line['total'] / $subtotal), 2);
+                $allocatedDiscount += $lineDiscount;
+            }
+
+            $taxableLine = max(0, round($line['total'] - $lineDiscount, 2));
+
+            if ($validated['tax_mode'] === 'exclusive') {
+                $taxAmount += round($taxableLine * $line['tax_rate'] / 100, 2);
+            } elseif ($validated['tax_mode'] === 'inclusive' && $line['tax_rate'] > 0) {
+                $taxAmount += round($taxableLine - ($taxableLine / (1 + ($line['tax_rate'] / 100))), 2);
+            }
+        }
+
         $total = $validated['tax_mode'] === 'exclusive'
             ? $subtotal - $discountAmount + $taxAmount
             : $subtotal - $discountAmount;

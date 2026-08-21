@@ -2,32 +2,30 @@
 
 Last cleaned: 2026-08-01
 
-Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, deferred scope, security guardrails และสถานะล่าสุด. รายละเอียด audit ที่แก้จบแล้วให้ดู `gemini.md`, `checklist.md`, `README.md` แทน.
+Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, deferred scope, security guardrails และสถานะล่าสุด. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `gemini.md`, `README.md`, และ git diff.
 
 ---
 
-## 1. Current Phase Status
+## 1. Current Status
 
 - Phase 1: Done
 - Phase 1.1: Done
 - Phase 2: Done
 - Phase 3: Done
 - Phase 4: Done
-- Phase 5: Done / closed after Gemini review
-- Phase 6: In progress
+- Phase 5: Done / Gemini review closed
+- Phase 6: In progress / dashboard reporting & visual polish mostly done
 
-Latest verified baseline:
+Latest known validation snapshots:
 
-- Full PHPUnit suite: 154 tests / 1200 assertions passed
-- Laravel Pint: passed
-- `pnpm run check-format`: passed
-- `pnpm run lint`: passed
-- `pnpm run build`: passed
+- Full PHPUnit suite baseline before latest dashboard visual work: 154 tests / 1200 assertions passed
+- Dashboard-focused after latest work: `phpunit --filter Dashboard` => 16 tests / 395 assertions passed
+- Frontend: `pnpm run check-format`, `pnpm run lint`, `pnpm run build` passed after latest changes
+- Pint: passed after latest changes
 
-Test command note for local Windows:
+Local test note:
 
-- Use PHP with required extensions enabled, e.g. `fileinfo`, `mbstring`, `openssl`, `intl`, `pdo_sqlite`, `sqlite3`, `pdo_mysql`.
-- Previous working full-suite command used `C:\AppServ\php8\php.exe` with `-d extension_dir=C:\AppServ\php8\ext` and explicit `-d extension=...` flags.
+- Use `C:\AppServ\php8\php.exe` with required extensions when running PHPUnit locally: `fileinfo`, `mbstring`, `openssl`, `intl`, `pdo_sqlite`, `sqlite3`, `pdo_mysql`.
 
 ---
 
@@ -46,18 +44,12 @@ Test command note for local Windows:
 - Use `User::hasPermissionCode()` as central permission helper.
 - Sensitive writes require `password.confirm` where already scoped.
 - `person_id`, password, token, secrets must not leak in UI/log/Inertia props.
-- AuditLog must keep central recursive redaction:
-  - any key containing `password`
-  - any key containing `token`
-  - any key containing `secret`
-  - `person_id` is masked after type-safe string/null casting
+- AuditLog must keep central recursive redaction for password/token/secret keys and `person_id`.
 - Production invite flow must not flash plain invite token or `invite_url`.
 - User disable, role change, and role permission changes must invalidate affected sessions and rotate/clear `remember_token` where implemented.
-- Executive Dashboard data is visible only to `executive.dashboard.view` or owner/admin fallback.
-- Department dashboards stay permission scoped:
-  - Finance Dashboard: `expenses.view`
-  - Delivery Dashboard: `projects.view` or `tasks.view`
-- Member with only `tasks.view` sees own task scope and no project financial metrics.
+- Executive Dashboard data requires `executive.dashboard.view` or owner/admin fallback.
+- Finance Dashboard requires `expenses.view`.
+- Delivery Dashboard is for `projects.view` or `tasks.view`; task-only member sees own task scope and no project financial metrics.
 
 ### Sales / Invoice
 
@@ -92,11 +84,7 @@ Test command note for local Windows:
 
 Decision: defer Post-MVP/V2.
 
-Reason:
-
-- Phase 4 passed with owner/assignee-only visibility.
-- Adding it affects data model, permission matrix, UI assignment, dashboard scope, tests, and migrations.
-- Gemini Phase 4 audit marked current model as completed.
+Reason: Phase 4 passed with owner/assignee visibility. Adding it affects model, permissions, UI assignment, dashboard scope, tests, and migrations.
 
 ### Tax / Invoice Compliance
 
@@ -106,10 +94,7 @@ Deferred:
 - Header discount VAT allocation.
 - Credit note / full tax invoice compliance.
 
-Reason:
-
-- Larger accounting compliance scope.
-- Impacts backend formula, UI preview, historical expectations, tests, and docs.
+Reason: larger accounting compliance scope; impacts formulas, UI preview, historical expectations, tests, and docs.
 
 ### Number Format Expansion
 
@@ -117,33 +102,77 @@ Deferred:
 
 - `invoice_no` / `expense_no` from `char(6)` to `varchar(30)`.
 
-Reason:
+Reason: not an MVP blocker. Do when preparing real UAT/demo numbering format.
 
-- Not an MVP blocker.
-- Do when preparing real UAT/demo numbering format.
+### Broad Code Optimization / Refactor
 
-### Dashboard Date Filters
+Decision: do not do broad dedup/refactor inside closed Phase 5/active dashboard visual slice.
 
-Deferred:
-
-- Dashboard Date Filters are now implemented for Finance/Delivery/Executive metrics: all-time/month/year/custom range.
-
-### Code Optimization / Refactor
-
-Decision: do not do broad dedup/refactor inside closed Phase 5.
-
-Reason:
-
-- Phase 5 hardening is security-sensitive and green.
-- Broad refactor should be Phase 6 cleanup or a dedicated branch with full regression.
+Reason: security-sensitive green baseline. Refactor should be scoped with a risk/test plan.
 
 ---
 
-## 4. Phase Reference Summary
+## 4. Dashboard / Reporting Reference
 
-### Phase 3: Finance
+### Dashboard Separation
 
-Completed and important behavior:
+Implemented:
+
+- `/dashboard` => Admin/System overview only in UI.
+- `/executive-dashboard` => Executive metrics only.
+- `/finance-dashboard` => Finance metrics only.
+- `/delivery-dashboard` => Delivery metrics only.
+- `/sales-dashboard` => Sales-only page.
+
+Important note:
+
+- `/dashboard` still keeps backend props backward-compatible for existing tests/callers, but UI hides non-admin sections.
+- Date filters submit to the active dashboard route.
+
+### Date Filters
+
+Implemented:
+
+- `all_time`
+- `month=YYYY-MM`
+- `year=YYYY`
+- `custom` via `from=YYYY-MM-DD&to=YYYY-MM-DD`
+
+Applied to:
+
+- Executive metrics
+- Finance metrics
+- Delivery metrics
+
+Finance trend:
+
+- `financeSummary.previous` exists only when a selected date range has a meaningful previous same-length period.
+- `all_time` keeps `previous = null`.
+
+### Visual Dashboard Work
+
+Done:
+
+- Admin/System: Security Alert donut + System Normal state.
+- Executive: Sales Conversion, Finance Mix, Delivery Signal cards.
+- Finance: Invoice Status donut, Payment Reversal bar, previous-period trend tiles.
+- Delivery: Budget Burn bar, Task Load bars, Project Status donut, Risk badges.
+- Sales: Pipeline funnel, Won/Lost donut, Top Owner bars, Follow-ups/Stale warning tiles.
+
+Guardrails:
+
+- Charts support exact figures, not replace them.
+- Keep exact money/metric numbers visible.
+- Reuse current props first; add backend data only when chart needs real data.
+- No Cash Balance remains unchanged.
+
+---
+
+## 5. Phase Behavior Reference
+
+### Phase 3 Finance
+
+Important completed behavior:
 
 - Products/Services catalog.
 - Manual invoice + invoice items.
@@ -157,9 +186,9 @@ Completed and important behavior:
 - `needs_sales_review` after void invoice from deal.
 - Concurrent payment no-overpay test.
 
-### Phase 4: Delivery
+### Phase 4 Delivery
 
-Completed and important behavior:
+Important completed behavior:
 
 - Projects + tasks + task_checklists + task_comments.
 - Manual project and project from won deal.
@@ -171,45 +200,30 @@ Completed and important behavior:
 - Expense project link guarded by org.
 - Dynamic project cost from approved/paid expenses.
 - Delivery Dashboard metrics.
-- `project_members` deferred Post-MVP/V2.
 
-### Pre-Phase 5 UX Addition
+### Phase 5 Executive / UAT
 
-Organization Structure page includes Organization Chart.
-
-- Uses existing Branch -> Division -> Department -> Users data.
-- No new database table/migration.
-
-### Phase 5: Executive Dashboard + E2E/UAT
-
-Completed and important behavior:
+Important completed behavior:
 
 - Executive Dashboard aggregates Sales + Finance + Delivery.
 - `executive.dashboard.view` permission added.
 - Owner/admin fallback can see executive summary.
 - No Cash Balance in UI/props/API.
-- UAT seed data added in `Phase1DemoSeeder`.
+- UAT seed data in `Phase1DemoSeeder`.
 - Expected UAT dashboard values documented in `docs/SEED_DATA.md`.
-- E2E coverage added:
-  - Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
-  - Role isolation
-  - Multi-role UNION permission
-  - Payment reversal metrics
-  - Invoice totals
-  - Dashboard metrics
-  - `needs_sales_review` after invoice void
-  - No export/notifications/public API scope
-  - Audit log redaction and session invalidation
-  - Production invite does not flash plain token
+- E2E coverage includes invite/customer/deal/invoice/payment/project/task/dashboard flow, role isolation, multi-role permission union, payment reversal metrics, invoice totals, audit redaction, session invalidation, and production invite token safety.
 
-Gemini final review:
+### Organization Chart
 
-- Phase 5 marked fully audited/secured in `gemini.md`.
-- No new actionable code changes after latest review.
+Implemented before Phase 5:
+
+- Organization Structure page includes Organization Chart.
+- Uses existing Branch -> Division -> Department -> Users data.
+- No new database table/migration.
 
 ---
 
-## 5. Operational Notes
+## 6. Operational Notes
 
 Local URL:
 
@@ -219,34 +233,6 @@ Local URL:
 When Gemini reviews:
 
 - Gemini should read this file for current decisions only.
-- Historical full details are intentionally removed to reduce context weight.
+- Historical completion logs were intentionally removed to reduce context weight.
 - If Gemini suggests broad optimization/refactor, ask for a scoped target and risk/test plan before implementation.
----
-
-## 6. Phase 6 Started: Dashboard Date Filters
-
-Implemented on 2026-08-01:
-
-- Added `dashboardFilters` query handling to `DashboardController`.
-- Supported periods:
-  - `all_time` default
-  - `month` via `month=YYYY-MM`
-  - `year` via `year=YYYY`
-  - `custom` via `from=YYYY-MM-DD&to=YYYY-MM-DD`
-- Applied selected range to Executive, Finance, and Delivery metrics while keeping default all-time behavior unchanged.
-- Added Dashboard UI filter bar with Apply/Reset controls.
-- Added `Phase6DashboardFiltersTest` covering month filter behavior across sales, finance, delivery, and returned filter props.
-
-Verification:
-
-- Phase 5 + Phase 6 dashboard tests: 11 tests / 299 assertions passed
-- Full PHPUnit suite: 154 tests / 1200 assertions passed
-- Laravel Pint: passed
-- `pnpm run check-format`: passed
-- `pnpm run lint`: passed
-- `pnpm run build`: passed
-
-Remaining Phase 6:
-
-- Number format expansion: `invoice_no` / `expense_no` from `char(6)` to `varchar(30)`.
-- Tax / Invoice Compliance first pass: inclusive VAT display and header discount VAT allocation.
+- Current actionable backlog after dashboard visual work: Number format expansion and Tax/Invoice Compliance first pass, unless Gemini adds a new scoped blocker.

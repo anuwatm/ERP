@@ -25,7 +25,7 @@
 | Phase 3 | Done | Finance + Finance Dashboard completed |
 | Phase 4 | Done | Delivery + Delivery Dashboard completed; project_members deferred Post-MVP |
 | Phase 5 | Done | Executive Dashboard + E2E/UAT completed and Gemini review closed |
-| Phase 6 | In Progress | Reporting/filters/operational polish started; Dashboard Date Filters completed |
+| Phase 6 | Done | Reporting/filters/operational polish completed |
 
 ---
 
@@ -408,7 +408,16 @@ Exit criteria:
 - [x] Delivery Dashboard metrics respect selected date range
 - [x] Executive Dashboard metrics respect selected date range
 - [x] Dashboard filter UI with Apply/Reset controls
+- [x] Finance Dashboard visuals: Invoice Status donut and Payment Reversal loss bar
+- [x] Delivery Dashboard visuals: Budget vs Actual progress bar and Task Load ranked bars
+- [x] Executive Dashboard visuals: Sales conversion, Finance mix, Delivery signal indicators
+- [x] Sales Dashboard visuals: Pipeline funnel, Won/Lost donut, Top Owner bars
 - [x] Tests for dashboard date filter behavior
-- [ ] Number format expansion: `invoice_no` / `expense_no` from `char(6)` to `varchar(30)`
-- [ ] Tax / Invoice Compliance first pass: inclusive VAT display and header discount VAT allocation
+- [x] Number format expansion: `invoice_no` / `expense_no` from `char(6)` to `varchar(30)`
+- [x] Tax / Invoice Compliance first pass: inclusive VAT display and header discount VAT allocation
 - [x] Update `README.md` with Phase 6 completed features
+- [x] Dashboard department separation: Admin, Executive, Finance, Delivery, Sales dashboards are separated by route/menu/UI scope
+- [x] Delivery Dashboard visual follow-up: Project Status donut and pulsing risk badges
+- [x] Admin/System Dashboard visual follow-up: Security Alert donut and System Normal state
+- [x] Sales Dashboard action visual follow-up: Follow-ups/Stale Deals warning tiles and clear state
+- [x] Finance Dashboard previous-period trend: backend previous metrics and trend tiles

@@ -770,6 +770,18 @@ export default function Invoices({
                                                     }
                                                 />
                                                 <Field
+                                                    label="Line Discount"
+                                                    type="number"
+                                                    value={item.discount_amount}
+                                                    onChange={(value) =>
+                                                        setItem(
+                                                            index,
+                                                            'discount_amount',
+                                                            value,
+                                                        )
+                                                    }
+                                                />
+                                                <Field
                                                     label="Tax Rate"
                                                     type="number"
                                                     value={item.tax_rate}
@@ -840,50 +852,70 @@ export default function Invoices({
 }
 
 function previewTotals(form: InvoiceForm) {
-    const subtotal = form.items.reduce(
-        (sum, item) =>
-            sum +
-            Math.max(
-                0,
-                Number(item.quantity || 0) * Number(item.unit_price || 0) -
-                    Number(item.discount_amount || 0),
-            ),
-        0,
+    const lines = form.items.map((item) => ({
+        total: Math.max(
+            0,
+            Number(item.quantity || 0) * Number(item.unit_price || 0) -
+                Number(item.discount_amount || 0),
+        ),
+        taxRate: Number(item.tax_rate || 0),
+    }));
+    const subtotal = lines.reduce((sum, line) => sum + line.total, 0);
+    const discount = Math.min(
+        roundMoney(Number(form.discount_amount || 0)),
+        roundMoney(subtotal),
     );
+    let allocatedDiscount = 0;
     const tax =
-        form.tax_mode === 'exclusive'
-            ? form.items.reduce((sum, item) => {
-                  const line = Math.max(
+        form.tax_mode === 'no_tax'
+            ? 0
+            : lines.reduce((sum, line, index) => {
+                  const lineDiscount =
+                      discount > 0 && subtotal > 0
+                          ? index === lines.length - 1
+                              ? roundMoney(discount - allocatedDiscount)
+                              : roundMoney(discount * (line.total / subtotal))
+                          : 0;
+                  allocatedDiscount = roundMoney(
+                      allocatedDiscount + lineDiscount,
+                  );
+                  const taxableLine = Math.max(
                       0,
-                      Number(item.quantity || 0) *
-                          Number(item.unit_price || 0) -
-                          Number(item.discount_amount || 0),
+                      roundMoney(line.total - lineDiscount),
                   );
 
-                  return sum + line * (Number(item.tax_rate || 0) / 100);
-              }, 0)
-            : form.tax_mode === 'inclusive'
-              ? form.items.reduce((sum, item) => {
-                    const line = Math.max(
-                        0,
-                        Number(item.quantity || 0) *
-                            Number(item.unit_price || 0) -
-                            Number(item.discount_amount || 0),
-                    );
-                    const rate = Number(item.tax_rate || 0);
-                    return (
-                        sum + (rate > 0 ? line - line / (1 + rate / 100) : 0)
-                    );
-                }, 0)
-              : 0;
+                  if (form.tax_mode === 'exclusive') {
+                      return (
+                          sum + roundMoney(taxableLine * (line.taxRate / 100))
+                      );
+                  }
+
+                  return (
+                      sum +
+                      (line.taxRate > 0
+                          ? roundMoney(
+                                taxableLine -
+                                    taxableLine / (1 + line.taxRate / 100),
+                            )
+                          : 0)
+                  );
+              }, 0);
     const total = Math.max(
         0,
         form.tax_mode === 'exclusive'
-            ? subtotal - Number(form.discount_amount || 0) + tax
-            : subtotal - Number(form.discount_amount || 0),
+            ? subtotal - discount + tax
+            : subtotal - discount,
     );
 
-    return { subtotal, tax, total };
+    return {
+        subtotal: roundMoney(subtotal),
+        tax: roundMoney(tax),
+        total: roundMoney(total),
+    };
+}
+
+function roundMoney(value: number) {
+    return Math.round(value * 100) / 100;
 }
 
 function PaymentHistory({
