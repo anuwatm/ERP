@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\InAppNotification;
 use App\Models\Organization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -67,6 +68,10 @@ class HandleInertiaRequests extends Middleware
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
             ],
+            'notifications' => $user ? [
+                'unread_count' => InAppNotification::where('user_id', $user->id)->whereNull('read_at')->count(),
+                'latest' => InAppNotification::where('user_id', $user->id)->latest()->limit(5)->get(['id', 'title', 'body', 'url', 'read_at']),
+            ] : ['unread_count' => 0, 'latest' => []],
         ];
     }
 }

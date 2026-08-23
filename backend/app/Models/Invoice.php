@@ -40,6 +40,11 @@ class Invoice extends Model
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function deal(): BelongsTo
     {
         return $this->belongsTo(Deal::class);

@@ -8,7 +8,9 @@ use App\Models\Customer;
 use App\Models\Deal;
 use App\Models\Expense;
 use App\Models\Project;
+use App\Models\ProjectMember;
 use App\Models\User;
+use App\Services\NotificationService;
 use App\Services\NumberSequenceService;
 use App\Support\ProjectAccess;
 use App\Support\SalesAccess;
@@ -27,7 +29,7 @@ class ProjectController extends Controller
         $canSeeAll = ProjectAccess::canSeeAll($user);
 
         $projects = ProjectAccess::scopeProjects(Project::query(), $user)
-            ->with(['customer:id,company_name,customer_code', 'deal:id,title', 'owner:id,name,email'])
+            ->with(['customer:id,company_name,customer_code', 'deal:id,title', 'owner:id,name,email', 'members.user:id,name,email'])
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($inner) use ($search) {
                 $inner->where('name', 'like', "%{$search}%")
                     ->orWhere('project_code', 'like', "%{$search}%")
@@ -135,6 +137,46 @@ class ProjectController extends Controller
         $this->audit($request, 'project.create_from_deal', $project, null, $this->snapshot($project));
 
         return redirect()->route('projects.index')->with('success', "Project {$project->project_code} created from deal.");
+    }
+
+    public function storeMember(Request $request, Project $project, NotificationService $notifications): RedirectResponse
+    {
+        $user = $request->user();
+        ProjectAccess::assertProjectVisible($project, $user);
+        abort_unless(ProjectAccess::canSeeAll($user) || $project->owner_id === $user->id, 403);
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'uuid', Rule::exists('users', 'id')->where('org_id', $user->org_id)],
+            'role' => ['required', Rule::in(ProjectMember::ROLES)],
+        ]);
+        abort_if($validated['user_id'] === $project->owner_id, 422, 'Project owner is already included.');
+
+        ProjectMember::updateOrCreate(
+            ['project_id' => $project->id, 'user_id' => $validated['user_id']],
+            ['org_id' => $project->org_id, 'role' => $validated['role'], 'created_by' => $user->id]
+        );
+        $memberUser = User::where('org_id', $project->org_id)->whereKey($validated['user_id'])->firstOrFail();
+        $notifications->notify(
+            $memberUser,
+            'project.member_assigned',
+            "project.member_assigned:{$project->id}:{$memberUser->id}",
+            'Project assignment',
+            "You have been added to {$project->name}.",
+            route('projects.index')
+        );
+
+        return back()->with('success', 'Project member saved.');
+    }
+
+    public function destroyMember(Request $request, Project $project, ProjectMember $member): RedirectResponse
+    {
+        $user = $request->user();
+        ProjectAccess::assertProjectVisible($project, $user);
+        abort_unless(ProjectAccess::canSeeAll($user) || $project->owner_id === $user->id, 403);
+        abort_unless($member->project_id === $project->id && $member->org_id === $user->org_id, 404);
+        $member->delete();
+
+        return back()->with('success', 'Project member removed.');
     }
 
     private function validateProject(Request $request, ?Project $project = null): array

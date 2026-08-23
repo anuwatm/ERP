@@ -18,7 +18,10 @@ class ProjectAccess
         $query->where('org_id', $user->org_id);
 
         if (! self::canSeeAll($user)) {
-            $query->where('owner_id', $user->id);
+            $query->where(function ($inner) use ($user) {
+                $inner->where('owner_id', $user->id)
+                    ->orWhereHas('members', fn ($member) => $member->where('user_id', $user->id));
+            });
         }
 
         return $query;
@@ -27,6 +30,6 @@ class ProjectAccess
     public static function assertProjectVisible(Project $project, User $user): void
     {
         abort_unless($project->org_id === $user->org_id, 404);
-        abort_if(! self::canSeeAll($user) && $project->owner_id !== $user->id, 403);
+        abort_if(! self::canSeeAll($user) && $project->owner_id !== $user->id && ! $project->members()->where('user_id', $user->id)->exists(), 403);
     }
 }

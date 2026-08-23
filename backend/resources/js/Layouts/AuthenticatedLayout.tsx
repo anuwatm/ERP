@@ -16,6 +16,10 @@ export default function AuthenticatedLayout({
     const user = pageProps.auth.user;
     const org = pageProps.org;
     const permissions = pageProps.auth.permissions ?? [];
+    const notifications = pageProps.notifications ?? {
+        unread_count: 0,
+        latest: [],
+    };
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -202,6 +206,90 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m-6-6a6 6 0 1112 0 6 6 0 01-12 0z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Tax Reports',
+                    href: route('tax-reports.index'),
+                    active: route().current('tax-reports.*'),
+                    permission: 'tax_reports.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 17h6m-6-4h6m-6-4h2m-4 12h10a2 2 0 002-2V7l-4-4H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Suppliers',
+                    href: route('suppliers.index'),
+                    active: route().current('suppliers.*'),
+                    permission: 'suppliers.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M3 7h18M5 7v12h14V7M8 11h3m2 0h3M8 15h8"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Purchase Orders',
+                    href: route('purchase-orders.index'),
+                    active: route().current('purchase-orders.*'),
+                    permission: 'purchase_orders.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12h6m-6 4h6M7 4h10l2 2v14H5V6l2-2z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Inventory / GRN',
+                    href: route('goods-receipts.index'),
+                    active: route().current('goods-receipts.*'),
+                    permission: 'inventory.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M20 7l-8-4-8 4m16 0v10l-8 4m8-14l-8 4m0 10L4 17V7m8 4L4 7"
                             />
                         </svg>
                     ),
@@ -406,6 +494,27 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Notifications',
+                    href: route('settings.notifications.edit'),
+                    active: route().current('settings.notifications.*'),
+                    permission: 'settings.organization.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9"
                             />
                         </svg>
                     ),
@@ -620,6 +729,87 @@ export default function AuthenticatedLayout({
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button
+                                    type="button"
+                                    title="Notifications"
+                                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:bg-slate-900"
+                                >
+                                    <svg
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9"
+                                        />
+                                    </svg>
+                                    {notifications.unread_count > 0 && (
+                                        <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-white dark:ring-slate-950">
+                                            {notifications.unread_count > 99
+                                                ? '99+'
+                                                : notifications.unread_count}
+                                        </span>
+                                    )}
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content align="right" width="48">
+                                <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-3 text-xs font-bold text-slate-900 dark:border-slate-800/80 dark:bg-slate-950/60 dark:text-white">
+                                    Notifications
+                                </div>
+                                <div className="max-h-80 overflow-y-auto py-1">
+                                    {notifications.latest.length === 0 ? (
+                                        <div className="px-4 py-4 text-xs font-medium text-slate-500 dark:text-slate-300">
+                                            No notifications
+                                        </div>
+                                    ) : (
+                                        notifications.latest.map(
+                                            (notification) =>
+                                                notification.url ? (
+                                                    <Link
+                                                        key={notification.id}
+                                                        href={notification.url}
+                                                        className="block px-4 py-3 text-xs transition hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                                                    >
+                                                        <div className="font-bold text-slate-900 dark:text-white">
+                                                            {notification.title}
+                                                        </div>
+                                                        {notification.body && (
+                                                            <div className="mt-1 line-clamp-2 text-slate-600 dark:text-slate-300">
+                                                                {
+                                                                    notification.body
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </Link>
+                                                ) : (
+                                                    <div
+                                                        key={notification.id}
+                                                        className="px-4 py-3 text-xs"
+                                                    >
+                                                        <div className="font-bold text-slate-900 dark:text-white">
+                                                            {notification.title}
+                                                        </div>
+                                                        {notification.body && (
+                                                            <div className="mt-1 line-clamp-2 text-slate-600 dark:text-slate-300">
+                                                                {
+                                                                    notification.body
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ),
+                                        )
+                                    )}
+                                </div>
+                            </Dropdown.Content>
+                        </Dropdown>
+
                         {/* Theme Switcher Toggle */}
                         <ThemeToggle />
 

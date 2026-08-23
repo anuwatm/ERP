@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Expense;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -57,7 +58,7 @@ class Phase3ExpensesTest extends TestCase
         $this->assertTrue(AuditLog::where('action', 'expense.create')->where('entity_id', $expense->id)->exists());
     }
 
-    public function test_supplier_id_is_uuid_but_not_foreign_key_for_mvp(): void
+    public function test_supplier_id_must_belong_to_current_org_after_phase7(): void
     {
         $finance = User::factory()->create();
         $this->attachRole($finance, 'finance', ['expenses.create']);
@@ -66,9 +67,16 @@ class Phase3ExpensesTest extends TestCase
         $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
             ->post(route('expenses.store'), $this->expensePayload([
                 'supplier_id' => $supplierId,
+            ]))->assertSessionHasErrors('supplier_id');
+
+        $supplier = Supplier::create(['org_id' => $finance->org_id, 'supplier_code' => '000001', 'name' => 'Expense Supplier', 'status' => 'active']);
+
+        $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
+            ->post(route('expenses.store'), $this->expensePayload([
+                'supplier_id' => $supplier->id,
             ]))->assertRedirect();
 
-        $this->assertSame($supplierId, Expense::firstOrFail()->supplier_id);
+        $this->assertSame($supplier->id, Expense::firstOrFail()->supplier_id);
     }
 
     public function test_finance_user_can_update_only_draft_expense(): void

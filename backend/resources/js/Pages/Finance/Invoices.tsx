@@ -59,6 +59,27 @@ type Payment = {
     attachment_file_id?: string | null;
     attachment?: AttachmentFile | null;
 };
+type MoneyValue = string | number;
+type TaxSummaryLine = {
+    gross_total: MoneyValue;
+    allocated_header_discount: MoneyValue;
+    gross_after_discount: MoneyValue;
+    taxable_base: MoneyValue;
+    tax_amount: MoneyValue;
+    tax_rate: MoneyValue;
+};
+type TaxSummary = {
+    mode: string;
+    gross_subtotal: MoneyValue;
+    header_discount: MoneyValue;
+    gross_after_discount: MoneyValue;
+    net_subtotal: MoneyValue;
+    taxable_base: MoneyValue;
+    tax_amount: MoneyValue;
+    total: MoneyValue;
+    wording: string;
+    lines: TaxSummaryLine[];
+};
 type Invoice = {
     id: string;
     invoice_no: string;
@@ -81,6 +102,7 @@ type Invoice = {
     deal?: Deal | null;
     project?: Project | null;
     items: InvoiceItem[];
+    tax_summary?: TaxSummary;
     payments?: Payment[];
     needs_sales_review?: boolean;
 };
@@ -367,8 +389,24 @@ export default function Invoices({
                                 },
                                 {
                                     header: 'Total',
-                                    accessor: (row) =>
-                                        `${money(row.total)} ${row.currency}`,
+                                    accessor: (row) => (
+                                        <div>
+                                            <div>
+                                                {money(row.total)}{' '}
+                                                {row.currency}
+                                            </div>
+                                            {row.tax_mode === 'inclusive' && (
+                                                <div className="text-xs text-slate-500 dark:text-slate-300">
+                                                    VAT included:{' '}
+                                                    {money(
+                                                        row.tax_summary
+                                                            ?.tax_amount ??
+                                                            row.tax_amount,
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ),
                                 },
                                 {
                                     header: 'Paid',
@@ -382,6 +420,36 @@ export default function Invoices({
                                     header: 'Actions',
                                     accessor: (row) => (
                                         <div className="flex flex-wrap gap-2">
+                                            <SecondaryButton
+                                                type="button"
+                                                onClick={() =>
+                                                    window.open(
+                                                        route(
+                                                            'invoices.print',
+                                                            row.id,
+                                                        ),
+                                                        '_blank',
+                                                        'noopener,noreferrer',
+                                                    )
+                                                }
+                                            >
+                                                Print
+                                            </SecondaryButton>
+                                            <SecondaryButton
+                                                type="button"
+                                                onClick={() =>
+                                                    window.open(
+                                                        route(
+                                                            'invoices.pdf',
+                                                            row.id,
+                                                        ),
+                                                        '_blank',
+                                                        'noopener,noreferrer',
+                                                    )
+                                                }
+                                            >
+                                                PDF
+                                            </SecondaryButton>
                                             {canRecordPayments &&
                                                 row.status !== 'void' &&
                                                 Number(row.balance_due) > 0 && (
@@ -818,13 +886,7 @@ export default function Invoices({
                                     ))}
                                 </div>
 
-                                <div className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-white">
-                                    <div>
-                                        Subtotal: {money(totals.subtotal)}
-                                    </div>
-                                    <div>Tax: {money(totals.tax)}</div>
-                                    <div>Total: {money(totals.total)}</div>
-                                </div>
+                                <TaxSummaryCard summary={totals} />
 
                                 <div className="flex justify-end gap-2">
                                     {editingInvoice && (
@@ -851,71 +913,168 @@ export default function Invoices({
     );
 }
 
-function previewTotals(form: InvoiceForm) {
+function previewTotals(form: InvoiceForm): TaxSummary {
     const lines = form.items.map((item) => ({
-        total: Math.max(
+        grossTotal: Math.max(
             0,
-            Number(item.quantity || 0) * Number(item.unit_price || 0) -
-                Number(item.discount_amount || 0),
+            roundMoney(
+                Number(item.quantity || 0) * Number(item.unit_price || 0) -
+                    Number(item.discount_amount || 0),
+            ),
         ),
         taxRate: Number(item.tax_rate || 0),
     }));
-    const subtotal = lines.reduce((sum, line) => sum + line.total, 0);
+    const subtotal = roundMoney(
+        lines.reduce((sum, line) => sum + line.grossTotal, 0),
+    );
     const discount = Math.min(
         roundMoney(Number(form.discount_amount || 0)),
         roundMoney(subtotal),
     );
     let allocatedDiscount = 0;
-    const tax =
-        form.tax_mode === 'no_tax'
-            ? 0
-            : lines.reduce((sum, line, index) => {
-                  const lineDiscount =
-                      discount > 0 && subtotal > 0
-                          ? index === lines.length - 1
-                              ? roundMoney(discount - allocatedDiscount)
-                              : roundMoney(discount * (line.total / subtotal))
-                          : 0;
-                  allocatedDiscount = roundMoney(
-                      allocatedDiscount + lineDiscount,
-                  );
-                  const taxableLine = Math.max(
-                      0,
-                      roundMoney(line.total - lineDiscount),
-                  );
+    let tax = 0;
+    const summaryLines = lines.map((line, index) => {
+        const lineDiscount =
+            discount > 0 && subtotal > 0
+                ? index === lines.length - 1
+                    ? roundMoney(discount - allocatedDiscount)
+                    : roundMoney(discount * (line.grossTotal / subtotal))
+                : 0;
+        allocatedDiscount = roundMoney(allocatedDiscount + lineDiscount);
+        const grossAfterDiscount = Math.max(
+            0,
+            roundMoney(line.grossTotal - lineDiscount),
+        );
+        let taxableBase = grossAfterDiscount;
+        let lineTax = 0;
 
-                  if (form.tax_mode === 'exclusive') {
-                      return (
-                          sum + roundMoney(taxableLine * (line.taxRate / 100))
-                      );
-                  }
+        if (form.tax_mode === 'exclusive') {
+            lineTax = roundMoney(grossAfterDiscount * (line.taxRate / 100));
+        } else if (form.tax_mode === 'inclusive' && line.taxRate > 0) {
+            lineTax = roundMoney(
+                grossAfterDiscount -
+                    grossAfterDiscount / (1 + line.taxRate / 100),
+            );
+            taxableBase = roundMoney(grossAfterDiscount - lineTax);
+        }
 
-                  return (
-                      sum +
-                      (line.taxRate > 0
-                          ? roundMoney(
-                                taxableLine -
-                                    taxableLine / (1 + line.taxRate / 100),
-                            )
-                          : 0)
-                  );
-              }, 0);
+        if (form.tax_mode !== 'no_tax') {
+            tax = roundMoney(tax + lineTax);
+        }
+
+        return {
+            gross_total: line.grossTotal,
+            allocated_header_discount: lineDiscount,
+            gross_after_discount: grossAfterDiscount,
+            taxable_base:
+                form.tax_mode === 'no_tax' ? grossAfterDiscount : taxableBase,
+            tax_amount: form.tax_mode === 'no_tax' ? 0 : lineTax,
+            tax_rate: line.taxRate,
+        };
+    });
+    const grossAfterDiscount = Math.max(0, roundMoney(subtotal - discount));
+    const netSubtotal =
+        form.tax_mode === 'inclusive'
+            ? Math.max(0, roundMoney(grossAfterDiscount - tax))
+            : grossAfterDiscount;
     const total = Math.max(
         0,
         form.tax_mode === 'exclusive'
-            ? subtotal - discount + tax
-            : subtotal - discount,
+            ? roundMoney(grossAfterDiscount + tax)
+            : grossAfterDiscount,
     );
 
     return {
-        subtotal: roundMoney(subtotal),
-        tax: roundMoney(tax),
+        mode: form.tax_mode,
+        gross_subtotal: roundMoney(subtotal),
+        header_discount: roundMoney(discount),
+        gross_after_discount: grossAfterDiscount,
+        net_subtotal: netSubtotal,
+        taxable_base: netSubtotal,
+        tax_amount: roundMoney(tax),
         total: roundMoney(total),
+        wording:
+            form.tax_mode === 'inclusive'
+                ? 'Prices include VAT. VAT amount is shown for reporting.'
+                : form.tax_mode === 'exclusive'
+                  ? 'VAT is added on top of taxable base.'
+                  : 'No VAT applied.',
+        lines: summaryLines,
     };
 }
 
 function roundMoney(value: number) {
     return Math.round(value * 100) / 100;
+}
+
+function TaxSummaryCard({ summary }: { summary: TaxSummary }) {
+    const rows =
+        summary.mode === 'inclusive'
+            ? [
+                  ['Gross subtotal', summary.gross_subtotal],
+                  ['Invoice discount', summary.header_discount],
+                  ['Gross after discount', summary.gross_after_discount],
+                  ['Net before VAT', summary.net_subtotal],
+                  ['VAT included', summary.tax_amount],
+                  ['Total', summary.total],
+              ]
+            : summary.mode === 'exclusive'
+              ? [
+                    ['Subtotal before tax', summary.gross_subtotal],
+                    ['Invoice discount', summary.header_discount],
+                    ['Taxable base', summary.taxable_base],
+                    ['VAT', summary.tax_amount],
+                    ['Total', summary.total],
+                ]
+              : [
+                    ['Subtotal', summary.gross_subtotal],
+                    ['Invoice discount', summary.header_discount],
+                    ['Total', summary.total],
+                ];
+
+    return (
+        <div className="space-y-2 rounded-md bg-slate-100 p-3 text-sm text-slate-800 dark:bg-slate-900 dark:text-white">
+            <div className="flex items-center justify-between font-semibold">
+                <span>Tax Summary</span>
+                <span className="uppercase text-slate-500 dark:text-slate-300">
+                    {summary.mode}
+                </span>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-300">
+                {summary.wording}
+            </div>
+            <div className="space-y-1">
+                {rows.map(([label, value]) => (
+                    <div
+                        key={label}
+                        className="flex items-center justify-between gap-3"
+                    >
+                        <span className="text-slate-500 dark:text-slate-300">
+                            {label}
+                        </span>
+                        <span className="font-semibold">{money(value)}</span>
+                    </div>
+                ))}
+            </div>
+            {summary.lines.length > 0 && (
+                <div className="border-t border-slate-200 pt-2 text-xs dark:border-slate-700">
+                    {summary.lines.map((line, index) => (
+                        <div
+                            key={index}
+                            className="flex flex-wrap justify-between gap-x-3 gap-y-1"
+                        >
+                            <span>Line {index + 1}</span>
+                            <span>
+                                Discount {money(line.allocated_header_discount)}
+                            </span>
+                            <span>Base {money(line.taxable_base)}</span>
+                            <span>VAT {money(line.tax_amount)}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 }
 
 function PaymentHistory({

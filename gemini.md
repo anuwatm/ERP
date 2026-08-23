@@ -1,14 +1,14 @@
 # Gemini Review & Audit Notes (Clean)
 
-Last cleaned: 2026-08-01
+Last cleaned: 2026-08-23 (Phase 8 In Progress)
 
-Purpose: เก็บเฉพาะข้อมูลอ้างอิงสถาปัตยกรรม/ความปลอดภัยหลักที่ยังต้องควบคุม (Security Guardrails) และแผนงานที่ยังไม่ได้ทำ เพื่อความสะอาดของบริบท
+Purpose: เก็บเฉพาะข้อมูลอ้างอิงสถาปัตยกรรม/ความปลอดภัยหลักที่ยังต้องควบคุม (Security Guardrails) และแผนงานพัฒนาต่อยอด เพื่อความสะอาดและกระชับของบริบท (รายละเอียดงานที่ปิดแล้วสามารถดูได้ที่ `checklist.md` และ Git history)
 
 ---
 
 ## 1. ข้อมูลอ้างอิงการควบคุมความปลอดภัย (Security Guardrails Reference)
 
-รายการควบคุมความปลอดภัยที่ต้องคงอยู่ในการพัฒนาต่อยอด:
+รายการควบคุมความปลอดภัยที่ต้องคงอยู่ในการพัฒนาต่อยอดทุกส่วน:
 
 | หัวข้อความปลอดภัย | รายละเอียดการควบคุมความปลอดภัย (Security Control) |
 | :--- | :--- |
@@ -29,22 +29,37 @@ Purpose: เก็บเฉพาะข้อมูลอ้างอิงส�
 
 ---
 
-## 3. แผนงานที่ยังไม่ได้ทำ (Pending Phase 6 Tasks)
+## 3. สถานะโครงการล่าสุด (Current Status)
 
-ตามแผนงานของ Phase 6 ส่วนที่ยังไม่ได้เริ่มพัฒนา:
-
-- [x] **Number format expansion:** ขยายขนาดฟิลด์ `invoice_no` / `expense_no` จาก `char(6)` เป็น `varchar(30)`
-- [x] **Tax / Invoice Compliance first pass:** แสดงผล Inclusive VAT และการจัดสรรภาษีมูลค่าเพิ่มสำหรับส่วนลดท้ายบิล (Header discount VAT allocation)
+- **Phase 1 - 7: Complete / Closed** (ครอบคลุม Core MVP, Dashboard แยกตาม Role, Number Sequences, Inclusive VAT, Suppliers & POs, Project Members)
+- **Phase 8: In Progress** (เริ่ม implementation ด้วย Official Print/Export foundation และ Tax Reports first pass)
+- **Validation Snapshot:** 170 Tests Passed (1,372 Assertions / 0 Failures), TypeScript/Vite Build, ESLint, Prettier, Pint Clean
 
 ---
 
-## 4. รายการที่ต้องแก้ไขปรับปรุง (Pending Fixes & Improvements)
+## 4. แผนงานพัฒนาต่อยอด (Phase 8: Production & Accounting Roadmap)
 
-*ไม่มีข้อผิดพลาดพบจากการทดสอบ PHPUnit, ESLint, Pint หรือการคอมไพล์ในเบราว์เซอร์*
+สถานะ: ออกแบบครบแล้วใน `checklist.md`; เริ่ม implementation แล้วในส่วน Official Print/Export foundation และ Tax Reports first pass. ลำดับ implementation แนะนำต่อคือ PDF binary package -> Thai font -> 50-Tawi -> Tax report expansion/WHT/aging -> Notifications/Queues -> Inventory/GRN เว้นแต่ธุรกิจต้องใช้ stock จริงก่อน
 
-- [ ] **Configurable Number Sequences (ปรับแต่งรูปแบบเลขที่เอกสาร):** ปรับปรุง `NumberSequenceService` และหน้าตั้งค่าองค์กรให้รองรับรูปแบบกำหนดเอง (เช่น `INV-YYYYMM-00001` หรือ `EXP-YY-0001`) เพื่อใช้ประโยชน์จากฟิลด์ `varchar(30)` ที่ขยายขนาดในฐานข้อมูลเรียบร้อยแล้ว
-- [ ] **Inclusive VAT UI Subtotal Display (การแสดงผลราคาก่อนและหลังภาษี):** ปรับปรุงหน้าจอสร้าง/ดูใบแจ้งหนี้เพื่อแสดงราคาสุทธิไม่รวมภาษี (Net Subtotal) และภาษีมูลค่าเพิ่มที่ซ่อนอยู่แยกให้ชัดเจนตามมาตรฐานสรรพากร กรณีเลือก `Inclusive VAT`
-- [ ] **Project Members Assignment (ดีเฟอร์จาก Phase 4):** เพิ่มตารางเชื่อมโยง `project_members` เพื่อรองรับการระบุสมาชิกหลายคนในหนึ่งโครงการ แทนการตรวจสอบอิงเฉพาะ Owner/Assignee
-- [ ] **Suppliers and Purchase Orders (ดีเฟอร์จาก Phase 3):** พัฒนาระบบคู่ค้า (Suppliers) และใบสั่งซื้อ (Purchase Orders) เพื่อให้โมดูลรายจ่าย (Expenses) สามารถอ้างอิงข้อมูลได้อย่างถูกต้องและรองรับการเก็บ Inventory ในอนาคต
+### 1. Official Document Print & PDF Export (ระบบพิมพ์เอกสารทางการและภาษี)
+- **PDF Layouts:** ออกแบบฟอร์มเอกสารใบกำกับภาษี/ใบเสร็จรับเงิน (Tax Invoice / Receipt), ใบสั่งซื้อ (PO), และใบแจ้งหนี้ (Invoice)
+- **Thai Compliance:**
+  - แปลงตัวเลขยอดสุทธิเป็นตัวอักษรภาษาไทย (BahtText) เช่น `(หนึ่งหมื่นสองพันสามร้อยสี่สิบห้าบาทถ้วน)`
+  - ระบุเลขผู้เสียภาษี 13 หลัก, สำนักงานใหญ่/สาขา, โลโก้, ข้อมูลคู่ค้า และลายเซ็นผู้อนุมัติ
+  - รองรับการระบุหัวเอกสาร "ต้นฉบับ (Original)" / "สำเนา (Copy)" และลายน้ำ "VOID" สำหรับเอกสารที่ถูกยกเลิก
+  - รองรับแบบฟอร์มหนังสือรับรองการหักภาษี ณ ที่จ่าย (ใบ 50 ทวิ)
 
+### 2. Inventory & Goods Receipt (GRN - การจัดการคลังสินค้า)
+- **Goods Receipt Flow:** ระบบรับสินค้าจาก Purchase Order ที่อนุมัติแล้ว พร้อมอัปเดตยอดคงเหลือใน PO (`partially_received` / `received` / `closed`)
+- **Stock Movement Ledger:** บันทึก Stock Ledger (Movement Log) ไม่ใช้การแก้ตัวเลขตรงๆ รองรับประเภท movement: รับเข้าจาก PO, ปรับปรุงยอดตรวจนับ (Adjustment In/Out), และส่งคืนผู้ขาย (Return to Supplier)
+- **Multi-Warehouse & Costing:** รองรับการจัดเก็บแยกคลัง/สาขา และบันทึกต้นทุนเฉลี่ย (Moving Average Cost) เพื่อคำนวณกำไรขั้นต้นและต้นทุนขาย (COGS)
 
+### 3. Tax & Accounting Reports (รายงานภาษีและวิเคราะห์อายุหนี้)
+- **Tax Reports:** รายงานภาษีขาย (Sales Tax Report) และภาษีซื้อ (Purchase Tax Report) สำหรับสรุปยอดและส่งออก Excel/CSV เพื่อยื่น ภ.พ.30
+- **Withholding Tax Reports:** รายงานสรุปรายการหัก ณ ที่จ่าย ภ.ง.ด. 3 (บุคคลธรรมดา) และ ภ.ง.ด. 53 (นิติบุคคล)
+- **AR / AP Aging Reports:** รายงานวิเคราะห์อายุลูกหนี้ (Accounts Receivable Aging) และอายุเจ้าหนี้ (Accounts Payable Aging) แยกช่วงเวลา (0-30, 31-60, 61-90, >90 วัน)
+
+### 4. Notifications & Background Queues (ระบบแจ้งเตือนและคิวงาน)
+- **Alert Triggers:** แจ้งเตือนเมื่อมี Purchase Order รออนุมัติ, ใบแจ้งหนี้ใกล้ครบกำหนด/เกินกำหนดชำระ (Due Soon / Overdue Alerts), มอบหมายงานโครงการ และการเชิญผู้ใช้
+- **Multi-Channel:** รองรับทั้ง Email Notifications (Background Queues) และ In-App Notification Bell บนเมนู Navbar
+- **Preferences & Safety:** ตั้งค่าเปิด/ปิดการแจ้งเตือนรายบุคคล และมีระบบ Throttling/Deduplication ป้องกันการส่งแจ้งเตือนซ้ำซ้อน

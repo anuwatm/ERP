@@ -42,12 +42,25 @@ class PermissionCatalog
             ['code' => 'payments.view', 'module' => 'payments', 'action' => 'view', 'description' => 'View invoice payments'],
             ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
             ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
+            ['code' => 'tax_reports.view', 'module' => 'tax_reports', 'action' => 'view', 'description' => 'View tax and accounting reports'],
             ['code' => 'expenses.view', 'module' => 'expenses', 'action' => 'view', 'description' => 'View expenses'],
             ['code' => 'expenses.create', 'module' => 'expenses', 'action' => 'create', 'description' => 'Create expense drafts'],
             ['code' => 'expenses.update', 'module' => 'expenses', 'action' => 'update', 'description' => 'Update expense drafts'],
             ['code' => 'expenses.approve', 'module' => 'expenses', 'action' => 'approve', 'description' => 'Approve expenses'],
             ['code' => 'expenses.pay', 'module' => 'expenses', 'action' => 'pay', 'description' => 'Mark approved expenses paid'],
             ['code' => 'expenses.reject', 'module' => 'expenses', 'action' => 'reject', 'description' => 'Reject expenses'],
+            ['code' => 'suppliers.view', 'module' => 'suppliers', 'action' => 'view', 'description' => 'View suppliers'],
+            ['code' => 'suppliers.create', 'module' => 'suppliers', 'action' => 'create', 'description' => 'Create suppliers'],
+            ['code' => 'suppliers.update', 'module' => 'suppliers', 'action' => 'update', 'description' => 'Update suppliers'],
+            ['code' => 'suppliers.delete', 'module' => 'suppliers', 'action' => 'delete', 'description' => 'Delete suppliers safely'],
+            ['code' => 'purchase_orders.view', 'module' => 'purchase_orders', 'action' => 'view', 'description' => 'View purchase orders'],
+            ['code' => 'purchase_orders.create', 'module' => 'purchase_orders', 'action' => 'create', 'description' => 'Create purchase orders'],
+            ['code' => 'purchase_orders.update', 'module' => 'purchase_orders', 'action' => 'update', 'description' => 'Update draft purchase orders'],
+            ['code' => 'purchase_orders.approve', 'module' => 'purchase_orders', 'action' => 'approve', 'description' => 'Approve purchase orders'],
+            ['code' => 'purchase_orders.cancel', 'module' => 'purchase_orders', 'action' => 'cancel', 'description' => 'Cancel purchase orders'],
+            ['code' => 'inventory.view', 'module' => 'inventory', 'action' => 'view', 'description' => 'View inventory and goods receipts'],
+            ['code' => 'inventory.receive', 'module' => 'inventory', 'action' => 'receive', 'description' => 'Receive goods from purchase orders'],
+            ['code' => 'inventory.adjust', 'module' => 'inventory', 'action' => 'adjust', 'description' => 'Adjust inventory stock movements'],
             ['code' => 'projects.view', 'module' => 'projects', 'action' => 'view', 'description' => 'View delivery projects'],
             ['code' => 'projects.create', 'module' => 'projects', 'action' => 'create', 'description' => 'Create delivery projects'],
             ['code' => 'projects.update', 'module' => 'projects', 'action' => 'update', 'description' => 'Update delivery projects'],
@@ -79,14 +92,15 @@ class PermissionCatalog
         $all = array_column(self::permissions(), 'code');
         $sales = ['dashboard.view', 'sales.dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'contacts.create', 'contacts.update', 'contacts.delete', 'deals.view', 'deals.create', 'deals.update', 'activities.create', 'activities.update'];
         $projects = ['dashboard.view', 'projects.view', 'projects.create', 'projects.update', 'tasks.view', 'tasks.create', 'tasks.update', 'tasks.comment'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'payments.view', 'payments.create', 'payments.reverse', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject'];
+        $procurement = ['suppliers.view', 'suppliers.create', 'suppliers.update', 'suppliers.delete', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.approve', 'purchase_orders.cancel', 'inventory.view', 'inventory.receive', 'inventory.adjust'];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [
             'owner' => $all,
             'admin' => array_values(array_diff($all, ['person_id.view_full'])),
             'sales' => $sales,
-            'project_manager' => $projects,
+            'project_manager' => array_values(array_unique(array_merge($projects, ['suppliers.view', 'purchase_orders.view']))),
             'finance' => $finance,
             'member' => ['dashboard.view', 'tasks.view', 'tasks.update', 'tasks.comment'],
             'viewer' => ['dashboard.view'],

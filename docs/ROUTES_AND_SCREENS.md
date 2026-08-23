@@ -106,6 +106,43 @@
 | Executive Dashboard | `GET /dashboard` | `dashboard.view` |
 | UAT Demo Flow | seed/demo data only | Owner/Admin |
 
+## Phase 6: Reporting / Filters / Operational Polish
+
+| Screen | Route | Permission |
+| --- | --- | --- |
+| Executive Dashboard Filters | `GET /dashboard?month=YYYY-MM` | `dashboard.view` |
+| Finance Dashboard Filters | `GET /finance-dashboard?month=YYYY-MM` | `expenses.view` |
+| Delivery Dashboard Filters | `GET /delivery-dashboard?month=YYYY-MM` | `dashboard.view` |
+
+## Phase 7: Post-MVP Features
+
+| Screen | Route | Permission |
+| --- | --- | --- |
+| Organization Numbering Settings | `GET /settings/organization`, `PATCH /settings/organization/numbering` | `settings.organization.view/update` |
+| Suppliers | `GET /suppliers` | `suppliers.view` |
+| Supplier Create/Edit/Delete | `POST /suppliers`, `PATCH /suppliers/{supplier}`, `DELETE /suppliers/{supplier}` | `suppliers.create/update/delete` |
+| Purchase Orders | `GET /purchase-orders` | `purchase_orders.view` |
+| Purchase Order Create/Edit | `POST /purchase-orders`, `PATCH /purchase-orders/{purchaseOrder}` | `purchase_orders.create/update` |
+| Purchase Order Approve/Cancel | `POST /purchase-orders/{purchaseOrder}/approve`, `POST /purchase-orders/{purchaseOrder}/cancel` | `purchase_orders.approve/cancel` |
+| Project Members | `POST /projects/{project}/members`, `DELETE /projects/{project}/members/{member}` | `projects.update` |
+
+## Phase 8: Production Roadmap
+
+| Screen | Route | Permission |
+| --- | --- | --- |
+| Invoice Official Print | `GET /invoices/{invoice}/print` | `invoices.view` |
+| Invoice PDF Export | `GET /invoices/{invoice}/pdf` | `invoices.view` |
+| Purchase Order Official Print | `GET /purchase-orders/{purchaseOrder}/print` | `purchase_orders.view` |
+| Purchase Order PDF Export | `GET /purchase-orders/{purchaseOrder}/pdf` | `purchase_orders.view` |
+| WHT 50-Tawi Certificate | `GET /expenses/{expense}/withholding-certificate` | `expenses.view` |
+| Tax Reports | `GET /tax-reports` | `tax_reports.view` |
+| Tax Reports CSV Export | `GET /tax-reports/{type}/export` | `tax_reports.view` |
+| Tax Reports Excel-compatible Export | `GET /tax-reports/{type}/excel` | `tax_reports.view` |
+| Goods Receipt List / GRN | `GET /goods-receipts` | `inventory.view` |
+| Goods Receipt Create | `POST /goods-receipts` | `inventory.receive` |
+| Stock Movement Adjustment / Return | `POST /stock-movements` | `inventory.adjust` |
+| Notification Settings | `GET /settings/notifications`, `PATCH /settings/notifications` | `settings.organization.view/update` |
+
 ## Empty States
 
 - ไม่มี user invited: แสดงปุ่ม invite.

@@ -26,10 +26,22 @@ export interface FlashProps {
     info?: string;
 }
 
+export interface NotificationProps {
+    unread_count: number;
+    latest: Array<{
+        id: string;
+        title: string;
+        body?: string | null;
+        url?: string | null;
+        read_at?: string | null;
+    }>;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: AuthProps;
     org?: OrganizationProps | null;
     flash: FlashProps;
+    notifications: NotificationProps;
 };

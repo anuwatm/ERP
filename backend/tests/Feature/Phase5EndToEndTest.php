@@ -276,7 +276,7 @@ class Phase5EndToEndTest extends TestCase
 
         $uris = collect(Route::getRoutes())->map(fn ($route) => $route->uri())->values();
         $this->assertFalse($uris->contains(fn (string $uri) => Str::startsWith($uri, 'api/')));
-        $this->assertFalse($uris->contains(fn (string $uri) => str_contains($uri, 'export')));
+        $this->assertFalse($uris->contains(fn (string $uri) => str_contains($uri, 'export') && ! Str::startsWith($uri, 'tax-reports/')));
         $this->assertFalse($uris->contains(fn (string $uri) => $uri === 'notifications' || Str::startsWith($uri, 'notifications/')));
         $this->assertFalse($uris->contains(fn (string $uri) => $uri === 'notification-settings' || Str::startsWith($uri, 'notification-settings/')));
     }

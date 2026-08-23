@@ -9,13 +9,17 @@ use App\Models\Deal;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Project;
+use App\Services\BahtText;
 use App\Services\NumberSequenceService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class InvoiceController extends Controller
 {
@@ -47,6 +51,7 @@ class InvoiceController extends Controller
             ->get();
 
         $this->attachNeedsSalesReview($invoices, $user->org_id);
+        $this->attachTaxSummaries($invoices);
 
         $sourceDeal = filled($request->query('deal_id'))
             ? Deal::where('org_id', $user->org_id)->whereKey($request->query('deal_id'))->first(['id', 'title', 'customer_id'])
@@ -131,6 +136,75 @@ class InvoiceController extends Controller
         $this->audit($request, 'invoice.void', $invoice, $before, $this->snapshot($invoice));
 
         return back()->with('success', "Invoice {$invoice->invoice_no} voided.");
+    }
+
+    public function print(Request $request, Invoice $invoice, BahtText $bahtText): View
+    {
+        abort_unless($invoice->org_id === $request->user()->org_id, 403);
+
+        $invoice->load(['branch', 'customer', 'items']);
+        $organization = $request->user()->organization;
+
+        return view('documents.official-print', [
+            'organization' => [
+                'legal_name' => $organization?->legal_name ?: $organization?->name ?: 'Organization',
+                'tax_id' => $organization?->tax_id,
+                'address' => $organization?->address,
+                'phone' => $organization?->phone,
+                'email' => $organization?->email,
+                'logo_url' => $organization ? $organization::formatLogoUrl($organization->logo_url) : null,
+            ],
+            'branch' => [
+                'name' => $invoice->branch?->name,
+                'code' => $invoice->branch?->code,
+                'address' => $invoice->branch?->address,
+                'phone' => $invoice->branch?->phone,
+                'is_head_office' => (bool) $invoice->branch?->is_head_office,
+            ],
+            'party' => [
+                'name' => $invoice->customer?->company_name ?: '-',
+                'tax_id' => $invoice->customer?->tax_id,
+                'address' => $invoice->customer?->address,
+                'phone' => $invoice->customer?->phone,
+                'email' => $invoice->customer?->email,
+            ],
+            'document' => [
+                'title' => $invoice->status === 'paid' ? 'Tax Invoice / Receipt' : 'Invoice',
+                'number' => $invoice->invoice_no,
+                'issue_date' => $invoice->issue_date?->format('Y-m-d') ?: '-',
+                'due_date' => $invoice->due_date?->format('Y-m-d'),
+                'status' => $invoice->status,
+                'copy_label' => $request->boolean('copy') ? 'Copy' : 'Original',
+                'party_label' => 'Customer',
+                'tax_wording' => $this->taxWording($invoice->tax_mode),
+                'currency' => $invoice->currency ?: 'THB',
+                'subtotal' => $this->displayMoney($invoice->subtotal),
+                'discount_amount' => $this->displayMoney($invoice->discount_amount),
+                'tax_amount' => $this->displayMoney($invoice->tax_amount),
+                'total' => $this->displayMoney($invoice->total),
+                'baht_text' => $bahtText->convert($invoice->total),
+                'notes' => $invoice->notes,
+                'void' => $invoice->status === 'void',
+            ],
+            'items' => $invoice->items->map(fn ($item) => [
+                'description' => $item->description,
+                'quantity' => rtrim(rtrim((string) $item->quantity, '0'), '.'),
+                'unit' => $item->unit,
+                'unit_price' => $this->displayMoney($item->unit_price),
+                'discount_amount' => $this->displayMoney($item->discount_amount),
+                'tax_rate' => rtrim(rtrim((string) $item->tax_rate, '0'), '.'),
+                'line_total' => $this->displayMoney($item->line_total),
+            ])->all(),
+        ]);
+    }
+
+    public function pdf(Request $request, Invoice $invoice, BahtText $bahtText): HttpResponse
+    {
+        $view = $this->print($request, $invoice, $bahtText)->with('pdf', true);
+
+        return Pdf::loadHTML($view->render())
+            ->setPaper('a4')
+            ->download("invoice-{$invoice->invoice_no}.pdf");
     }
 
     private function attachNeedsSalesReview($invoices, string $orgId): void
@@ -232,56 +306,133 @@ class InvoiceController extends Controller
 
     private function calculateTotals(array $validated): array
     {
-        $subtotal = 0.0;
-        $taxAmount = 0.0;
-        $lines = [];
+        $summary = $this->taxSummaryFromLines(
+            $validated['tax_mode'],
+            $validated['discount_amount'] ?? 0,
+            array_map(fn ($item) => [
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'discount_amount' => $item['discount_amount'] ?? 0,
+                'tax_rate' => $item['tax_rate'] ?? 0,
+            ], $validated['items'])
+        );
 
-        foreach ($validated['items'] as $item) {
+        return [
+            'subtotal' => $summary['gross_subtotal'],
+            'discount_amount' => $summary['header_discount'],
+            'tax_amount' => $summary['tax_amount'],
+            'total' => $summary['total'],
+        ];
+    }
+
+    private function attachTaxSummaries($invoices): void
+    {
+        $invoices->each(fn ($invoice) => $invoice->setAttribute(
+            'tax_summary',
+            $this->taxSummaryFromLines(
+                $invoice->tax_mode,
+                $invoice->discount_amount,
+                $invoice->items->map(fn ($item) => [
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'discount_amount' => $item->discount_amount,
+                    'tax_rate' => $item->tax_rate,
+                ])->all()
+            )
+        ));
+    }
+
+    private function taxSummaryFromLines(string $taxMode, mixed $headerDiscount, array $items): array
+    {
+        $grossSubtotal = 0.0;
+        $taxAmount = 0.0;
+        $lineSummaries = [];
+
+        foreach ($items as $item) {
             $lineTotal = max(0, round(((float) $item['quantity'] * (float) $item['unit_price']) - (float) ($item['discount_amount'] ?? 0), 2));
-            $subtotal += $lineTotal;
-            $lines[] = [
-                'total' => $lineTotal,
+            $grossSubtotal += $lineTotal;
+            $lineSummaries[] = [
+                'gross_total' => $lineTotal,
                 'tax_rate' => (float) ($item['tax_rate'] ?? 0),
             ];
         }
 
-        $discountAmount = min(round((float) ($validated['discount_amount'] ?? 0), 2), round($subtotal, 2));
+        $grossSubtotal = round($grossSubtotal, 2);
+        $discountAmount = min(round((float) $headerDiscount, 2), $grossSubtotal);
         $allocatedDiscount = 0.0;
 
-        foreach ($lines as $index => $line) {
+        foreach ($lineSummaries as $index => $line) {
             $lineDiscount = 0.0;
 
-            if ($discountAmount > 0 && $subtotal > 0) {
-                $lineDiscount = $index === array_key_last($lines)
+            if ($discountAmount > 0 && $grossSubtotal > 0) {
+                $lineDiscount = $index === array_key_last($lineSummaries)
                     ? round($discountAmount - $allocatedDiscount, 2)
-                    : round($discountAmount * ($line['total'] / $subtotal), 2);
+                    : round($discountAmount * ($line['gross_total'] / $grossSubtotal), 2);
                 $allocatedDiscount += $lineDiscount;
             }
 
-            $taxableLine = max(0, round($line['total'] - $lineDiscount, 2));
+            $grossAfterDiscount = max(0, round($line['gross_total'] - $lineDiscount, 2));
+            $lineTax = 0.0;
+            $taxableBase = $grossAfterDiscount;
 
-            if ($validated['tax_mode'] === 'exclusive') {
-                $taxAmount += round($taxableLine * $line['tax_rate'] / 100, 2);
-            } elseif ($validated['tax_mode'] === 'inclusive' && $line['tax_rate'] > 0) {
-                $taxAmount += round($taxableLine - ($taxableLine / (1 + ($line['tax_rate'] / 100))), 2);
+            if ($taxMode === 'exclusive') {
+                $lineTax = round($grossAfterDiscount * $line['tax_rate'] / 100, 2);
+            } elseif ($taxMode === 'inclusive' && $line['tax_rate'] > 0) {
+                $lineTax = round($grossAfterDiscount - ($grossAfterDiscount / (1 + ($line['tax_rate'] / 100))), 2);
+                $taxableBase = round($grossAfterDiscount - $lineTax, 2);
             }
+
+            $taxAmount += $lineTax;
+            $lineSummaries[$index]['allocated_header_discount'] = $this->moneyValue($lineDiscount);
+            $lineSummaries[$index]['gross_after_discount'] = $this->moneyValue($grossAfterDiscount);
+            $lineSummaries[$index]['taxable_base'] = $this->moneyValue($taxMode === 'no_tax' ? $grossAfterDiscount : $taxableBase);
+            $lineSummaries[$index]['tax_amount'] = $this->moneyValue($taxMode === 'no_tax' ? 0 : $lineTax);
         }
 
-        $total = $validated['tax_mode'] === 'exclusive'
-            ? $subtotal - $discountAmount + $taxAmount
-            : $subtotal - $discountAmount;
-
-        if ($validated['tax_mode'] === 'no_tax') {
-            $taxAmount = 0.0;
-            $total = $subtotal - $discountAmount;
-        }
+        $taxAmount = $taxMode === 'no_tax' ? 0.0 : round($taxAmount, 2);
+        $grossAfterDiscount = max(0, round($grossSubtotal - $discountAmount, 2));
+        $total = $taxMode === 'exclusive'
+            ? $grossAfterDiscount + $taxAmount
+            : $grossAfterDiscount;
+        $netSubtotal = $taxMode === 'inclusive'
+            ? max(0, round($grossAfterDiscount - $taxAmount, 2))
+            : $grossAfterDiscount;
 
         return [
-            'subtotal' => round($subtotal, 2),
-            'discount_amount' => $discountAmount,
-            'tax_amount' => round($taxAmount, 2),
-            'total' => max(0, round($total, 2)),
+            'mode' => $taxMode,
+            'gross_subtotal' => $this->moneyValue($grossSubtotal),
+            'header_discount' => $this->moneyValue($discountAmount),
+            'gross_after_discount' => $this->moneyValue($grossAfterDiscount),
+            'net_subtotal' => $this->moneyValue($netSubtotal),
+            'taxable_base' => $this->moneyValue($netSubtotal),
+            'tax_amount' => $this->moneyValue($taxAmount),
+            'total' => $this->moneyValue(max(0, round($total, 2))),
+            'wording' => match ($taxMode) {
+                'inclusive' => 'Prices include VAT. VAT amount is shown for reporting.',
+                'exclusive' => 'VAT is added on top of taxable base.',
+                default => 'No VAT applied.',
+            },
+            'lines' => $lineSummaries,
         ];
+    }
+
+    private function moneyValue(float $value): string
+    {
+        return number_format(round($value, 2), 2, '.', '');
+    }
+
+    private function displayMoney(mixed $value): string
+    {
+        return number_format((float) $value, 2);
+    }
+
+    private function taxWording(string $taxMode): string
+    {
+        return match ($taxMode) {
+            'inclusive' => 'Prices include VAT. VAT amount is shown for reporting.',
+            'exclusive' => 'VAT is added on top of taxable base.',
+            default => 'No VAT applied.',
+        };
     }
 
     private function syncItems(Invoice $invoice, array $items): void

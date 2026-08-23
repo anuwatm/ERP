@@ -8,15 +8,20 @@ use App\Http\Controllers\Delivery\ProjectController;
 use App\Http\Controllers\Delivery\TaskController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\Finance\ExpenseController;
+use App\Http\Controllers\Finance\GoodsReceiptController;
 use App\Http\Controllers\Finance\InvoiceController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Finance\ProductController;
+use App\Http\Controllers\Finance\PurchaseOrderController;
+use App\Http\Controllers\Finance\SupplierController;
+use App\Http\Controllers\Finance\TaxReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
 use App\Http\Controllers\Sales\ContactController;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\DealController;
 use App\Http\Controllers\Sales\SalesDashboardController;
+use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\OrganizationSettingsController;
 use App\Http\Controllers\Settings\OrganizationStructureController;
 use Illuminate\Support\Facades\Route;
@@ -101,6 +106,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])
         ->middleware(['permission:products.manage', 'password.confirm', 'throttle:10,1'])
         ->name('products.destroy');
+    Route::get('/suppliers', [SupplierController::class, 'index'])
+        ->middleware('permission:suppliers.view')
+        ->name('suppliers.index');
+    Route::post('/suppliers', [SupplierController::class, 'store'])
+        ->middleware(['permission:suppliers.create', 'password.confirm', 'throttle:10,1'])
+        ->name('suppliers.store');
+    Route::patch('/suppliers/{supplier}', [SupplierController::class, 'update'])
+        ->middleware(['permission:suppliers.update', 'password.confirm', 'throttle:10,1'])
+        ->name('suppliers.update');
+    Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])
+        ->middleware(['permission:suppliers.delete', 'password.confirm', 'throttle:10,1'])
+        ->name('suppliers.destroy');
+    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])
+        ->middleware('permission:purchase_orders.view')
+        ->name('purchase-orders.index');
+    Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])
+        ->middleware(['permission:purchase_orders.create', 'password.confirm', 'throttle:10,1'])
+        ->name('purchase-orders.store');
+    Route::patch('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])
+        ->middleware(['permission:purchase_orders.update', 'password.confirm', 'throttle:10,1'])
+        ->name('purchase-orders.update');
+    Route::post('/purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'approve'])
+        ->middleware(['permission:purchase_orders.approve', 'password.confirm', 'throttle:10,1'])
+        ->name('purchase-orders.approve');
+    Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])
+        ->middleware(['permission:purchase_orders.cancel', 'password.confirm', 'throttle:10,1'])
+        ->name('purchase-orders.cancel');
+    Route::get('/purchase-orders/{purchaseOrder}/print', [PurchaseOrderController::class, 'print'])
+        ->middleware('permission:purchase_orders.view')
+        ->name('purchase-orders.print');
+    Route::get('/purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'pdf'])
+        ->middleware('permission:purchase_orders.view')
+        ->name('purchase-orders.pdf');
     Route::get('/invoices', [InvoiceController::class, 'index'])
         ->middleware('permission:invoices.view')
         ->name('invoices.index');
@@ -113,12 +151,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/invoices/{invoice}/void', [InvoiceController::class, 'void'])
         ->middleware(['permission:invoices.void', 'password.confirm', 'throttle:10,1'])
         ->name('invoices.void');
+    Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])
+        ->middleware('permission:invoices.view')
+        ->name('invoices.print');
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])
+        ->middleware('permission:invoices.view')
+        ->name('invoices.pdf');
     Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store'])
         ->middleware(['permission:payments.create', 'password.confirm', 'throttle:10,1'])
         ->name('invoices.payments.store');
     Route::post('/payments/{payment}/reverse', [PaymentController::class, 'reverse'])
         ->middleware(['permission:payments.reverse', 'password.confirm', 'throttle:10,1'])
         ->name('payments.reverse');
+    Route::get('/tax-reports', [TaxReportController::class, 'index'])
+        ->middleware('permission:tax_reports.view')
+        ->name('tax-reports.index');
+    Route::get('/tax-reports/{type}/export', [TaxReportController::class, 'export'])
+        ->middleware('permission:tax_reports.view')
+        ->name('tax-reports.export');
+    Route::get('/tax-reports/{type}/excel', [TaxReportController::class, 'excel'])
+        ->middleware('permission:tax_reports.view')
+        ->name('tax-reports.excel');
+    Route::get('/goods-receipts', [GoodsReceiptController::class, 'index'])
+        ->middleware('permission:inventory.view')
+        ->name('goods-receipts.index');
+    Route::post('/goods-receipts', [GoodsReceiptController::class, 'store'])
+        ->middleware(['permission:inventory.receive', 'password.confirm', 'throttle:10,1'])
+        ->name('goods-receipts.store');
+    Route::post('/stock-movements', [GoodsReceiptController::class, 'storeMovement'])
+        ->middleware(['permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])
+        ->name('stock-movements.store');
     Route::get('/expenses', [ExpenseController::class, 'index'])
         ->middleware('permission:expenses.view')
         ->name('expenses.index');
@@ -137,6 +199,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/expenses/{expense}/reject', [ExpenseController::class, 'reject'])
         ->middleware(['permission:expenses.reject', 'password.confirm', 'throttle:10,1'])
         ->name('expenses.reject');
+    Route::get('/expenses/{expense}/withholding-certificate', [ExpenseController::class, 'withholdingCertificate'])
+        ->middleware('permission:expenses.view')
+        ->name('expenses.withholding-certificate');
     Route::get('/projects', [ProjectController::class, 'index'])
         ->middleware('permission:projects.view')
         ->name('projects.index');
@@ -149,6 +214,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/deals/{deal}/project', [ProjectController::class, 'storeFromDeal'])
         ->middleware(['permission:projects.create', 'password.confirm', 'throttle:10,1'])
         ->name('deals.projects.store');
+    Route::post('/projects/{project}/members', [ProjectController::class, 'storeMember'])
+        ->middleware(['permission:projects.update', 'password.confirm', 'throttle:10,1'])
+        ->name('projects.members.store');
+    Route::delete('/projects/{project}/members/{member}', [ProjectController::class, 'destroyMember'])
+        ->middleware(['permission:projects.update', 'password.confirm', 'throttle:10,1'])
+        ->name('projects.members.destroy');
     Route::get('/tasks', [TaskController::class, 'index'])
         ->middleware('permission:tasks.view')
         ->name('tasks.index');
@@ -175,6 +246,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/settings/organization', [OrganizationSettingsController::class, 'update'])
         ->middleware(['permission:settings.organization.update', 'password.confirm'])
         ->name('settings.organization.update');
+    Route::patch('/settings/organization/numbering', [OrganizationSettingsController::class, 'updateNumbering'])
+        ->middleware(['permission:settings.organization.update', 'password.confirm'])
+        ->name('settings.organization.numbering.update');
+    Route::get('/settings/notifications', [NotificationPreferenceController::class, 'edit'])
+        ->middleware('permission:settings.organization.view')
+        ->name('settings.notifications.edit');
+    Route::patch('/settings/notifications', [NotificationPreferenceController::class, 'update'])
+        ->middleware(['permission:settings.organization.update', 'password.confirm'])
+        ->name('settings.notifications.update');
 
     Route::get('/settings/organization-structure', [OrganizationStructureController::class, 'index'])
         ->middleware('permission:settings.structure.view')

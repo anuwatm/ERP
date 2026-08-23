@@ -9,6 +9,7 @@ use App\Models\Department;
 use App\Models\Division;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\NotificationService;
 use App\Support\PersonIdMask;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,7 +48,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function invite(Request $request): RedirectResponse
+    public function invite(Request $request, NotificationService $notifications): RedirectResponse
     {
         $actor = $request->user();
         $validated = $request->validate([
@@ -93,6 +94,16 @@ class UserController extends Controller
 
             return $user;
         });
+
+        $inviteUrl = route('invites.accept', ['user' => $invited->id, 'token' => $plainToken], absolute: true);
+        $notifications->notify(
+            $invited,
+            'user.invite',
+            "user.invite:{$invited->id}",
+            'ERP invitation',
+            "You have been invited to {$actor->organization?->name}. This invitation expires in 72 hours.",
+            $inviteUrl
+        );
 
         if (app()->environment('production')) {
             return back()->with('success', 'Invite created.');

@@ -32,11 +32,21 @@ type OrganizationForm = {
     address: string;
     logo: File | null;
 };
+type NumberingFormat = {
+    enabled: boolean;
+    format: string;
+    reset: string;
+    scope: string;
+};
 
 export default function Organization({
     organization,
+    numberingFormats,
+    numberingPreviews,
 }: {
     organization: Organization;
+    numberingFormats: Record<string, NumberingFormat>;
+    numberingPreviews: Record<string, string>;
 }) {
     const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
     const logoPreview = selectedLogoFile
@@ -54,6 +64,7 @@ export default function Organization({
             address: organization.address ?? '',
             logo: null,
         });
+    const numberingForm = useForm({ formats: numberingFormats });
 
     const updateLogo: ChangeEventHandler<HTMLInputElement> = (event) => {
         const file = event.target.files?.[0] ?? null;
@@ -202,6 +213,153 @@ export default function Organization({
                                 }
                             >
                                 Save Organization Profile
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </Card>
+
+                <Card
+                    title="Document Numbering"
+                    description="Configure document number formats and reset periods"
+                >
+                    <form
+                        className="space-y-4"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            numberingForm.patch(
+                                route('settings.organization.numbering.update'),
+                                { preserveScroll: true },
+                            );
+                        }}
+                    >
+                        <div className="grid gap-3 lg:grid-cols-2">
+                            {Object.entries(numberingForm.data.formats).map(
+                                ([docType, config]) => (
+                                    <div
+                                        key={docType}
+                                        className="rounded-md border border-slate-200 p-3 dark:border-slate-800"
+                                    >
+                                        <div className="mb-3 flex items-center justify-between gap-3">
+                                            <div className="font-semibold text-slate-900 dark:text-white">
+                                                {docType.replaceAll('_', ' ')}
+                                            </div>
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={config.enabled}
+                                                    onChange={(event) =>
+                                                        numberingForm.setData(
+                                                            'formats',
+                                                            {
+                                                                ...numberingForm
+                                                                    .data
+                                                                    .formats,
+                                                                [docType]: {
+                                                                    ...config,
+                                                                    enabled:
+                                                                        event
+                                                                            .target
+                                                                            .checked,
+                                                                },
+                                                            },
+                                                        )
+                                                    }
+                                                />
+                                                enabled
+                                            </label>
+                                        </div>
+                                        <TextInput
+                                            className="block w-full"
+                                            value={config.format}
+                                            onChange={(event) =>
+                                                numberingForm.setData(
+                                                    'formats',
+                                                    {
+                                                        ...numberingForm.data
+                                                            .formats,
+                                                        [docType]: {
+                                                            ...config,
+                                                            format: event.target
+                                                                .value,
+                                                        },
+                                                    },
+                                                )
+                                            }
+                                        />
+                                        <div className="mt-2 grid grid-cols-2 gap-2">
+                                            <select
+                                                className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                                value={config.reset}
+                                                onChange={(event) =>
+                                                    numberingForm.setData(
+                                                        'formats',
+                                                        {
+                                                            ...numberingForm
+                                                                .data.formats,
+                                                            [docType]: {
+                                                                ...config,
+                                                                reset: event
+                                                                    .target
+                                                                    .value,
+                                                            },
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                <option value="none">
+                                                    none
+                                                </option>
+                                                <option value="yearly">
+                                                    yearly
+                                                </option>
+                                                <option value="monthly">
+                                                    monthly
+                                                </option>
+                                                <option value="daily">
+                                                    daily
+                                                </option>
+                                            </select>
+                                            <select
+                                                className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                                value={config.scope}
+                                                onChange={(event) =>
+                                                    numberingForm.setData(
+                                                        'formats',
+                                                        {
+                                                            ...numberingForm
+                                                                .data.formats,
+                                                            [docType]: {
+                                                                ...config,
+                                                                scope: event
+                                                                    .target
+                                                                    .value,
+                                                            },
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                <option value="organization">
+                                                    organization
+                                                </option>
+                                                <option value="branch">
+                                                    branch
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div className="mt-2 text-xs text-slate-500 dark:text-slate-300">
+                                            Preview:{' '}
+                                            <span className="font-mono font-semibold">
+                                                {numberingPreviews[docType] ??
+                                                    '-'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ),
+                            )}
+                        </div>
+                        <div className="flex justify-end">
+                            <PrimaryButton disabled={numberingForm.processing}>
+                                Save Numbering
                             </PrimaryButton>
                         </div>
                     </form>

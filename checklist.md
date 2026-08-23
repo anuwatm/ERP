@@ -26,6 +26,8 @@
 | Phase 4 | Done | Delivery + Delivery Dashboard completed; project_members deferred Post-MVP |
 | Phase 5 | Done | Executive Dashboard + E2E/UAT completed and Gemini review closed |
 | Phase 6 | Done | Reporting/filters/operational polish completed |
+| Phase 7 | Closed | Post-MVP implementation completed and phase closed: VAT UI, configurable numbering, suppliers, purchase orders, project members |
+| Phase 8 | In Progress | Core production roadmap implemented: PDF/50-Tawi, tax/WHT/aging exports, Inventory/GRN/adjustments, notifications/preferences; tax source/filter expansion remains |
 
 ---
 
@@ -421,3 +423,177 @@ Exit criteria:
 - [x] Admin/System Dashboard visual follow-up: Security Alert donut and System Normal state
 - [x] Sales Dashboard action visual follow-up: Follow-ups/Stale Deals warning tiles and clear state
 - [x] Finance Dashboard previous-period trend: backend previous metrics and trend tiles
+
+---
+
+## Phase 7: Post-MVP Design Backlog
+
+ที่มา: `gemini.md` หมวด Pending Fixes & Improvements. เฟสนี้เป็น checklist งานออกแบบก่อน implementation.
+
+Design doc: `docs/PHASE_7_POST_MVP_DESIGN.md`
+
+### Inclusive VAT UI Implementation
+
+- [x] Backend ส่ง `tax_summary` สำหรับ invoice list โดยใช้สูตรเดียวกับ `InvoiceController::calculateTotals`
+- [x] Frontend preview แสดง gross/net/VAT breakdown ตาม `tax_mode`
+- [x] Invoice list แสดง VAT included สำหรับ invoice แบบ `inclusive`
+- [x] Feature test ตรวจค่า `tax_summary` สำหรับ inclusive VAT หลัง header discount
+- [x] Print/export-ready wording ผ่าน `tax_summary.wording` สำหรับ invoice VAT included
+
+### Number Sequences Implementation
+
+- [x] เพิ่ม `period_key` ใน `number_sequences` สำหรับ reset none/yearly/monthly/daily
+- [x] `NumberSequenceService` รองรับ format tokens: `{YYYY}`, `{YY}`, `{MM}`, `{DD}`, `{BRANCH}`, `{SEQ:n}`
+- [x] เพิ่ม `preview()` สำหรับดูเลขถัดไปโดยไม่ increment
+- [x] รองรับ organization scope และ branch scope
+- [x] Feature test ครอบ default format, custom monthly reset, branch scope และ invalid format
+- [x] Organization Settings UI สำหรับแก้ format และดู preview
+- [x] Duplicate guard test สำหรับ repeated custom sequence calls
+
+### Suppliers & Purchase Orders Implementation
+
+- [x] เพิ่ม schema/model `suppliers`, `purchase_orders`, `purchase_order_items`
+- [x] เพิ่ม CRUD พื้นฐานสำหรับ suppliers พร้อม org scope และ unique supplier code
+- [x] เพิ่ม purchase order create/update/approve/cancel พร้อม server-calculated totals
+- [x] เพิ่ม routes/UI สำหรับ `/suppliers` และ `/purchase-orders`
+- [x] เพิ่ม permission catalog และ migration backfill สำหรับ supplier/PO permissions
+- [x] ผูก `expenses.purchase_order_id` และ validate supplier/PO chain
+- [x] Feature test ครอบ supplier isolation, PO totals/status, expense chain validation
+
+### Project Members Implementation
+
+- [x] เพิ่ม schema/model `project_members`
+- [x] ปรับ `ProjectAccess` ให้ project member เห็น project ได้
+- [x] เพิ่ม add/remove project member endpoints
+- [x] เพิ่ม UI ในหน้า Projects สำหรับเพิ่ม/ลบ member และกำหนด role
+- [x] Feature test ครอบ member visibility และ removal
+
+### Number Sequences Design
+
+- [x] Design configurable document number formats เช่น `INV-YYYYMM-00001`, `EXP-YY-0001`
+- [x] Design settings schema สำหรับเก็บ prefix, date token, padding length, reset period และ branch scope
+- [x] Design validation rule กัน format ยาวเกิน `varchar(30)` และกัน duplicate ใน `UNIQUE(org_id, *_no)`
+- [x] Design migration/backward compatibility จากเลขเดิม `000001`
+- [x] Design UI ใน Organization Settings สำหรับ preview เลขเอกสารถัดไป
+- [x] Design tests สำหรับ sequence concurrency, reset period, duplicate guard และ invalid format
+
+### Inclusive VAT UI Design
+
+- [x] Design invoice totals breakdown สำหรับ `inclusive` แยก gross subtotal, net subtotal, hidden VAT, header discount และ total
+- [x] Design display rules สำหรับ `exclusive`, `inclusive`, `no_tax` ให้ผู้ใช้ไม่สับสน
+- [x] Design line item preview ให้เห็น line discount, allocated header discount, taxable base และ VAT ต่อ line
+- [x] Design print/export-ready wording สำหรับใบแจ้งหนี้ที่มี VAT รวมในราคา
+- [x] Design tests ให้ frontend preview ตรงกับ backend `InvoiceController::calculateTotals`
+
+### Project Members Design
+
+- [x] Design `project_members` schema: `org_id`, `project_id`, `user_id`, `role`, timestamps, unique constraints
+- [x] Design permission model ระหว่าง project owner, project member, task assignee และ admin
+- [x] Design project member UI สำหรับเพิ่ม/ลบสมาชิกและกำหนดบทบาทใน project
+- [x] Design access scope ใหม่ใน `ProjectAccess` และ `TaskAccess`
+- [x] Design migration path ที่ไม่กระทบ owner/assignee behavior เดิม
+- [x] Design tests สำหรับ visibility, update guard, cross-org guard และ member removal
+
+### Suppliers & Purchase Orders Design
+
+- [x] Design suppliers schema และ CRUD scope
+- [x] Design purchase orders schema: header, items, status, totals, supplier link
+- [x] Design expense-supplier relation จาก `supplier_id` nullable ปัจจุบันไปเป็น FK แบบปลอดภัย
+- [x] Design PO to expense/inventory future flow
+- [x] Design UI routes/screens สำหรับ suppliers และ purchase orders
+- [x] Design permission catalog สำหรับ suppliers และ purchase orders
+- [x] Design tests สำหรับ supplier isolation, PO totals, status transition และ expense linkage
+
+---
+
+## Phase 8: Production Roadmap (Design & Implementation)
+
+ที่มา: `gemini.md` หมวด Phase 8 / Production & Accounting Roadmap.
+
+Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
+
+### Official Document Print & PDF Export Implementation
+
+- [x] เพิ่ม Library/Service สำหรับ PDF Generation ด้วย DomPDF พร้อม print template ที่รองรับภาษาไทยเบื้องต้น
+- [x] ฟังก์ชันแปลงตัวเลขจำนวนเงินเป็นตัวอักษรภาษาไทย (`BahtText`) สำหรับระบุในใบกำกับภาษีและใบเสร็จรับเงิน
+- [x] Template และ Layout สำหรับพิมพ์เอกสารทางการชุดแรก:
+  - ใบแจ้งหนี้ (Invoice)
+  - ใบกำกับภาษี / ใบเสร็จรับเงิน (Tax Invoice / Receipt)
+  - ใบสั่งซื้อ (Purchase Order)
+- [x] Template หนังสือรับรองการหักภาษี ณ ที่จ่าย (ใบ 50 ทวิ)
+- [x] แสดง Header เอกสารพื้นฐาน: ข้อมูลบริษัท, เลขประจำตัวผู้เสียภาษี 13 หลัก, ที่อยู่
+- [x] เพิ่ม Header เอกสารส่วน Production: สำนักงานใหญ่/สาขา, โลโก้
+- [x] แสดง Tax Identity ของลูกค้า/คู่ค้า ครบถ้วนตามมาตรฐานกรมสรรพากร
+- [x] รองรับการระบุหัวเอกสาร "ต้นฉบับ (Original)" / "สำเนา (Copy)" และแสดงลายน้ำ "VOID" อัตโนมัติเมื่อเอกสารถูกยกเลิก
+- [x] ตรวจสอบสิทธิ์การเข้าถึง Official Print พร้อม Org-scope isolation
+- [x] ตรวจสอบสิทธิ์การเข้าถึงและ Download PDF binary พร้อม Org-scope isolation
+- [x] Feature tests ครอบคลุม Official Print Render, Org Guard, BahtText Accuracy, และ Wording
+- [x] Feature tests ครอบคลุม PDF binary generation
+
+### Inventory & Goods Receipt Implementation
+
+- [x] เพิ่ม Schema / Models: `goods_receipts`, `goods_receipt_items`, `stock_movements` และเปิด `products.track_inventory` เมื่อรับสินค้า
+- [x] ระบบสร้าง Goods Receipt (GRN) รับสินค้าเข้าคลังอ้างอิงจาก Purchase Order ที่อนุมัติแล้ว
+- [x] อัปเดตสถานะของ PO เมื่อรับสินค้า: `partially_received` / `received`
+- [x] ตรวจสอบยอดรับสินค้าไม่ให้เกินยอดที่สั่งใน PO (Over-receive guard)
+- [x] บันทึก Stock Ledger (Movement Log) ไม่ใช้การแก้ตัวเลขตรงๆ รองรับรอบแรก:
+  - รับเข้าจาก PO (`receive_from_po`)
+- [x] ขยาย Stock Ledger รองรับ:
+  - ปรับยอดตรวจนับ (`adjustment_in` / `adjustment_out`)
+  - ส่งคืนผู้ขาย (`return_to_supplier`)
+- [x] คำนวณต้นทุนสินค้าคงเหลือเฉลี่ย (Moving Average Cost) จาก movement ledger
+- [x] หน้าจอ UI สำหรับออกใบรับสินค้า (GRN), ดูรายการรับสินค้า, ดู stock on-hand summary, average cost และ stock movement history
+- [x] Feature tests ครอบคลุม Partial Receive, Over-receive Guard, Stock Ledger, และ Multi-tenant Isolation
+
+### Tax & Accounting Reports Implementation
+
+- [x] หน้ารายงานภาษีขาย (Sales Tax Report) อ้างอิงจาก Invoices ตามช่วงเวลาและงวดภาษี
+- [x] หน้ารายงานภาษีซื้อ (Purchase Tax Report) อ้างอิงจาก PO รอบแรก
+- [ ] ขยาย Purchase Tax Report ให้รวม Expenses / GRN หลัง schema มี tax source ครบ
+- [x] หน้ารายงานภาษีหัก ณ ที่จ่าย (Withholding Tax Report) แยก ภ.ง.ด. 3 (บุคคลธรรมดา) และ ภ.ง.ด. 53 (นิติบุคคล)
+- [x] หน้ารายงานวิเคราะห์อายุหนี้รอบแรก:
+  - รายงานอายุลูกหนี้ (Accounts Receivable Aging: 0-30, 31-60, 61-90, >90 วัน)
+  - รายงานอายุเจ้าหนี้ (Accounts Payable Aging: 0-30, 31-60, 61-90, >90 วัน)
+- [x] ตัวกรองรายงานรอบแรก: ช่วงวันที่ (Date Range), สาขา (Branch) สำหรับ Sales Tax
+- [x] ตัวกรองรายงานส่วนขยาย: สถานะ (Status), ลูกค้า/คู่ค้า (Customer/Supplier)
+- [x] ระบบส่งออกรายงานเป็น CSV รอบแรก
+- [x] ระบบส่งออกรายงานเป็น Excel-compatible `.xls` โดยไม่ต้องใช้ `ext-zip`
+- [x] Feature tests ครอบคลุมการคำนวณยอดรายงาน, การตัดงวดภาษี, สิทธิ์การเข้าถึง, Export CSV และ Aging buckets
+- [x] Feature tests ครอบคลุม Excel-compatible export
+- [x] Feature tests ครอบคลุม filters ส่วนขยาย
+
+### Notifications & Background Queues Implementation
+
+- [x] ตั้งค่า Notification service ให้ใช้ Laravel queued mail และ scheduled commands รอบแรก
+- [x] สร้าง Notification service, queued mail และ email template:
+  - แจ้งเตือนเมื่อมี Purchase Order รอการอนุมัติ (Pending Approval)
+  - แจ้งเตือนใบแจ้งหนี้ใกล้ครบกำหนด (Due Soon Alert) และเกินกำหนดชำระ (Overdue Alert)
+  - แจ้งเตือนการมอบหมายงานโครงการใหม่ (Project Member / Task Assigned)
+  - แจ้งเตือนคำเชิญเข้าสู่ระบบ (User Invitation) พร้อมความปลอดภัยของ Token
+- [x] เมนูกระดิ่งแจ้งเตือนบน Navbar (In-App Notification Bell) พร้อมนับจำนวน Unread
+- [x] ระบบป้องกันการส่งแจ้งเตือนซ้ำซ้อน (Deduplication Idempotency)
+- [x] หน้าตั้งค่าเปิด/ปิดการรับแจ้งเตือนรายบุคคล (Notification Preferences)
+- [x] Feature tests ครอบคลุม Mail Queue, In-App Notification, Deduplication Guard และ shared unread count
+- [x] Feature tests ครอบคลุม Due/Overdue/Invite notifications, Notification Preferences และ Sensitive Data Redaction รอบ invite token
+
+---
+
+### Phase 8 Design Backlog
+
+- [x] Design PDF document types: Invoice, Tax Invoice / Receipt, Purchase Order, 50-Tawi (WHT)
+- [x] Design official document header fields: legal name, tax ID, branch/head office, address, logo, BahtText
+- [x] Design customer/supplier tax identity fields required on official documents
+- [x] Design document numbering usage from configurable `NumberSequenceService`
+- [x] Design VAT wording/source from `tax_summary.wording` สำหรับ inclusive/exclusive/no_tax
+- [x] Design line item table: description, qty, unit, unit price, discount, VAT, line total
+- [x] Design signature area, print-friendly layout, Original/Copy indicator, and VOID watermark
+- [x] Design PDF access permissions and org-scope download guards
+- [x] Design inventory tables: stock items, stock movements, goods receipts, goods receipt items
+- [x] Design GRN flow from approved Purchase Order and status transitions
+- [x] Design stock on-hand calculation from movement ledger, moving average cost, and return flow
+- [x] Design inventory permissions for view, receive, adjust, and report
+- [x] Design Sales Tax, Purchase Tax, WHT (ภ.ง.ด. 3/53), and AR/AP Aging Reports
+- [x] Design report filters and accountant-friendly Excel/CSV export formats
+- [x] Design queue/mail infrastructure, In-App notification bell, and notification preferences
+- [x] Design notification templates, safe data redaction, and deduplication guard
+- [x] Design tests for PDF render, inventory ledger, tax reconciliation, and queued notifications

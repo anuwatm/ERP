@@ -8,8 +8,8 @@
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-สถานะล่าสุด: **Phase 6 Done**  
-ฟีเจอร์หลักถึงตอนนี้เสร็จแล้วตั้งแต่ Auth, Admin, CRM, Finance, Delivery, Executive Dashboard และ Dashboard Date Filters
+สถานะล่าสุด: **Phase 7 Closed**  
+ฟีเจอร์หลักถึงตอนนี้เสร็จแล้วตั้งแต่ Auth, Admin, CRM, Finance, Delivery, Executive Dashboard, Dashboard Date Filters, Configurable Numbering, Suppliers, Purchase Orders และ Project Members
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 
@@ -564,7 +564,7 @@ vendor\bin\pint
 
 ```text
 php artisan test
-155 passed, 1216 assertions
+170 passed, 1372 assertions
 ```
 
 ---
@@ -581,6 +581,7 @@ php artisan test
 | Phase 4 | Done | Delivery |
 | Phase 5 | Done | Executive Dashboard, E2E, UAT |
 | Phase 6 | Done | Reporting filters, dashboard polish, document number expansion, invoice VAT compliance |
+| Phase 7 | Closed | Configurable numbering, inclusive VAT UI, suppliers, purchase orders, project members |
 
 ---
 
@@ -588,17 +589,34 @@ php artisan test
 
 รายการที่ยังไม่อยู่ใน MVP:
 
-- `project_members`
 - Generic file attachment ทุก module
-- Export Excel/CSV
-- Notifications
+- Native `.xlsx` export via PhpSpreadsheet, blocked until PHP has `ext-gd` and `ext-zip`
 - Public API
-- Advanced tax compliance
+- Advanced official document font hardening for print-shop production
+- Advanced tax/accounting reports
 - Accounting integration
 - Payroll
-- Inventory
+- Inventory warehouse/bin-level costing
 - Customer portal
 - AI assistant
+
+---
+
+## Phase 8 / Production Roadmap
+
+ข้อเสนอแนะจาก `gemini.md` สำหรับงานถัดไป:
+
+- Official Document Print & PDF Export: Invoice, Tax Invoice/Receipt, PO
+  - Done: official print views, PDF binary export, BahtText, Original/Copy, VOID watermark, logo/branch header, org-scope guards
+  - Done: 50-Tawi WHT certificate PDF
+  - Remaining: deeper Thai font hardening if required
+- Inventory & Goods Receipt: รับสินค้าเข้าคลังจาก PO ที่ approve แล้ว
+  - Done: GRN from approved PO, partial receive, over-receive guard, stock ledger, adjustment in/out, supplier return, on-hand summary, average cost
+- Tax & Accounting Reports: Sales Tax, Purchase Tax, export Excel/CSV สำหรับ ภ.พ.30
+  - Done: Sales/Purchase Tax report page, WHT report, CSV export, Excel-compatible `.xls` export, AR/AP Aging
+  - Remaining: Expenses/GRN purchase tax source expansion once tax source schema exists
+- Email Notifications & Queues: PO approval, invoice due/overdue, invite email
+  - Done: PO approval, invoice due/overdue, invite email, task/project assignment, queued mail, in-app notification bell, unread count, dedupe guard, preferences
 
 ---
 

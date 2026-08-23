@@ -6,14 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Expense;
 use App\Models\Project;
+use App\Models\PurchaseOrder;
+use App\Services\BahtText;
 use App\Services\NumberSequenceService;
 use App\Support\FileAttachmentManager;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class ExpenseController extends Controller
 {
@@ -31,7 +36,7 @@ class ExpenseController extends Controller
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['category'] ?? null, fn ($query, $category) => $query->where('category', $category))
             ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
-            ->with(['receiptFile:id,file_name,mime_type,size_bytes', 'project:id,project_code,name'])
+            ->with(['receiptFile:id,file_name,mime_type,size_bytes', 'project:id,project_code,name', 'supplier:id,name,tax_id'])
             ->latest('expense_date')
             ->latest()
             ->get();
@@ -58,6 +63,7 @@ class ExpenseController extends Controller
         $expense = DB::transaction(function () use ($request, $user, $validated, $numbers, $files): Expense {
             $expensePayload = $validated;
             unset($expensePayload['receipt']);
+            $expensePayload = $this->withholdingPayload($expensePayload);
 
             $expense = Expense::create(array_merge($expensePayload, [
                 'org_id' => $user->org_id,
@@ -90,6 +96,7 @@ class ExpenseController extends Controller
 
         $expensePayload = $validated;
         unset($expensePayload['receipt']);
+        $expensePayload = $this->withholdingPayload($expensePayload);
 
         $expense->update(array_merge($expensePayload, [
             'updated_by' => $request->user()->id,
@@ -165,18 +172,67 @@ class ExpenseController extends Controller
         return back()->with('success', "Expense {$expense->expense_no} rejected.");
     }
 
+    public function withholdingCertificate(Request $request, Expense $expense, BahtText $bahtText): HttpResponse
+    {
+        abort_unless($expense->org_id === $request->user()->org_id, 403);
+        abort_unless((float) $expense->withholding_tax_amount > 0, 404);
+
+        $expense->load('supplier');
+        $organization = $request->user()->organization;
+
+        return Pdf::loadView('documents.withholding-certificate', [
+            'organization' => [
+                'legal_name' => $organization?->legal_name ?: $organization?->name ?: 'Organization',
+                'tax_id' => $organization?->tax_id,
+                'address' => $organization?->address,
+                'phone' => $organization?->phone,
+            ],
+            'supplier' => [
+                'name' => $expense->supplier?->name ?: '-',
+                'tax_id' => $expense->supplier?->tax_id,
+                'address' => $expense->supplier?->address,
+            ],
+            'expense' => [
+                'expense_no' => $expense->expense_no,
+                'date' => $expense->expense_date?->toDateString() ?: '-',
+                'title' => $expense->title,
+                'form' => $expense->withholding_tax_form ?: 'pnd53',
+                'base_amount' => $this->money($expense->amount),
+                'rate' => $this->money($expense->withholding_tax_rate),
+                'withholding_amount' => $this->money($expense->withholding_tax_amount),
+                'baht_text' => $bahtText->convert($expense->withholding_tax_amount),
+            ],
+        ])->setPaper('a4')->download("withholding-certificate-{$expense->expense_no}.pdf");
+    }
+
     private function validateExpense(Request $request): array
     {
-        return $request->validate([
+        return Validator::make($request->all(), [
             'category' => ['required', Rule::in(Expense::CATEGORIES)],
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'gt:0', 'max:999999999999.99'],
+            'withholding_tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'withholding_tax_form' => ['nullable', Rule::in(['pnd3', 'pnd53'])],
             'expense_date' => ['required', 'date'],
             'project_id' => ['nullable', 'uuid', Rule::exists('projects', 'id')->where('org_id', $request->user()->org_id)],
-            'supplier_id' => ['nullable', 'uuid'],
+            'supplier_id' => ['nullable', 'uuid', Rule::exists('suppliers', 'id')->where('org_id', $request->user()->org_id)],
+            'purchase_order_id' => ['nullable', 'uuid', Rule::exists('purchase_orders', 'id')->where('org_id', $request->user()->org_id)],
             'receipt' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:'.FileAttachmentManager::MAX_KILOBYTES],
             'note' => ['nullable', 'string', 'max:2000'],
-        ]);
+        ])->after(function ($validator) use ($request): void {
+            if (! filled($request->input('purchase_order_id'))) {
+                return;
+            }
+
+            $purchaseOrder = PurchaseOrder::where('org_id', $request->user()->org_id)->find($request->input('purchase_order_id'));
+            if (! $purchaseOrder) {
+                return;
+            }
+
+            if (filled($request->input('supplier_id')) && $purchaseOrder->supplier_id !== $request->input('supplier_id')) {
+                $validator->errors()->add('purchase_order_id', 'Purchase order must belong to selected supplier.');
+            }
+        })->validate();
     }
 
     private function appendStatusNote(?string $note, string $label, ?string $statusNote): ?string
@@ -192,7 +248,24 @@ class ExpenseController extends Controller
 
     private function snapshot(Expense $expense): array
     {
-        return $expense->fresh()->only(['expense_no', 'category', 'title', 'amount', 'expense_date', 'project_id', 'supplier_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note']);
+        return $expense->fresh()->only(['expense_no', 'category', 'title', 'amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note']);
+    }
+
+    private function withholdingPayload(array $payload): array
+    {
+        $rate = round((float) ($payload['withholding_tax_rate'] ?? 0), 2);
+        $amount = round((float) $payload['amount'] * $rate / 100, 2);
+
+        $payload['withholding_tax_rate'] = $rate;
+        $payload['withholding_tax_amount'] = $amount;
+        $payload['withholding_tax_form'] = $rate > 0 ? ($payload['withholding_tax_form'] ?? 'pnd53') : null;
+
+        return $payload;
+    }
+
+    private function money(mixed $value): string
+    {
+        return number_format((float) $value, 2, '.', '');
     }
 
     private function audit(Request $request, string $action, Expense $expense, ?array $before, ?array $after): void

@@ -27,6 +27,9 @@ type Expense = {
     category: string;
     title: string;
     amount: string;
+    withholding_tax_rate?: string;
+    withholding_tax_amount?: string;
+    withholding_tax_form?: string | null;
     expense_date: string;
     project_id?: string | null;
     supplier_id?: string | null;
@@ -42,6 +45,8 @@ type ExpenseForm = {
     category: string;
     title: string;
     amount: string;
+    withholding_tax_rate: string;
+    withholding_tax_form: string;
     expense_date: string;
     project_id: string;
     supplier_id: string;
@@ -55,6 +60,8 @@ const emptyExpense: ExpenseForm = {
     category: 'misc',
     title: '',
     amount: '0.00',
+    withholding_tax_rate: '0.00',
+    withholding_tax_form: 'pnd53',
     expense_date: today,
     project_id: '',
     supplier_id: '',
@@ -113,6 +120,8 @@ export default function Expenses({
             category: expense.category,
             title: expense.title,
             amount: expense.amount,
+            withholding_tax_rate: expense.withholding_tax_rate ?? '0.00',
+            withholding_tax_form: expense.withholding_tax_form ?? 'pnd53',
             expense_date: expense.expense_date?.slice(0, 10) ?? today,
             project_id: expense.project_id ?? '',
             supplier_id: expense.supplier_id ?? '',
@@ -218,7 +227,22 @@ export default function Expenses({
                                 },
                                 {
                                     header: 'Amount',
-                                    accessor: (row) => thbMoney(row.amount),
+                                    accessor: (row) => (
+                                        <div>
+                                            <div>{thbMoney(row.amount)}</div>
+                                            {Number(
+                                                row.withholding_tax_amount ?? 0,
+                                            ) > 0 && (
+                                                <div className="text-xs text-slate-500">
+                                                    WHT:{' '}
+                                                    {thbMoney(
+                                                        row.withholding_tax_amount ??
+                                                            '0',
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ),
                                 },
                                 {
                                     header: 'Status',
@@ -246,6 +270,25 @@ export default function Expenses({
                                                         Edit
                                                     </SecondaryButton>
                                                 )}
+                                            {Number(
+                                                row.withholding_tax_amount ?? 0,
+                                            ) > 0 && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        window.open(
+                                                            route(
+                                                                'expenses.withholding-certificate',
+                                                                row.id,
+                                                            ),
+                                                            '_blank',
+                                                            'noopener,noreferrer',
+                                                        )
+                                                    }
+                                                >
+                                                    50-Tawi
+                                                </SecondaryButton>
+                                            )}
                                             {canApproveExpenses &&
                                                 row.status === 'draft' && (
                                                     <SecondaryButton
@@ -330,6 +373,39 @@ export default function Expenses({
                                         }
                                         required
                                     />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Field
+                                            label="WHT Rate %"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={
+                                                form.data.withholding_tax_rate
+                                            }
+                                            error={
+                                                form.errors.withholding_tax_rate
+                                            }
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'withholding_tax_rate',
+                                                    value,
+                                                )
+                                            }
+                                        />
+                                        <SelectField
+                                            label="WHT Form"
+                                            value={
+                                                form.data.withholding_tax_form
+                                            }
+                                            options={['pnd3', 'pnd53']}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'withholding_tax_form',
+                                                    value,
+                                                )
+                                            }
+                                        />
+                                    </div>
                                     <Field
                                         label="Expense Date"
                                         type="date"

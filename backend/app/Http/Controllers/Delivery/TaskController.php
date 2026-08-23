@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\TaskChecklist;
 use App\Models\TaskComment;
 use App\Models\User;
+use App\Services\NotificationService;
 use App\Support\ProjectAccess;
 use App\Support\TaskAccess;
 use Illuminate\Http\RedirectResponse;
@@ -58,7 +59,7 @@ class TaskController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, NotificationService $notifications): RedirectResponse
     {
         $user = $request->user();
         $validated = $this->validateTask($request);
@@ -72,11 +73,12 @@ class TaskController extends Controller
 
         $task = Task::create($validated);
         $this->audit($request, 'task.create', $task, null, $this->snapshot($task));
+        $this->notifyAssignee($task, $notifications);
 
         return back()->with('success', 'Task created.');
     }
 
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(Request $request, Task $task, NotificationService $notifications): RedirectResponse
     {
         $user = $request->user();
         $task->load('project');
@@ -96,6 +98,7 @@ class TaskController extends Controller
         $validated['updated_by'] = $user->id;
         $task->update($validated);
         $this->audit($request, 'task.update', $task, $before, $this->snapshot($task));
+        $this->notifyAssignee($task, $notifications);
 
         return back()->with('success', 'Task updated.');
     }
@@ -177,6 +180,27 @@ class TaskController extends Controller
     private function snapshot(Task $task): array
     {
         return $task->fresh()->only(['project_id', 'title', 'description', 'status', 'priority', 'assignee_id', 'due_date', 'completed_at']);
+    }
+
+    private function notifyAssignee(Task $task, NotificationService $notifications): void
+    {
+        if (! $task->assignee_id) {
+            return;
+        }
+
+        $assignee = User::where('org_id', $task->org_id)->whereKey($task->assignee_id)->first();
+        if (! $assignee) {
+            return;
+        }
+
+        $notifications->notify(
+            $assignee,
+            'task.assigned',
+            "task.assigned:{$task->id}:{$assignee->id}",
+            'Task assigned',
+            $task->title,
+            route('tasks.index')
+        );
     }
 
     private function audit(Request $request, string $action, Task $task, ?array $before, ?array $after): void

@@ -9,7 +9,7 @@ import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useMemo, useState } from 'react';
 
 type Customer = { id: string; customer_code: string; company_name: string };
@@ -21,6 +21,12 @@ type Deal = {
     value_amount: string;
 };
 type Owner = { id: string; name: string; email: string };
+type ProjectMember = {
+    id: string;
+    user_id: string;
+    role: string;
+    user?: Owner | null;
+};
 type Project = {
     id: string;
     project_code: string;
@@ -40,6 +46,7 @@ type Project = {
     customer?: Customer | null;
     deal?: Deal | null;
     owner?: Owner | null;
+    members?: ProjectMember[];
 };
 type ProjectForm = {
     name: string;
@@ -89,6 +96,7 @@ export default function Projects({
 }) {
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const form = useForm<ProjectForm>(emptyProject);
+    const memberForm = useForm({ user_id: '', role: 'member' });
     const availableDeals = useMemo(
         () =>
             deals.filter((deal) => deal.customer_id === form.data.customer_id),
@@ -385,6 +393,113 @@ export default function Projects({
                                 </PrimaryButton>
                             </div>
                         </form>
+
+                        {editingProject && (
+                            <div className="mt-5 space-y-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+                                <div className="text-sm font-semibold text-slate-800 dark:text-white">
+                                    Project Members
+                                </div>
+                                <form
+                                    className="grid grid-cols-[1fr_110px_auto] gap-2"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        memberForm.post(
+                                            route(
+                                                'projects.members.store',
+                                                editingProject.id,
+                                            ),
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () =>
+                                                    memberForm.setData({
+                                                        user_id: '',
+                                                        role: 'member',
+                                                    }),
+                                            },
+                                        );
+                                    }}
+                                >
+                                    <select
+                                        className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                        value={memberForm.data.user_id}
+                                        onChange={(event) =>
+                                            memberForm.setData(
+                                                'user_id',
+                                                event.target.value,
+                                            )
+                                        }
+                                    >
+                                        <option value="">Select user</option>
+                                        {owners.map((owner) => (
+                                            <option
+                                                key={owner.id}
+                                                value={owner.id}
+                                            >
+                                                {owner.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                        value={memberForm.data.role}
+                                        onChange={(event) =>
+                                            memberForm.setData(
+                                                'role',
+                                                event.target.value,
+                                            )
+                                        }
+                                    >
+                                        <option value="manager">manager</option>
+                                        <option value="member">member</option>
+                                        <option value="viewer">viewer</option>
+                                    </select>
+                                    <PrimaryButton
+                                        disabled={memberForm.processing}
+                                    >
+                                        Add
+                                    </PrimaryButton>
+                                </form>
+                                <div className="space-y-2">
+                                    {(editingProject.members ?? []).map(
+                                        (member) => (
+                                            <div
+                                                key={member.id}
+                                                className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900"
+                                            >
+                                                <div>
+                                                    <div className="font-semibold text-slate-800 dark:text-white">
+                                                        {member.user?.name ??
+                                                            member.user_id}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        {member.role}
+                                                    </div>
+                                                </div>
+                                                <SecondaryButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        router.delete(
+                                                            route(
+                                                                'projects.members.destroy',
+                                                                [
+                                                                    editingProject.id,
+                                                                    member.id,
+                                                                ],
+                                                            ),
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    Remove
+                                                </SecondaryButton>
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </Card>
                 </div>
             </div>

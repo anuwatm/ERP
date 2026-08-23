@@ -9,5 +9,5 @@ class NumberSequence extends Model
 {
     use UsesOrderedUuid;
 
-    protected $fillable = ['org_id', 'branch_id', 'branch_key', 'doc_type', 'prefix', 'year', 'year_key', 'last_number'];
+    protected $fillable = ['org_id', 'branch_id', 'branch_key', 'doc_type', 'prefix', 'year', 'year_key', 'period_key', 'last_number'];
 }

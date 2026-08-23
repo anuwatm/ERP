@@ -15,12 +15,14 @@ class Expense extends Model
 
     public const CATEGORIES = ['salary', 'software', 'marketing', 'travel', 'office', 'contractor', 'hosting', 'misc'];
 
-    protected $fillable = ['org_id', 'expense_no', 'category', 'title', 'amount', 'expense_date', 'project_id', 'supplier_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'expense_no', 'category', 'title', 'amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'withholding_tax_rate' => 'decimal:2',
+            'withholding_tax_amount' => 'decimal:2',
             'expense_date' => 'date',
             'approved_at' => 'datetime',
             'paid_at' => 'datetime',
@@ -35,5 +37,15 @@ class Expense extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class);
     }
 }

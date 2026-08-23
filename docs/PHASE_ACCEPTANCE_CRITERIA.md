@@ -88,3 +88,44 @@
 - UAT seed data พร้อม demo.
 - ไม่มี critical/security bug เปิดค้าง.
 
+## Phase 6: Reporting / Filters / Operational Polish
+
+ผ่านเมื่อ:
+
+- Dashboard รองรับ date/month filters.
+- Finance/Delivery/Executive metrics ใช้ช่วงวันที่เดียวกัน.
+- Dashboard visual polish และ empty states ตรวจผ่าน.
+- Document number columns รองรับความยาวสำหรับ format หลัง MVP.
+- Invoice VAT compliance รอบแรกตรวจผ่าน.
+
+## Phase 7: Post-MVP Features
+
+ผ่านเมื่อ:
+
+- Configurable Number Sequences รองรับ tokens, reset period, scope และ preview.
+- Inclusive VAT UI แสดง gross/net/VAT breakdown และ `tax_summary.wording`.
+- Suppliers CRUD ใช้งานได้ภายใต้ org scope.
+- Purchase Orders create/update/approve/cancel ได้ และ server คำนวณ totals.
+- Expense validate supplier/PO chain.
+- Project Members เพิ่ม/ลบสมาชิกได้ และ member เห็น project ที่ถูก assign.
+- Tests, lint, format, build ผ่านครบ.
+
+## Phase 8: Production Roadmap
+
+ผ่านเมื่อ:
+
+- Official PDF export สำหรับ Invoice, Tax Invoice/Receipt, PO และ 50-Tawi WHT certificate.
+- Goods Receipt เชื่อมกับ approved PO, inventory on-hand, adjustment/return movement และ average cost.
+- Sales/Purchase/WHT Tax reports export CSV และ Excel-compatible XLS ได้สำหรับงานบัญชี.
+- Email notifications ทำงานผ่าน queue สำหรับ approval, due/overdue, invite, task/project assignment และมี in-app notification dedupe/preferences.
+
+สถานะปัจจุบัน:
+
+- Official Print/PDF เสร็จสำหรับ Invoice, Tax Invoice/Receipt และ PO พร้อม BahtText, logo/branch header, Original/Copy, VOID watermark และ PDF binary.
+- 50-Tawi WHT certificate PDF เสร็จจาก expenses ที่มี withholding tax.
+- Sales/Purchase Tax Reports, WHT Report, CSV/XLS export และ org isolation เสร็จรอบแรก.
+- AR/AP Aging first pass เสร็จด้วยช่วง 0-30, 31-60, 61-90, >90 วัน.
+- Inventory/GRN เสร็จ: partial receive, over-receive guard, stock ledger, adjustment in/out, return to supplier, on-hand summary, average cost.
+- Notifications/Queues เสร็จ: PO pending approval, invoice due/overdue, invite, task/project assignment, queued mail, in-app notification, unread count, dedupe, preferences.
+- ยัง pending: Purchase Tax source expansion จาก Expense/GRN เมื่อ schema ภาษีซื้อจาก expense/receipt พร้อมใช้งาน.
+

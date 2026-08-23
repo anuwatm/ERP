@@ -85,7 +85,7 @@ class Phase3InvoicesTest extends TestCase
     public function test_header_discount_is_allocated_before_inclusive_vat_display(): void
     {
         $finance = User::factory()->create();
-        $this->attachRole($finance, 'finance', ['invoices.create']);
+        $this->attachRole($finance, 'finance', ['invoices.create', 'invoices.view']);
         $customer = Customer::create(['org_id' => $finance->org_id, 'customer_code' => '000001', 'company_name' => 'VAT Customer', 'owner_id' => $finance->id]);
 
         $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
@@ -112,6 +112,22 @@ class Phase3InvoicesTest extends TestCase
         $this->assertSame('63.00', $invoice->tax_amount);
         $this->assertSame('963.00', $invoice->total);
         $this->assertSame('963.00', $invoice->balance_due);
+
+        $this->actingAsOrgUser($finance)->get(route('invoices.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Finance/Invoices')
+                ->where('invoices.0.tax_summary.mode', 'inclusive')
+                ->where('invoices.0.tax_summary.gross_subtotal', '1070.00')
+                ->where('invoices.0.tax_summary.header_discount', '107.00')
+                ->where('invoices.0.tax_summary.gross_after_discount', '963.00')
+                ->where('invoices.0.tax_summary.net_subtotal', '900.00')
+                ->where('invoices.0.tax_summary.tax_amount', '63.00')
+                ->where('invoices.0.tax_summary.total', '963.00')
+                ->where('invoices.0.tax_summary.wording', 'Prices include VAT. VAT amount is shown for reporting.')
+                ->where('invoices.0.tax_summary.lines.0.taxable_base', '900.00')
+                ->where('invoices.0.tax_summary.lines.0.tax_amount', '63.00')
+            );
     }
 
     public function test_invoice_list_is_org_scoped(): void
