@@ -54,6 +54,11 @@ class Deal extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
+
     public function project(): HasOne
     {
         return $this->hasOne(Project::class);

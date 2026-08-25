@@ -7,12 +7,14 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Delivery\ProjectController;
 use App\Http\Controllers\Delivery\TaskController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\Finance\CommercialDocumentController;
 use App\Http\Controllers\Finance\ExpenseController;
 use App\Http\Controllers\Finance\GoodsReceiptController;
 use App\Http\Controllers\Finance\InvoiceController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Finance\ProductController;
 use App\Http\Controllers\Finance\PurchaseOrderController;
+use App\Http\Controllers\Finance\QuotationController;
 use App\Http\Controllers\Finance\SupplierController;
 use App\Http\Controllers\Finance\TaxReportController;
 use App\Http\Controllers\ProfileController;
@@ -157,6 +159,54 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])
         ->middleware('permission:invoices.view')
         ->name('invoices.pdf');
+    Route::get('/quotations', [QuotationController::class, 'index'])
+        ->middleware('permission:quotations.view')
+        ->name('quotations.index');
+    Route::post('/quotations', [QuotationController::class, 'store'])
+        ->middleware(['permission:quotations.create', 'password.confirm', 'throttle:10,1'])
+        ->name('quotations.store');
+    Route::patch('/quotations/{quotation}', [QuotationController::class, 'update'])
+        ->middleware(['permission:quotations.update', 'password.confirm', 'throttle:10,1'])
+        ->name('quotations.update');
+    Route::post('/quotations/{quotation}/approve', [QuotationController::class, 'approve'])
+        ->middleware(['permission:quotations.approve', 'password.confirm', 'throttle:10,1'])
+        ->name('quotations.approve');
+    Route::post('/quotations/{quotation}/reject', [QuotationController::class, 'reject'])
+        ->middleware(['permission:quotations.approve', 'password.confirm', 'throttle:10,1'])
+        ->name('quotations.reject');
+    Route::post('/quotations/{quotation}/convert-to-invoice', [QuotationController::class, 'convertToInvoice'])
+        ->middleware(['permission:quotations.convert', 'password.confirm', 'throttle:10,1'])
+        ->name('quotations.convert-to-invoice');
+    Route::get('/commercial-documents', [CommercialDocumentController::class, 'index'])
+        ->middleware('permission:billing_notes.view')
+        ->name('commercial-documents.index');
+    Route::post('/credit-debit-notes', [CommercialDocumentController::class, 'storeCreditDebitNote'])
+        ->middleware(['permission:credit_debit_notes.create', 'password.confirm', 'throttle:10,1'])
+        ->name('credit-debit-notes.store');
+    Route::post('/billing-notes', [CommercialDocumentController::class, 'storeBillingNote'])
+        ->middleware(['permission:billing_notes.create', 'password.confirm', 'throttle:10,1'])
+        ->name('billing-notes.store');
+    Route::post('/delivery-orders', [CommercialDocumentController::class, 'storeDeliveryOrder'])
+        ->middleware(['permission:delivery_orders.create', 'password.confirm', 'throttle:10,1'])
+        ->name('delivery-orders.store');
+    Route::post('/purchase-requests', [CommercialDocumentController::class, 'storePurchaseRequest'])
+        ->middleware(['permission:purchase_requests.create', 'password.confirm', 'throttle:10,1'])
+        ->name('purchase-requests.store');
+    Route::post('/purchase-requests/{purchaseRequest}/approve', [CommercialDocumentController::class, 'approvePurchaseRequest'])
+        ->middleware(['permission:purchase_requests.approve', 'password.confirm', 'throttle:10,1'])
+        ->name('purchase-requests.approve');
+    Route::post('/purchase-requests/{purchaseRequest}/convert-to-po', [CommercialDocumentController::class, 'convertPurchaseRequest'])
+        ->middleware(['permission:purchase_requests.approve', 'password.confirm', 'throttle:10,1'])
+        ->name('purchase-requests.convert-to-po');
+    Route::post('/vouchers', [CommercialDocumentController::class, 'storeVoucher'])
+        ->middleware(['permission:vouchers.create', 'password.confirm', 'throttle:10,1'])
+        ->name('vouchers.store');
+    Route::get('/commercial-documents/{type}/{id}/print', [CommercialDocumentController::class, 'print'])
+        ->middleware('permission:billing_notes.view')
+        ->name('commercial-documents.print');
+    Route::get('/commercial-documents/{type}/{id}/pdf', [CommercialDocumentController::class, 'pdf'])
+        ->middleware('permission:billing_notes.view')
+        ->name('commercial-documents.pdf');
     Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store'])
         ->middleware(['permission:payments.create', 'password.confirm', 'throttle:10,1'])
         ->name('invoices.payments.store');

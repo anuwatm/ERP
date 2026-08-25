@@ -28,6 +28,15 @@
 | Phase 6 | Done | Reporting/filters/operational polish completed |
 | Phase 7 | Closed | Post-MVP implementation completed and phase closed: VAT UI, configurable numbering, suppliers, purchase orders, project members |
 | Phase 8 | Done | Production roadmap completed: PDF/50-Tawi, tax/WHT/aging exports, Purchase Tax from PO/Expenses/GRN, Inventory/GRN/adjustments, notifications/preferences |
+| Production Prep | Planned | Server readiness before real deployment: scheduler, queue worker, PDF Thai fonts, storage/upload limits |
+| Phase 9 | Done | Commercial & Procurement Documents completed: Quotation, CN/DN, Billing Note, Delivery Order, Purchase Request, Voucher, print/PDF, permissions, audit, tests |
+| Phase 10 | Planned | Treasury, Banking & Cash Management: bank accounts, reconciliation, petty cash, cheque/PDC |
+| Phase 11 | Planned | General Ledger & Double-entry Accounting |
+| Phase 12 | Planned | E-Tax & RD Online Tax Filing |
+| Phase 13 | Planned | Fixed Assets & Depreciation |
+| Phase 14 | Planned | Multi-Currency & FX |
+| Phase 15 | Planned | Advanced Inventory & Barcode/QR Operations |
+| Phase 16 | Planned | Payroll, Social Security & Security 2FA |
 
 ---
 
@@ -598,3 +607,286 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [x] Design queue/mail infrastructure, In-App notification bell, and notification preferences
 - [x] Design notification templates, safe data redaction, and deduplication guard
 - [x] Design tests for PDF render, inventory ledger, tax reconciliation, and queued notifications
+
+---
+
+## Production Prep: Deployment Readiness
+
+ที่มา: `gemini.md` หมวด Production Deployment & Server Prep.
+
+เป้าหมาย: ทำให้ระบบพร้อม deploy ใช้งานจริง โดยไม่เพิ่ม business feature ใหม่.
+
+### Scheduler & Queue Worker
+
+- [ ] สร้างเอกสาร deployment สำหรับ Laravel Scheduler: `* * * * * cd /path/to/ERP/backend && php artisan schedule:run >> /dev/null 2>&1`
+- [ ] สร้างตัวอย่าง Supervisor/Systemd config สำหรับ `php artisan queue:work --tries=3`
+- [ ] เพิ่ม health check หรือคำสั่งตรวจสถานะ queue worker/scheduler สำหรับ production
+- [ ] ตรวจ `.env.example` ให้มี queue/mail/scheduler-related settings ครบ
+- [ ] เพิ่ม smoke test/manual checklist สำหรับ due soon/overdue invoice notifications หลังเปิด scheduler
+
+### Thai Fonts & PDF Production Hardening
+
+- [ ] เพิ่มแนวทางติดตั้ง Sarabun หรือ THSarabunNew สำหรับ DomPDF บน Linux production
+- [ ] เพิ่ม `@font-face` หรือ font registration path สำหรับ PDF templates หากเลือกฝัง font ใน repo/storage
+- [ ] ทดสอบ PDF ภาษาไทยบน Invoice, PO, 50-Tawi ว่าไม่เป็น `???` และสระไม่ลอยผิดปกติ
+- [ ] เพิ่มหมายเหตุเรื่อง font license/source ใน deployment docs
+
+### Uploads & File Storage
+
+- [ ] เพิ่ม deployment step: `php artisan storage:link`
+- [ ] ระบุค่าแนะนำ `upload_max_filesize`, `post_max_size`, `client_max_body_size`
+- [ ] ตรวจ file upload path และ permission บน production storage
+- [ ] เพิ่ม smoke test/manual checklist สำหรับ upload/download logo, receipt, attachments
+
+### Environment Security & Backup
+
+- [ ] เพิ่ม production `.env` security checklist: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true`
+- [ ] ตรวจ session/cookie/domain settings ให้เหมาะกับ HTTPS production
+- [ ] กำหนดนโยบาย automated database backup รายวัน
+- [ ] เพิ่ม restore drill checklist และทดสอบกู้คืนข้อมูลอย่างน้อย 1 รอบก่อน go-live
+- [ ] ระบุ retention policy และที่เก็บ backup แยกจาก production server
+
+---
+
+## Phase 9: Commercial & Procurement Documents
+
+ที่มา: `gemini.md` Future Roadmap & Architectural Guardrails.
+
+เป้าหมาย: เติมเอกสารการค้าและจัดซื้อที่จำเป็นตาม workflow ไทย ก่อนขยับไปบัญชีเต็มรูปแบบ.
+
+### Phase 9 Design Backlog
+
+- [x] Design Quotation schema/status flow: draft, sent, approved, rejected, expired
+- [x] Design Quotation -> Invoice conversion จาก Deal/Customer/Line items
+- [x] Design Credit Note / Debit Note schema อ้างอิง Invoice/Tax Invoice เดิม
+- [x] Design CN/DN tax adjustment rules สำหรับรายงานภาษีขาย ภ.พ.30
+- [x] Design guardrail: ห้ามใช้ Void แทน CN/DN หลังออกเอกสารภาษีทางการแล้ว
+- [x] Design Billing Note / Statement of Account สำหรับรวม Invoice หลายใบของลูกค้ารายเดียว
+- [x] Design Delivery Order schema/status/signature proof และ relation กับ Invoice/Stock
+- [x] Design Purchase Request flow: employee request -> manager approve -> convert to PO
+- [x] Design Payment Voucher / Receipt Voucher สำหรับบันทึกหลักฐานรับ/จ่ายเงิน, audit และ print/PDF
+- [x] Design number sequences, permissions, org isolation และ audit trail สำหรับเอกสารใหม่ทั้งหมด
+- [x] Design tests สำหรับ conversion, tax adjustment, status transition, cross-org guard, permissions
+
+### Phase 9 Implementation Backlog
+
+- [x] สร้าง migrations/models สำหรับ Quotations และ Quotation Items
+- [x] สร้าง UI/Controller สำหรับ Quotations
+- [x] เพิ่ม Convert Quotation to Invoice
+- [x] สร้าง migrations/models สำหรับ Credit Notes / Debit Notes และ items
+- [x] ผูก CN/DN กับ Invoice balance, tax report และ official PDF/print
+- [x] สร้าง migrations/models สำหรับ Billing Notes และ Billing Note Lines
+- [x] สร้าง UI/PDF สำหรับ Billing Note / Statement of Account
+- [x] สร้าง migrations/models สำหรับ Delivery Orders และ items
+- [x] ผูก Delivery Order กับ stock outbound และ customer acceptance
+- [x] สร้าง migrations/models สำหรับ Purchase Requests
+- [x] เพิ่ม PR approval และ Convert PR to PO
+- [x] สร้าง Payment Voucher / Receipt Voucher print/PDF
+- [x] เพิ่ม feature tests และ full regression validation
+
+---
+
+## Phase 10: Treasury, Banking & Cash Management
+
+เป้าหมาย: ทำให้การรับ/จ่ายเงินผูกบัญชีธนาคารจริง กระทบยอดได้ และรองรับเงินสดย่อย/เช็คล่วงหน้า.
+
+### Phase 10 Design Backlog
+
+- [ ] Design Bank Accounts Master: bank, branch, account no, account type, currency, org/branch scope
+- [ ] Design payment receipt/payment expense ให้ผูก bank account หรือ cash account
+- [ ] Design Bank Statement import format และ reconciliation matching rules
+- [ ] Design manual match/unmatch และ reconciliation audit trail
+- [ ] Design Petty Cash fund, request, reimbursement และ approval flow
+- [ ] Design Cheque/PDC register: received/issued, due date, cleared, bounced, cancelled
+- [ ] Design Voucher attachment: upload/download proof slip files สำหรับ PV/RV พร้อม org isolation & permission guards
+- [ ] Design permissions สำหรับ treasury setup, reconciliation, petty cash, cheque management
+- [ ] Design tests สำหรับ bank org isolation, reconciliation matching, petty cash approval, cheque status
+
+### Phase 10 Implementation Backlog
+
+- [ ] สร้าง migrations/models สำหรับ Bank Accounts
+- [ ] เพิ่ม Bank Account UI
+- [ ] ผูก payment receipts/reversals กับ bank account
+- [ ] ผูก expense payments กับ bank/cash account
+- [ ] สร้าง migrations/models สำหรับ Bank Statements และ Statement Lines
+- [ ] เพิ่ม Bank Statement import และ reconciliation screen
+- [ ] เพิ่ม manual match/unmatch reconciliation
+- [ ] สร้าง Petty Cash schema/UI/approval flow
+- [ ] สร้าง Cheque/PDC schema/UI/status flow
+- [ ] เพิ่ม Voucher attachment upload/download และ tests ครอบคลุมความปลอดภัย
+- [ ] เพิ่ม treasury reports และ feature tests
+
+---
+
+## Phase 11: General Ledger & Double-entry Accounting
+
+เป้าหมาย: เพิ่มแกนบัญชีคู่ของ ERP หลังเอกสารการค้าและธนาคารพร้อม.
+
+### Phase 11 Design Backlog
+
+- [ ] Design Chart of Accounts schema: account code, name, type, parent account, active flag, org scope
+- [ ] Design Accounting Periods schema พร้อมสถานะ `open` / `closed`
+- [ ] Design Journal Entries schema: header, lines, debit/credit, posting date, source document, status
+- [ ] Design posting rules จาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash
+- [ ] Design period lock guard: ห้าม post, void หรือแก้ financial documents ย้อนหลังในงวดที่ปิดแล้ว
+- [ ] Design immutable posted journal policy และ reversal journal pattern
+- [ ] Design posting idempotency ด้วย `source_type` + `source_id`
+- [ ] Design Trial Balance, General Ledger report และ account ledger report
+- [ ] Design permissions และ tests สำหรับ double-entry balance, org isolation, posting/reversal
+
+### Phase 11 Implementation Backlog
+
+- [ ] สร้าง migrations/models สำหรับ Chart of Accounts
+- [ ] สร้าง migrations/models สำหรับ Accounting Periods
+- [ ] สร้าง migrations/models สำหรับ Journal Entries และ Journal Lines
+- [ ] Seed default chart of accounts สำหรับบริษัทไทย SME
+- [ ] สร้าง Journal Posting service ที่บังคับ debit = credit เสมอ
+- [ ] เพิ่ม source idempotency guard
+- [ ] เพิ่ม period lock guard ใน financial document flows
+- [ ] ผูก auto-posting จาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash
+- [ ] สร้างหน้า Chart of Accounts และ Journal Entries
+- [ ] สร้าง Trial Balance และ GL reports
+- [ ] เพิ่ม feature tests และ full regression validation
+
+---
+
+## Phase 12: E-Tax & RD Online Tax Filing
+
+เป้าหมาย: รองรับเอกสารภาษีอิเล็กทรอนิกส์และ export ไฟล์สำหรับยื่นภาษีออนไลน์.
+
+### Phase 12 Design Backlog
+
+- [ ] ศึกษา/ล็อก scope มาตรฐาน ETDA/RD ที่จะรองรับ: e-Tax by Email หรือ RD API
+- [ ] Design XML data mapping จาก Invoice / Tax Invoice / Receipt / CN / DN
+- [ ] Design digital signature/certificate storage และ rotation policy
+- [ ] Design e-Tax document status: generated, signed, submitted, accepted, rejected
+- [ ] Design RD Prep Text Export สำหรับ ภ.ง.ด. 1, ภ.ง.ด. 3, ภ.ง.ด. 53
+- [ ] Design error handling, retry, idempotency และ submission audit log
+- [ ] Design permissions และ tests สำหรับ XML schema, signature boundary, org isolation
+
+### Phase 12 Implementation Backlog
+
+- [ ] เพิ่ม e-Tax configuration ต่อ organization
+- [ ] สร้าง XML generator service
+- [ ] สร้าง signature adapter interface
+- [ ] เพิ่ม download XML สำหรับเอกสารภาษี
+- [ ] เพิ่ม submission log/table และ UI status
+- [ ] เพิ่ม queued job สำหรับ submit/retry
+- [ ] เพิ่ม RD Prep text export สำหรับ WHT/payroll tax forms
+- [ ] เพิ่ม feature tests และ sample XML/text fixtures
+
+---
+
+## Phase 13: Fixed Assets & Depreciation
+
+เป้าหมาย: จัดการทะเบียนทรัพย์สินและคำนวณค่าเสื่อมราคาเข้า GL.
+
+### Phase 13 Design Backlog
+
+- [ ] Design asset categories และ fixed asset register schema
+- [ ] Design capitalization source จาก Expense/PO/GRN
+- [ ] Design depreciation methods รอบแรก: straight-line
+- [ ] Design monthly depreciation schedule และ posting to GL
+- [ ] Design disposal/write-off/sale flow
+- [ ] Design asset custody/location fields และ attachment proof
+- [ ] Design permissions และ tests สำหรับ depreciation, disposal, org isolation
+
+### Phase 13 Implementation Backlog
+
+- [ ] สร้าง migrations/models สำหรับ Asset Categories และ Fixed Assets
+- [ ] สร้าง asset register UI
+- [ ] เพิ่ม capitalization from expense/PO flow
+- [ ] สร้าง depreciation schedule service
+- [ ] เพิ่ม monthly depreciation command/job
+- [ ] ผูก depreciation posting เข้า GL
+- [ ] เพิ่ม disposal/write-off flow
+- [ ] เพิ่ม asset reports และ feature tests
+
+---
+
+## Phase 14: Multi-Currency & FX
+
+เป้าหมาย: รองรับซื้อขายหลายสกุลเงิน โดยผูกกับ GL/FX accounting.
+
+### Phase 14 Design Backlog
+
+- [ ] Design currency master และ exchange rate table ต่อ organization
+- [ ] Design base currency policy และ document currency policy
+- [ ] Design FX rate locking บน Invoice, Payment, Expense, PO
+- [ ] Design historical FX rate snapshot บนเอกสาร ไม่ใช้ dynamic join กับ rate ล่าสุด
+- [ ] Design realized/unrealized FX gain/loss posting rules
+- [ ] Design period-end unrealized FX revaluation flow
+- [ ] Design UI display สำหรับ document amount vs base amount
+- [ ] Design reports ที่รองรับ currency/base currency
+- [ ] Design tests สำหรับ rate lock, payment partial FX, reversal, org isolation
+
+### Phase 14 Implementation Backlog
+
+- [ ] เพิ่ม currency/exchange rate schema
+- [ ] เพิ่ม currency setup UI
+- [ ] เพิ่ม currency fields ในเอกสารการเงินหลัก
+- [ ] ปรับ totals calculation ให้เก็บ document currency และ base currency
+- [ ] บันทึก FX rate snapshot ณ วันที่ออกเอกสาร/เกิดรายการ
+- [ ] ผูก FX posting เข้า GL
+- [ ] เพิ่ม realized FX posting ตอนรับ/จ่ายเงิน และ unrealized FX revaluation ตอนสิ้นงวด
+- [ ] ปรับ reports/export ให้รองรับ currency columns
+- [ ] เพิ่ม feature tests และ regression tests
+
+---
+
+## Phase 15: Advanced Inventory & Barcode/QR Operations
+
+เป้าหมาย: เพิ่มความสามารถคลังสินค้าเชิงปฏิบัติการ: โอนคลัง, reorder, lot/expiry และ scanner.
+
+### Phase 15 Design Backlog
+
+- [ ] Design warehouse/location/bin schema สำหรับตำแหน่งจัดเก็บสินค้า
+- [ ] Design stock transfer ระหว่างคลัง/สาขา
+- [ ] Design reorder point และ low stock alert
+- [ ] Design lot number และ expiration tracking
+- [ ] Design barcode/QR field บน Product/SKU/Lot
+- [ ] Design scanner UX สำหรับ GRN, DO, Stock Adjustment, Stock Count
+- [ ] Design duplicate barcode guard, org isolation และ mobile/responsive behavior
+- [ ] Design tests สำหรับ transfer, reorder alert, lot expiry, scan match, negative stock guard
+
+### Phase 15 Implementation Backlog
+
+- [ ] เพิ่ม warehouse/location/bin schema และ UI พื้นฐาน
+- [ ] ผูก stock movements กับ warehouse/bin location
+- [ ] เพิ่ม stock transfer flow
+- [ ] เพิ่ม reorder point fields และ low stock notification
+- [ ] เพิ่ม lot/expiry schema และ movement tracking
+- [ ] เพิ่ม barcode/QR fields ใน products/lots
+- [ ] เพิ่ม scanner input mode ใน Goods Receipt, Delivery Order, Stock Adjustment
+- [ ] เพิ่ม stock count workflow
+- [ ] เพิ่ม feature tests และ frontend validation
+
+---
+
+## Phase 16: Payroll, Social Security & Security 2FA
+
+เป้าหมาย: รองรับเงินเดือน ภาษีเงินได้พนักงาน ประกันสังคม payslip และเพิ่มความปลอดภัยบัญชีสำคัญ.
+
+### Phase 16 Design Backlog
+
+- [ ] Design employee payroll profile: salary, tax id, social security, payment method
+- [ ] Design payroll period, payroll run, earnings/deductions, approval flow
+- [ ] Design Thai withholding tax ภ.ง.ด. 1 / 1ก calculation/export scope
+- [ ] Design Social Security contribution rules
+- [ ] Design payslip PDF และ employee access guard
+- [ ] Design payroll posting to GL
+- [ ] Design 2FA/Auth OTP สำหรับ owner/admin/finance roles
+- [ ] Design recovery codes, enforcement policy และ audit log
+- [ ] Design tests สำหรับ payroll calculation, org isolation, payslip privacy, 2FA challenge
+
+### Phase 16 Implementation Backlog
+
+- [ ] สร้าง payroll profile schema/UI
+- [ ] สร้าง payroll periods/runs schema
+- [ ] เพิ่ม payroll calculation service
+- [ ] เพิ่ม approval/payment status flow
+- [ ] สร้าง payslip PDF
+- [ ] เพิ่ม ภ.ง.ด. 1 / 1ก และ Social Security exports
+- [ ] ผูก payroll posting เข้า GL
+- [ ] เพิ่ม 2FA setup/challenge/recovery codes สำหรับ admin/finance
+- [ ] เพิ่ม feature tests และ security regression tests

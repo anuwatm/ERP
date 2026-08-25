@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\CreditDebitNote;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\GoodsReceipt;
@@ -150,7 +151,7 @@ class TaxReportController extends Controller
      */
     private function salesRows(Request $request, array $filters): array
     {
-        return Invoice::query()
+        $invoiceRows = Invoice::query()
             ->where('org_id', $request->user()->org_id)
             ->whereIn('status', self::SALES_STATUSES)
             ->with(['customer:id,company_name,tax_id', 'branch:id,code,name'])
@@ -174,6 +175,42 @@ class TaxReportController extends Controller
                 'tax_amount' => $this->money($invoice->tax_amount),
                 'total' => $this->money($invoice->total),
             ])
+            ->values()
+            ->all();
+
+        $adjustmentRows = CreditDebitNote::query()
+            ->where('org_id', $request->user()->org_id)
+            ->where('status', 'issued')
+            ->with('invoice.customer:id,company_name,tax_id')
+            ->when($filters['date_from'], fn ($query, $date) => $query->whereDate('issue_date', '>=', $date))
+            ->when($filters['date_to'], fn ($query, $date) => $query->whereDate('issue_date', '<=', $date))
+            ->when($filters['customer_id'], fn ($query, $customerId) => $query->whereHas('invoice', fn ($invoiceQuery) => $invoiceQuery->where('customer_id', $customerId)))
+            ->orderBy('issue_date')
+            ->orderBy('note_no')
+            ->get()
+            ->map(function (CreditDebitNote $note) {
+                $sign = $note->type === 'credit' ? -1 : 1;
+                $total = $sign * (float) $note->total;
+                $tax = $sign * (float) $note->tax_amount;
+
+                return [
+                    'date' => $note->issue_date?->toDateString() ?: '',
+                    'document_no' => $note->note_no,
+                    'source' => $note->type === 'credit' ? 'credit_note' : 'debit_note',
+                    'partner' => $note->invoice?->customer?->company_name ?: '-',
+                    'tax_id' => $note->invoice?->customer?->tax_id ?: '',
+                    'branch' => '',
+                    'tax_mode' => $note->invoice?->tax_mode ?: 'exclusive',
+                    'taxable_base' => $this->money($total - $tax),
+                    'tax_amount' => $this->money($tax),
+                    'total' => $this->money($total),
+                ];
+            })
+            ->values()
+            ->all();
+
+        return collect([...$invoiceRows, ...$adjustmentRows])
+            ->sortBy([['date', 'asc'], ['document_no', 'asc']])
             ->values()
             ->all();
     }

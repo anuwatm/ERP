@@ -39,6 +39,31 @@ class PermissionCatalog
             ['code' => 'invoices.create', 'module' => 'invoices', 'action' => 'create', 'description' => 'Create invoices'],
             ['code' => 'invoices.update', 'module' => 'invoices', 'action' => 'update', 'description' => 'Update invoices'],
             ['code' => 'invoices.void', 'module' => 'invoices', 'action' => 'void', 'description' => 'Void invoices'],
+            ['code' => 'quotations.view', 'module' => 'quotations', 'action' => 'view', 'description' => 'View quotations'],
+            ['code' => 'quotations.create', 'module' => 'quotations', 'action' => 'create', 'description' => 'Create quotations'],
+            ['code' => 'quotations.update', 'module' => 'quotations', 'action' => 'update', 'description' => 'Update draft quotations'],
+            ['code' => 'quotations.approve', 'module' => 'quotations', 'action' => 'approve', 'description' => 'Approve or reject quotations'],
+            ['code' => 'quotations.convert', 'module' => 'quotations', 'action' => 'convert', 'description' => 'Convert approved quotations to invoices'],
+            ['code' => 'credit_debit_notes.view', 'module' => 'credit_debit_notes', 'action' => 'view', 'description' => 'View credit and debit notes'],
+            ['code' => 'credit_debit_notes.create', 'module' => 'credit_debit_notes', 'action' => 'create', 'description' => 'Create credit and debit notes'],
+            ['code' => 'credit_debit_notes.update', 'module' => 'credit_debit_notes', 'action' => 'update', 'description' => 'Update credit and debit notes'],
+            ['code' => 'credit_debit_notes.approve', 'module' => 'credit_debit_notes', 'action' => 'approve', 'description' => 'Approve credit and debit notes'],
+            ['code' => 'billing_notes.view', 'module' => 'billing_notes', 'action' => 'view', 'description' => 'View billing notes'],
+            ['code' => 'billing_notes.create', 'module' => 'billing_notes', 'action' => 'create', 'description' => 'Create billing notes'],
+            ['code' => 'billing_notes.update', 'module' => 'billing_notes', 'action' => 'update', 'description' => 'Update billing notes'],
+            ['code' => 'billing_notes.approve', 'module' => 'billing_notes', 'action' => 'approve', 'description' => 'Approve billing notes'],
+            ['code' => 'delivery_orders.view', 'module' => 'delivery_orders', 'action' => 'view', 'description' => 'View delivery orders'],
+            ['code' => 'delivery_orders.create', 'module' => 'delivery_orders', 'action' => 'create', 'description' => 'Create delivery orders'],
+            ['code' => 'delivery_orders.update', 'module' => 'delivery_orders', 'action' => 'update', 'description' => 'Update delivery orders'],
+            ['code' => 'delivery_orders.approve', 'module' => 'delivery_orders', 'action' => 'approve', 'description' => 'Approve delivery orders'],
+            ['code' => 'purchase_requests.view', 'module' => 'purchase_requests', 'action' => 'view', 'description' => 'View purchase requests'],
+            ['code' => 'purchase_requests.create', 'module' => 'purchase_requests', 'action' => 'create', 'description' => 'Create purchase requests'],
+            ['code' => 'purchase_requests.update', 'module' => 'purchase_requests', 'action' => 'update', 'description' => 'Update purchase requests'],
+            ['code' => 'purchase_requests.approve', 'module' => 'purchase_requests', 'action' => 'approve', 'description' => 'Approve and convert purchase requests'],
+            ['code' => 'vouchers.view', 'module' => 'vouchers', 'action' => 'view', 'description' => 'View payment and receipt vouchers'],
+            ['code' => 'vouchers.create', 'module' => 'vouchers', 'action' => 'create', 'description' => 'Create payment and receipt vouchers'],
+            ['code' => 'vouchers.update', 'module' => 'vouchers', 'action' => 'update', 'description' => 'Update payment and receipt vouchers'],
+            ['code' => 'vouchers.approve', 'module' => 'vouchers', 'action' => 'approve', 'description' => 'Approve payment and receipt vouchers'],
             ['code' => 'payments.view', 'module' => 'payments', 'action' => 'view', 'description' => 'View invoice payments'],
             ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
             ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
@@ -90,10 +115,11 @@ class PermissionCatalog
     public static function defaults(): array
     {
         $all = array_column(self::permissions(), 'code');
-        $sales = ['dashboard.view', 'sales.dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'contacts.create', 'contacts.update', 'contacts.delete', 'deals.view', 'deals.create', 'deals.update', 'activities.create', 'activities.update'];
+        $sales = ['dashboard.view', 'sales.dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'contacts.create', 'contacts.update', 'contacts.delete', 'deals.view', 'deals.create', 'deals.update', 'activities.create', 'activities.update', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert'];
         $projects = ['dashboard.view', 'projects.view', 'projects.create', 'projects.update', 'tasks.view', 'tasks.create', 'tasks.update', 'tasks.comment'];
         $procurement = ['suppliers.view', 'suppliers.create', 'suppliers.update', 'suppliers.delete', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.approve', 'purchase_orders.cancel', 'inventory.view', 'inventory.receive', 'inventory.adjust'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
+        $phase9Finance = ['credit_debit_notes.view', 'credit_debit_notes.create', 'credit_debit_notes.update', 'credit_debit_notes.approve', 'billing_notes.view', 'billing_notes.create', 'billing_notes.update', 'billing_notes.approve', 'delivery_orders.view', 'delivery_orders.create', 'delivery_orders.update', 'delivery_orders.approve', 'purchase_requests.view', 'purchase_requests.create', 'purchase_requests.update', 'purchase_requests.approve', 'vouchers.view', 'vouchers.create', 'vouchers.update', 'vouchers.approve'];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [

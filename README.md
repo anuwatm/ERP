@@ -8,8 +8,8 @@
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-สถานะล่าสุด: **Phase 7 Closed**  
-ฟีเจอร์หลักถึงตอนนี้เสร็จแล้วตั้งแต่ Auth, Admin, CRM, Finance, Delivery, Executive Dashboard, Dashboard Date Filters, Configurable Numbering, Suppliers, Purchase Orders และ Project Members
+สถานะล่าสุด: **Phase 9 Done**  
+ฟีเจอร์หลักถึงตอนนี้เสร็จแล้วตั้งแต่ Auth, Admin, CRM, Finance, Delivery, Executive Dashboard, Dashboard Date Filters, Configurable Numbering, Suppliers, Purchase Orders, Project Members, Production Roadmap features และ Commercial & Procurement Documents
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 
@@ -64,6 +64,7 @@ Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dash
 | Task | งานย่อย, checklist, comment, assignee visibility |
 | Dashboard | Admin, Executive, Finance, Delivery, Sales dashboard |
 | Reporting Filters | filter dashboard แบบ all-time, month, year, custom range |
+| Commercial Documents | Quotation, Credit/Debit Note, Billing Note, Delivery Order, Purchase Request, Payment/Receipt Voucher |
 
 ---
 
@@ -203,6 +204,18 @@ year=2026
 from=2026-08-01
 to=2026-08-31
 ```
+
+### 7. Commercial & Procurement Documents
+
+เอกสารการค้าและจัดซื้อ Phase 9:
+
+- Quotation พร้อม status flow และ convert เป็น invoice
+- Credit Note / Debit Note อ้าง invoice เดิม ปรับ balance และ sales tax report
+- Billing Note / Statement of Account รวม invoice หลายใบของลูกค้ารายเดียว
+- Delivery Order จาก invoice items พร้อม delivered status, receiver proof และ stock outbound
+- Purchase Request พร้อม approve และ convert เป็น Purchase Order
+- Payment Voucher / Receipt Voucher พร้อม print/PDF
+- ทุกเอกสารใช้ running number, permission, org scope และ audit log
 
 ---
 
@@ -445,6 +458,8 @@ ERP/
 | `/deals` | Sales deals |
 | `/products` | Product catalog |
 | `/invoices` | Invoices |
+| `/quotations` | Quotations |
+| `/commercial-documents` | CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers |
 | `/expenses` | Expenses |
 | `/projects` | Delivery projects |
 | `/tasks` | Delivery tasks |
@@ -564,7 +579,7 @@ vendor\bin\pint
 
 ```text
 php artisan test
-170 passed, 1372 assertions
+195 passed, 1625 assertions
 ```
 
 ---
@@ -582,6 +597,8 @@ php artisan test
 | Phase 5 | Done | Executive Dashboard, E2E, UAT |
 | Phase 6 | Done | Reporting filters, dashboard polish, document number expansion, invoice VAT compliance |
 | Phase 7 | Closed | Configurable numbering, inclusive VAT UI, suppliers, purchase orders, project members |
+| Phase 8 | Done | Official documents/PDF, tax reports, inventory/GRN, notifications |
+| Phase 9 | Done | Commercial & Procurement Documents |
 
 ---
 
@@ -593,7 +610,6 @@ php artisan test
 - Native `.xlsx` export via PhpSpreadsheet, blocked until PHP has `ext-gd` and `ext-zip`
 - Public API
 - Advanced official document font hardening for print-shop production
-- Advanced tax/accounting reports
 - Accounting integration
 - Payroll
 - Inventory warehouse/bin-level costing

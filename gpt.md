@@ -1,6 +1,6 @@
 # GPT Decision Log (Clean)
 
-Last updated: 2026-08-25 (Phase 8 Closed)
+Last updated: 2026-08-25 (Gemini Phase 9 Reconciled)
 
 Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, security guardrails, สถานะล่าสุด และแผนงานพัฒนา เพื่อให้ LLM ทุกตัว (GPT, Gemini, Claude) มี context ที่ตรงกัน 100%. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `gemini.md`, `README.md`, และ git diff.
 
@@ -8,20 +8,8 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 
 ## 1. Current Status
 
-- Phase 1-7: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, และ `gemini.md`.
-- Phase 8: completed / closed.
-- Phase 8 completed slices:
-  - Invoice / Tax Invoice-Receipt / Purchase Order official print views, BahtText, Original/Copy marker, VOID watermark, logo/branch header, org-scope print guards, UI Print buttons, and feature tests.
-  - Sales/Purchase Tax Reports first pass with date/branch filters, CSV export, org isolation, and feature tests.
-  - Purchase Tax source expansion from approved/paid Expenses and posted GRNs.
-  - AR/AP Aging first pass with 0-30, 31-60, 61-90, >90 buckets and feature tests.
-  - WHT report from approved/paid expenses with ภ.ง.ด. 3/53 form support and CSV export.
-  - PDF binary export for Invoice/Tax Invoice/Receipt/PO and 50-Tawi WHT certificate PDF.
-  - Excel-compatible `.xls` report export for tax/WHT/aging reports.
-  - Inventory/GRN from approved PO with partial receive, over-receive guard, stock ledger, adjustment in/out, supplier return, on-hand summary, and average cost.
-  - Notification service with queued mail, in-app notification, dedupe guard, PO approval, invoice due/overdue, invite, task/project assignment, preferences, and navbar unread count.
-- Latest targeted Phase 8 validation: **22 tests / 252 assertions passed**.
-- Latest full validation: **186 tests / 1555 assertions passed**.
+- Phase 1-9: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
+- Latest full validation: **195 tests / 1625 assertions passed**.
 
 ---
 
@@ -65,19 +53,8 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 - Internal tasks support `project_id = null`.
 - `blocked` tasks do not count as overdue in metrics.
 
----
+## 3. Gemini Reconciliation Status
 
-## 3. Closed Phase 8 Design Scope
-
-Implementation order recommendation:
-
-1. **Official Document Print & PDF Export**
-   - Done: Invoice, Tax Invoice / Receipt, Purchase Order print/PDF, BahtText, logo/branch header, org guard, 50-Tawi WHT certificate.
-   - Done: PDF font stack hardened with DomPDF-safe DejaVu Sans fallback.
-2. **Tax & Accounting Reports**
-   - Done: Sales Tax, Purchase Tax, WHT, CSV/XLS export, AR/AP aging.
-   - Done: Purchase Tax includes PO, approved/paid Expenses, and posted GRNs.
-3. **Email Notifications & Background Queues**
-   - Done: PO approval, invoice due soon/overdue, user invite mail, task/project member notifications, preferences, dedupe.
-4. **Inventory & Goods Receipt (GRN)**
-   - Done: Approved PO -> Goods Receipt -> stock movement ledger -> on-hand calculation, adjustment/return movements, average costing.
+- Phase 9 PV/RV wording reconciled with Gemini: current scope is record, audit, print/PDF, and source-document readiness.
+- Voucher attachment upload/download is accepted as Phase 10 backlog, not a Phase 9 reopen.
+- Keep Phase 10 acceptance strict: file upload validation, server-generated `storage_key`, parent permission download guard, org isolation, audit log, and feature tests.

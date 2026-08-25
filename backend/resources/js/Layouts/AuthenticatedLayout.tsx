@@ -190,6 +190,48 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'Quotations',
+                    href: route('quotations.index'),
+                    active: route().current('quotations.*'),
+                    permission: 'quotations.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12h6m-6 4h6M7 4h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Commercial Docs',
+                    href: route('commercial-documents.index'),
+                    active: route().current('commercial-documents.*'),
+                    permission: 'billing_notes.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 6h16M4 10h16M6 14h6m-6 4h10"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Expenses',
                     href: route('expenses.index'),
                     active: route().current('expenses.*'),
