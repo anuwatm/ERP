@@ -5,7 +5,7 @@
     <title>Withholding Tax Certificate {{ $expense['expense_no'] }}</title>
     <style>
         @page { size: A4; margin: 16mm; }
-        body { color: #111827; font-family: Tahoma, Arial, sans-serif; font-size: 12px; line-height: 1.5; }
+        body { color: #111827; font-family: "DejaVu Sans", Tahoma, Arial, sans-serif; font-size: 12px; line-height: 1.5; }
         h1 { font-size: 22px; margin: 0; text-align: center; }
         h2 { font-size: 16px; margin: 4px 0 18px; text-align: center; }
         .box { border: 1px solid #111827; margin-top: 12px; padding: 10px; }

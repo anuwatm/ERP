@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Expense;
+use App\Models\GoodsReceipt;
 use App\Models\Invoice;
 use App\Models\Permission;
 use App\Models\PurchaseOrder;
@@ -315,6 +316,109 @@ class Phase8TaxReportsTest extends TestCase
             ->streamedContent();
         $this->assertStringContainsString('EXP-WHT-001', $excel);
         $this->assertStringNotContainsString('EXP-DRAFT-WHT', $excel);
+    }
+
+    public function test_purchase_tax_report_includes_expense_and_goods_receipt_tax_sources(): void
+    {
+        $finance = User::factory()->create();
+        $this->attachRole($finance, 'finance', ['tax_reports.view']);
+        $supplier = Supplier::create([
+            'org_id' => $finance->org_id,
+            'supplier_code' => '000001',
+            'name' => 'Input VAT Supplier',
+            'tax_id' => '0105559000404',
+            'status' => 'active',
+        ]);
+
+        Expense::create([
+            'org_id' => $finance->org_id,
+            'expense_no' => 'EXP-VAT-001',
+            'category' => 'software',
+            'title' => 'Software tax invoice',
+            'amount' => 1000,
+            'tax_mode' => 'exclusive',
+            'tax_invoice_no' => 'TX-EXP-001',
+            'tax_amount' => 70,
+            'expense_date' => '2026-08-16',
+            'supplier_id' => $supplier->id,
+            'status' => 'approved',
+        ]);
+        Expense::create([
+            'org_id' => $finance->org_id,
+            'expense_no' => 'EXP-DRAFT-VAT',
+            'category' => 'software',
+            'title' => 'Draft tax invoice',
+            'amount' => 1000,
+            'tax_mode' => 'exclusive',
+            'tax_invoice_no' => 'TX-DRAFT',
+            'tax_amount' => 70,
+            'expense_date' => '2026-08-16',
+            'supplier_id' => $supplier->id,
+            'status' => 'draft',
+        ]);
+
+        $po = PurchaseOrder::create([
+            'org_id' => $finance->org_id,
+            'supplier_id' => $supplier->id,
+            'po_no' => 'PO-GRN-VAT',
+            'status' => 'received',
+            'order_date' => '2026-08-15',
+            'tax_mode' => 'exclusive',
+            'subtotal' => 500,
+            'tax_amount' => 35,
+            'total' => 535,
+        ]);
+        $poItem = $po->items()->create([
+            'org_id' => $finance->org_id,
+            'description' => 'Received item',
+            'quantity' => 5,
+            'unit' => 'pcs',
+            'unit_price' => 100,
+            'tax_rate' => 7,
+            'line_total' => 500,
+            'sort_order' => 0,
+        ]);
+        $receipt = GoodsReceipt::create([
+            'org_id' => $finance->org_id,
+            'purchase_order_id' => $po->id,
+            'grn_no' => 'GRN-VAT-001',
+            'received_date' => '2026-08-17',
+            'status' => 'posted',
+        ]);
+        $receipt->items()->create([
+            'org_id' => $finance->org_id,
+            'purchase_order_item_id' => $poItem->id,
+            'description' => 'Received item',
+            'quantity' => 5,
+            'unit' => 'pcs',
+            'unit_cost' => 100,
+            'tax_rate' => 7,
+            'tax_amount' => 35,
+            'line_total' => 535,
+        ]);
+
+        $this->actingAsOrgUser($finance)
+            ->get(route('tax-reports.index', ['date_from' => '2026-08-01', 'date_to' => '2026-08-31', 'supplier_id' => $supplier->id]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('purchaseRows', 3)
+                ->where('purchaseRows.0.source', 'purchase_order')
+                ->where('purchaseRows.1.document_no', 'TX-EXP-001')
+                ->where('purchaseRows.1.source', 'expense')
+                ->where('purchaseRows.1.tax_amount', '70.00')
+                ->where('purchaseRows.2.document_no', 'GRN-VAT-001')
+                ->where('purchaseRows.2.source', 'goods_receipt')
+                ->where('purchaseRows.2.tax_amount', '35.00')
+            );
+
+        $csv = $this->actingAsOrgUser($finance)
+            ->get(route('tax-reports.export', ['type' => 'purchase', 'date_from' => '2026-08-01', 'date_to' => '2026-08-31', 'supplier_id' => $supplier->id]))
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertStringContainsString('TX-EXP-001', $csv);
+        $this->assertStringContainsString('GRN-VAT-001', $csv);
+        $this->assertStringNotContainsString('TX-DRAFT', $csv);
     }
 
     private function attachRole(User $user, string $code, array $permissions): Role

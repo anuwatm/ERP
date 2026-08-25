@@ -48,6 +48,7 @@ class GoodsReceiptController extends Controller
                         'remaining_quantity' => $this->money4(max(0, (float) $item->quantity - $this->receivedQuantity($item->id, $orgId))),
                         'unit' => $item->unit,
                         'unit_price' => $this->money($item->unit_price),
+                        'tax_rate' => $this->money($item->tax_rate),
                     ]),
                 ]),
             'products' => Product::where('org_id', $orgId)
@@ -111,6 +112,14 @@ class GoodsReceiptController extends Controller
                 $remaining = (float) $poItem->quantity - $this->receivedQuantity($poItem->id, $orgId);
                 $quantity = round((float) $itemData['quantity'], 4);
                 abort_if($quantity > $remaining, 422, 'Receive quantity cannot exceed remaining purchase order quantity.');
+                $lineBase = round($quantity * (float) $poItem->unit_price, 2);
+                $taxRate = round((float) $poItem->tax_rate, 2);
+                $taxAmount = match ($po->tax_mode) {
+                    'inclusive' => $taxRate > 0 ? round($lineBase - ($lineBase / (1 + $taxRate / 100)), 2) : 0.0,
+                    'exclusive' => round($lineBase * $taxRate / 100, 2),
+                    default => 0.0,
+                };
+                $lineTotal = $po->tax_mode === 'exclusive' ? round($lineBase + $taxAmount, 2) : $lineBase;
 
                 GoodsReceiptItem::create([
                     'org_id' => $orgId,
@@ -121,6 +130,9 @@ class GoodsReceiptController extends Controller
                     'quantity' => $quantity,
                     'unit' => $poItem->unit,
                     'unit_cost' => $poItem->unit_price,
+                    'tax_rate' => $taxRate,
+                    'tax_amount' => $taxAmount,
+                    'line_total' => $lineTotal,
                 ]);
 
                 StockMovement::create([

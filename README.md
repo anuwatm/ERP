@@ -609,12 +609,11 @@ php artisan test
 - Official Document Print & PDF Export: Invoice, Tax Invoice/Receipt, PO
   - Done: official print views, PDF binary export, BahtText, Original/Copy, VOID watermark, logo/branch header, org-scope guards
   - Done: 50-Tawi WHT certificate PDF
-  - Remaining: deeper Thai font hardening if required
+  - Done: PDF font stack hardened with DomPDF-safe DejaVu Sans fallback
 - Inventory & Goods Receipt: รับสินค้าเข้าคลังจาก PO ที่ approve แล้ว
   - Done: GRN from approved PO, partial receive, over-receive guard, stock ledger, adjustment in/out, supplier return, on-hand summary, average cost
 - Tax & Accounting Reports: Sales Tax, Purchase Tax, export Excel/CSV สำหรับ ภ.พ.30
-  - Done: Sales/Purchase Tax report page, WHT report, CSV export, Excel-compatible `.xls` export, AR/AP Aging
-  - Remaining: Expenses/GRN purchase tax source expansion once tax source schema exists
+  - Done: Sales/Purchase Tax report page, Purchase Tax from PO/Expenses/GRN, WHT report, CSV export, Excel-compatible `.xls` export, AR/AP Aging
 - Email Notifications & Queues: PO approval, invoice due/overdue, invite email
   - Done: PO approval, invoice due/overdue, invite email, task/project assignment, queued mail, in-app notification bell, unread count, dedupe guard, preferences
 

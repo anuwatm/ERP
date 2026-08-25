@@ -8,9 +8,9 @@ import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { thbMoney } from '@/Utils/format';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
-import { thbMoney } from '@/Utils/format';
 
 type Project = { id: string; project_code: string; name: string };
 
@@ -27,6 +27,9 @@ type Expense = {
     category: string;
     title: string;
     amount: string;
+    tax_mode?: string;
+    tax_invoice_no?: string | null;
+    tax_amount?: string;
     withholding_tax_rate?: string;
     withholding_tax_amount?: string;
     withholding_tax_form?: string | null;
@@ -45,6 +48,8 @@ type ExpenseForm = {
     category: string;
     title: string;
     amount: string;
+    tax_mode: string;
+    tax_invoice_no: string;
     withholding_tax_rate: string;
     withholding_tax_form: string;
     expense_date: string;
@@ -60,6 +65,8 @@ const emptyExpense: ExpenseForm = {
     category: 'misc',
     title: '',
     amount: '0.00',
+    tax_mode: 'no_tax',
+    tax_invoice_no: '',
     withholding_tax_rate: '0.00',
     withholding_tax_form: 'pnd53',
     expense_date: today,
@@ -120,6 +127,8 @@ export default function Expenses({
             category: expense.category,
             title: expense.title,
             amount: expense.amount,
+            tax_mode: expense.tax_mode ?? 'no_tax',
+            tax_invoice_no: expense.tax_invoice_no ?? '',
             withholding_tax_rate: expense.withholding_tax_rate ?? '0.00',
             withholding_tax_form: expense.withholding_tax_form ?? 'pnd53',
             expense_date: expense.expense_date?.slice(0, 10) ?? today,
@@ -230,6 +239,15 @@ export default function Expenses({
                                     accessor: (row) => (
                                         <div>
                                             <div>{thbMoney(row.amount)}</div>
+                                            {Number(row.tax_amount ?? 0) >
+                                                0 && (
+                                                <div className="text-xs text-slate-500">
+                                                    VAT:{' '}
+                                                    {thbMoney(
+                                                        row.tax_amount ?? '0',
+                                                    )}
+                                                </div>
+                                            )}
                                             {Number(
                                                 row.withholding_tax_amount ?? 0,
                                             ) > 0 && (
@@ -373,6 +391,31 @@ export default function Expenses({
                                         }
                                         required
                                     />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <SelectField
+                                            label="VAT Mode"
+                                            value={form.data.tax_mode}
+                                            options={[
+                                                'no_tax',
+                                                'exclusive',
+                                                'inclusive',
+                                            ]}
+                                            onChange={(value) =>
+                                                form.setData('tax_mode', value)
+                                            }
+                                        />
+                                        <Field
+                                            label="Tax Invoice No."
+                                            value={form.data.tax_invoice_no}
+                                            error={form.errors.tax_invoice_no}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'tax_invoice_no',
+                                                    value,
+                                                )
+                                            }
+                                        />
+                                    </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <Field
                                             label="WHT Rate %"

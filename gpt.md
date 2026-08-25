@@ -1,6 +1,6 @@
 # GPT Decision Log (Clean)
 
-Last updated: 2026-08-23 (Phase 8 In Progress)
+Last updated: 2026-08-25 (Phase 8 Closed)
 
 Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, security guardrails, สถานะล่าสุด และแผนงานพัฒนา เพื่อให้ LLM ทุกตัว (GPT, Gemini, Claude) มี context ที่ตรงกัน 100%. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `gemini.md`, `README.md`, และ git diff.
 
@@ -9,18 +9,19 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 ## 1. Current Status
 
 - Phase 1-7: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, และ `gemini.md`.
-- Phase 8: In Progress; production roadmap core slices implemented, purchase-tax source expansion remains once expense/GRN tax source schema exists.
+- Phase 8: completed / closed.
 - Phase 8 completed slices:
   - Invoice / Tax Invoice-Receipt / Purchase Order official print views, BahtText, Original/Copy marker, VOID watermark, logo/branch header, org-scope print guards, UI Print buttons, and feature tests.
   - Sales/Purchase Tax Reports first pass with date/branch filters, CSV export, org isolation, and feature tests.
+  - Purchase Tax source expansion from approved/paid Expenses and posted GRNs.
   - AR/AP Aging first pass with 0-30, 31-60, 61-90, >90 buckets and feature tests.
   - WHT report from approved/paid expenses with ภ.ง.ด. 3/53 form support and CSV export.
   - PDF binary export for Invoice/Tax Invoice/Receipt/PO and 50-Tawi WHT certificate PDF.
   - Excel-compatible `.xls` report export for tax/WHT/aging reports.
   - Inventory/GRN from approved PO with partial receive, over-receive guard, stock ledger, adjustment in/out, supplier return, on-hand summary, and average cost.
   - Notification service with queued mail, in-app notification, dedupe guard, PO approval, invoice due/overdue, invite, task/project assignment, preferences, and navbar unread count.
-- Latest targeted Phase 8 validation: **21 tests / 223 assertions passed**.
-- Latest full validation: **185 tests / 1526 assertions passed**.
+- Latest targeted Phase 8 validation: **22 tests / 252 assertions passed**.
+- Latest full validation: **186 tests / 1555 assertions passed**.
 
 ---
 
@@ -66,16 +67,16 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 
 ---
 
-## 3. Active Phase 8 Design Scope
+## 3. Closed Phase 8 Design Scope
 
 Implementation order recommendation:
 
 1. **Official Document Print & PDF Export**
    - Done: Invoice, Tax Invoice / Receipt, Purchase Order print/PDF, BahtText, logo/branch header, org guard, 50-Tawi WHT certificate.
-   - Remaining: deeper Thai font hardening for production print shops if required.
+   - Done: PDF font stack hardened with DomPDF-safe DejaVu Sans fallback.
 2. **Tax & Accounting Reports**
    - Done: Sales Tax, Purchase Tax, WHT, CSV/XLS export, AR/AP aging.
-   - Remaining: Expenses/GRN purchase tax source expansion once tax source schema exists.
+   - Done: Purchase Tax includes PO, approved/paid Expenses, and posted GRNs.
 3. **Email Notifications & Background Queues**
    - Done: PO approval, invoice due soon/overdue, user invite mail, task/project member notifications, preferences, dedupe.
 4. **Inventory & Goods Receipt (GRN)**

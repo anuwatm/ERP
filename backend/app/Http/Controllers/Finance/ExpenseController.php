@@ -63,7 +63,7 @@ class ExpenseController extends Controller
         $expense = DB::transaction(function () use ($request, $user, $validated, $numbers, $files): Expense {
             $expensePayload = $validated;
             unset($expensePayload['receipt']);
-            $expensePayload = $this->withholdingPayload($expensePayload);
+            $expensePayload = $this->withholdingPayload($this->taxPayload($expensePayload));
 
             $expense = Expense::create(array_merge($expensePayload, [
                 'org_id' => $user->org_id,
@@ -96,7 +96,7 @@ class ExpenseController extends Controller
 
         $expensePayload = $validated;
         unset($expensePayload['receipt']);
-        $expensePayload = $this->withholdingPayload($expensePayload);
+        $expensePayload = $this->withholdingPayload($this->taxPayload($expensePayload));
 
         $expense->update(array_merge($expensePayload, [
             'updated_by' => $request->user()->id,
@@ -211,6 +211,8 @@ class ExpenseController extends Controller
             'category' => ['required', Rule::in(Expense::CATEGORIES)],
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'gt:0', 'max:999999999999.99'],
+            'tax_mode' => ['nullable', Rule::in(['no_tax', 'exclusive', 'inclusive'])],
+            'tax_invoice_no' => ['nullable', 'string', 'max:50'],
             'withholding_tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'withholding_tax_form' => ['nullable', Rule::in(['pnd3', 'pnd53'])],
             'expense_date' => ['required', 'date'],
@@ -248,7 +250,24 @@ class ExpenseController extends Controller
 
     private function snapshot(Expense $expense): array
     {
-        return $expense->fresh()->only(['expense_no', 'category', 'title', 'amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note']);
+        return $expense->fresh()->only(['expense_no', 'category', 'title', 'amount', 'tax_mode', 'tax_invoice_no', 'tax_amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note']);
+    }
+
+    private function taxPayload(array $payload): array
+    {
+        $mode = $payload['tax_mode'] ?? 'no_tax';
+        $amount = round((float) $payload['amount'], 2);
+        $taxAmount = match ($mode) {
+            'exclusive' => round($amount * 0.07, 2),
+            'inclusive' => round($amount - ($amount / 1.07), 2),
+            default => 0.0,
+        };
+
+        $payload['tax_mode'] = $mode;
+        $payload['tax_amount'] = $taxAmount;
+        $payload['tax_invoice_no'] = filled($payload['tax_invoice_no'] ?? null) ? $payload['tax_invoice_no'] : null;
+
+        return $payload;
     }
 
     private function withholdingPayload(array $payload): array

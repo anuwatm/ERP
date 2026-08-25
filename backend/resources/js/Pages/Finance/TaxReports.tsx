@@ -14,6 +14,7 @@ type Supplier = { id: string; supplier_code: string; name: string };
 type TaxRow = {
     date: string;
     document_no: string;
+    source?: string;
     partner: string;
     tax_id: string;
     branch?: string;
@@ -213,7 +214,7 @@ export default function TaxReports({
 
                 <TaxReportTable
                     title="Purchase Tax Report"
-                    description="Approved purchase orders and received/closed PO documents"
+                    description="Purchase tax from approved POs, expenses, and posted GRNs"
                     rows={purchaseRows}
                     csvHref={reportUrl('tax-reports.export', 'purchase')}
                     excelHref={reportUrl('tax-reports.excel', 'purchase')}
@@ -305,6 +306,11 @@ function TaxReportTable({
                                 {row.branch && (
                                     <div className="text-xs text-slate-500">
                                         {row.branch}
+                                    </div>
+                                )}
+                                {row.source && (
+                                    <div className="text-xs text-slate-500">
+                                        {titleCase(row.source)}
                                     </div>
                                 )}
                             </div>
@@ -402,6 +408,12 @@ function Summary({ label, value }: { label: string; value: number }) {
             <div className="mt-1 text-lg font-bold">{money(value)}</div>
         </div>
     );
+}
+
+function titleCase(value: string) {
+    return value
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function AgingReportTable({

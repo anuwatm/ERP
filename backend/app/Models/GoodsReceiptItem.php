@@ -10,13 +10,16 @@ class GoodsReceiptItem extends Model
 {
     use UsesOrderedUuid;
 
-    protected $fillable = ['org_id', 'goods_receipt_id', 'purchase_order_item_id', 'product_id', 'description', 'quantity', 'unit', 'unit_cost'];
+    protected $fillable = ['org_id', 'goods_receipt_id', 'purchase_order_item_id', 'product_id', 'description', 'quantity', 'unit', 'unit_cost', 'tax_rate', 'tax_amount', 'line_total'];
 
     protected function casts(): array
     {
         return [
             'quantity' => 'decimal:4',
             'unit_cost' => 'decimal:2',
+            'tax_rate' => 'decimal:2',
+            'tax_amount' => 'decimal:2',
+            'line_total' => 'decimal:2',
         ];
     }
 

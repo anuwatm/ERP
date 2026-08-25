@@ -123,9 +123,9 @@
 
 - Official Print/PDF เสร็จสำหรับ Invoice, Tax Invoice/Receipt และ PO พร้อม BahtText, logo/branch header, Original/Copy, VOID watermark และ PDF binary.
 - 50-Tawi WHT certificate PDF เสร็จจาก expenses ที่มี withholding tax.
-- Sales/Purchase Tax Reports, WHT Report, CSV/XLS export และ org isolation เสร็จรอบแรก.
+- Sales/Purchase Tax Reports, WHT Report, CSV/XLS export และ org isolation เสร็จ รวม Purchase Tax source จาก PO/Expenses/GRN.
 - AR/AP Aging first pass เสร็จด้วยช่วง 0-30, 31-60, 61-90, >90 วัน.
 - Inventory/GRN เสร็จ: partial receive, over-receive guard, stock ledger, adjustment in/out, return to supplier, on-hand summary, average cost.
 - Notifications/Queues เสร็จ: PO pending approval, invoice due/overdue, invite, task/project assignment, queued mail, in-app notification, unread count, dedupe, preferences.
-- ยัง pending: Purchase Tax source expansion จาก Expense/GRN เมื่อ schema ภาษีซื้อจาก expense/receipt พร้อมใช้งาน.
+- Phase 8 closed: ไม่มี pending item ใน roadmap ปัจจุบัน.
 

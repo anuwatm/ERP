@@ -27,7 +27,7 @@
 | Phase 5 | Done | Executive Dashboard + E2E/UAT completed and Gemini review closed |
 | Phase 6 | Done | Reporting/filters/operational polish completed |
 | Phase 7 | Closed | Post-MVP implementation completed and phase closed: VAT UI, configurable numbering, suppliers, purchase orders, project members |
-| Phase 8 | In Progress | Core production roadmap implemented: PDF/50-Tawi, tax/WHT/aging exports, Inventory/GRN/adjustments, notifications/preferences; tax source/filter expansion remains |
+| Phase 8 | Done | Production roadmap completed: PDF/50-Tawi, tax/WHT/aging exports, Purchase Tax from PO/Expenses/GRN, Inventory/GRN/adjustments, notifications/preferences |
 
 ---
 
@@ -549,7 +549,7 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 - [x] หน้ารายงานภาษีขาย (Sales Tax Report) อ้างอิงจาก Invoices ตามช่วงเวลาและงวดภาษี
 - [x] หน้ารายงานภาษีซื้อ (Purchase Tax Report) อ้างอิงจาก PO รอบแรก
-- [ ] ขยาย Purchase Tax Report ให้รวม Expenses / GRN หลัง schema มี tax source ครบ
+- [x] ขยาย Purchase Tax Report ให้รวม Expenses / GRN หลัง schema มี tax source ครบ
 - [x] หน้ารายงานภาษีหัก ณ ที่จ่าย (Withholding Tax Report) แยก ภ.ง.ด. 3 (บุคคลธรรมดา) และ ภ.ง.ด. 53 (นิติบุคคล)
 - [x] หน้ารายงานวิเคราะห์อายุหนี้รอบแรก:
   - รายงานอายุลูกหนี้ (Accounts Receivable Aging: 0-30, 31-60, 61-90, >90 วัน)
@@ -561,6 +561,7 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [x] Feature tests ครอบคลุมการคำนวณยอดรายงาน, การตัดงวดภาษี, สิทธิ์การเข้าถึง, Export CSV และ Aging buckets
 - [x] Feature tests ครอบคลุม Excel-compatible export
 - [x] Feature tests ครอบคลุม filters ส่วนขยาย
+- [x] Feature tests ครอบคลุม Purchase Tax source expansion จาก Expenses / GRN
 
 ### Notifications & Background Queues Implementation
 

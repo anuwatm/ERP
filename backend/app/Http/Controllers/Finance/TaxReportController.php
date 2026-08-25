@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Expense;
+use App\Models\GoodsReceipt;
 use App\Models\Invoice;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
@@ -54,7 +55,7 @@ class TaxReportController extends Controller
             $handle = fopen('php://output', 'w');
             $header = $type === 'withholding'
                 ? ['date', 'document_no', 'supplier', 'tax_id', 'form', 'base_amount', 'wht_rate', 'wht_amount']
-                : ['date', 'document_no', 'partner', 'tax_id', 'tax_mode', 'taxable_base', 'tax_amount', 'total'];
+                : ['date', 'document_no', 'source', 'partner', 'tax_id', 'tax_mode', 'taxable_base', 'tax_amount', 'total'];
             fputcsv($handle, $header);
 
             foreach ($rows as $row) {
@@ -70,6 +71,7 @@ class TaxReportController extends Controller
                 ] : [
                     $row['date'],
                     $row['document_no'],
+                    $row['source'],
                     $row['partner'],
                     $row['tax_id'],
                     $row['tax_mode'],
@@ -163,6 +165,7 @@ class TaxReportController extends Controller
             ->map(fn (Invoice $invoice) => [
                 'date' => $invoice->issue_date?->toDateString() ?: '',
                 'document_no' => $invoice->invoice_no,
+                'source' => 'invoice',
                 'partner' => $invoice->customer?->company_name ?: '-',
                 'tax_id' => $invoice->customer?->tax_id ?: '',
                 'branch' => $invoice->branch ? trim($invoice->branch->code.' '.$invoice->branch->name) : '',
@@ -180,7 +183,7 @@ class TaxReportController extends Controller
      */
     private function purchaseRows(Request $request, array $filters): array
     {
-        return PurchaseOrder::query()
+        $purchaseOrders = PurchaseOrder::query()
             ->where('org_id', $request->user()->org_id)
             ->whereIn('status', self::PURCHASE_STATUSES)
             ->with('supplier:id,name,tax_id')
@@ -194,6 +197,7 @@ class TaxReportController extends Controller
             ->map(fn (PurchaseOrder $po) => [
                 'date' => $po->order_date?->toDateString() ?: '',
                 'document_no' => $po->po_no,
+                'source' => 'purchase_order',
                 'partner' => $po->supplier?->name ?: '-',
                 'tax_id' => $po->supplier?->tax_id ?: '',
                 'branch' => '',
@@ -202,6 +206,76 @@ class TaxReportController extends Controller
                 'tax_amount' => $this->money($po->tax_amount),
                 'total' => $this->money($po->total),
             ])
+            ->values()
+            ->all();
+
+        $expenses = Expense::query()
+            ->where('org_id', $request->user()->org_id)
+            ->whereIn('status', ['approved', 'paid'])
+            ->where('tax_amount', '>', 0)
+            ->with('supplier:id,name,tax_id')
+            ->when($filters['date_from'], fn ($query, $date) => $query->whereDate('expense_date', '>=', $date))
+            ->when($filters['date_to'], fn ($query, $date) => $query->whereDate('expense_date', '<=', $date))
+            ->when($filters['status'], fn ($query, $status) => in_array($status, ['approved', 'paid'], true) ? $query->where('status', $status) : $query)
+            ->when($filters['supplier_id'], fn ($query, $supplierId) => $query->where('supplier_id', $supplierId))
+            ->orderBy('expense_date')
+            ->orderBy('expense_no')
+            ->get()
+            ->map(function (Expense $expense) {
+                $taxAmount = (float) $expense->tax_amount;
+                $amount = (float) $expense->amount;
+                $total = $expense->tax_mode === 'exclusive' ? $amount + $taxAmount : $amount;
+
+                return [
+                    'date' => $expense->expense_date?->toDateString() ?: '',
+                    'document_no' => $expense->tax_invoice_no ?: $expense->expense_no,
+                    'source' => 'expense',
+                    'partner' => $expense->supplier?->name ?: '-',
+                    'tax_id' => $expense->supplier?->tax_id ?: '',
+                    'branch' => '',
+                    'tax_mode' => $expense->tax_mode,
+                    'taxable_base' => $this->money(max(0, $total - $taxAmount)),
+                    'tax_amount' => $this->money($taxAmount),
+                    'total' => $this->money($total),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $goodsReceipts = GoodsReceipt::query()
+            ->where('org_id', $request->user()->org_id)
+            ->where('status', 'posted')
+            ->whereHas('items', fn ($query) => $query->where('tax_amount', '>', 0))
+            ->with(['purchaseOrder:id,supplier_id,tax_mode', 'purchaseOrder.supplier:id,name,tax_id', 'items:id,goods_receipt_id,tax_amount,line_total'])
+            ->when($filters['date_from'], fn ($query, $date) => $query->whereDate('received_date', '>=', $date))
+            ->when($filters['date_to'], fn ($query, $date) => $query->whereDate('received_date', '<=', $date))
+            ->when($filters['status'], fn ($query, $status) => $status === 'posted' ? $query->where('status', $status) : $query)
+            ->when($filters['supplier_id'], fn ($query, $supplierId) => $query->whereHas('purchaseOrder', fn ($poQuery) => $poQuery->where('supplier_id', $supplierId)))
+            ->orderBy('received_date')
+            ->orderBy('grn_no')
+            ->get()
+            ->map(function (GoodsReceipt $receipt) {
+                $taxAmount = (float) $receipt->items->sum('tax_amount');
+                $total = (float) $receipt->items->sum('line_total');
+
+                return [
+                    'date' => $receipt->received_date?->toDateString() ?: '',
+                    'document_no' => $receipt->grn_no,
+                    'source' => 'goods_receipt',
+                    'partner' => $receipt->purchaseOrder?->supplier?->name ?: '-',
+                    'tax_id' => $receipt->purchaseOrder?->supplier?->tax_id ?: '',
+                    'branch' => '',
+                    'tax_mode' => $receipt->purchaseOrder?->tax_mode ?: 'exclusive',
+                    'taxable_base' => $this->money(max(0, $total - $taxAmount)),
+                    'tax_amount' => $this->money($taxAmount),
+                    'total' => $this->money($total),
+                ];
+            })
+            ->values()
+            ->all();
+
+        return collect([...$purchaseOrders, ...$expenses, ...$goodsReceipts])
+            ->sortBy([['date', 'asc'], ['document_no', 'asc']])
             ->values()
             ->all();
     }
@@ -329,7 +403,7 @@ class TaxReportController extends Controller
         return match ($type) {
             'withholding' => ['date', 'document_no', 'partner', 'tax_id', 'form', 'base_amount', 'wht_rate', 'wht_amount'],
             'ar-aging', 'ap-aging' => ['due_date', 'document_no', 'partner', 'days_overdue', 'bucket', 'amount'],
-            default => ['date', 'document_no', 'partner', 'tax_id', 'tax_mode', 'taxable_base', 'tax_amount', 'total'],
+            default => ['date', 'document_no', 'source', 'partner', 'tax_id', 'tax_mode', 'taxable_base', 'tax_amount', 'total'],
         };
     }
 }
