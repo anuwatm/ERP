@@ -316,6 +316,111 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'Bank Accounts',
+                    href: route('bank-accounts.index'),
+                    active: route().current('bank-accounts.*'),
+                    permission: 'treasury.accounts.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M3 10l9-5 9 5M4 10h16M5 10v8m4-8v8m6-8v8m4-8v8M3 18h18"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Bank Statements',
+                    href: route('bank-statements.index'),
+                    active: route().current('bank-statements.*'),
+                    permission: 'treasury.reconciliation.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M6 3h9l3 3v15H6V3zm3 7h6m-6 4h6m-6 4h4"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Petty Cash',
+                    href: route('petty-cash.index'),
+                    active: route().current('petty-cash.*'),
+                    permission: 'petty_cash.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M3 7h18v10H3zM7 11h4m-4 3h7"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Cheques / PDC',
+                    href: route('cheques.index'),
+                    active: route().current('cheques.*'),
+                    permission: 'cheques.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 5h16v14H4zM7 9h10m-10 4h6"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Treasury Reports',
+                    href: route('treasury-reports.index'),
+                    active: route().current('treasury-reports.*'),
+                    permission: 'treasury.reports.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 19V5m4 14v-6m4 6V9m4 10V6m4 13H3"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Inventory / GRN',
                     href: route('goods-receipts.index'),
                     active: route().current('goods-receipts.*'),

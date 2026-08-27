@@ -26,6 +26,7 @@ class PaymentController extends Controller
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999999.99'],
             'payment_date' => ['required', 'date'],
             'payment_method' => ['required', Rule::in(Payment::METHODS)],
+            'bank_account_id' => ['nullable', 'uuid', Rule::exists('bank_accounts', 'id')->where('org_id', $request->user()->org_id)->where('status', 'active')],
             'reference_no' => ['nullable', 'string', 'max:100'],
             'note' => ['nullable', 'string', 'max:2000'],
             'idempotency_key' => ['nullable', 'string', 'max:100'],
@@ -61,6 +62,7 @@ class PaymentController extends Controller
                 $payment = Payment::create([
                     'org_id' => $lockedInvoice->org_id,
                     'invoice_id' => $lockedInvoice->id,
+                    'bank_account_id' => $validated['bank_account_id'] ?? null,
                     'entry_type' => 'receipt',
                     'amount' => $amount,
                     'payment_date' => $validated['payment_date'],
@@ -130,6 +132,7 @@ class PaymentController extends Controller
                 $reversal = Payment::create([
                     'org_id' => $receipt->org_id,
                     'invoice_id' => $receipt->invoice_id,
+                    'bank_account_id' => $receipt->bank_account_id,
                     'entry_type' => 'reversal',
                     'reversal_of_payment_id' => $receipt->id,
                     'amount' => $receipt->amount,
@@ -162,6 +165,7 @@ class PaymentController extends Controller
             && round((float) $existing->amount, 2) === round((float) $validated['amount'], 2)
             && $existing->payment_date->toDateString() === $validated['payment_date']
             && $existing->payment_method === $validated['payment_method']
+            && $existing->bank_account_id === ($validated['bank_account_id'] ?? null)
             && (string) ($existing->reference_no ?? '') === (string) ($validated['reference_no'] ?? '');
 
         if (! $matches) {
@@ -259,6 +263,7 @@ class PaymentController extends Controller
             'amount' => $payment->amount,
             'payment_date' => $payment->payment_date,
             'payment_method' => $payment->payment_method,
+            'bank_account_id' => $payment->bank_account_id,
             'reference_no' => $payment->reference_no,
             'attachment_file_id' => $payment->attachment_file_id,
             'invoice_paid_amount' => $invoice->paid_amount,

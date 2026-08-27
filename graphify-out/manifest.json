@@ -1,0 +1,527 @@
+{
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Admin\\AuditLogController.php": {
+    "mtime": 1784984459.8749018,
+    "ast_hash": "c83e50e114cfce287acc8afbe2729686",
+    "semantic_hash": "c83e50e114cfce287acc8afbe2729686"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Admin\\DashboardController.php": {
+    "mtime": 1785601554.4855084,
+    "ast_hash": "0aa22c099de7fd2b28cc6dca18c7b650",
+    "semantic_hash": "0aa22c099de7fd2b28cc6dca18c7b650"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Admin\\RoleController.php": {
+    "mtime": 1785569553.9004874,
+    "ast_hash": "e9bc73f8a4ca23a934361c3f11fc9f89",
+    "semantic_hash": "e9bc73f8a4ca23a934361c3f11fc9f89"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Admin\\UserController.php": {
+    "mtime": 1787500283.0211558,
+    "ast_hash": "c8491dea1e847c6a548859078060b4c2",
+    "semantic_hash": "c8491dea1e847c6a548859078060b4c2"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\AcceptInviteController.php": {
+    "mtime": 1784964588.4424906,
+    "ast_hash": "df57345a52cd72ea2b65c0c33e6e6ffd",
+    "semantic_hash": "df57345a52cd72ea2b65c0c33e6e6ffd"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php": {
+    "mtime": 1784962885.3267028,
+    "ast_hash": "6620fb377b23ad88b0dc784bfb030b55",
+    "semantic_hash": "6620fb377b23ad88b0dc784bfb030b55"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php": {
+    "mtime": 1784961523.0299218,
+    "ast_hash": "fee3d986bfe89938af1bc3ed87537728",
+    "semantic_hash": "fee3d986bfe89938af1bc3ed87537728"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\EmailVerificationNotificationController.php": {
+    "mtime": 1784961523.0309193,
+    "ast_hash": "68ced5fefa7a2362391bc17048d150a4",
+    "semantic_hash": "68ced5fefa7a2362391bc17048d150a4"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\EmailVerificationPromptController.php": {
+    "mtime": 1784961523.0319164,
+    "ast_hash": "c873b98fe182689691921ec87a6e3893",
+    "semantic_hash": "c873b98fe182689691921ec87a6e3893"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\NewPasswordController.php": {
+    "mtime": 1784968386.5303817,
+    "ast_hash": "60a63805bd41f2e742cccaeca37b6c79",
+    "semantic_hash": "60a63805bd41f2e742cccaeca37b6c79"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\PasswordController.php": {
+    "mtime": 1784961523.0329137,
+    "ast_hash": "1462f1e00bbf125e74e9f4ab59bf7a55",
+    "semantic_hash": "1462f1e00bbf125e74e9f4ab59bf7a55"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\PasswordResetLinkController.php": {
+    "mtime": 1784961523.0349088,
+    "ast_hash": "ebd707bf4b1d4f66ac29dcb137fdb35b",
+    "semantic_hash": "ebd707bf4b1d4f66ac29dcb137fdb35b"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\RegisteredUserController.php": {
+    "mtime": 1784962885.5332017,
+    "ast_hash": "5e4caa2e45e541992687993dde28f8ae",
+    "semantic_hash": "5e4caa2e45e541992687993dde28f8ae"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Auth\\VerifyEmailController.php": {
+    "mtime": 1784968079.1301851,
+    "ast_hash": "7e8e9559631c2eba5e52b32ccaae9950",
+    "semantic_hash": "7e8e9559631c2eba5e52b32ccaae9950"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Controller.php": {
+    "mtime": 1773754980.0,
+    "ast_hash": "25a307335c0719bc9a91b3f7babd186d",
+    "semantic_hash": "25a307335c0719bc9a91b3f7babd186d"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Delivery\\ProjectController.php": {
+    "mtime": 1787500283.2453792,
+    "ast_hash": "ec92c4e7105304c8a7951a6e3ac547f3",
+    "semantic_hash": "ec92c4e7105304c8a7951a6e3ac547f3"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Delivery\\TaskController.php": {
+    "mtime": 1787499365.5675013,
+    "ast_hash": "e737d35e01c14add6c27a0e47043e957",
+    "semantic_hash": "e737d35e01c14add6c27a0e47043e957"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\FileController.php": {
+    "mtime": 1785306984.3809116,
+    "ast_hash": "57feae5c950d89f30323b3f47bce3aae",
+    "semantic_hash": "57feae5c950d89f30323b3f47bce3aae"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\CommercialDocumentController.php": {
+    "mtime": 1787652125.9126263,
+    "ast_hash": "06790e73b872d6630103e4ca616b4d2b",
+    "semantic_hash": "06790e73b872d6630103e4ca616b4d2b"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\ExpenseController.php": {
+    "mtime": 1787637479.9700067,
+    "ast_hash": "e953b32616e8462de2d962e4799848da",
+    "semantic_hash": "e953b32616e8462de2d962e4799848da"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\GoodsReceiptController.php": {
+    "mtime": 1787637512.0445774,
+    "ast_hash": "7f62a8a97477a1c25cb7f92cae6a6418",
+    "semantic_hash": "7f62a8a97477a1c25cb7f92cae6a6418"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\InvoiceController.php": {
+    "mtime": 1787499684.9379168,
+    "ast_hash": "1400a64915439b2f640bc031a908c01a",
+    "semantic_hash": "1400a64915439b2f640bc031a908c01a"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\PaymentController.php": {
+    "mtime": 1785313548.8652384,
+    "ast_hash": "162ad2f9fc3e17e79cf566291fd80e31",
+    "semantic_hash": "162ad2f9fc3e17e79cf566291fd80e31"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\ProductController.php": {
+    "mtime": 1785306608.7352564,
+    "ast_hash": "dc08e4d57b2ad54837939cfa06c805c4",
+    "semantic_hash": "dc08e4d57b2ad54837939cfa06c805c4"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\PurchaseOrderController.php": {
+    "mtime": 1787499686.7004013,
+    "ast_hash": "1333b01bec733018eb2a5e21544c25ab",
+    "semantic_hash": "1333b01bec733018eb2a5e21544c25ab"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\QuotationController.php": {
+    "mtime": 1787648877.4457834,
+    "ast_hash": "b0e0cd3bd87684b220c161094ab6fdc5",
+    "semantic_hash": "b0e0cd3bd87684b220c161094ab6fdc5"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\SupplierController.php": {
+    "mtime": 1787331523.4704144,
+    "ast_hash": "720da89cd416d2a08bf1583952338fee",
+    "semantic_hash": "720da89cd416d2a08bf1583952338fee"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Finance\\TaxReportController.php": {
+    "mtime": 1787651729.3360872,
+    "ast_hash": "8ad14dc66744ca43518afcc651b4c61e",
+    "semantic_hash": "8ad14dc66744ca43518afcc651b4c61e"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\ProfileController.php": {
+    "mtime": 1784961523.0379012,
+    "ast_hash": "402cad3af7f03bd48a93dc9b1ecd335a",
+    "semantic_hash": "402cad3af7f03bd48a93dc9b1ecd335a"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Sales\\ActivityController.php": {
+    "mtime": 1785051583.4359765,
+    "ast_hash": "0ba58ccc3d028c20cb878f2f99332b05",
+    "semantic_hash": "0ba58ccc3d028c20cb878f2f99332b05"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Sales\\ContactController.php": {
+    "mtime": 1785051583.715033,
+    "ast_hash": "bf312d954a679cb806222fec618f8ede",
+    "semantic_hash": "bf312d954a679cb806222fec618f8ede"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Sales\\CustomerController.php": {
+    "mtime": 1785314013.2346623,
+    "ast_hash": "4653bed1c6d9eb224a7063b3bab677f7",
+    "semantic_hash": "4653bed1c6d9eb224a7063b3bab677f7"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Sales\\DealController.php": {
+    "mtime": 1785339333.2952213,
+    "ast_hash": "57dd4936753c0dc89736e92723ee15a6",
+    "semantic_hash": "57dd4936753c0dc89736e92723ee15a6"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Sales\\SalesDashboardController.php": {
+    "mtime": 1785051584.8789632,
+    "ast_hash": "537a5bbefe5288059920e2c9bed3cd07",
+    "semantic_hash": "537a5bbefe5288059920e2c9bed3cd07"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Settings\\NotificationPreferenceController.php": {
+    "mtime": 1787499528.2017832,
+    "ast_hash": "40e5a5c06499fd5c96a4d5d79b655241",
+    "semantic_hash": "40e5a5c06499fd5c96a4d5d79b655241"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Settings\\OrganizationSettingsController.php": {
+    "mtime": 1787331870.3157334,
+    "ast_hash": "55c286a6335b2d23f8584b0eb23ed446",
+    "semantic_hash": "55c286a6335b2d23f8584b0eb23ed446"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Controllers\\Settings\\OrganizationStructureController.php": {
+    "mtime": 1785393301.7217906,
+    "ast_hash": "389810f6f55729edbcb281afc439a51d",
+    "semantic_hash": "389810f6f55729edbcb281afc439a51d"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Middleware\\EnsurePermission.php": {
+    "mtime": 1784964589.2754352,
+    "ast_hash": "4e09b804d5d69d319d121c68c3022d9c",
+    "semantic_hash": "4e09b804d5d69d319d121c68c3022d9c"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Middleware\\HandleInertiaRequests.php": {
+    "mtime": 1787499199.7634537,
+    "ast_hash": "40022c4e91c903f5e260e3a9a5671462",
+    "semantic_hash": "40022c4e91c903f5e260e3a9a5671462"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Requests\\Auth\\LoginRequest.php": {
+    "mtime": 1784962885.7391615,
+    "ast_hash": "f8c24c682fca5178a9164754a9586072",
+    "semantic_hash": "f8c24c682fca5178a9164754a9586072"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Http\\Requests\\ProfileUpdateRequest.php": {
+    "mtime": 1784961523.1192005,
+    "ast_hash": "80a73e67db650b32485bc84687e5b634",
+    "semantic_hash": "80a73e67db650b32485bc84687e5b634"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Mail\\ErpNotificationMail.php": {
+    "mtime": 1787498827.10202,
+    "ast_hash": "4357d333ec35207e2b2904a7ea9e03e1",
+    "semantic_hash": "4357d333ec35207e2b2904a7ea9e03e1"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Activity.php": {
+    "mtime": 1785051585.247425,
+    "ast_hash": "627997138eaa7b0142dcdf180c18a37a",
+    "semantic_hash": "627997138eaa7b0142dcdf180c18a37a"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\AuditLog.php": {
+    "mtime": 1785572282.482813,
+    "ast_hash": "03c989974e52bc31137e82dbcf0f8417",
+    "semantic_hash": "03c989974e52bc31137e82dbcf0f8417"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\BillingNote.php": {
+    "mtime": 1787651503.9277275,
+    "ast_hash": "576b380dfb63a4d4218a745b25c43f8d",
+    "semantic_hash": "576b380dfb63a4d4218a745b25c43f8d"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\BillingNoteLine.php": {
+    "mtime": 1787651506.2338052,
+    "ast_hash": "55c8792f45ec1f6b096ee65d07e31b4a",
+    "semantic_hash": "55c8792f45ec1f6b096ee65d07e31b4a"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Branch.php": {
+    "mtime": 1784962885.7930198,
+    "ast_hash": "e221c075ee60d862e5979a6323ba09ca",
+    "semantic_hash": "e221c075ee60d862e5979a6323ba09ca"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Concerns\\UsesOrderedUuid.php": {
+    "mtime": 1784962885.8084881,
+    "ast_hash": "22a7d6b3bf151550eed9c9e6a82304e1",
+    "semantic_hash": "22a7d6b3bf151550eed9c9e6a82304e1"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Contact.php": {
+    "mtime": 1785051913.5141747,
+    "ast_hash": "1c33f7b8a75517a9f6cea39cf6169a26",
+    "semantic_hash": "1c33f7b8a75517a9f6cea39cf6169a26"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\CreditDebitNote.php": {
+    "mtime": 1787651499.492381,
+    "ast_hash": "41b5477c97283047e70329521dec4639",
+    "semantic_hash": "41b5477c97283047e70329521dec4639"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\CreditDebitNoteItem.php": {
+    "mtime": 1787651501.6163247,
+    "ast_hash": "b98b69d858e19ac181df5467dfaef4d5",
+    "semantic_hash": "b98b69d858e19ac181df5467dfaef4d5"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Customer.php": {
+    "mtime": 1785314013.3818188,
+    "ast_hash": "abe96dd8e8bbcb439fc4d8b1e6a5b01c",
+    "semantic_hash": "abe96dd8e8bbcb439fc4d8b1e6a5b01c"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Deal.php": {
+    "mtime": 1787648913.6799006,
+    "ast_hash": "0b44714758f1f0e28eebf27a0cc78b17",
+    "semantic_hash": "0b44714758f1f0e28eebf27a0cc78b17"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\DeliveryOrder.php": {
+    "mtime": 1787651508.3388758,
+    "ast_hash": "61dd5587dee59fb6c83615d7c4ac8e6c",
+    "semantic_hash": "61dd5587dee59fb6c83615d7c4ac8e6c"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\DeliveryOrderItem.php": {
+    "mtime": 1787651510.7852485,
+    "ast_hash": "a01ed7a2b0261f3d6614de96c0076830",
+    "semantic_hash": "a01ed7a2b0261f3d6614de96c0076830"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Department.php": {
+    "mtime": 1784962885.8274386,
+    "ast_hash": "87a703a2499e94fcb7297054fa031231",
+    "semantic_hash": "87a703a2499e94fcb7297054fa031231"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Division.php": {
+    "mtime": 1784962885.8493798,
+    "ast_hash": "f15f56027cef2e6b412858a6fc76cc5c",
+    "semantic_hash": "f15f56027cef2e6b412858a6fc76cc5c"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Expense.php": {
+    "mtime": 1787637451.3649962,
+    "ast_hash": "cc3beb263c4d03f517c5db5d9b134523",
+    "semantic_hash": "cc3beb263c4d03f517c5db5d9b134523"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\GoodsReceipt.php": {
+    "mtime": 1787498470.8756285,
+    "ast_hash": "159fec272c86a92feebc36825d663e5d",
+    "semantic_hash": "159fec272c86a92feebc36825d663e5d"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\GoodsReceiptItem.php": {
+    "mtime": 1787637453.1223154,
+    "ast_hash": "732a8dd03b1cea009c7446ed6b85f277",
+    "semantic_hash": "732a8dd03b1cea009c7446ed6b85f277"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\InAppNotification.php": {
+    "mtime": 1787498821.9258149,
+    "ast_hash": "b7f5f81968fa244ef1fa20773f5c4101",
+    "semantic_hash": "b7f5f81968fa244ef1fa20773f5c4101"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Invoice.php": {
+    "mtime": 1787648911.3972273,
+    "ast_hash": "99151bbf4c91c3e22c656525548e0f81",
+    "semantic_hash": "99151bbf4c91c3e22c656525548e0f81"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\InvoiceItem.php": {
+    "mtime": 1785313515.3806005,
+    "ast_hash": "8c3ece8672b6110a33a9d2e1e1d8a51e",
+    "semantic_hash": "8c3ece8672b6110a33a9d2e1e1d8a51e"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\NotificationEvent.php": {
+    "mtime": 1787498823.8553498,
+    "ast_hash": "fa6c5fc5c832e90ffc6f805f8667110d",
+    "semantic_hash": "fa6c5fc5c832e90ffc6f805f8667110d"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\NotificationPreference.php": {
+    "mtime": 1787499335.8916574,
+    "ast_hash": "ba2911be29a0347f30ba4057c1c46197",
+    "semantic_hash": "ba2911be29a0347f30ba4057c1c46197"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\NumberSequence.php": {
+    "mtime": 1787330653.9065573,
+    "ast_hash": "38c74ae8584396d3ff754bd0f26e8722",
+    "semantic_hash": "38c74ae8584396d3ff754bd0f26e8722"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Organization.php": {
+    "mtime": 1785048650.9257526,
+    "ast_hash": "f8416e9774124ad9b6e238d1b2bfb156",
+    "semantic_hash": "f8416e9774124ad9b6e238d1b2bfb156"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Payment.php": {
+    "mtime": 1785254974.5690718,
+    "ast_hash": "9f0c5309c8e3a3a066de7c272e56e42f",
+    "semantic_hash": "9f0c5309c8e3a3a066de7c272e56e42f"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Permission.php": {
+    "mtime": 1784962885.9022443,
+    "ast_hash": "ad73becaf5e8129c521df80f3aa5d4e5",
+    "semantic_hash": "ad73becaf5e8129c521df80f3aa5d4e5"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Product.php": {
+    "mtime": 1785125303.7408855,
+    "ast_hash": "75dce6fc8f3ae188f6ae33d788ebbb20",
+    "semantic_hash": "75dce6fc8f3ae188f6ae33d788ebbb20"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Project.php": {
+    "mtime": 1787331445.7799637,
+    "ast_hash": "0f235284c145ead5754e4dea5cc60934",
+    "semantic_hash": "0f235284c145ead5754e4dea5cc60934"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\ProjectMember.php": {
+    "mtime": 1787331443.4541998,
+    "ast_hash": "eedb506d81ed6ad7ea934f19e49b9a6d",
+    "semantic_hash": "eedb506d81ed6ad7ea934f19e49b9a6d"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\PurchaseOrder.php": {
+    "mtime": 1787498621.0261803,
+    "ast_hash": "f3cda8a8b8b33a09ff91abfc37e8b902",
+    "semantic_hash": "f3cda8a8b8b33a09ff91abfc37e8b902"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\PurchaseOrderItem.php": {
+    "mtime": 1787331441.0483167,
+    "ast_hash": "fbaee64a29e8a03aa500144cf81e001f",
+    "semantic_hash": "fbaee64a29e8a03aa500144cf81e001f"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\PurchaseRequest.php": {
+    "mtime": 1787651513.5784507,
+    "ast_hash": "77394a50ce2b5da243c076600deff453",
+    "semantic_hash": "77394a50ce2b5da243c076600deff453"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\PurchaseRequestItem.php": {
+    "mtime": 1787651515.6062894,
+    "ast_hash": "38581ebfe99e94dbf89bda6e2bb4fce7",
+    "semantic_hash": "38581ebfe99e94dbf89bda6e2bb4fce7"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Quotation.php": {
+    "mtime": 1787648805.3280947,
+    "ast_hash": "1d7fb3bf9f661ed1fb4e934d6bf13174",
+    "semantic_hash": "1d7fb3bf9f661ed1fb4e934d6bf13174"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\QuotationItem.php": {
+    "mtime": 1787648807.7497299,
+    "ast_hash": "dc16f7d048e2b45ee215131e400898f4",
+    "semantic_hash": "dc16f7d048e2b45ee215131e400898f4"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Role.php": {
+    "mtime": 1784965099.0414927,
+    "ast_hash": "dbbd6993a5dc783d2d3a751be8bfd8c6",
+    "semantic_hash": "dbbd6993a5dc783d2d3a751be8bfd8c6"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Setting.php": {
+    "mtime": 1784962885.9356623,
+    "ast_hash": "7ab27b86a0bf54678dd8f2f606146038",
+    "semantic_hash": "7ab27b86a0bf54678dd8f2f606146038"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\StockMovement.php": {
+    "mtime": 1787498475.2009134,
+    "ast_hash": "c9d18e220c6c9741b5d594eb0fd9ee00",
+    "semantic_hash": "c9d18e220c6c9741b5d594eb0fd9ee00"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\StoredFile.php": {
+    "mtime": 1785254888.1698923,
+    "ast_hash": "b24c575f9a8f5cf2f9ae60dec8837233",
+    "semantic_hash": "b24c575f9a8f5cf2f9ae60dec8837233"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Supplier.php": {
+    "mtime": 1787331436.404991,
+    "ast_hash": "8c3862124598a5ae84fb4879fdca67b4",
+    "semantic_hash": "8c3862124598a5ae84fb4879fdca67b4"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Task.php": {
+    "mtime": 1785342429.659512,
+    "ast_hash": "50bdd3d9c88740509b363f7a90176dcb",
+    "semantic_hash": "50bdd3d9c88740509b363f7a90176dcb"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\TaskChecklist.php": {
+    "mtime": 1785342429.872974,
+    "ast_hash": "d33e6e115789049605fea1ac744eb26e",
+    "semantic_hash": "d33e6e115789049605fea1ac744eb26e"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\TaskComment.php": {
+    "mtime": 1785342430.0775087,
+    "ast_hash": "439d0ae36bcfdf0b271b9117adfdf030",
+    "semantic_hash": "439d0ae36bcfdf0b271b9117adfdf030"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\User.php": {
+    "mtime": 1785306874.140685,
+    "ast_hash": "2d885f57c825ff1acc9c9490deefc542",
+    "semantic_hash": "2d885f57c825ff1acc9c9490deefc542"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Models\\Voucher.php": {
+    "mtime": 1787651518.332038,
+    "ast_hash": "d28bd7c1529393cf4e3be437ccd56267",
+    "semantic_hash": "d28bd7c1529393cf4e3be437ccd56267"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Policies\\ActivityPolicy.php": {
+    "mtime": 1785051584.8869772,
+    "ast_hash": "c63d2ad8a9c624cc0060f5cbc133864c",
+    "semantic_hash": "c63d2ad8a9c624cc0060f5cbc133864c"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Policies\\ContactPolicy.php": {
+    "mtime": 1785051584.9305723,
+    "ast_hash": "289e1809090af9de7fa43dbf998158ae",
+    "semantic_hash": "289e1809090af9de7fa43dbf998158ae"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Policies\\CustomerPolicy.php": {
+    "mtime": 1785051584.9512348,
+    "ast_hash": "434017d0e932bae10351e2b3cf7b8baa",
+    "semantic_hash": "434017d0e932bae10351e2b3cf7b8baa"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Policies\\DealPolicy.php": {
+    "mtime": 1785051584.9952705,
+    "ast_hash": "4aa8bf50254d38403c829f9255f759a4",
+    "semantic_hash": "4aa8bf50254d38403c829f9255f759a4"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Policies\\InvoicePolicy.php": {
+    "mtime": 1785150092.8214197,
+    "ast_hash": "f31e70ff73d9efd0f51089fd8acc4547",
+    "semantic_hash": "f31e70ff73d9efd0f51089fd8acc4547"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Policies\\ProductPolicy.php": {
+    "mtime": 1785125303.7418854,
+    "ast_hash": "6447de8d23c8d11f5604fe0c7b78107e",
+    "semantic_hash": "6447de8d23c8d11f5604fe0c7b78107e"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Providers\\AppServiceProvider.php": {
+    "mtime": 1784961523.0259323,
+    "ast_hash": "2567dbab818700f69f71a99396879696",
+    "semantic_hash": "2567dbab818700f69f71a99396879696"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Services\\BahtText.php": {
+    "mtime": 1787471599.8601744,
+    "ast_hash": "554129f00b5858a8edd843bc970bbfd3",
+    "semantic_hash": "554129f00b5858a8edd843bc970bbfd3"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Services\\NotificationService.php": {
+    "mtime": 1787499337.82375,
+    "ast_hash": "2c28a0f246257d6d1d63ebac114e6209",
+    "semantic_hash": "2c28a0f246257d6d1d63ebac114e6209"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Services\\NumberSequenceService.php": {
+    "mtime": 1787330820.6886654,
+    "ast_hash": "1a422207da9b830d5d9ec20115d2eb9b",
+    "semantic_hash": "1a422207da9b830d5d9ec20115d2eb9b"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Services\\OrganizationProvisioner.php": {
+    "mtime": 1784962886.186016,
+    "ast_hash": "d9c4f57bde0711979e708e86a0329b6b",
+    "semantic_hash": "d9c4f57bde0711979e708e86a0329b6b"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Support\\FileAttachmentManager.php": {
+    "mtime": 1785313641.3292837,
+    "ast_hash": "e4fa7ca27f948c617ae69692cf0f9749",
+    "semantic_hash": "e4fa7ca27f948c617ae69692cf0f9749"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Support\\PermissionCatalog.php": {
+    "mtime": 1787651998.6591966,
+    "ast_hash": "44e642d5c3ace53b784ad29f549f6689",
+    "semantic_hash": "44e642d5c3ace53b784ad29f549f6689"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Support\\PersonIdMask.php": {
+    "mtime": 1784964590.0428002,
+    "ast_hash": "b402c6181a23e2f2054a0bf69f327a6a",
+    "semantic_hash": "b402c6181a23e2f2054a0bf69f327a6a"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Support\\ProjectAccess.php": {
+    "mtime": 1787331450.656346,
+    "ast_hash": "e0b5cd71da9a68ca48a9d76ad9d5b257",
+    "semantic_hash": "e0b5cd71da9a68ca48a9d76ad9d5b257"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Support\\SalesAccess.php": {
+    "mtime": 1785051585.3215394,
+    "ast_hash": "2766a1a9950c784886650690e774384c",
+    "semantic_hash": "2766a1a9950c784886650690e774384c"
+  },
+  "C:\\LocalDevine\\www\\ERP\\backend\\app\\Support\\TaskAccess.php": {
+    "mtime": 1785342433.0015037,
+    "ast_hash": "757df803d167c2ab076bfd5530e68790",
+    "semantic_hash": "757df803d167c2ab076bfd5530e68790"
+  }
+}

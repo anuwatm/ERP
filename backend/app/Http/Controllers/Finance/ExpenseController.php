@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\BankAccount;
 use App\Models\Expense;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
@@ -36,7 +37,7 @@ class ExpenseController extends Controller
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['category'] ?? null, fn ($query, $category) => $query->where('category', $category))
             ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
-            ->with(['receiptFile:id,file_name,mime_type,size_bytes', 'project:id,project_code,name', 'supplier:id,name,tax_id'])
+            ->with(['receiptFile:id,file_name,mime_type,size_bytes', 'project:id,project_code,name', 'supplier:id,name,tax_id', 'bankAccount:id,bank_name,account_name'])
             ->latest('expense_date')
             ->latest()
             ->get();
@@ -52,6 +53,7 @@ class ExpenseController extends Controller
             'canApproveExpenses' => $user->hasPermissionCode('expenses.approve'),
             'canPayExpenses' => $user->hasPermissionCode('expenses.pay'),
             'canRejectExpenses' => $user->hasPermissionCode('expenses.reject'),
+            'bankAccounts' => BankAccount::where('org_id', $user->org_id)->where('status', 'active')->orderBy('account_name')->get(['id', 'bank_name', 'account_name']),
         ]);
     }
 
@@ -138,12 +140,14 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'paid_at' => ['nullable', 'date'],
             'note' => ['nullable', 'string', 'max:2000'],
+            'bank_account_id' => ['nullable', 'uuid', Rule::exists('bank_accounts', 'id')->where('org_id', $request->user()->org_id)->where('status', 'active')],
         ]);
 
         $before = $this->snapshot($expense);
         $expense->update([
             'status' => 'paid',
             'paid_at' => filled($validated['paid_at'] ?? null) ? $validated['paid_at'] : now(),
+            'bank_account_id' => $validated['bank_account_id'] ?? null,
             'note' => $this->appendStatusNote($expense->note, 'Paid', $validated['note'] ?? null),
             'updated_by' => $request->user()->id,
         ]);

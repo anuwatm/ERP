@@ -17,7 +17,7 @@ class FileAttachmentManager
 
     public function store(Request $request, UploadedFile $upload, string $entityType, string $entityId, string $category = 'receipt'): StoredFile
     {
-        abort_unless(in_array($entityType, ['payment', 'expense'], true), 422, 'Invalid file entity type.');
+        abort_unless(in_array($entityType, ['payment', 'expense', 'voucher'], true), 422, 'Invalid file entity type.');
 
         $extension = strtolower($upload->extension() ?: $upload->getClientOriginalExtension());
         abort_unless(in_array($extension, self::MIMES, true), 422, 'Invalid attachment file type.');

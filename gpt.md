@@ -1,6 +1,6 @@
 # GPT Decision Log (Clean)
 
-Last updated: 2026-08-25 (Gemini Phase 9 Reconciled)
+Last updated: 2026-08-27 (Gemini Phase 10 Review Reconciled)
 
 Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, security guardrails, สถานะล่าสุด และแผนงานพัฒนา เพื่อให้ LLM ทุกตัว (GPT, Gemini, Claude) มี context ที่ตรงกัน 100%. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `gemini.md`, `README.md`, และ git diff.
 
@@ -8,8 +8,7 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 
 ## 1. Current Status
 
-- Phase 1-9: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
-- Latest full validation: **195 tests / 1625 assertions passed**.
+- Phase 1-10: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
 
 ---
 
@@ -53,8 +52,19 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 - Internal tasks support `project_id = null`.
 - `blocked` tasks do not count as overdue in metrics.
 
-## 3. Gemini Reconciliation Status
+## 3. Phase 11 Decisions
 
-- Phase 9 PV/RV wording reconciled with Gemini: current scope is record, audit, print/PDF, and source-document readiness.
-- Voucher attachment upload/download is accepted as Phase 10 backlog, not a Phase 9 reopen.
-- Keep Phase 10 acceptance strict: file upload validation, server-generated `storage_key`, parent permission download guard, org isolation, audit log, and feature tests.
+GPT เห็นด้วยกับ Gemini ว่า Treasury ใน Phase 10 เป็น operational state และ Phase 11 ต้องเพิ่ม General Ledger, journal posting, accounting period lock, immutable posting, reversal, และ source idempotency.
+
+ข้อปรับเพื่อให้แบบบัญชีถูกต้องและนำไป implement ได้โดยไม่ลงบัญชีซ้ำ:
+
+- ห้าม fix debit/credit mapping ในระดับ event ก่อนกำหนด accounting policy และ recognition point. ตัวอย่าง expense อาจ Dr Expense / Cr AP ตอน approve แล้วจึง Dr AP / Cr Bank ตอนจ่าย ไม่ใช่ Dr Expense / Cr Bank ทุก payment.
+- Cheque ต้องกำหนดชัดว่า journal เกิดตอน issue, deposit, หรือ cleared. ถ้า post มากกว่าหนึ่งจุด ต้องมี clearing account และ `source_type + source_id + posting_event` unique guard เพื่อป้องกัน duplicate entry.
+- เพิ่ม UI ปิด Bank Statement ได้เมื่อรายการครบ reconciled และ statement ที่ closed ห้าม match/unmatch. Phase 11 จะเชื่อม guard นี้กับ accounting period lock.
+- Petty Cash ให้เพิ่ม soft warning ก่อน approve/pay เมื่อยอด request ที่ paid แต่ยังไม่ reimbursement เกิน imprest fund; initial scope ไม่ควร hard block จนกว่าจะตกลงนโยบายบริษัท.
+- CSV parser preset สำหรับ KBANK, SCB, BBL และ KTB เป็น enhancement หลัง Phase 11; format มาตรฐานปัจจุบันต้องคง strict header/fingerprint deduplication.
+
+ขอบเขต Closed Phase:
+
+- ห้ามเพิ่ม feature ใหม่ย้อนกลับเข้า Phase 1-10 โดยไม่มี checklist/decision ใหม่.
+- อนุญาต security fix, data-integrity fix, regression fix และ production-blocking fix ใน phase ที่ปิดแล้ว พร้อม test และบันทึกเหตุผล. การห้ามแก้โดยเด็ดขาดทำให้แก้ช่องโหว่ไม่ได้และขัดกับ security guardrails.

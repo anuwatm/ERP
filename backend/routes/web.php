@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Delivery\ProjectController;
 use App\Http\Controllers\Delivery\TaskController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\Finance\BankAccountController;
+use App\Http\Controllers\Finance\BankStatementController;
 use App\Http\Controllers\Finance\CommercialDocumentController;
 use App\Http\Controllers\Finance\ExpenseController;
 use App\Http\Controllers\Finance\GoodsReceiptController;
@@ -17,6 +19,8 @@ use App\Http\Controllers\Finance\PurchaseOrderController;
 use App\Http\Controllers\Finance\QuotationController;
 use App\Http\Controllers\Finance\SupplierController;
 use App\Http\Controllers\Finance\TaxReportController;
+use App\Http\Controllers\Finance\TreasuryOperationsController;
+use App\Http\Controllers\Finance\TreasuryReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
 use App\Http\Controllers\Sales\ContactController;
@@ -180,6 +184,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/commercial-documents', [CommercialDocumentController::class, 'index'])
         ->middleware('permission:billing_notes.view')
         ->name('commercial-documents.index');
+    Route::get('/bank-accounts', [BankAccountController::class, 'index'])
+        ->middleware('permission:treasury.accounts.view')
+        ->name('bank-accounts.index');
+    Route::post('/bank-accounts', [BankAccountController::class, 'store'])
+        ->middleware(['permission:treasury.accounts.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('bank-accounts.store');
+    Route::patch('/bank-accounts/{bankAccount}', [BankAccountController::class, 'update'])
+        ->middleware(['permission:treasury.accounts.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('bank-accounts.update');
+    Route::get('/bank-statements', [BankStatementController::class, 'index'])
+        ->middleware('permission:treasury.reconciliation.view')
+        ->name('bank-statements.index');
+    Route::post('/bank-statements/import', [BankStatementController::class, 'import'])
+        ->middleware(['permission:treasury.reconciliation.manage', 'password.confirm', 'throttle:5,1'])
+        ->name('bank-statements.import');
+    Route::post('/bank-statement-lines/{line}/match', [BankStatementController::class, 'match'])
+        ->middleware(['permission:treasury.reconciliation.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('bank-statement-lines.match');
+    Route::post('/bank-statement-lines/{line}/unmatch', [BankStatementController::class, 'unmatch'])
+        ->middleware(['permission:treasury.reconciliation.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('bank-statement-lines.unmatch');
+    Route::get('/petty-cash', [TreasuryOperationsController::class, 'pettyCash'])->middleware('permission:petty_cash.view')->name('petty-cash.index');
+    Route::post('/petty-cash/funds', [TreasuryOperationsController::class, 'storeFund'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.funds.store');
+    Route::post('/petty-cash/requests', [TreasuryOperationsController::class, 'storeRequest'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.store');
+    Route::post('/petty-cash/requests/{pettyCashRequest}/approve', [TreasuryOperationsController::class, 'approveRequest'])->middleware(['permission:petty_cash.approve', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.approve');
+    Route::post('/petty-cash/requests/{pettyCashRequest}/reject', [TreasuryOperationsController::class, 'rejectRequest'])->middleware(['permission:petty_cash.approve', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.reject');
+    Route::post('/petty-cash/requests/{pettyCashRequest}/pay', [TreasuryOperationsController::class, 'payRequest'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.pay');
+    Route::post('/petty-cash/reimbursements', [TreasuryOperationsController::class, 'reimburse'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.reimbursements.store');
+    Route::get('/cheques', [TreasuryOperationsController::class, 'cheques'])->middleware('permission:cheques.view')->name('cheques.index');
+    Route::post('/cheques', [TreasuryOperationsController::class, 'storeCheque'])->middleware(['permission:cheques.manage', 'password.confirm', 'throttle:10,1'])->name('cheques.store');
+    Route::post('/cheques/{cheque}/transition', [TreasuryOperationsController::class, 'transitionCheque'])->middleware(['permission:cheques.manage', 'password.confirm', 'throttle:10,1'])->name('cheques.transition');
+    Route::get('/treasury-reports', [TreasuryReportController::class, 'index'])->middleware('permission:treasury.reports.view')->name('treasury-reports.index');
     Route::post('/credit-debit-notes', [CommercialDocumentController::class, 'storeCreditDebitNote'])
         ->middleware(['permission:credit_debit_notes.create', 'password.confirm', 'throttle:10,1'])
         ->name('credit-debit-notes.store');
@@ -201,6 +237,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/vouchers', [CommercialDocumentController::class, 'storeVoucher'])
         ->middleware(['permission:vouchers.create', 'password.confirm', 'throttle:10,1'])
         ->name('vouchers.store');
+    Route::post('/vouchers/{voucher}/attachment', [CommercialDocumentController::class, 'storeVoucherAttachment'])
+        ->middleware(['permission:vouchers.update', 'password.confirm', 'throttle:10,1'])
+        ->name('vouchers.attachment.store');
     Route::get('/commercial-documents/{type}/{id}/print', [CommercialDocumentController::class, 'print'])
         ->middleware('permission:billing_notes.view')
         ->name('commercial-documents.print');

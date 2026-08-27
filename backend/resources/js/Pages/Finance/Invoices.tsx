@@ -123,6 +123,7 @@ type PaymentForm = {
     amount: string;
     payment_date: string;
     payment_method: string;
+    bank_account_id: string;
     reference_no: string;
     note: string;
     idempotency_key: string;
@@ -163,6 +164,7 @@ const emptyPayment = (amount = '0.00'): PaymentForm => ({
     amount,
     payment_date: today,
     payment_method: 'bank_transfer',
+    bank_account_id: '',
     reference_no: '',
     note: '',
     idempotency_key: paymentKey(),
@@ -178,6 +180,7 @@ export default function Invoices({
     taxModes,
     canRecordPayments,
     canReversePayments,
+    bankAccounts,
     sourceDeal,
 }: {
     invoices: Invoice[];
@@ -190,6 +193,7 @@ export default function Invoices({
     filters: Record<string, string | null>;
     canRecordPayments: boolean;
     canReversePayments: boolean;
+    bankAccounts: { id: string; bank_name: string; account_name: string }[];
     sourceDeal?: SourceDeal | null;
 }) {
     const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -566,6 +570,39 @@ export default function Invoices({
                                             'other',
                                         ]}
                                     />
+                                    <div>
+                                        <InputLabel value="Bank / Cash Account" />
+                                        <select
+                                            className="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm"
+                                            value={
+                                                paymentForm.data.bank_account_id
+                                            }
+                                            onChange={(event) =>
+                                                paymentForm.setData(
+                                                    'bank_account_id',
+                                                    event.target.value,
+                                                )
+                                            }
+                                        >
+                                            <option value="">Not linked</option>
+                                            {bankAccounts.map((account) => (
+                                                <option
+                                                    key={account.id}
+                                                    value={account.id}
+                                                >
+                                                    {account.bank_name} -{' '}
+                                                    {account.account_name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError
+                                            message={
+                                                paymentForm.errors
+                                                    .bank_account_id
+                                            }
+                                            className="mt-1"
+                                        />
+                                    </div>
                                     <Field
                                         label="Reference No"
                                         value={paymentForm.data.reference_no}

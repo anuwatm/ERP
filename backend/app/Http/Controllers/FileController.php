@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\StoredFile;
+use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -47,6 +48,14 @@ class FileController extends Controller
             abort_unless($request->user()->hasPermissionCode('expenses.view'), 403);
             $expense = Expense::where('id', $file->entity_id)->where('org_id', $request->user()->org_id)->firstOrFail();
             abort_unless($expense->receipt_file_id === $file->id, 403);
+
+            return;
+        }
+
+        if ($file->entity_type === 'voucher') {
+            abort_unless($request->user()->hasPermissionCode('vouchers.view'), 403);
+            $voucher = Voucher::where('id', $file->entity_id)->where('org_id', $request->user()->org_id)->firstOrFail();
+            abort_unless($voucher->attachment_file_id === $file->id, 403);
 
             return;
         }

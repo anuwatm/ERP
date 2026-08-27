@@ -64,6 +64,16 @@ class PermissionCatalog
             ['code' => 'vouchers.create', 'module' => 'vouchers', 'action' => 'create', 'description' => 'Create payment and receipt vouchers'],
             ['code' => 'vouchers.update', 'module' => 'vouchers', 'action' => 'update', 'description' => 'Update payment and receipt vouchers'],
             ['code' => 'vouchers.approve', 'module' => 'vouchers', 'action' => 'approve', 'description' => 'Approve payment and receipt vouchers'],
+            ['code' => 'treasury.accounts.view', 'module' => 'treasury_accounts', 'action' => 'view', 'description' => 'View bank and cash accounts'],
+            ['code' => 'treasury.accounts.manage', 'module' => 'treasury_accounts', 'action' => 'manage', 'description' => 'Manage bank and cash accounts'],
+            ['code' => 'treasury.reconciliation.view', 'module' => 'treasury_reconciliation', 'action' => 'view', 'description' => 'View bank statements and reconciliation'],
+            ['code' => 'treasury.reconciliation.manage', 'module' => 'treasury_reconciliation', 'action' => 'manage', 'description' => 'Import bank statements and manage reconciliation'],
+            ['code' => 'treasury.reports.view', 'module' => 'treasury_reports', 'action' => 'view', 'description' => 'View treasury reports'],
+            ['code' => 'petty_cash.view', 'module' => 'petty_cash', 'action' => 'view', 'description' => 'View petty cash'],
+            ['code' => 'petty_cash.manage', 'module' => 'petty_cash', 'action' => 'manage', 'description' => 'Manage petty cash funds and requests'],
+            ['code' => 'petty_cash.approve', 'module' => 'petty_cash', 'action' => 'approve', 'description' => 'Approve petty cash requests'],
+            ['code' => 'cheques.view', 'module' => 'cheques', 'action' => 'view', 'description' => 'View cheques and PDC'],
+            ['code' => 'cheques.manage', 'module' => 'cheques', 'action' => 'manage', 'description' => 'Manage cheques and PDC'],
             ['code' => 'payments.view', 'module' => 'payments', 'action' => 'view', 'description' => 'View invoice payments'],
             ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
             ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
@@ -119,7 +129,8 @@ class PermissionCatalog
         $projects = ['dashboard.view', 'projects.view', 'projects.create', 'projects.update', 'tasks.view', 'tasks.create', 'tasks.update', 'tasks.comment'];
         $procurement = ['suppliers.view', 'suppliers.create', 'suppliers.update', 'suppliers.delete', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.approve', 'purchase_orders.cancel', 'inventory.view', 'inventory.receive', 'inventory.adjust'];
         $phase9Finance = ['credit_debit_notes.view', 'credit_debit_notes.create', 'credit_debit_notes.update', 'credit_debit_notes.approve', 'billing_notes.view', 'billing_notes.create', 'billing_notes.update', 'billing_notes.approve', 'delivery_orders.view', 'delivery_orders.create', 'delivery_orders.update', 'delivery_orders.approve', 'purchase_requests.view', 'purchase_requests.create', 'purchase_requests.update', 'purchase_requests.approve', 'vouchers.view', 'vouchers.create', 'vouchers.update', 'vouchers.approve'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
+        $treasury = ['treasury.accounts.view', 'treasury.accounts.manage', 'treasury.reconciliation.view', 'treasury.reconciliation.manage', 'treasury.reports.view', 'petty_cash.view', 'petty_cash.manage', 'petty_cash.approve', 'cheques.view', 'cheques.manage'];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [

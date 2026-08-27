@@ -13,6 +13,7 @@ use App\Models\PurchaseRequest;
 use App\Models\StockMovement;
 use App\Models\Voucher;
 use App\Services\NumberSequenceService;
+use App\Support\FileAttachmentManager;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -35,7 +36,7 @@ class CommercialDocumentController extends Controller
             'billingNotes' => BillingNote::where('org_id', $orgId)->with('customer:id,company_name')->latest()->get(),
             'deliveryOrders' => DeliveryOrder::where('org_id', $orgId)->with('invoice:id,invoice_no')->latest()->get(),
             'purchaseRequests' => PurchaseRequest::where('org_id', $orgId)->with(['supplier:id,name', 'items'])->latest()->get(),
-            'vouchers' => Voucher::where('org_id', $orgId)->latest()->get(),
+            'vouchers' => Voucher::where('org_id', $orgId)->with('attachment:id,file_name,mime_type,size_bytes')->latest()->get(),
         ]);
     }
 
@@ -267,6 +268,25 @@ class CommercialDocumentController extends Controller
         $this->audit($request, 'voucher.create', 'voucher', $voucher->id, null, $voucher->only(['voucher_no', 'type', 'status', 'amount']));
 
         return back()->with('success', 'Voucher created.');
+    }
+
+    public function storeVoucherAttachment(Request $request, Voucher $voucher, FileAttachmentManager $files): RedirectResponse
+    {
+        abort_unless($voucher->org_id === $request->user()->org_id, 404);
+        $request->validate([
+            'attachment' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:'.FileAttachmentManager::MAX_KILOBYTES],
+        ]);
+
+        DB::transaction(function () use ($request, $voucher, $files): void {
+            $lockedVoucher = Voucher::where('org_id', $request->user()->org_id)->lockForUpdate()->findOrFail($voucher->id);
+            $previousFileId = $lockedVoucher->attachment_file_id;
+            $files->delete($lockedVoucher->attachment);
+            $file = $files->store($request, $request->file('attachment'), 'voucher', $lockedVoucher->id, 'voucher_proof');
+            $lockedVoucher->update(['attachment_file_id' => $file->id]);
+            $this->audit($request, 'voucher.attachment.upload', 'voucher', $lockedVoucher->id, ['attachment_file_id' => $previousFileId], ['attachment_file_id' => $file->id]);
+        });
+
+        return back()->with('success', 'Voucher proof uploaded.');
     }
 
     public function print(Request $request, string $type, string $id): View

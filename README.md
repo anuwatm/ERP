@@ -8,8 +8,8 @@
 Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dashboard
 ```
 
-สถานะล่าสุด: **Phase 9 Done**  
-ฟีเจอร์หลักถึงตอนนี้เสร็จแล้วตั้งแต่ Auth, Admin, CRM, Finance, Delivery, Executive Dashboard, Dashboard Date Filters, Configurable Numbering, Suppliers, Purchase Orders, Project Members, Production Roadmap features และ Commercial & Procurement Documents
+สถานะล่าสุด: **Phase 10 Done**
+ฟีเจอร์หลักถึงตอนนี้เสร็จแล้วตั้งแต่ Auth, Admin, CRM, Finance, Delivery, Executive Dashboard, Dashboard Date Filters, Configurable Numbering, Suppliers, Purchase Orders, Project Members, Production Roadmap features, Commercial & Procurement Documents และ Treasury/Banking/Cash Management
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 
@@ -65,6 +65,7 @@ Invite user -> Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Dash
 | Dashboard | Admin, Executive, Finance, Delivery, Sales dashboard |
 | Reporting Filters | filter dashboard แบบ all-time, month, year, custom range |
 | Commercial Documents | Quotation, Credit/Debit Note, Billing Note, Delivery Order, Purchase Request, Payment/Receipt Voucher |
+| Treasury | Bank account master, bank statement import/reconciliation, petty cash, cheque/PDC, voucher proof, treasury reports |
 
 ---
 
@@ -216,6 +217,18 @@ to=2026-08-31
 - Purchase Request พร้อม approve และ convert เป็น Purchase Order
 - Payment Voucher / Receipt Voucher พร้อม print/PDF
 - ทุกเอกสารใช้ running number, permission, org scope และ audit log
+
+### 8. Treasury, Banking & Cash Management
+
+ฟีเจอร์ Treasury Phase 10:
+
+- Bank account master พร้อมเข้ารหัสเลขบัญชีและป้องกันเลขบัญชีซ้ำในองค์กร
+- Payment receipt/reversal และ expense payment ผูก bank/cash account
+- นำเข้า CSV bank statement พร้อมป้องกันรายการซ้ำ และ match/unmatch reconciliation ที่มี audit trail
+- Petty cash fund, request, independent approval, payment และ reimbursement
+- Cheque/PDC register สำหรับรับ/จ่าย พร้อม deposit, clear เทียบ statement, bounce และ cancel
+- Voucher proof upload/download ตาม permission ของเอกสารต้นทาง
+- Treasury report สรุป expected bank position, unreconciled items, petty cash และ pending cheques
 
 ---
 
@@ -599,6 +612,7 @@ php artisan test
 | Phase 7 | Closed | Configurable numbering, inclusive VAT UI, suppliers, purchase orders, project members |
 | Phase 8 | Done | Official documents/PDF, tax reports, inventory/GRN, notifications |
 | Phase 9 | Done | Commercial & Procurement Documents |
+| Phase 10 | Done | Treasury, Banking & Cash Management |
 
 ---
 

@@ -15,7 +15,7 @@ class Payment extends Model
 
     public const METHODS = ['bank_transfer', 'cash', 'credit_card', 'promptpay', 'other'];
 
-    protected $fillable = ['org_id', 'invoice_id', 'entry_type', 'reversal_of_payment_id', 'amount', 'payment_date', 'payment_method', 'reference_no', 'attachment_file_id', 'note', 'idempotency_key', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'invoice_id', 'bank_account_id', 'entry_type', 'reversal_of_payment_id', 'amount', 'payment_date', 'payment_method', 'reference_no', 'attachment_file_id', 'note', 'idempotency_key', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
@@ -43,5 +43,10 @@ class Payment extends Model
     public function attachment(): BelongsTo
     {
         return $this->belongsTo(StoredFile::class, 'attachment_file_id');
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 }

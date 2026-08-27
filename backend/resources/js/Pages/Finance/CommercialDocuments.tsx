@@ -5,6 +5,7 @@ import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
 import { Head } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 
 type Row = Record<string, string | number | null | undefined> & { id: string };
 
@@ -69,6 +70,7 @@ export default function CommercialDocuments({
                         amountKey="amount"
                         statusKey="status"
                         printType="voucher"
+                        isVoucher
                     />
                 </div>
             </div>
@@ -83,6 +85,7 @@ function SimpleTable({
     amountKey,
     statusKey,
     printType,
+    isVoucher = false,
 }: {
     title: string;
     rows: Row[];
@@ -90,6 +93,7 @@ function SimpleTable({
     amountKey: string | null;
     statusKey: string;
     printType: string;
+    isVoucher?: boolean;
 }) {
     return (
         <Card title={title} description={`${rows.length} document(s)`}>
@@ -148,11 +152,57 @@ function SimpleTable({
                                 >
                                     PDF
                                 </SecondaryButton>
+                                {isVoucher && (
+                                    <VoucherAttachmentActions row={row} />
+                                )}
                             </div>
                         ),
                     },
                 ]}
             />
         </Card>
+    );
+}
+
+function VoucherAttachmentActions({ row }: { row: Row }) {
+    const form = useForm<{ attachment: File | null }>({ attachment: null });
+    const attachment = row.attachment as
+        { id: string; file_name: string } | null | undefined;
+
+    return (
+        <div className="flex flex-wrap items-center gap-2">
+            <label className="cursor-pointer rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+                {form.processing
+                    ? 'Uploading'
+                    : attachment
+                      ? 'Replace Proof'
+                      : 'Upload Proof'}
+                <input
+                    className="sr-only"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    disabled={form.processing}
+                    onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+
+                        form.setData('attachment', file);
+                        form.post(route('vouchers.attachment.store', row.id), {
+                            forceFormData: true,
+                            preserveScroll: true,
+                            onFinish: () => form.reset('attachment'),
+                        });
+                    }}
+                />
+            </label>
+            {attachment && (
+                <a
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-300"
+                    href={route('files.download', attachment.id)}
+                >
+                    {attachment.file_name}
+                </a>
+            )}
+        </div>
     );
 }

@@ -30,7 +30,7 @@
 | Phase 8 | Done | Production roadmap completed: PDF/50-Tawi, tax/WHT/aging exports, Purchase Tax from PO/Expenses/GRN, Inventory/GRN/adjustments, notifications/preferences |
 | Production Prep | Planned | Server readiness before real deployment: scheduler, queue worker, PDF Thai fonts, storage/upload limits |
 | Phase 9 | Done | Commercial & Procurement Documents completed: Quotation, CN/DN, Billing Note, Delivery Order, Purchase Request, Voucher, print/PDF, permissions, audit, tests |
-| Phase 10 | Planned | Treasury, Banking & Cash Management: bank accounts, reconciliation, petty cash, cheque/PDC |
+| Phase 10 | Done | Treasury, Banking & Cash Management: bank accounts, statement reconciliation, petty cash, cheque/PDC, voucher proof, treasury reports, and feature tests completed |
 | Phase 11 | Planned | General Ledger & Double-entry Accounting |
 | Phase 12 | Planned | E-Tax & RD Online Tax Filing |
 | Phase 13 | Planned | Fixed Assets & Depreciation |
@@ -692,29 +692,29 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 10 Design Backlog
 
-- [ ] Design Bank Accounts Master: bank, branch, account no, account type, currency, org/branch scope
-- [ ] Design payment receipt/payment expense ให้ผูก bank account หรือ cash account
-- [ ] Design Bank Statement import format และ reconciliation matching rules
-- [ ] Design manual match/unmatch และ reconciliation audit trail
-- [ ] Design Petty Cash fund, request, reimbursement และ approval flow
-- [ ] Design Cheque/PDC register: received/issued, due date, cleared, bounced, cancelled
-- [ ] Design Voucher attachment: upload/download proof slip files สำหรับ PV/RV พร้อม org isolation & permission guards
-- [ ] Design permissions สำหรับ treasury setup, reconciliation, petty cash, cheque management
-- [ ] Design tests สำหรับ bank org isolation, reconciliation matching, petty cash approval, cheque status
+- [x] Design Bank Accounts Master: bank, branch, account no, account type, currency, org/branch scope
+- [x] Design payment receipt/payment expense ให้ผูก bank account หรือ cash account
+- [x] Design Bank Statement import format และ reconciliation matching rules
+- [x] Design manual match/unmatch และ reconciliation audit trail
+- [x] Design Petty Cash fund, request, reimbursement และ approval flow
+- [x] Design Cheque/PDC register: received/issued, due date, cleared, bounced, cancelled
+- [x] Design Voucher attachment: upload/download proof slip files สำหรับ PV/RV พร้อม org isolation & permission guards
+- [x] Design permissions สำหรับ treasury setup, reconciliation, petty cash, cheque management
+- [x] Design tests สำหรับ bank org isolation, reconciliation matching, petty cash approval, cheque status
 
 ### Phase 10 Implementation Backlog
 
-- [ ] สร้าง migrations/models สำหรับ Bank Accounts
-- [ ] เพิ่ม Bank Account UI
-- [ ] ผูก payment receipts/reversals กับ bank account
-- [ ] ผูก expense payments กับ bank/cash account
-- [ ] สร้าง migrations/models สำหรับ Bank Statements และ Statement Lines
-- [ ] เพิ่ม Bank Statement import และ reconciliation screen
-- [ ] เพิ่ม manual match/unmatch reconciliation
-- [ ] สร้าง Petty Cash schema/UI/approval flow
-- [ ] สร้าง Cheque/PDC schema/UI/status flow
-- [ ] เพิ่ม Voucher attachment upload/download และ tests ครอบคลุมความปลอดภัย
-- [ ] เพิ่ม treasury reports และ feature tests
+- [x] สร้าง migrations/models สำหรับ Bank Accounts
+- [x] เพิ่ม Bank Account UI
+- [x] ผูก payment receipts/reversals กับ bank account
+- [x] ผูก expense payments กับ bank/cash account
+- [x] สร้าง migrations/models สำหรับ Bank Statements และ Statement Lines
+- [x] เพิ่ม Bank Statement import และ reconciliation screen
+- [x] เพิ่ม manual match/unmatch reconciliation
+- [x] สร้าง Petty Cash schema/UI/approval flow
+- [x] สร้าง Cheque/PDC schema/UI/status flow
+- [x] เพิ่ม Voucher attachment upload/download และ tests ครอบคลุมความปลอดภัย
+- [x] เพิ่ม treasury reports และ feature tests
 
 ---
 

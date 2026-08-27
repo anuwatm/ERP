@@ -1,6 +1,6 @@
 # Gemini Review & Audit Notes (Clean)
 
-Last cleaned: 2026-08-25 (Phase 9 Closed)
+Last cleaned: 2026-08-27 (Phase 10 Closed)
 
 Purpose: เก็บเฉพาะข้อมูลอ้างอิงสถาปัตยกรรม/ความปลอดภัยหลักที่ยังต้องควบคุม (Security Guardrails), สถานะโครงการล่าสุด, ข้อคิดเห็น/ข้อสังเกตเชิงสถาปัตยกรรม (Architectural Observations & Feedback), ข้อปฏิบัติในการขึ้น Production และแผนงานพัฒนาต่อยอด เพื่อความสะอาดและกระชับของบริบท (รายละเอียดงานที่ปิดแล้วสามารถดูได้ที่ `checklist.md` และ Git history)
 
@@ -15,9 +15,10 @@ Purpose: เก็บเฉพาะข้อมูลอ้างอิงส�
 | **Directory Traversal Protection** | ตรวจสอบ Canonical Path ด้วย `realpath()` และ `str_starts_with($fullPath, $basePath)` ป้องกันการเข้าถึงไฟล์นอกพื้นที่จัดเก็บไฟล์สาธารณะอย่างสมบูรณ์ |
 | **Invite Token Protection** | ซ่อนและไม่ส่ง Plain Invite Token และ URL ใน Flash Session หากอยู่ในสภาพแวดล้อมที่เป็น `production` |
 | **Audit Logs Redaction** | พัฒนา Central Redaction Guard ใน Eloquent `saving` event เพื่อเซนเซอร์คำสำคัญ (เช่น password, token, secret) และทำ Masking เลขประจำตัวประชาชน (`person_id`) |
-| **Upload File Security** | ตรวจสอบนามสกุลและ MIME Type ของไฟล์โลโก้อย่างเข้มงวด ป้องกันไฟล์ที่เป็น Executable หรือ Polyglot File |
+| **Upload & Attachment Security** | ตรวจสอบนามสกุลและ MIME Type ของไฟล์แนบ (Voucher proof slip, Logos, Documents) อย่างเข้มงวด ป้องกันไฟล์ Executable/Polyglot และจัดเก็บใน storage key ฝั่ง server ใต้ `tenants/{org_id}/...` เท่านั้น |
 | **Session Invalidation** | เมื่อมีการ Disable บัญชีผู้ใช้ หรือมีการเปลี่ยนแปลง Role หรือปรับปรุงระดับสิทธิ์ (Permissions) ระบบจะทำลายเซสชันเก่าในตาราง `sessions` และล้าง `remember_token` ของผู้ใช้รายนั้นทันทีเพื่อบังคับให้ออกจากระบบ |
-| **Financial Isolation & Privacy** | ข้อมูลการเงินรวมทั้งหมดบน Dashboard แสดงผลเฉพาะผู้ที่มีสิทธิ์ `executive.dashboard.view` หรือผู้ดูแลระบบ (Owner/Admin) เท่านั้น พนักงานปกติหรือพนักงานส่งมอบทั่วไปจะไม่มีการดึงหรือเห็นข้อมูลสรุปการเงินได้เลย และไม่มีการส่งคอลัมน์หรือประมวลผลเรื่อง `Cash Balance` |
+| **Financial Isolation & Privacy** | ข้อมูลการเงินรวมทั้งหมดบน Dashboard แสดงผลเฉพาะผู้ที่มีสิทธิ์ `executive.dashboard.view` หรือผู้ดูแลระบบ (Owner/Admin) เท่านั้น พนักงานปกติหรือพนักงานส่งมอบทั่วไปจะไม่มีการดึงหรือเห็นข้อมูลสรุปการเงินได้เลย |
+| **Bank Account Data Protection** | เลขบัญชีธนาคารจัดเก็บแบบเข้ารหัส (`encrypted` cast) และใช้ `account_number_hash` (SHA-256) ตรวจสอบความซ้ำซ้อนภายในองค์กร ส่วนการแสดงผลบน UI และ Audit Logs จะแสดงเฉพาะเลขที่ Mask แล้ว (`maskedAccountNumber`) เท่านั้น |
 
 ---
 
@@ -27,38 +28,42 @@ Purpose: เก็บเฉพาะข้อมูลอ้างอิงส�
 - **การจำกัดสิทธิ์พนักงาน (Member Guard):** สมาชิกทั่วไปที่เป็นผู้รับผิดชอบงาน (Assignee) แต่ไม่ได้เป็นเจ้าของโครงการ จะมีสิทธิ์แก้ไขได้เฉพาะสถานะของงาน (`status`) เท่านั้น ระบบหลังบ้านจะป้องกันการแก้ไขชื่อ, รายละเอียด หรือผู้รับผิดชอบงานอย่างปลอดภัย
 - **สถานะขัดข้อง (Blocked Overdue Rule):** งานที่มีสถานะเป็น `blocked` แม้เกินกำหนดเวลาส่งจะไม่ถูกนับเป็นงานล่าช้า (Overdue Task) ในสถิติระบบ
 - **ความถูกต้องทางภาษีและการค้า (Tax & Commercial Integrity):** ห้ามใช้วิธี Void กับใบกำกับภาษีหรือเอกสารการค้าทางการที่ส่งมอบหรือยื่นรอบบัญชีแล้ว ให้ใช้วิธีออก Credit Note / Debit Note เพื่อปรับยอดหนี้และกระทบยอดภาษีขายตามกฎหมายสรรพากร
+- **การกระทบยอดและการเงิน (Treasury Integrity):** การกระทบยอด Bank Statement, การจัดการ Petty Cash และ Cheque/PDC ใน Phase 10 จัดการในระดับ Treasury State โดยข้อมูลยอดคงเหลือคำนวณแบบ Dynamic จาก Transactions จริง และเตรียมพร้อมเชื่อม Double-Entry Journal Postings ใน Phase 11
 
 ---
 
 ## 3. สถานะโครงการล่าสุด (Current Status)
 
-- **Phase 1 - 9: Complete / Closed**
+- **Phase 1 - 10: Complete / Closed**
   - **Core & Operations (Phase 1 - 7):** Core MVP, Multitenancy, Dashboards แยกตามบทบาท, Number Sequences, Inclusive VAT, Procurement & Suppliers, Project Members.
   - **Official Documents & Compliance (Phase 8):** Official Print/PDF (Invoice, Tax Invoice/Receipt, PO, 50-Tawi WHT), Inventory/GRN/Costing, Tax Reports/Aging/WHT, In-App & Queued Notifications.
-  - **Commercial & Procurement Documents (Phase 9):** Quotations & Convert to Invoice, Credit Note / Debit Note (กระทบ Invoice balance & ภ.พ.30), Billing Note / Statement of Account, Delivery Order (ตัดสต็อก Outbound & บันทึกหลักฐานผู้รับของ), Purchase Request (PR -> Approve -> Convert to PO), Payment/Receipt Voucher (PV/RV) พร้อม Print/PDF และ Security/Audit Isolation.
-- **Validation Snapshot:** 195 Tests Passed (1,625 Assertions / 0 Failures), TypeScript/Vite Build Clean, ESLint Clean, Prettier Clean, Pint Clean.
-- *(รายละเอียดประวัติงานที่ปิดแล้วใน Phase 1 - 9 ดูได้ที่ `checklist.md` และ Git history)*
+  - **Commercial & Procurement Documents (Phase 9):** Quotations & Convert to Invoice, Credit Note / Debit Note, Billing Note, Delivery Order, Purchase Request (PR -> PO), Payment/Receipt Voucher (PV/RV) พร้อม Print/PDF.
+  - **Treasury, Banking & Cash Management (Phase 10):** Bank Accounts Master (Encrypted/Masked), Bank Statement Import (CSV) & Fingerprint Deduplication, Bank Reconciliation (Match/Unmatch Audit Trail), Petty Cash Management (Imprest Fund, Independent Approval, Reimbursement), Cheque/PDC Lifecycle Management (Registered, Deposited, Cleared with Statement Line, Bounced, Cancelled), Voucher Attachment (Upload/Download Proof Slip with Org Isolation), Treasury Summary Reports.
+- **Validation Snapshot:** 209 Tests Passed (1,707 Assertions / 0 Failures), TypeScript/Vite Build Clean, ESLint Clean, Prettier Clean, Pint Clean.
+- *(รายละเอียดประวัติงานที่ปิดแล้วใน Phase 1 - 10 ดูได้ที่ `checklist.md` และ Git history)*
 
 ---
 
-## 4. ข้อคิดเห็นและข้อสังเกตจาก Phase 9 (Phase 9 Architectural Feedback & Review Notes)
+## 4. ข้อคิดเห็นและการประสานสถาปัตยกรรม Phase 10 สู่ Phase 11 (Reconciled Architecture Notes for Phase 11)
 
-จากการตรวจสอบการทำงานจริงและโครงสร้างของ Phase 9 มีข้อสังเกตและคำแนะนำเชิงสถาปัตยกรรมสำหรับเตรียมเชื่อมต่อไปยัง Phase 10 และ Phase 11 ดังนี้:
+จากการตรวจสอบร่วมกันระหว่าง Gemini และ GPT มีข้อสรุปและแนวทางสถาปัตยกรรมสำหรับ **Phase 11 (General Ledger & Double-Entry Accounting)** ดังนี้:
 
-1. **Credit Note (CN) กับการรับคืนสินค้า (Sales Return vs Stock Inbound):**
-   - *สถานะปัจจุบัน:* CN มีการคำนวณปรับลดหนี้ของ Invoice และปรับลดยอดภาษีขายในรายงาน ภ.พ.30 ได้อย่างสมบูรณ์แบบ
-   - *ข้อสังเกตสำหรับ Phase 11 (GL):* หากการออก CN มีกรณีที่เกิดจากการ "รับคืนสินค้ากลับเข้าคลัง" ควรให้ผู้ใช้งานทำ Stock Adjustment (Type: In) ควบคู่ไปด้วย เพื่อให้ทั้งยอดสต็อก On-hand และการลงบัญชีคู่ตัดต้นทุนขาย (COGS Reversal) ใน Phase 11 สอดคล้องกันอย่างถูกต้อง
-2. **Billing Note (ใบวางบิล) กับสถานะการชำระเงิน (Settlement Visibility):**
-   - *สถานะปัจจุบัน:* รวม Invoice ค้างชำระของลูกค้ารายเดียวกันได้ถูกต้อง พร้อมหน้าพิมพ์ใบวางบิล
-   - *คำแนะนำต่อยอด:* ใน Phase 10 เมื่อมีการรับชำระเงินผ่าน Bank Account หรือ Cheque แล้ว สามารถเพิ่มตัวกรองหรือ Badge สถานะ "Paid / Partially Paid" บนรายการบิลที่วางบิลไปแล้วเพื่อให้ฝ่ายการเงินติดตามยอดง่ายขึ้น
-3. **Delivery Order (DO) และการป้องกันสต็อกติดลบ:**
-   - *สถานะปัจจุบัน:* DO มีการตัด Stock Outbound เมื่อเอกสารเปลี่ยนเป็นสถานะ `delivered` พร้อมบันทึกหลักฐานผู้รับของ และมี Validation ป้องกันสต็อกติดลบ
-   - *ข้อสังเกตสำหรับ Phase 15 (Barcode/QR):* โครงสร้างของ DO Item เตรียมพร้อมรองรับการต่อยอดสแกน Serial/Lot/Bin Location ได้ทันทีใน Phase 15
-4. **Purchase Request (PR) ➔ Purchase Order (PO) 1:1 Flow:**
-   - *สถานะปัจจุบัน:* การอนุมัติ PR และแปลงเป็น PO ทำงานแบบ 1:1 ป้องกันการสร้าง PO ซ้ำจาก PR เดิมได้อย่างปลอดภัย ครอบคลุมการใช้งานของธุรกิจทั่วไป
-5. **Payment Voucher (PV) / Receipt Voucher (RV) สำหรับการเชื่อม Double-Entry (Phase 11):**
-   - *สถานะปัจจุบัน:* จัดเก็บบันทึกข้อมูล (Records), Audit Log, และพิมพ์ใบสำคัญรับ-จ่ายเงิน (Print/PDF) พร้อมโครงสร้างที่เชื่อมโยงกับเอกสารต้นทาง (Payment/Expense) โดยระบบแนบไฟล์สลิป/หลักฐานโดยตรงบนตัว Voucher จะบรรจุเข้าสู่ Backlog ของ Phase 10
-   - *ข้อสังเกตสำหรับ Phase 11:* โครงสร้างข้อมูลของ PV/RV ในปัจจุบันเหมาะสมมากสำหรับใช้เป็น Trigger Document ในการ Auto-Post บัญชีแยกประเภท (Dr. Expense/Vendor / Cr. Bank/Cash/WHT Payable) เมื่อก้าวเข้าสู่ระบบ General Ledger
+1. **การเชื่อมต่อ Treasury สู่ผังบัญชีแยกประเภท (Treasury to GL & Recognition Points):**
+   - *หลักการบัญชีคงค้าง (Accrual Basis):* ไม่ Hardcode ผัง Dr./Cr. แบบ 1-step ตายตัว แต่ให้รองรับตาม Accounting Policy & Recognition Point:
+     - **Billings / Invoices & Expenses Approval:** บันทึกตั้งหนี้/ลูกหนี้ก่อน (เช่น Dr. AR / Cr. Sales, Dr. Expense / Cr. AP)
+     - **Settlement / Payments:** บันทึกตัดหนี้/ลูกหนี้เมื่อรับหรือจ่ายเงินจริง (เช่น Dr. Bank / Cr. AR, Dr. AP / Cr. Bank หรือ Petty Cash)
+     - **Petty Cash Reimbursement:** Dr. Petty Cash (1112) / Cr. Bank Account (1111)
+2. **วงจรเช็คและบัญชีพัก (Cheque Clearing & Idempotency Guard):**
+   - การลงบันทึกเช็คต้องมี Clearing Accounts (เช่น เช็ครอเรียกเก็บ / เช็คจ่ายรอนำฝาก) รองรับวงจรตั้งแต่ Issue/Receive $\rightarrow$ Deposit $\rightarrow$ Cleared
+   - ป้องกันการลงบัญชีซ้ำซ้อนด้วย Unique Constraint / Guard: `source_type + source_id + posting_event`
+3. **การปิดรอบ Statement (Bank Statement Period Closing Guard):**
+   - รองรับปุ่ม "Close Statement Period" บนหน้า UI เมื่อกระทบยอด Reconciled ครบทุกรายการ
+   - Statement ที่มีสถานะ `closed` ห้าม Match/Unmatch และเชื่อมโยงกับการล็อกงวดบัญชี (Accounting Period Lock) ใน Phase 11
+4. **การควบคุมวงเงินเงินสดย่อย (Petty Cash Imprest Fund Safeguard):**
+   - ใช้ระบบ **Soft Warning** แจ้งเตือนเมื่อยอดเบิกสะสมที่รอการชดเชย (Unreimbursed Paid Requests) เกินวงเงิน Imprest Fund (ไม่ใช้ Hard Block เพื่อความยืดหยุ่นตามนโยบายองค์กร)
+5. **ความยืดหยุ่นของไฟล์ Bank Statement Import (Bank CSV Formats):**
+   - คงความเข้มงวดในการตรวจสอบ Header มาตรฐาน 5 คอลัมน์ พร้อม SHA-256 Fingerprint ป้องกันแถวซ้ำ
+   - จัดเตรียมโครงสร้างให้พร้อมสำหรับต่อยอด Preset/Parser ของธนาคารไทย (KBANK, SCB, BBL, KTB) ในอนาคต
 
 ---
 
@@ -82,9 +87,7 @@ Purpose: เก็บเฉพาะข้อมูลอ้างอิงส�
 ### แผนผังลำดับการพัฒนา Phase 10 - 16:
 
 ```
-[Phase 9: Complete]
-       ↓
-[Phase 10: Treasury, Banking & Cash Management] (Bank Accounts, Bank Reconciliation, Petty Cash, Cheque PDC)
+[Phase 10: Complete]
        ↓
 [Phase 11: General Ledger & Double-entry Accounting] (Chart of Accounts, Journal Posting, Period Lock)
        ↓
@@ -101,30 +104,25 @@ Purpose: เก็บเฉพาะข้อมูลอ้างอิงส�
 
 ### รายละเอียดและ Architectural Guardrails รายโมดูล:
 
-1. **Phase 10: Treasury, Banking & Cash Management (การเงิน, ธนาคาร, เงินสดย่อย และเช็ค):**
-   - **Bank Accounts Master:** ตารางสมุดบัญชีธนาคารบริษัท แยกสาขา/เลขบัญชี สำหรับตัดเงินรับชำระและจ่ายเงิน
-   - **Bank Reconciliation:** นำเข้า Bank Statement กระทบยอดเงินฝากธนาคารกับบันทึกในระบบ
-   - **Petty Cash (เงินสดย่อย):** วงเงินสดย่อยออฟฟิศ, การบันทึกใบเบิกเงินสดย่อย และการเบิกชดเชยเงินสดย่อย
-   - **Cheque Management (ทะเบียนเช็ค):** คุมเช็ครับ/เช็คจ่ายล่วงหน้า (Post-Dated Cheque - PDC), สถานะรอเรียกเก็บ, เช็คผ่าน (Cleared), และเช็คเด้ง (Bounced)
-2. **Phase 11: General Ledger (GL) & Double-Entry Accounting:**
-   - **Chart of Accounts & Journal Posting:** ผังบัญชี และบันทึก Journal Entries อัตโนมัติจาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, และ Petty Cash
+1. **Phase 11: General Ledger (GL) & Double-Entry Accounting:**
+   - **Chart of Accounts & Journal Posting:** ผังบัญชี (สินทรัพย์, หนี้สิน, ส่วนของเจ้าของ, รายได้, ค่าใช้จ่าย) และบันทึก Journal Entries อัตโนมัติจาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, และ Petty Cash ตาม Recognition Point
    - **Accounting Period & Period Lock:** ตาราง `accounting_periods` พร้อมสถานะ `open` / `closed` และ Guardrail ห้ามแก้ไข/Void/Post เอกสารการเงินย้อนหลังเข้าสู่งวดที่ปิดแล้ว
    - **Immutable Posting & Reversal Pattern:** Journal Entry ที่ `posted` แล้วห้ามแก้ตัวเลขเด็ดขาด หากผิดพลาดต้องออก Reversal Journal เท่านั้น
-   - **Posting Idempotency:** ป้องกันการ Post ซ้ำซ้อนจากเอกสารต้นทางเดิม (ผูก `source_type` + `source_id`)
-3. **Phase 12: E-Tax & RD Online Tax Filing (ภาษีอิเล็กทรอนิกส์และการยื่นภาษีออนไลน์):**
+   - **Posting Idempotency:** ป้องกันการ Post ซ้ำซ้อนจากเอกสารต้นทางเดิม (ผูก `source_type + source_id + posting_event`)
+2. **Phase 12: E-Tax & RD Online Tax Filing (ภาษีอิเล็กทรอนิกส์และการยื่นภาษีออนไลน์):**
    - **E-Tax Invoice / E-Receipt:** สร้างไฟล์ XML ตามมาตรฐาน ETDA และลงลายมือชื่อดิจิทัล (Digital Signature) รองรับ e-Tax by Email / RD API
    - **RD Prep Text Export:** ส่งออกไฟล์ Text รูปแบบมาตรฐานของโปรแกรม RD Prep สรรพากร เพื่อใช้อัปโหลดยื่นภาษี ภ.ง.ด. 1, ภ.ง.ด. 3, และ ภ.ง.ด. 53 ทางอินเทอร์เน็ต
-4. **Phase 13: Fixed Assets & Depreciation:**
+3. **Phase 13: Fixed Assets & Depreciation:**
    - ทะเบียนทรัพย์สินบริษัท และคำนวณค่าเสื่อมราคารายเดือน (Straight-Line) Post เข้า GL อัตโนมัติ
-5. **Phase 14: Multi-Currency & FX:**
+4. **Phase 14: Multi-Currency & FX:**
    - **Historical FX Rate Snapshot:** Snapshot อัตราแลกเปลี่ยนลงเอกสาร ณ วันที่เกิดรายการ ไม่ใช้ Dynamic Join
    - **Realized vs Unrealized FX:** แยกการรับรู้กำไร/ขาดทุนจากอัตราแลกเปลี่ยนจริง และเมื่อสิ้นงวดบัญชี
-6. **Phase 15: Advanced Inventory & Barcode/QR Operations:**
+5. **Phase 15: Advanced Inventory & Barcode/QR Operations:**
    - **Stock Transfer:** โอนย้ายสินค้าระหว่างคลังสินค้าหรือสาขา (Inter-warehouse transfer)
    - **Reorder Point & Low Stock Alert:** กำหนดระดับสต็อกขั้นต่ำและแจ้งเตือนเมื่อสินค้าใกล้หมด
    - **Lot & Expiration Tracking:** คุม Lot Number และวันหมดอายุสินค้า
    - **Barcode / QR Scanner UX:** สแกนรับสินค้า (GRN), จ่ายสินค้า (DO), ปรับยอด (Adjust) พร้อมระบุ Shelf/Bin Location
-7. **Phase 16: Payroll, Social Security & Security 2FA:**
+6. **Phase 16: Payroll, Social Security & Security 2FA:**
    - คำนวณเงินเดือนพนักงาน, ประกันสังคม (สปส.), ภาษีหัก ณ ที่จ่าย ภ.ง.ด. 1 / 1ก และออก Payslip
    - Two-Factor Authentication (2FA / Authenticator OTP) สำหรับบัญชีผู้ดูแลและฝ่ายการเงิน
 
@@ -133,5 +131,7 @@ Purpose: เก็บเฉพาะข้อมูลอ้างอิงส�
 ## 7. คำแนะนำสำหรับ AI ในการพัฒนาต่อยอด (Directives for Development)
 
 1. **ห้ามละเมิด Security Guardrails ในข้อ 1 และ 2 ของ `gemini.md` โดยเด็ดขาด** (Org Isolation, Redaction, Permission Check, Session Invalidation)
-2. **ห้ามแก้ไขประวัติที่ Closed แล้วใน Phase 1 - 9** ให้ต่อยอดใน Phase ใหม่ตามลำดับ
+2. **ขอบเขตการแก้ไขใน Phase ที่ Closed แล้ว (Closed Phase Governance):**
+   - ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-10 โดยไม่มี Decision/Checklist ใหม่
+   - **อนุญาตและให้ดำเนินการได้:** การแก้ไข Security Vulnerability, Data-Integrity Bug, Regression Fix หรือ Production-Blocking Issue ใน Phase ที่ปิดแล้ว โดยต้องมี Test ครอบคลุมและบันทึกเหตุผลชัดเจน
 3. **รักษา Code Quality:** รัน `php artisan test`, `pnpm run build`, `pnpm run lint`, `pnpm run check-format`, และ `pint` ให้ผ่าน 100% ทุกครั้งที่จบ Slice/Phase

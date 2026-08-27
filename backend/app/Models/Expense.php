@@ -15,7 +15,7 @@ class Expense extends Model
 
     public const CATEGORIES = ['salary', 'software', 'marketing', 'travel', 'office', 'contractor', 'hosting', 'misc'];
 
-    protected $fillable = ['org_id', 'expense_no', 'category', 'title', 'amount', 'tax_mode', 'tax_invoice_no', 'tax_amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'expense_no', 'category', 'title', 'amount', 'tax_mode', 'tax_invoice_no', 'tax_amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'bank_account_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
@@ -48,5 +48,10 @@ class Expense extends Model
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 }

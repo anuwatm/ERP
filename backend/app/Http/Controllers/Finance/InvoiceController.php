@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\BankAccount;
 use App\Models\Customer;
 use App\Models\Deal;
 use App\Models\Invoice;
@@ -63,6 +64,7 @@ class InvoiceController extends Controller
             'deals' => Deal::where('org_id', $user->org_id)->whereIn('stage', ['won', 'proposal', 'negotiation'])->orderBy('title')->get(['id', 'title', 'customer_id']),
             'projects' => Project::where('org_id', $user->org_id)->orderBy('name')->get(['id', 'project_code', 'name', 'customer_id']),
             'products' => Product::where('org_id', $user->org_id)->where('is_active', true)->orderBy('name')->get(['id', 'sku', 'name', 'unit', 'price']),
+            'bankAccounts' => BankAccount::where('org_id', $user->org_id)->where('status', 'active')->orderBy('account_name')->get(['id', 'bank_name', 'account_name']),
             'statuses' => Invoice::STATUSES,
             'taxModes' => Invoice::TAX_MODES,
             'filters' => $filters,
