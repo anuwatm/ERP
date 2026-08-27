@@ -15,6 +15,17 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 ---
 
+## 🗺️ System Diagrams & Architecture Documentation
+
+ระบบมีชุด Diagram สถาปัตยกรรม เวิร์กโฟลว์ และผังฐานข้อมูลฉบับสมบูรณ์ (Archify Interactive HTML + Mermaid Diagrams):
+
+* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML (เปิดดูบน Browser ได้ทันที)
+* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 10 ชุดหลัก
+* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก
+* 🗄️ **[Full Database ER Diagram (38+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 7 โดเมน
+
+---
+
 ## ใช้ทำงานอะไร
 
 โปรเจกต์นี้ใช้เป็นระบบบริหารองค์กรแบบรวมศูนย์ (Company OS) ที่เชื่อมโยงทุกแผนกเข้าด้วยกัน:

@@ -311,11 +311,57 @@ erDiagram
 
 ---
 
+### 11. Full Database ER Diagram (38+ Tables)
+- **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
+- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 38+ ตาราง ครอบคลุม 7 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
+- **Mermaid Preview (Master Cross-Domain):**
+
+```mermaid
+erDiagram
+    ORGANIZATIONS ||--o{ BRANCHES : "1:N"
+    BRANCHES ||--o{ DIVISIONS : "1:N"
+    DIVISIONS ||--o{ DEPARTMENTS : "1:N"
+    DEPARTMENTS ||--o{ USERS : "1:N"
+    ORGANIZATIONS ||--o{ CUSTOMERS : "1:N"
+    CUSTOMERS ||--o{ CONTACTS : "1:N"
+    CUSTOMERS ||--o{ DEALS : "1:N"
+    DEALS ||--o{ PROJECTS : "1:N"
+    PROJECTS ||--o{ TASKS : "1:N"
+    CUSTOMERS ||--o{ INVOICES : "1:N"
+    INVOICES ||--o{ PAYMENTS : "1:N"
+    SUPPLIERS ||--o{ PURCHASE_ORDERS : "1:N"
+    WAREHOUSES ||--o{ STOCK_LEVELS : "1:N"
+    EMPLOYEES ||--o{ ATTENDANCES : "1:N"
+    EMPLOYEES ||--o{ PAYSLIPS : "1:N"
+```
+
+---
+
+### 12. 6 Domain Group Workflows (31 Modules)
+- **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
+- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 19 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
+- **Mermaid Preview (Inter-Group Interaction):**
+
+```mermaid
+flowchart LR
+    G1["1. Foundation & Security"] --> G2["2. CRM & Sales"]
+    G2 --> G3["3. Project Delivery"]
+    G2 --> G4["4. Finance & Billing"]
+    G3 -. Milestone Done .-> G4
+    G4 --> G5["5. Insights & Dashboard"]
+    G4 -. Procure/Sync .-> G6["6. Operations & V2+"]
+```
+
+---
+
 ## 🛠️ วิธีการเปิดดูและใช้งาน
 
 1. **เปิดผ่านเบราว์เซอร์:**
    - ดับเบิลคลิกไฟล์ [`document/index.html`](./index.html) หรือไฟล์ `.html` ใดๆ เพื่อเปิด interactive viewer ในเบราว์เซอร์
    - สามารถกดปุ่มสลับ **Light / Dark mode**, **Focus View**, **Pan & Zoom**, และ **Export เป็น SVG / PNG / WebP** ได้ทันที
-2. **แก้ไขหรือสร้างใหม่:**
+2. **เปิดดูเอกสารผังรายกลุ่มและ ERD:**
+   - ผังการทำงาน 6 กลุ่มโมดูล (31 Modules): [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
+   - ผังฐานข้อมูล 38+ ตาราง: [`document/DATABASE_ERD.md`](./DATABASE_ERD.md)
+3. **แก้ไขหรือสร้างใหม่:**
    - ไฟล์ JSON Specification อยู่ในโฟลเดอร์ [`document/specs/`](./specs/)
    - สามารถรันคำสั่ง `node <archify-path>/bin/archify.mjs deliver <type> <spec.json> <output.html> --quality showcase --json` เพื่อ render ใหม่ได้ตลอดเวลา

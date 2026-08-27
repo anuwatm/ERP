@@ -21,6 +21,10 @@
 | [`database/DATABASE.md`](./database/DATABASE.md) | **Schema กลาง** — ต้อง sync กับ AD ก่อน migrate |
 | [`modules/README.md`](./modules/README.md) | ดัชนี module docs (31 ไฟล์) |
 | [`modules/*.md`](./modules/) | รายละเอียดต่อ module: หน้าที่, workflow, data flow, DB |
+| [`../document/index.html`](../document/index.html) | **Diagram Portal Hub** — รวม Interactive Standalone HTML Diagrams |
+| [`../document/README.md`](../document/README.md) | สารบัญและ Mermaid Diagrams ทั้งหมดของระบบ |
+| [`../document/GROUPS_WORKFLOW.md`](../document/GROUPS_WORKFLOW.md) | ผังการทำงาน 6 กลุ่มโมดูลหลัก (31 Modules) |
+| [`../document/DATABASE_ERD.md`](../document/DATABASE_ERD.md) | **Full Database ER Diagram** (38+ ตาราง ครอบคลุม 7 โดเมน) |
 | [`../ERP_FEATURE_PLAN.md`](../ERP_FEATURE_PLAN.md) | แผนยาว / backlog (authority ต่ำสุดเมื่อขัด MVP) |
 | [`../backend/`](../backend/) | Laravel app |
 
