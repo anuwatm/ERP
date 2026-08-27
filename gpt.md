@@ -8,7 +8,7 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 
 ## 1. Current Status
 
-- Phase 1-10: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
+- Phase 1-11: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
 
 ---
 

@@ -74,6 +74,15 @@ class PermissionCatalog
             ['code' => 'petty_cash.approve', 'module' => 'petty_cash', 'action' => 'approve', 'description' => 'Approve petty cash requests'],
             ['code' => 'cheques.view', 'module' => 'cheques', 'action' => 'view', 'description' => 'View cheques and PDC'],
             ['code' => 'cheques.manage', 'module' => 'cheques', 'action' => 'manage', 'description' => 'Manage cheques and PDC'],
+            ['code' => 'accounting.chart_accounts.view', 'module' => 'accounting_chart_accounts', 'action' => 'view', 'description' => 'View chart of accounts'],
+            ['code' => 'accounting.chart_accounts.manage', 'module' => 'accounting_chart_accounts', 'action' => 'manage', 'description' => 'Manage chart of accounts'],
+            ['code' => 'accounting.periods.view', 'module' => 'accounting_periods', 'action' => 'view', 'description' => 'View accounting periods'],
+            ['code' => 'accounting.periods.manage', 'module' => 'accounting_periods', 'action' => 'manage', 'description' => 'Manage accounting periods'],
+            ['code' => 'accounting.journals.view', 'module' => 'accounting_journals', 'action' => 'view', 'description' => 'View journals'],
+            ['code' => 'accounting.journals.create', 'module' => 'accounting_journals', 'action' => 'create', 'description' => 'Create draft journals'],
+            ['code' => 'accounting.journals.post', 'module' => 'accounting_journals', 'action' => 'post', 'description' => 'Post journals'],
+            ['code' => 'accounting.journals.reverse', 'module' => 'accounting_journals', 'action' => 'reverse', 'description' => 'Reverse posted journals'],
+            ['code' => 'accounting.reports.view', 'module' => 'accounting_reports', 'action' => 'view', 'description' => 'View general ledger reports'],
             ['code' => 'payments.view', 'module' => 'payments', 'action' => 'view', 'description' => 'View invoice payments'],
             ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
             ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
@@ -130,7 +139,8 @@ class PermissionCatalog
         $procurement = ['suppliers.view', 'suppliers.create', 'suppliers.update', 'suppliers.delete', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.approve', 'purchase_orders.cancel', 'inventory.view', 'inventory.receive', 'inventory.adjust'];
         $phase9Finance = ['credit_debit_notes.view', 'credit_debit_notes.create', 'credit_debit_notes.update', 'credit_debit_notes.approve', 'billing_notes.view', 'billing_notes.create', 'billing_notes.update', 'billing_notes.approve', 'delivery_orders.view', 'delivery_orders.create', 'delivery_orders.update', 'delivery_orders.approve', 'purchase_requests.view', 'purchase_requests.create', 'purchase_requests.update', 'purchase_requests.approve', 'vouchers.view', 'vouchers.create', 'vouchers.update', 'vouchers.approve'];
         $treasury = ['treasury.accounts.view', 'treasury.accounts.manage', 'treasury.reconciliation.view', 'treasury.reconciliation.manage', 'treasury.reports.view', 'petty_cash.view', 'petty_cash.manage', 'petty_cash.approve', 'cheques.view', 'cheques.manage'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
+        $accounting = ['accounting.chart_accounts.view', 'accounting.chart_accounts.manage', 'accounting.periods.view', 'accounting.periods.manage', 'accounting.journals.view', 'accounting.journals.create', 'accounting.journals.post', 'accounting.journals.reverse', 'accounting.reports.view'];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [

@@ -31,7 +31,7 @@
 | Production Prep | Planned | Server readiness before real deployment: scheduler, queue worker, PDF Thai fonts, storage/upload limits |
 | Phase 9 | Done | Commercial & Procurement Documents completed: Quotation, CN/DN, Billing Note, Delivery Order, Purchase Request, Voucher, print/PDF, permissions, audit, tests |
 | Phase 10 | Done | Treasury, Banking & Cash Management: bank accounts, statement reconciliation, petty cash, cheque/PDC, voucher proof, treasury reports, and feature tests completed |
-| Phase 11 | Planned | General Ledger & Double-entry Accounting |
+| Phase 11 | Done | General Ledger & Double-entry Accounting: COA, periods, immutable journals, source posting, reports, permissions, and regression validation completed |
 | Phase 12 | Planned | E-Tax & RD Online Tax Filing |
 | Phase 13 | Planned | Fixed Assets & Depreciation |
 | Phase 14 | Planned | Multi-Currency & FX |
@@ -724,29 +724,29 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 11 Design Backlog
 
-- [ ] Design Chart of Accounts schema: account code, name, type, parent account, active flag, org scope
-- [ ] Design Accounting Periods schema พร้อมสถานะ `open` / `closed`
-- [ ] Design Journal Entries schema: header, lines, debit/credit, posting date, source document, status
-- [ ] Design posting rules จาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash
-- [ ] Design period lock guard: ห้าม post, void หรือแก้ financial documents ย้อนหลังในงวดที่ปิดแล้ว
-- [ ] Design immutable posted journal policy และ reversal journal pattern
-- [ ] Design posting idempotency ด้วย `source_type` + `source_id`
-- [ ] Design Trial Balance, General Ledger report และ account ledger report
-- [ ] Design permissions และ tests สำหรับ double-entry balance, org isolation, posting/reversal
+- [x] Design Chart of Accounts schema: account code, name, type, parent account, active flag, org scope
+- [x] Design Accounting Periods schema พร้อมสถานะ `open` / `closed`
+- [x] Design Journal Entries schema: header, lines, debit/credit, posting date, source document, status
+- [x] Design posting rules จาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash
+- [x] Design period lock guard: ห้าม post, void หรือแก้ financial documents ย้อนหลังในงวดที่ปิดแล้ว
+- [x] Design immutable posted journal policy และ reversal journal pattern
+- [x] Design posting idempotency ด้วย `source_type` + `source_id`
+- [x] Design Trial Balance, General Ledger report และ account ledger report
+- [x] Design permissions และ tests สำหรับ double-entry balance, org isolation, posting/reversal
 
 ### Phase 11 Implementation Backlog
 
-- [ ] สร้าง migrations/models สำหรับ Chart of Accounts
-- [ ] สร้าง migrations/models สำหรับ Accounting Periods
-- [ ] สร้าง migrations/models สำหรับ Journal Entries และ Journal Lines
-- [ ] Seed default chart of accounts สำหรับบริษัทไทย SME
-- [ ] สร้าง Journal Posting service ที่บังคับ debit = credit เสมอ
-- [ ] เพิ่ม source idempotency guard
-- [ ] เพิ่ม period lock guard ใน financial document flows
-- [ ] ผูก auto-posting จาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash
-- [ ] สร้างหน้า Chart of Accounts และ Journal Entries
-- [ ] สร้าง Trial Balance และ GL reports
-- [ ] เพิ่ม feature tests และ full regression validation
+- [x] สร้าง migrations/models สำหรับ Chart of Accounts
+- [x] สร้าง migrations/models สำหรับ Accounting Periods
+- [x] สร้าง migrations/models สำหรับ Journal Entries และ Journal Lines
+- [x] Seed default chart of accounts สำหรับบริษัทไทย SME
+- [x] สร้าง Journal Posting service ที่บังคับ debit = credit เสมอ
+- [x] เพิ่ม source idempotency guard
+- [x] เพิ่ม period lock guard ใน financial document flows
+- [x] ผูก auto-posting จาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash
+- [x] สร้างหน้า Chart of Accounts และ Journal Entries
+- [x] สร้าง Trial Balance และ GL reports
+- [x] เพิ่ม feature tests และ full regression validation
 
 ---
 

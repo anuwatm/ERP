@@ -8,7 +8,7 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะล่าสุด: **Phase 10 Done** (Phases 0 ถึง 10 เสร็จสมบูรณ์แล้ว | Production Prep และ Phases 11–16 อยู่ในแผน Roadmap)
+สถานะล่าสุด: **Phase 11 Done** (Phases 0 ถึง 11 เสร็จสมบูรณ์แล้ว | Production Prep และ Phases 12–16 อยู่ในแผน Roadmap)
 ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers) และ Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports)
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
@@ -66,6 +66,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Tax & Aging Reports** | ภาษีขาย (ภ.พ.30), ภาษีซื้อ, หัก ณ ที่จ่าย (ภ.ง.ด.3/53), อายุหนี้ลูกหนี้/เจ้าหนี้ (AR/AP Aging) | Phase 8 |
 | **Commercial Docs** | ใบลดหนี้/เพิ่มหนี้ (CN/DN), ใบวางบิล (Billing Note), ใบส่งของ (DO), ใบขอซื้อ (PR), ใบสำคัญ (PV/RV) | Phase 9 |
 | **Treasury & Banking** | บัญชีธนาคารเข้ารหัส, นำเข้า CSV Bank Statement & Reconciliation, เงินสดย่อย, ทะเบียนเช็ค | Phase 10 |
+| **General Ledger** | Chart of Accounts, accounting periods, immutable double-entry journals, source posting, trial balance และ account ledger | Phase 11 |
 | **Projects & Tasks** | แปลงจาก Won Deal, สมาชิกโครงการ (Project Members), งานย่อย (Tasks, Checklists, Comments) | Phase 4, 7 |
 | **Notifications** | กระดิ่งแจ้งเตือน In-App, อีเมลคิวแจ้งเตือน (PO, Invoice Due, Assign, Invite), Preferences | Phase 8 |
 | **Dashboards** | Admin, Executive, Finance, Delivery, Sales Dashboards พร้อมตัวกรองช่วงเวลาและกราฟสรุป | Phase 1, 2, 3, 4, 5, 6 |
@@ -181,11 +182,12 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 - **PDF Thai Fonts**: ติดตั้งฟอนต์ภาษาไทยมาตรฐาน (Sarabun / THSarabunNew) บนเซิร์ฟเวอร์ Linux สำหรับ DomPDF
 - **Disaster Recovery**: นโยบายและขั้นตอน Backup ฐานข้อมูลอัตโนมัติรายวันพร้อมคู่มือกู้คืนระบบ
 
-### Phase 11: General Ledger & Double-entry Accounting (Planned)
-- **Chart of Accounts (COA)**: ผังบัญชีมาตรฐานสำหรับธุรกิจ SME
-- **Accounting Periods**: การเปิด/ปิดงวดบัญชีพร้อม Period Lock ป้องกันการแก้ไขย้อนหลัง
-- **Journal Entries & Automatic Posting**: บันทึกสมุดรายวันทั่วไป (Debits = Credits เสมอ) พร้อมระบบ Auto-post จาก Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank และ Petty Cash
-- **Financial Statements**: งบทดลอง (Trial Balance), สมุดบัญชีแยกประเภท (General Ledger Report)
+### Phase 11: General Ledger & Double-entry Accounting
+- **Chart of Accounts (COA)**: ผังบัญชี SME ต่อองค์กร พร้อม default account seed และการควบคุม active/postable
+- **Accounting Periods**: การเปิด/ปิดงวดบัญชีพร้อม Period Lock ป้องกันการ post หรือ reversal ย้อนหลัง
+- **Immutable Journals**: บังคับ Debits = Credits, source-event idempotency และ reversal journal สำหรับการแก้ไข
+- **Automatic Posting**: Invoice, Payment, Expense, CN/DN, Goods Receipt และ Petty Cash Reimbursement สร้าง journal ตาม recognition point; PV/RV, reconciliation และ request เป็น evidence/control จึงไม่ post ซ้ำ
+- **Financial Statements**: งบทดลอง (Trial Balance) และสมุดบัญชีแยกประเภท (General Ledger/Account Ledger)
 
 ### Phase 12: E-Tax & RD Online Tax Filing (Planned)
 - **e-Tax Invoice by Email / API**: สร้างไฟล์ XML ตามมาตรฐาน ETDA/กรมสรรพากร พร้อม Digital Signature
@@ -231,7 +233,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Production Prep** | *Planned* | Deployment readiness, Laravel Scheduler/Supervisor config, Linux Thai fonts, backup & recovery |
 | **Phase 9** | **Done** | Commercial & Procurement Docs: Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers (PV/RV) |
 | **Phase 10** | **Done** | Treasury, Banking & Cash Management: Bank accounts, CSV statement reconciliation, Petty cash, Cheques/PDC, Treasury reports |
-| **Phase 11** | *Planned* | General Ledger & Double-entry Accounting (COA, Periods, Auto-posting, Trial Balance, GL) |
+| **Phase 11** | **Done** | Chart of Accounts, periods, immutable journals, source posting, Trial Balance และ General Ledger |
 | **Phase 12** | *Planned* | E-Tax XML generation, Digital Signature, RD Online Tax Filing exports |
 | **Phase 13** | *Planned* | Fixed Assets register, monthly depreciation schedule, asset disposal |
 | **Phase 14** | *Planned* | Multi-Currency master, exchange rates snapshot, Realized/Unrealized FX |
@@ -391,4 +393,3 @@ Pass: 195 passed, 1625 assertions
 - ห้ามรับ `org_id` จาก client สำหรับ business write
 - ห้าม expose secret/token/password ใน Inertia props
 - Write action สำคัญควรมี audit log
-

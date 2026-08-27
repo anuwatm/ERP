@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Services\FinancialJournalService;
 use App\Support\FileAttachmentManager;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -18,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
-    public function store(Request $request, Invoice $invoice, FileAttachmentManager $files): RedirectResponse
+    public function store(Request $request, Invoice $invoice, FileAttachmentManager $files, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);
 
@@ -43,7 +44,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $payment = DB::transaction(function () use ($request, $invoice, $validated, $idempotencyKey, $files): Payment {
+            $payment = DB::transaction(function () use ($request, $invoice, $validated, $idempotencyKey, $files, $journals): Payment {
                 $lockedInvoice = $this->lockInvoice($request, $invoice->id);
                 $existing = $this->existingIdempotentPayment($request, $idempotencyKey);
 
@@ -79,6 +80,7 @@ class PaymentController extends Controller
                 }
 
                 $this->recalculateInvoicePaymentState($lockedInvoice, $request->user()->id);
+                $journals->postPayment($payment, $request->user()->id);
                 $this->audit($request, 'payment.receipt', $payment, null, $this->paymentSnapshot($payment, $lockedInvoice));
 
                 return $payment;
@@ -90,7 +92,7 @@ class PaymentController extends Controller
         return back()->with('success', "Payment receipt {$payment->amount} recorded.");
     }
 
-    public function reverse(Request $request, Payment $payment): RedirectResponse
+    public function reverse(Request $request, Payment $payment, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($payment->org_id === $request->user()->org_id, 403);
 
@@ -110,7 +112,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $reversal = DB::transaction(function () use ($request, $payment, $validated, $idempotencyKey): Payment {
+            $reversal = DB::transaction(function () use ($request, $payment, $validated, $idempotencyKey, $journals): Payment {
                 $receipt = Payment::where('id', $payment->id)
                     ->where('org_id', $request->user()->org_id)
                     ->lockForUpdate()
@@ -145,6 +147,7 @@ class PaymentController extends Controller
                 ]);
 
                 $this->recalculateInvoicePaymentState($lockedInvoice, $request->user()->id);
+                $journals->postPayment($reversal, $request->user()->id);
                 $this->audit($request, 'payment.reversal', $reversal, $this->paymentSnapshot($receipt, $lockedInvoice), $this->paymentSnapshot($reversal, $lockedInvoice));
 
                 return $reversal;

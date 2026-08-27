@@ -421,6 +421,90 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'Chart of Accounts',
+                    href: route('accounting.chart-of-accounts.index'),
+                    active: route().current('accounting.chart-of-accounts.*'),
+                    permission: 'accounting.chart_accounts.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 5h16v14H4zM8 9h8m-8 4h8m-8 4h5"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Accounting Periods',
+                    href: route('accounting.periods.index'),
+                    active: route().current('accounting.periods.*'),
+                    permission: 'accounting.periods.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M7 3v3m10-3v3M4 9h16M5 5h14v15H5z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Journal Entries',
+                    href: route('accounting.journals.index'),
+                    active: route().current('accounting.journals.*'),
+                    permission: 'accounting.journals.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h4"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'GL Reports',
+                    href: route('accounting.reports.index'),
+                    active: route().current('accounting.reports.*'),
+                    permission: 'accounting.reports.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 19V5m4 14v-5m4 5V9m4 10V7m4 12H3"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Inventory / GRN',
                     href: route('goods-receipts.index'),
                     active: route().current('goods-receipts.*'),

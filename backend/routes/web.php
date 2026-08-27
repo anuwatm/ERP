@@ -11,6 +11,7 @@ use App\Http\Controllers\Finance\BankAccountController;
 use App\Http\Controllers\Finance\BankStatementController;
 use App\Http\Controllers\Finance\CommercialDocumentController;
 use App\Http\Controllers\Finance\ExpenseController;
+use App\Http\Controllers\Finance\GeneralLedgerController;
 use App\Http\Controllers\Finance\GoodsReceiptController;
 use App\Http\Controllers\Finance\InvoiceController;
 use App\Http\Controllers\Finance\PaymentController;
@@ -216,6 +217,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/cheques', [TreasuryOperationsController::class, 'storeCheque'])->middleware(['permission:cheques.manage', 'password.confirm', 'throttle:10,1'])->name('cheques.store');
     Route::post('/cheques/{cheque}/transition', [TreasuryOperationsController::class, 'transitionCheque'])->middleware(['permission:cheques.manage', 'password.confirm', 'throttle:10,1'])->name('cheques.transition');
     Route::get('/treasury-reports', [TreasuryReportController::class, 'index'])->middleware('permission:treasury.reports.view')->name('treasury-reports.index');
+    Route::get('/accounting/chart-of-accounts', [GeneralLedgerController::class, 'chartOfAccounts'])->middleware('permission:accounting.chart_accounts.view')->name('accounting.chart-of-accounts.index');
+    Route::post('/accounting/chart-of-accounts', [GeneralLedgerController::class, 'storeAccount'])->middleware(['permission:accounting.chart_accounts.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.chart-of-accounts.store');
+    Route::patch('/accounting/chart-of-accounts/{chartOfAccount}', [GeneralLedgerController::class, 'updateAccount'])->middleware(['permission:accounting.chart_accounts.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.chart-of-accounts.update');
+    Route::get('/accounting/periods', [GeneralLedgerController::class, 'periods'])->middleware('permission:accounting.periods.view')->name('accounting.periods.index');
+    Route::post('/accounting/periods', [GeneralLedgerController::class, 'storePeriod'])->middleware(['permission:accounting.periods.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.periods.store');
+    Route::post('/accounting/periods/{accountingPeriod}/close', [GeneralLedgerController::class, 'closePeriod'])->middleware(['permission:accounting.periods.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.periods.close');
+    Route::get('/accounting/journals', [GeneralLedgerController::class, 'journals'])->middleware('permission:accounting.journals.view')->name('accounting.journals.index');
+    Route::post('/accounting/journals', [GeneralLedgerController::class, 'storeJournal'])->middleware(['permission:accounting.journals.post', 'password.confirm', 'throttle:10,1'])->name('accounting.journals.store');
+    Route::post('/accounting/journals/{journalEntry}/reverse', [GeneralLedgerController::class, 'reverseJournal'])->middleware(['permission:accounting.journals.reverse', 'password.confirm', 'throttle:10,1'])->name('accounting.journals.reverse');
+    Route::get('/accounting/reports', [GeneralLedgerController::class, 'reports'])->middleware('permission:accounting.reports.view')->name('accounting.reports.index');
     Route::post('/credit-debit-notes', [CommercialDocumentController::class, 'storeCreditDebitNote'])
         ->middleware(['permission:credit_debit_notes.create', 'password.confirm', 'throttle:10,1'])
         ->name('credit-debit-notes.store');

@@ -12,6 +12,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\StockMovement;
 use App\Models\Voucher;
+use App\Services\FinancialJournalService;
 use App\Services\NumberSequenceService;
 use App\Support\FileAttachmentManager;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -40,7 +41,7 @@ class CommercialDocumentController extends Controller
         ]);
     }
 
-    public function storeCreditDebitNote(Request $request, NumberSequenceService $numbers): RedirectResponse
+    public function storeCreditDebitNote(Request $request, NumberSequenceService $numbers, FinancialJournalService $journals): RedirectResponse
     {
         $orgId = $request->user()->org_id;
         $validated = $request->validate([
@@ -55,7 +56,7 @@ class CommercialDocumentController extends Controller
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
-        DB::transaction(function () use ($request, $numbers, $orgId, $validated): void {
+        DB::transaction(function () use ($request, $numbers, $orgId, $validated, $journals): void {
             $invoice = Invoice::where('org_id', $orgId)->lockForUpdate()->findOrFail($validated['invoice_id']);
             abort_if($invoice->status === 'void', 422, 'Cannot issue CN/DN for void invoice.');
             $totals = $this->simpleTotals($validated['items'], $invoice->tax_mode);
@@ -94,6 +95,8 @@ class CommercialDocumentController extends Controller
                 'balance_due' => max(0, round((float) $invoice->balance_due + ($sign * $totals['total']), 2)),
                 'updated_by' => $request->user()->id,
             ]);
+
+            $journals->postCreditDebitNote($note, $request->user()->id);
 
             $this->audit($request, 'credit_debit_note.create', 'credit_debit_note', $note->id, null, $note->fresh()->only(['invoice_id', 'note_no', 'type', 'status', 'total']));
         });

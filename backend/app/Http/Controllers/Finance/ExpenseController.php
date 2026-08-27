@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
 use App\Services\BahtText;
+use App\Services\FinancialJournalService;
 use App\Services\NumberSequenceService;
 use App\Support\FileAttachmentManager;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -115,24 +116,27 @@ class ExpenseController extends Controller
         return back()->with('success', "Expense {$expense->expense_no} updated.");
     }
 
-    public function approve(Request $request, Expense $expense): RedirectResponse
+    public function approve(Request $request, Expense $expense, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($expense->org_id === $request->user()->org_id, 403);
         abort_unless($expense->status === 'draft', 422, 'Only draft expenses can be approved.');
 
         $before = $this->snapshot($expense);
-        $expense->update([
-            'status' => 'approved',
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-            'updated_by' => $request->user()->id,
-        ]);
-        $this->audit($request, 'expense.approve', $expense, $before, $this->snapshot($expense));
+        DB::transaction(function () use ($expense, $request, $journals, $before): void {
+            $expense->update([
+                'status' => 'approved',
+                'approved_by' => $request->user()->id,
+                'approved_at' => now(),
+                'updated_by' => $request->user()->id,
+            ]);
+            $journals->postExpenseApproval($expense, $request->user()->id);
+            $this->audit($request, 'expense.approve', $expense, $before, $this->snapshot($expense));
+        });
 
         return back()->with('success', "Expense {$expense->expense_no} approved.");
     }
 
-    public function pay(Request $request, Expense $expense): RedirectResponse
+    public function pay(Request $request, Expense $expense, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($expense->org_id === $request->user()->org_id, 403);
         abort_unless($expense->status === 'approved', 422, 'Only approved expenses can be paid.');
@@ -144,19 +148,22 @@ class ExpenseController extends Controller
         ]);
 
         $before = $this->snapshot($expense);
-        $expense->update([
-            'status' => 'paid',
-            'paid_at' => filled($validated['paid_at'] ?? null) ? $validated['paid_at'] : now(),
-            'bank_account_id' => $validated['bank_account_id'] ?? null,
-            'note' => $this->appendStatusNote($expense->note, 'Paid', $validated['note'] ?? null),
-            'updated_by' => $request->user()->id,
-        ]);
-        $this->audit($request, 'expense.pay', $expense, $before, $this->snapshot($expense));
+        DB::transaction(function () use ($expense, $request, $validated, $journals, $before): void {
+            $expense->update([
+                'status' => 'paid',
+                'paid_at' => filled($validated['paid_at'] ?? null) ? $validated['paid_at'] : now(),
+                'bank_account_id' => $validated['bank_account_id'] ?? null,
+                'note' => $this->appendStatusNote($expense->note, 'Paid', $validated['note'] ?? null),
+                'updated_by' => $request->user()->id,
+            ]);
+            $journals->postExpensePayment($expense->fresh(), $request->user()->id);
+            $this->audit($request, 'expense.pay', $expense, $before, $this->snapshot($expense));
+        });
 
         return back()->with('success', "Expense {$expense->expense_no} paid.");
     }
 
-    public function reject(Request $request, Expense $expense): RedirectResponse
+    public function reject(Request $request, Expense $expense, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($expense->org_id === $request->user()->org_id, 403);
         abort_unless(in_array($expense->status, ['draft', 'approved'], true), 422, 'Only draft or approved expenses can be rejected.');
@@ -166,12 +173,17 @@ class ExpenseController extends Controller
         ]);
 
         $before = $this->snapshot($expense);
-        $expense->update([
-            'status' => 'rejected',
-            'note' => $this->appendStatusNote($expense->note, 'Rejected', $validated['note']),
-            'updated_by' => $request->user()->id,
-        ]);
-        $this->audit($request, 'expense.reject', $expense, $before, $this->snapshot($expense));
+        DB::transaction(function () use ($expense, $request, $validated, $journals, $before): void {
+            if ($expense->status === 'approved') {
+                $journals->reverseExpenseApproval($expense, $request->user()->id, now()->toDateString());
+            }
+            $expense->update([
+                'status' => 'rejected',
+                'note' => $this->appendStatusNote($expense->note, 'Rejected', $validated['note']),
+                'updated_by' => $request->user()->id,
+            ]);
+            $this->audit($request, 'expense.reject', $expense, $before, $this->snapshot($expense));
+        });
 
         return back()->with('success', "Expense {$expense->expense_no} rejected.");
     }

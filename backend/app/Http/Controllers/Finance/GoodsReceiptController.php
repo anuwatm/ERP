@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\StockMovement;
+use App\Services\FinancialJournalService;
 use App\Services\NumberSequenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -80,7 +81,7 @@ class GoodsReceiptController extends Controller
         ]);
     }
 
-    public function store(Request $request, NumberSequenceService $numbers): RedirectResponse
+    public function store(Request $request, NumberSequenceService $numbers, FinancialJournalService $journals): RedirectResponse
     {
         $orgId = $request->user()->org_id;
         $validated = $request->validate([
@@ -95,7 +96,7 @@ class GoodsReceiptController extends Controller
         $po = PurchaseOrder::where('org_id', $orgId)->with('items')->findOrFail($validated['purchase_order_id']);
         abort_unless(in_array($po->status, ['approved', 'partially_received'], true), 422, 'Only approved purchase orders can be received.');
 
-        $receipt = DB::transaction(function () use ($request, $numbers, $orgId, $validated, $po): GoodsReceipt {
+        $receipt = DB::transaction(function () use ($request, $numbers, $orgId, $validated, $po, $journals): GoodsReceipt {
             $receipt = GoodsReceipt::create([
                 'org_id' => $orgId,
                 'purchase_order_id' => $po->id,
@@ -154,6 +155,7 @@ class GoodsReceiptController extends Controller
             }
 
             $po->update(['status' => $this->poReceiptStatus($po->fresh('items'), $orgId)]);
+            $journals->postGoodsReceipt($receipt, $request->user()->id);
 
             return $receipt;
         });

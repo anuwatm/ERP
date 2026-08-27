@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Project;
 use App\Services\BahtText;
+use App\Services\FinancialJournalService;
 use App\Services\NumberSequenceService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -74,7 +75,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(Request $request, NumberSequenceService $numbers): RedirectResponse
+    public function store(Request $request, NumberSequenceService $numbers, FinancialJournalService $journals): RedirectResponse
     {
         $user = $request->user();
         $validated = $this->validateInvoice($request);
@@ -82,7 +83,7 @@ class InvoiceController extends Controller
         $this->assertProjectMatchesCustomer($validated);
         $totals = $this->calculateTotals($validated);
 
-        $invoice = DB::transaction(function () use ($request, $user, $validated, $totals, $numbers): Invoice {
+        $invoice = DB::transaction(function () use ($request, $user, $validated, $totals, $numbers, $journals): Invoice {
             $invoice = Invoice::create(array_merge($this->invoicePayload($validated, $totals), [
                 'org_id' => $user->org_id,
                 'branch_id' => $user->branch_id,
@@ -93,6 +94,9 @@ class InvoiceController extends Controller
             ]));
 
             $this->syncItems($invoice, $validated['items']);
+            if ($invoice->status === 'sent') {
+                $journals->postInvoice($invoice, $user->id);
+            }
             $this->audit($request, 'invoice.create', $invoice, null, $this->snapshot($invoice));
 
             return $invoice;
@@ -101,10 +105,10 @@ class InvoiceController extends Controller
         return back()->with('success', "Invoice {$invoice->invoice_no} created.");
     }
 
-    public function update(Request $request, Invoice $invoice): RedirectResponse
+    public function update(Request $request, Invoice $invoice, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);
-        abort_if((float) $invoice->paid_amount > 0 || $invoice->status === 'void', 422, 'Cannot edit invoice after payment or void.');
+        abort_unless($invoice->status === 'draft', 422, 'Only draft invoices can be edited after GL posting is enabled.');
 
         $validated = $this->validateInvoice($request, $invoice);
         $this->assertDealMatchesCustomer($validated);
@@ -112,30 +116,38 @@ class InvoiceController extends Controller
         $totals = $this->calculateTotals($validated);
         $before = $this->snapshot($invoice);
 
-        DB::transaction(function () use ($request, $invoice, $validated, $totals, $before): void {
+        DB::transaction(function () use ($request, $invoice, $validated, $totals, $before, $journals): void {
             $invoice->update(array_merge($this->invoicePayload($validated, $totals), [
                 'balance_due' => $totals['total'] - (float) $invoice->paid_amount,
                 'updated_by' => $request->user()->id,
             ]));
             $invoice->items()->delete();
             $this->syncItems($invoice, $validated['items']);
+            if ($invoice->status === 'sent') {
+                $journals->postInvoice($invoice, $request->user()->id);
+            }
             $this->audit($request, 'invoice.update', $invoice, $before ?? null, $this->snapshot($invoice));
         });
 
         return back()->with('success', "Invoice {$invoice->invoice_no} updated.");
     }
 
-    public function void(Request $request, Invoice $invoice): RedirectResponse
+    public function void(Request $request, Invoice $invoice, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);
         abort_if((float) $invoice->paid_amount > 0 || $invoice->status === 'void', 422, 'Cannot void invoice after payment or already void.');
         $before = $this->snapshot($invoice);
-        $invoice->update([
-            'status' => 'void',
-            'voided_at' => now(),
-            'updated_by' => $request->user()->id,
-        ]);
-        $this->audit($request, 'invoice.void', $invoice, $before, $this->snapshot($invoice));
+        DB::transaction(function () use ($request, $invoice, $journals, $before): void {
+            if ($invoice->status === 'sent') {
+                $journals->reverseInvoice($invoice, $request->user()->id, now()->toDateString());
+            }
+            $invoice->update([
+                'status' => 'void',
+                'voided_at' => now(),
+                'updated_by' => $request->user()->id,
+            ]);
+            $this->audit($request, 'invoice.void', $invoice, $before, $this->snapshot($invoice));
+        });
 
         return back()->with('success', "Invoice {$invoice->invoice_no} voided.");
     }

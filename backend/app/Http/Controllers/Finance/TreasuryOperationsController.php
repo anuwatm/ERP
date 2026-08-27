@@ -11,9 +11,11 @@ use App\Models\PettyCashFund;
 use App\Models\PettyCashReimbursement;
 use App\Models\PettyCashRequest;
 use App\Models\User;
+use App\Services\FinancialJournalService;
 use App\Services\NumberSequenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -109,7 +111,7 @@ class TreasuryOperationsController extends Controller
         return back()->with('success', 'Petty cash request paid.');
     }
 
-    public function reimburse(Request $request): RedirectResponse
+    public function reimburse(Request $request, FinancialJournalService $journals): RedirectResponse
     {
         $data = $request->validate([
             'petty_cash_fund_id' => ['required', 'uuid', Rule::exists('petty_cash_funds', 'id')->where('org_id', $request->user()->org_id)->where('status', 'active')],
@@ -119,8 +121,13 @@ class TreasuryOperationsController extends Controller
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $item = PettyCashReimbursement::create(array_merge($data, ['org_id' => $request->user()->org_id, 'created_by' => $request->user()->id]));
-        $this->audit($request, 'petty_cash_reimbursement.create', 'petty_cash_reimbursement', $item->id, $item->only(['petty_cash_fund_id', 'amount']));
+        $item = DB::transaction(function () use ($data, $request, $journals): PettyCashReimbursement {
+            $item = PettyCashReimbursement::create(array_merge($data, ['org_id' => $request->user()->org_id, 'created_by' => $request->user()->id]));
+            $journals->postPettyCashReimbursement($item, $request->user()->id);
+            $this->audit($request, 'petty_cash_reimbursement.create', 'petty_cash_reimbursement', $item->id, $item->only(['petty_cash_fund_id', 'amount']));
+
+            return $item;
+        });
 
         return back()->with('success', 'Petty cash reimbursed.');
     }
