@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Invoice Status & Payment Lifecycle",
+    "output": "c:/LocalDevine/www/ERP/document/08_invoice_lifecycle.html",
+    "viewBox": [980, 660],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "billing-happy-path", "label": "Issuance to Full Payment", "focus": ["draft", "sent", "partial", "paid"], "note": "Configured invoice status values from editable draft through full payment." },
+      { "id": "overdue-handling", "label": "Overdue Aging Management", "focus": ["sent", "overdue", "partial"], "note": "Aging invoices past payment terms awaiting customer settlement." },
+      { "id": "cancellation-paths", "label": "Void Rules", "focus": ["draft", "sent", "void"], "note": "Invoices can be voided only when no payment has been collected." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Settlement Phases" },
+    { "id": "waiting", "label": "Aging & Overdue" },
+    { "id": "terminal", "label": "Terminal Exits" }
+  ],
+  "states": [
+    { "id": "draft", "type": "start", "label": "Draft", "sublabel": "Editable Items", "lane": "main", "col": 0, "step": "01", "tag": "Unlocked" },
+    { "id": "sent", "type": "active", "label": "Issued", "sublabel": "Sent to Client", "lane": "main", "col": 1, "step": "02", "tag": "Locked" },
+    { "id": "partial", "type": "active", "label": "Partial Paid", "sublabel": "Balance Remaining", "lane": "main", "col": 2, "step": "03", "tag": "DECIMAL" },
+    { "id": "paid", "type": "success", "label": "Paid", "sublabel": "Balance Settled", "lane": "main", "col": 3, "step": "04", "tag": "Cash In" },
+    { "id": "overdue", "type": "waiting", "label": "Overdue", "sublabel": "Past Due Date", "lane": "waiting", "col": 0, "tag": "Aging" },
+    { "id": "void", "type": "failure", "label": "Void", "sublabel": "No Payment Collected", "lane": "terminal", "col": 2, "tag": "Void" }
+  ],
+  "transitions": [
+    { "id": "draft-sent", "from": "draft", "to": "sent", "variant": "default" },
+    { "id": "sent-partial", "from": "sent", "to": "partial", "variant": "default" },
+    { "id": "partial-paid", "from": "partial", "to": "paid", "variant": "emphasis" },
+    { "id": "sent-overdue", "from": "sent", "to": "overdue", "variant": "default", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Strict Financial Precision",
+      "items": [
+        "Status values: Draft -> Sent -> Partially Paid -> Paid",
+        "Only Draft invoices can be edited after GL posting is enabled",
+        "Payments decrement remaining balance in real time using DECIMAL(18,2)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Aging & Overdue Tracking",
+      "items": [
+        "Automated overdue flagging based on credit terms and due dates",
+        "Aging reports categorize receivables into 30, 60, and 90+ day buckets",
+        "Payment posting recalculates balance and may move the invoice to Partially Paid or Paid"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Void and Audit Rules",
+      "items": [
+        "Voiding a Sent invoice reverses its GL posting",
+        "An invoice cannot be voided after payment has been collected",
+        "Write-off is not an invoice status in the current implementation"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Company OS ERP - Core Business Workflow",
+    "output": "c:/LocalDevine/www/ERP/document/03_business_core_workflow.html",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "sales-to-close", "label": "CRM & Sales Opportunity", "focus": ["lead_captured", "deal_won"], "note": "Lead acquisition through proposal and deal won stage." },
+      { "id": "delivery-execution", "label": "Project & Task Delivery", "focus": ["deal_won", "project_init", "tasks_executed"], "note": "Translating closed deals into organized delivery work." },
+      { "id": "finance-and-revenue", "label": "Billing & Cash-In", "focus": ["project_init", "invoice_issued", "payment_settled", "dashboard_kpis"], "note": "Invoices may reference a project or deal; payment recording maintains the outstanding balance." }
+    ]
+  },
+  "lanes": [
+    { "id": "sales", "label": "Sales & CRM" },
+    { "id": "delivery", "label": "Project Delivery" },
+    { "id": "finance", "label": "Finance & Billing" },
+    { "id": "management", "label": "Executive & Audit" },
+    { "id": "exceptions", "label": "Exceptions & Void", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "sales_phase", "label": "Sales Pipeline", "fromCol": 0, "toCol": 1 },
+    { "id": "delivery_phase", "label": "Delivery Execution", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "settlement_phase", "label": "Billing & Settlement", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "sales_group", "label": "Opportunity Closure", "lane": "sales", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "money_group", "label": "Cash Settlement", "lane": "finance", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["lead_captured", "deal_won", "project_init", "invoice_issued", "payment_settled", "dashboard_kpis"],
+  "nodes": [
+    { "id": "lead_captured", "lane": "sales", "col": 0, "type": "frontend", "label": "Capture Lead", "sublabel": "Customer & Deal", "tag": "THB" },
+    { "id": "deal_won", "lane": "sales", "col": 1, "type": "security", "label": "Win Deal", "sublabel": "Quotation Signed", "tag": "Contract" },
+    { "id": "project_init", "lane": "delivery", "col": 2, "type": "backend", "label": "Init Project", "sublabel": "Scope & Milestones" },
+    { "id": "tasks_executed", "lane": "delivery", "col": 3, "type": "frontend", "label": "Deliver Tasks", "sublabel": "Task Board Done" },
+    { "id": "invoice_issued", "lane": "finance", "col": 4, "type": "security", "label": "Issue Invoice", "sublabel": "DECIMAL(18,2)", "tag": "Locked Bill" },
+    { "id": "payment_settled", "lane": "finance", "col": 5, "type": "database", "label": "Receipt", "sublabel": "No Overpay", "tag": "Cash In" },
+    { "id": "dashboard_kpis", "lane": "management", "col": 5, "type": "backend", "label": "Executive KPIs", "sublabel": "Invoiced vs Cash" },
+    { "id": "deal_lost", "lane": "exceptions", "col": 1, "type": "security", "label": "Deal Lost", "sublabel": "Archived Reason" },
+    { "id": "payment_void", "lane": "exceptions", "col": 5, "type": "messagebus", "label": "Void Receipt", "sublabel": "Audit Reversal" }
+  ],
+  "edges": [
+    { "from": "lead_captured", "to": "deal_won", "variant": "emphasis" },
+    { "from": "deal_won", "to": "project_init", "variant": "emphasis", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "project_init", "to": "tasks_executed" },
+    { "from": "project_init", "to": "invoice_issued", "label": "optional project link", "variant": "dashed", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "invoice_issued", "to": "payment_settled", "variant": "emphasis" },
+    { "from": "payment_settled", "to": "dashboard_kpis", "variant": "emphasis", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "lead_captured", "to": "deal_lost", "label": "lost", "variant": "security", "role": "error", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "payment_settled", "to": "payment_void", "variant": "security", "role": "error", "route": "outside-right", "fromSide": "right", "toSide": "right" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "End-to-End Business Rail", "items": ["Connected loop from Lead acquisition through Delivery to Cash-in", "Eliminates silos between Sales, Delivery, and Finance teams", "Single source of truth for SME management"] },
+    { "dot": "rose", "title": "Strict Financial Integrity", "items": ["Invoiced Revenue vs Real Cash In tracked separately", "Strict anti-overpayment guard ensures received sum never exceeds invoice balance", "Payment reversals create auditable counterbalance entries"] },
+    { "dot": "cyan", "title": "Executive Observability", "items": ["KPI dashboards support Admin, Sales, PM, and Finance views", "Supported business actions write application audit records", "Company OS provides operational visibility without heavy enterprise bloat"] }
+  ]
+}

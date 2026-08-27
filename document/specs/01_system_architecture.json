@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Company OS ERP - System Architecture",
+    "output": "c:/LocalDevine/www/ERP/document/01_system_architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "full-stack-path", "label": "Full-Stack Request Path", "focus": ["client", "vite_inertia", "laravel_app", "mariadb"], "note": "Primary monolithic flow: React/Inertia frontend talking directly to Laravel controllers." },
+      { "id": "security-and-session", "label": "Security & Multi-Tenant Isolation", "focus": ["auth_service", "laravel_app", "session_store", "audit_log"], "note": "Local Breeze authentication, database-backed sessions, controller-level tenant scoping, and application audit logging." },
+      { "id": "storage-and-events", "label": "Storage & Event System", "focus": ["laravel_app", "file_storage", "audit_log"], "note": "Document attachments and internal business event dispatching." }
+    ]
+  },
+  "components": [
+    { "id": "client", "type": "external", "label": "Web Client", "sublabel": "Browser / Mobile UI", "pos": [40, 280], "size": [130, 64] },
+    { "id": "auth_service", "type": "security", "label": "Auth Provider", "sublabel": "Laravel Breeze (Local)", "pos": [260, 110], "size": [140, 64], "tag": "Password + RateLimit" },
+    { "id": "vite_inertia", "type": "frontend", "label": "React + Inertia", "sublabel": "Vite / TS / Tailwind", "pos": [260, 280], "size": [140, 64], "tag": "Monolith UI" },
+    { "id": "session_store", "type": "database", "label": "Session Store", "sublabel": "Laravel Database Sessions", "pos": [510, 110], "size": [150, 64], "tag": "Database" },
+    { "id": "laravel_app", "type": "backend", "label": "Laravel 13 Core", "sublabel": "Router, Guard & Controllers", "pos": [510, 280], "size": [150, 64], "tag": "PHP 8.3" },
+    { "id": "mariadb", "type": "database", "label": "MySQL / MariaDB", "sublabel": "Ordered UUID & DECIMAL(18,2)", "pos": [770, 280], "size": [150, 64], "tag": "Source of Truth" },
+    { "id": "file_storage", "type": "cloud", "label": "File Storage", "sublabel": "Invoices/Receipts/Docs", "pos": [510, 440], "size": [150, 64] },
+    { "id": "audit_log", "type": "database", "label": "Audit Logs", "sublabel": "Application Action Trail", "pos": [770, 440], "size": [150, 64], "tag": "Traceability" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Application Layer", "wraps": ["auth_service", "vite_inertia", "laravel_app"] },
+    { "kind": "security-group", "label": "Persistence & Storage Boundary", "wraps": ["session_store", "mariadb", "file_storage", "audit_log"] }
+  ],
+  "connections": [
+    { "id": "client_to_ui", "from": "client", "to": "vite_inertia", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "ui_to_auth", "from": "vite_inertia", "to": "auth_service", "label": "login", "variant": "security", "fromSide": "top", "toSide": "bottom", "labelDy": -48 },
+    { "id": "auth_to_session", "from": "auth_service", "to": "session_store", "label": "issue session", "variant": "security" },
+    { "id": "ui_to_laravel", "from": "vite_inertia", "to": "laravel_app", "label": "Inertia XHR", "variant": "emphasis" },
+    { "id": "laravel_to_session", "from": "laravel_app", "to": "session_store", "label": "read session", "variant": "security", "fromSide": "top", "toSide": "bottom", "labelDy": -48 },
+    { "id": "laravel_to_db", "from": "laravel_app", "to": "mariadb", "label": "Eloquent ORM", "variant": "emphasis" },
+    { "id": "laravel_to_storage", "from": "laravel_app", "to": "file_storage", "label": "attachments", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 48 },
+    { "id": "laravel_to_audit", "from": "laravel_app", "to": "audit_log", "label": "audit trail", "variant": "dashed", "fromSide": "right", "toSide": "top", "via": [[710, 312], [710, 390], [845, 390]] }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Frontend & Monolith Layer", "items": ["React 18 + Inertia.js + TypeScript + Vite", "No decoupled REST latency - direct Inertia page props and server state", "Responsive UI designed for SME Company OS operations"] },
+    { "dot": "cyan", "title": "Backend Core (PHP 8.3 / Laravel 13)", "items": ["Multi-tenant isolation enforced via org_id on all queries", "RBAC permission enforcement with 7 distinct business roles", "Business rules safeguard money with strict DECIMAL(18,2)"] },
+    { "dot": "rose", "title": "Security & Audit Governance", "items": ["Local Breeze auth with rate limiting and database-backed sessions", "Authenticated requests resolve the active session and organization", "Application audit logs record supported business actions; database-level immutability is not assumed"] }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Task Status Lifecycle",
+    "output": "c:/LocalDevine/www/ERP/document/09_task_project_lifecycle.html",
+    "viewBox": [980, 660],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "task-delivery-path", "label": "Task To-Do to Done", "focus": ["todo", "in_progress", "done"], "note": "Configured task status values for active work." },
+      { "id": "blocked-impediments", "label": "Blocked Work", "focus": ["in_progress", "blocked", "todo"], "note": "Blocked tasks can return to active work when their dependency is resolved." },
+      { "id": "cancellation", "label": "Cancelled Tasks", "focus": ["todo", "blocked", "cancelled"], "note": "Cancelled is the only configured terminal failure status." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Execution Stages" },
+    { "id": "waiting", "label": "Blockers & Holds" },
+    { "id": "terminal", "label": "Terminal Exits" }
+  ],
+  "states": [
+    { "id": "todo", "type": "start", "label": "To Do", "sublabel": "Assigned Scope", "lane": "main", "col": 0, "step": "01", "tag": "To-Do" },
+    { "id": "in_progress", "type": "active", "label": "In Progress", "sublabel": "Active Execution", "lane": "main", "col": 1, "step": "02", "tag": "Working" },
+    { "id": "done", "type": "success", "label": "Done", "sublabel": "Completed Work", "lane": "main", "col": 2, "step": "03", "tag": "Done" },
+    { "id": "blocked", "type": "waiting", "label": "Blocked", "sublabel": "Missing Input", "lane": "waiting", "col": 0, "tag": "Wait" },
+    { "id": "cancelled", "type": "failure", "label": "Cancelled", "sublabel": "Scope Dropped", "lane": "terminal", "col": 0, "tag": "Cancelled" }
+  ],
+  "transitions": [
+    { "id": "todo-progress", "from": "todo", "to": "in_progress", "variant": "default" },
+    { "id": "progress-done", "from": "in_progress", "to": "done", "variant": "emphasis" },
+    { "id": "progress-blocked", "from": "in_progress", "to": "blocked", "variant": "default", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "blocked-progress", "from": "blocked", "to": "in_progress", "variant": "default", "fromSide": "top", "toSide": "bottom", "route": "drop" },
+    { "id": "block-cancel", "from": "blocked", "to": "cancelled", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "straight" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Delivery & Kanban Rhythm",
+      "items": [
+        "Task status values: To Do, In Progress, Blocked, Done, and Cancelled",
+        "Task completion does not automatically create an invoice",
+        "Tasks belong to projects and support checklists and comments"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Blocker Visibility",
+      "items": [
+        "Blocked is a configured task status",
+        "A task can be returned to In Progress after resolving a dependency",
+        "Project workflow details such as QA and client sign-off are not task statuses"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Scope Control & Governance",
+      "items": [
+        "Cancelled is a configured task status",
+        "Rejected Scope is not a task status in the current implementation",
+        "Task status ordering is a workflow convention, not a database-enforced transition rule"
+      ]
+    }
+  ]
+}

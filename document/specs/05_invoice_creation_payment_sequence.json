@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Invoice Creation & Payment Settlement Sequence",
+    "output": "c:/LocalDevine/www/ERP/document/05_invoice_creation_payment_sequence.html",
+    "viewBox": [880, 780],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "invoice-issuance", "label": "Invoice Creation & Validation", "focus": ["finance_user", "controller", "validator", "db"], "note": "Validating money precision (DECIMAL 18,2), line items, and locking the invoice." },
+      { "id": "payment-guard", "label": "Anti-Overpayment Guard", "focus": ["finance_user", "controller", "payment_service", "db"], "note": "Enforcing remaining balance check to prevent overpayment." },
+      { "id": "settlement-and-audit", "label": "Settlement & Audit Trail", "focus": ["payment_service", "db", "audit"], "note": "Recording a payment, updating the invoice to Partially Paid or Paid, and writing an audit record." }
+    ]
+  },
+  "participants": [
+    { "id": "finance_user", "type": "external", "label": "Finance User", "sublabel": "Inertia Client" },
+    { "id": "controller", "type": "frontend", "label": "Invoice Ctrl", "sublabel": "Laravel + Inertia" },
+    { "id": "validator", "type": "security", "label": "Money Guard", "sublabel": "DECIMAL(18,2)" },
+    { "id": "payment_service", "type": "backend", "label": "Payment Svc", "sublabel": "Balance Evaluator" },
+    { "id": "db", "type": "database", "label": "MariaDB", "sublabel": "DB Transaction" },
+    { "id": "audit", "type": "database", "label": "Audit Trail", "sublabel": "Application Log" }
+  ],
+  "segments": [
+    { "from": 150, "to": 310, "label": "1. Invoice Issuance & Precision Check" },
+    { "from": 330, "to": 520, "label": "2. Payment Entry & Overpay Guard" },
+    { "from": 540, "to": 690, "label": "3. Balance Settle & Audit Logging" }
+  ],
+  "messages": [
+    { "id": "create-inv", "from": "finance_user", "to": "controller", "y": 185, "label": "POST /invoices (items, customer_id)", "variant": "emphasis" },
+    { "id": "check-rules", "from": "controller", "to": "validator", "y": 225, "label": "validate items & totals", "variant": "security" },
+    { "id": "rules-ok", "from": "validator", "to": "controller", "y": 255, "label": "precision valid", "variant": "return" },
+    { "id": "insert-inv", "from": "controller", "to": "db", "y": 290, "label": "INSERT invoice (status: Sent)", "variant": "emphasis" },
+    { "id": "inv-created", "from": "db", "to": "finance_user", "y": 325, "label": "redirect with invoice_no", "variant": "return" },
+    { "id": "submit-pay", "from": "finance_user", "to": "controller", "y": 375, "label": "POST /invoices/{id}/payments (amount)", "variant": "emphasis" },
+    { "id": "eval-balance", "from": "controller", "to": "payment_service", "y": 415, "label": "processPayment(amount)", "variant": "emphasis" },
+    { "id": "read-balance", "from": "payment_service", "to": "db", "y": 450, "label": "SELECT sum(amount) for invoice", "variant": "default" },
+    { "id": "balance-rows", "from": "db", "to": "payment_service", "y": 485, "label": "remaining balance", "variant": "return" },
+    { "id": "lock-transact", "from": "payment_service", "to": "db", "y": 555, "label": "INSERT payment & update balance/status", "variant": "emphasis" },
+    { "id": "log-audit", "from": "payment_service", "to": "audit", "y": 595, "label": "record payment_received event", "variant": "dashed" },
+    { "id": "audit-ack", "from": "audit", "to": "payment_service", "y": 630, "label": "logged", "variant": "return" },
+    { "id": "pay-receipt", "from": "payment_service", "to": "finance_user", "y": 665, "label": "redirect with receipt result", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "controller", "from": 180, "to": 300, "type": "frontend" },
+    { "participant": "validator", "from": 220, "to": 260, "type": "security" },
+    { "participant": "controller", "from": 370, "to": 420, "type": "frontend" },
+    { "participant": "payment_service", "from": 410, "to": 670, "type": "backend" },
+    { "participant": "db", "from": 445, "to": 490, "type": "database" },
+    { "participant": "db", "from": 550, "to": 580, "type": "database" },
+    { "participant": "audit", "from": 590, "to": 635, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Strict Monetary Precision",
+      "items": [
+        "All calculations locked to DECIMAL(18,2) to prevent floating-point rounding errors",
+        "Subtotal, VAT (7%), and discount calculated strictly per line item",
+        "Display codes formatted with uniform 6-digit padded strings (e.g. 000001)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Anti-Overpayment Guard",
+      "items": [
+        "Total paid sum can never exceed the gross invoice amount",
+        "Supports partial payments (status transitions to Partially Paid)",
+        "Fully paid threshold automatically marks invoice status as Paid"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Transactional Audit Integrity",
+      "items": [
+        "Executed inside atomic MariaDB transactions with database locks",
+        "Payment creates an application audit trail entry",
+        "Reversals and adjustments produce distinct counter-records rather than hard deletes"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "ERP Core Dataflow & Business Lineage",
+    "output": "c:/LocalDevine/www/ERP/document/06_erp_data_lineage_flow.html",
+    "viewBox": [1080, 760],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "crm-to-sales", "label": "CRM to Sales Conversion", "focus": ["crm_sources", "deals_store", "quotes_store"], "note": "Customer master records flowing into qualified deals and formal quotations." },
+      { "id": "sales-to-delivery", "label": "Sales to Project Delivery", "focus": ["deals_store", "quotes_store", "project_tasks"], "note": "Translating commercial agreements into structured projects and deliverable tasks." },
+      { "id": "billing-to-dashboards", "label": "Billing & Executive Dashboards", "focus": ["project_tasks", "invoices_store", "payments_store", "executive_kpis", "finance_dash"], "note": "Invoices can optionally reference a project or deal; receipts and dashboards track balances and cash-in." }
+    ]
+  },
+  "stages": [
+    { "label": "Master Data" },
+    { "label": "Sales Pipeline" },
+    { "label": "Delivery" },
+    { "label": "Transactions" },
+    { "label": "Dashboards" }
+  ],
+  "nodes": [
+    { "id": "crm_sources", "type": "frontend", "label": "Customers", "sublabel": "Contacts & Accounts", "stage": 0, "row": 1, "tag": "Master" },
+    { "id": "catalog_items", "type": "frontend", "label": "Price Book", "sublabel": "Products & Services", "stage": 0, "row": 3, "tag": "Rates" },
+    { "id": "deals_store", "type": "backend", "label": "Deals Store", "sublabel": "Sales Opportunities", "stage": 1, "row": 1, "tag": "CRM" },
+    { "id": "quotes_store", "type": "backend", "label": "Quotations", "sublabel": "Pricing & Terms", "stage": 1, "row": 3, "tag": "Agreed" },
+    { "id": "project_tasks", "type": "backend", "label": "Projects & Tasks", "sublabel": "Milestones & Delivery", "stage": 2, "row": 2, "tag": "Work" },
+    { "id": "invoices_store", "type": "database", "label": "Invoices", "sublabel": "DECIMAL(18,2) Balances", "stage": 3, "row": 1, "tag": "Billed" },
+    { "id": "payments_store", "type": "database", "label": "Payments", "sublabel": "Anti-Overpay Receipts", "stage": 3, "row": 3, "tag": "Cash In" },
+    { "id": "executive_kpis", "type": "backend", "label": "Exec Dashboard", "sublabel": "Invoiced vs Real Cash", "stage": 4, "row": 1, "tag": "KPIs" },
+    { "id": "finance_dash", "type": "backend", "label": "Finance Metric", "sublabel": "Receivables & Aging", "stage": 4, "row": 3, "tag": "Cashflow" }
+  ],
+  "flows": [
+    { "id": "cust_to_deal", "from": "crm_sources", "to": "deals_store", "label": "leads", "variant": "emphasis", "route": "straight" },
+    { "id": "catalog_to_quote", "from": "catalog_items", "to": "quotes_store", "label": "pricing", "variant": "default", "route": "straight" },
+    { "id": "deal_to_quote", "from": "deals_store", "to": "quotes_store", "label": "scope", "variant": "default" },
+    { "id": "quote_to_project", "from": "quotes_store", "to": "project_tasks", "label": "contract", "variant": "emphasis" },
+    { "id": "project_to_invoice", "from": "project_tasks", "to": "invoices_store", "label": "optional project ref", "variant": "dashed" },
+    { "id": "invoice_to_payment", "from": "invoices_store", "to": "payments_store", "label": "settlement", "variant": "security" },
+    { "id": "invoice_to_exec", "from": "invoices_store", "to": "executive_kpis", "label": "invoiced rev", "variant": "emphasis", "route": "straight" },
+    { "id": "payment_to_finance", "from": "payments_store", "to": "finance_dash", "label": "cash in", "variant": "emphasis", "route": "straight" },
+    { "id": "finance_to_exec", "from": "finance_dash", "to": "executive_kpis", "label": "cash summary", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Business Data Lineage",
+      "items": [
+        "Data travels cleanly from Customer/Product catalogs into Deals and Quotations",
+        "Signed contracts initiate Project milestones and task execution structures",
+        "Invoices can be created directly and may optionally reference a project or deal"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Revenue vs Cash Segregation",
+      "items": [
+        "Strict separation between Invoiced Revenue (Accrual) and Cash Received (Real money)",
+        "Zero simulated cash balance — Dashboards present authentic cash-in figures",
+        "All transactions enforce DECIMAL(18,2) precision with full tenant isolation"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Real-Time Decision Intelligence",
+      "items": [
+        "Executive Dashboard consumes aggregated streams for instant KPI visibility",
+        "Finance Dashboard tracks outstanding aging balances and collection ratios",
+        "Audit trail guarantees full historical traceability across the entire data lifecycle"
+      ]
+    }
+  ]
+}

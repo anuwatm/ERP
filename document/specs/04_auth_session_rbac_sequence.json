@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Authentication, Session & RBAC Authorization Flow",
+    "output": "c:/LocalDevine/www/ERP/document/04_auth_session_rbac_sequence.html",
+    "viewBox": [860, 780],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "login-and-verify", "label": "Login & Rate Limiter", "focus": ["client", "router", "auth", "limiter", "db"], "note": "Login credentials validation with throttle protection." },
+      { "id": "session-generation", "label": "Session & Tenant Setup", "focus": ["auth", "session_store", "db"], "note": "Creating a database-backed Laravel session and resolving the authenticated user's organization context." },
+      { "id": "protected-access", "label": "Protected Route & RBAC Guard", "focus": ["client", "router", "rbac_guard"], "note": "RBAC permission check before returning Inertia view and initial props." }
+    ]
+  },
+  "participants": [
+    { "id": "client", "type": "external", "label": "Browser", "sublabel": "React Client" },
+    { "id": "router", "type": "frontend", "label": "Router", "sublabel": "web.php + CSRF" },
+    { "id": "auth", "type": "security", "label": "Auth Service", "sublabel": "Breeze Local" },
+    { "id": "limiter", "type": "security", "label": "Rate Limiter", "sublabel": "Login Throttling" },
+    { "id": "session_store", "type": "database", "label": "Session DB", "sublabel": "Laravel Sessions" },
+    { "id": "rbac_guard", "type": "security", "label": "RBAC Guard", "sublabel": "Roles + Permissions" },
+    { "id": "db", "type": "database", "label": "MariaDB", "sublabel": "Users & Orgs" }
+  ],
+  "segments": [
+    { "from": 150, "to": 310, "label": "Authentication & Throttle" },
+    { "from": 330, "to": 520, "label": "Session & Tenant Context" },
+    { "from": 540, "to": 690, "label": "RBAC Verification & Page Render" }
+  ],
+  "messages": [
+    { "id": "submit-login", "from": "client", "to": "router", "y": 185, "label": "POST /login (email, password)", "variant": "emphasis" },
+    { "id": "check-throttle", "from": "router", "to": "limiter", "y": 225, "label": "check attempts", "variant": "security" },
+    { "id": "throttle-ok", "from": "limiter", "to": "router", "y": 255, "label": "rate limit ok", "variant": "return" },
+    { "id": "verify-credentials", "from": "router", "to": "auth", "y": 290, "label": "authenticate()", "variant": "emphasis" },
+    { "id": "query-user", "from": "auth", "to": "db", "y": 350, "label": "find user & org_id", "variant": "default" },
+    { "id": "user-record", "from": "db", "to": "auth", "y": 385, "label": "password hash & roles", "variant": "return" },
+    { "id": "create-session", "from": "auth", "to": "session_store", "y": 430, "label": "write database session", "variant": "security" },
+    { "id": "session-ack", "from": "session_store", "to": "auth", "y": 465, "label": "session id", "variant": "return" },
+    { "id": "login-success", "from": "auth", "to": "client", "y": 500, "label": "Set-Cookie + 302 Redirect", "variant": "return" },
+    { "id": "req-dashboard", "from": "client", "to": "router", "y": 565, "label": "GET /dashboard (Cookie)", "variant": "emphasis" },
+    { "id": "guard-check", "from": "router", "to": "rbac_guard", "y": 605, "label": "enforce org_id & roles", "variant": "security" },
+    { "id": "guard-allow", "from": "rbac_guard", "to": "router", "y": 640, "label": "authorized", "variant": "return" },
+    { "id": "render-inertia", "from": "router", "to": "client", "y": 675, "label": "Inertia::render('Dashboard', props)", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "router", "from": 180, "to": 300, "type": "frontend" },
+    { "participant": "limiter", "from": 220, "to": 260, "type": "security" },
+    { "participant": "auth", "from": 285, "to": 505, "type": "security" },
+    { "participant": "db", "from": 345, "to": 390, "type": "database" },
+    { "participant": "session_store", "from": 425, "to": 470, "type": "database" },
+    { "participant": "router", "from": 560, "to": 680, "type": "frontend" },
+    { "participant": "rbac_guard", "from": 600, "to": 645, "type": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Secure Local Auth Flow",
+      "items": [
+        "Rate-limiting protection prevents brute-force credential attacks",
+        "Passwords hashed using bcrypt/argon2 standards",
+        "Database session stores authenticated user context"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Multi-Tenant & RBAC Shield",
+      "items": [
+        "Authenticated requests resolve the user's organization context",
+        "RBAC Middleware verifies user roles and explicit module.action permissions",
+        "Unauthorized requests are stopped before reaching business controllers"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Inertia Monolith Integration",
+      "items": [
+        "Seamless session-based authentication without fragile external JWT tokens",
+        "Initial page props (user, permissions, flash messages) injected server-side",
+        "Full CSRF protection on all mutating state transitions"
+      ]
+    }
+  ]
+}

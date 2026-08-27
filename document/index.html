@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company OS / Lightweight ERP - Diagram Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(30, 41, 59, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(56, 189, 248, 0.4);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.25);
+      --accent: #818cf8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(129, 140, 248, 0.1), transparent);
+      padding: 40px 24px 80px;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .diagram-card {
+      position: relative;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .diagram-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 25px var(--primary-glow);
+    }
+
+    .card-top {
+      margin-bottom: 20px;
+    }
+
+    .type-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 14px;
+    }
+
+    .type-architecture { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .type-workflow { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .type-sequence { background: rgba(129, 140, 248, 0.15); color: #818cf8; border: 1px solid rgba(129, 140, 248, 0.3); }
+    .type-dataflow { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .type-lifecycle { background: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.3); }
+
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .meta-chip {
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #cbd5e1;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-open {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-open:hover {
+      background: linear-gradient(135deg, #38bdf8, #3b82f6);
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-json {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-json:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 48px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 24px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 80px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="badge-pill">Interactive Archify Diagrams</div>
+      <h1>Company OS / Lightweight ERP</h1>
+      <p class="subtitle">
+        ศูนย์รวมไดอะแกรมระบบทั้งหมด: สถาปัตยกรรม (Architecture), เวิร์กโฟลว์ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow) และวงจรสถานะ (Lifecycle)
+      </p>
+    </header>
+
+    <div class="section-title">สถาปัตยกรรมระบบ & โครงสร้างองค์กร (Architecture)</div>
+    <div class="categories">
+      
+      <!-- 01 System Architecture -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-architecture">Architecture</span>
+          <h2 class="card-title">01. System & Tech Stack Architecture</h2>
+          <p class="card-desc">
+            ภาพรวมสถาปัตยกรรม Full-Stack Monolith (React 18 + Inertia + Vite + Tailwind ↔ Laravel 13 PHP 8.3 ↔ MariaDB 11.x + Encrypted Session & Audit Log)
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">PHP 8.3 / Laravel 13</span>
+            <span class="meta-chip">React 18 + Inertia</span>
+            <span class="meta-chip">MariaDB 11.x</span>
+            <span class="meta-chip">UUIDv7 & DECIMAL(18,2)</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="01_system_architecture.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/01_system_architecture.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+      <!-- 02 Multitenancy & Org Hierarchy -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-architecture">Architecture</span>
+          <h2 class="card-title">02. Multi-Tenancy & Org Hierarchy</h2>
+          <p class="card-desc">
+            โครงสร้างองค์กรแบบลำดับขั้น (Organization &rarr; Branch &rarr; Division &rarr; Department &rarr; User) พร้อมระบบ RBAC 7 บทบาท และ OrgScope Guard
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">org_id Scoping</span>
+            <span class="meta-chip">7 Built-in Roles</span>
+            <span class="meta-chip">module.action Guard</span>
+            <span class="meta-chip">6-Digit Code (000001)</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="02_multitenancy_org_hierarchy.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/02_multitenancy_org_hierarchy.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+      <!-- 10 Database ER Domain Model -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-architecture">Architecture</span>
+          <h2 class="card-title">10. Database ER & Domain Model</h2>
+          <p class="card-desc">
+            แบบจำลองความสัมพันธ์ของตารางฐานข้อมูลหลัก (Master, CRM, Projects, Invoices, Payments, Audit Logs) พร้อมข้อกำหนดทางเทคนิค
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">MariaDB 11.x</span>
+            <span class="meta-chip">UUID v7 PK</span>
+            <span class="meta-chip">Soft Deletes</span>
+            <span class="meta-chip">Strict Money Rules</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="10_database_er_domain_model.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="DATABASE_ERD.md" target="_blank" class="btn-open" style="background: linear-gradient(135deg, #059669, #10b981);">Full ERD (38+ ตาราง) &rarr;</a>
+          <a href="specs/10_database_er_domain_model.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-title">กระบวนการทางธุรกิจ & เวิร์กโฟลว์ (Workflow)</div>
+    <div class="categories">
+
+      <!-- 03 Business Core Workflow -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-workflow">Workflow</span>
+          <h2 class="card-title">03. End-to-End Core Business Workflow</h2>
+          <p class="card-desc">
+            การเชื่อมโยงวงจรธุรกิจทั้งระบบ: Lead CRM &rarr; Deal Won &rarr; Project Init &rarr; Task Delivery &rarr; Invoice Issue &rarr; Payment Receipt &rarr; Executive KPIs
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Cross-Functional</span>
+            <span class="meta-chip">Sales to Cash-In</span>
+            <span class="meta-chip">Anti-Overpayment</span>
+            <span class="meta-chip">Real Revenue Metrics</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="03_business_core_workflow.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/03_business_core_workflow.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-title">ลำดับการทำงาน & ความปลอดภัย (Sequence)</div>
+    <div class="categories">
+
+      <!-- 04 Auth & Session RBAC Sequence -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-sequence">Sequence</span>
+          <h2 class="card-title">04. Auth, Session & RBAC Flow</h2>
+          <p class="card-desc">
+            ลำดับการล็อกอิน ป้องกัน Brute-force ด้วย Rate Limiting, การสร้าง Encrypted DB Session, และการตรวจสอบสิทธิ์ผ่าน Middleware ก่อนเรนเดอร์ Inertia
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Breeze Local Auth</span>
+            <span class="meta-chip">Rate Limiting</span>
+            <span class="meta-chip">Encrypted Cookie</span>
+            <span class="meta-chip">Inertia Props</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="04_auth_session_rbac_sequence.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/04_auth_session_rbac_sequence.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+      <!-- 05 Invoice Creation & Payment Sequence -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-sequence">Sequence</span>
+          <h2 class="card-title">05. Invoice Creation & Payment Settlement</h2>
+          <p class="card-desc">
+            ลำดับการออกใบแจ้งหนี้ ตรวจสอบความถูกต้องของตัวเลขเงิน DECIMAL(18,2), การบันทึกรับชำระเงิน, และการป้องกัน Overpayment
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">DB Transaction</span>
+            <span class="meta-chip">Anti-Overpayment Guard</span>
+            <span class="meta-chip">DECIMAL(18,2)</span>
+            <span class="meta-chip">Audit Logging</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="05_invoice_creation_payment_sequence.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/05_invoice_creation_payment_sequence.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-title">การไหลของข้อมูล & สรุปผล (Dataflow)</div>
+    <div class="categories">
+
+      <!-- 06 Data Lineage -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-dataflow">Dataflow</span>
+          <h2 class="card-title">06. ERP Data Lineage & Pipeline</h2>
+          <p class="card-desc">
+            การเดินทางของข้อมูลตั้งแต่ Master Data &rarr; Sales Pipeline &rarr; Delivery &rarr; Transactions &rarr; Dashboards แยก Invoiced vs Cash In
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">5 Data Stages</span>
+            <span class="meta-chip">Separated Cash In</span>
+            <span class="meta-chip">Executive Reporting</span>
+            <span class="meta-chip">Immutable Logs</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="06_erp_data_lineage_flow.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/06_erp_data_lineage_flow.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-title">วงจรสถานะของข้อมูล (Lifecycle & State Machine)</div>
+    <div class="categories">
+
+      <!-- 07 Deal Lifecycle -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-lifecycle">Lifecycle</span>
+          <h2 class="card-title">07. Sales Opportunity & Deal Lifecycle</h2>
+          <p class="card-desc">
+            วงจรสถานะโอกาสการขาย: New Lead &rarr; Qualified &rarr; Proposal Sent &rarr; Negotiating &rarr; Deal Won พร้อมสถานะ On Hold และ Lost
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">5 Main Stages</span>
+            <span class="meta-chip">On Hold Pause</span>
+            <span class="meta-chip">Lost Reason Tracking</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="07_deal_sales_lifecycle.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/07_deal_sales_lifecycle.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+      <!-- 08 Invoice Lifecycle -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-lifecycle">Lifecycle</span>
+          <h2 class="card-title">08. Invoice Status & Settlement Lifecycle</h2>
+          <p class="card-desc">
+            วงจรสถานะใบแจ้งหนี้: Draft &rarr; Issued &rarr; Partial Paid &rarr; Reconciling &rarr; Fully Paid พร้อมการติดตาม Overdue, Void และ Write-Off
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Immutable Locking</span>
+            <span class="meta-chip">Aging Overdue</span>
+            <span class="meta-chip">Audited Void/Write-off</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="08_invoice_lifecycle.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/08_invoice_lifecycle.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+      <!-- 09 Task Delivery Lifecycle -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-lifecycle">Lifecycle</span>
+          <h2 class="card-title">09. Task Delivery & Milestone Lifecycle</h2>
+          <p class="card-desc">
+            วงจรสถานะงานและส่งมอบ: Backlog &rarr; In Progress &rarr; Review & QA &rarr; Milestone Sign-off &rarr; Completed พร้อมการจัดการ Blocked
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Kanban States</span>
+            <span class="meta-chip">Blocker Handling</span>
+            <span class="meta-chip">Milestone Trigger</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="09_task_project_lifecycle.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/09_task_project_lifecycle.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 6 Domain Groups (31 Modules) Section -->
+    <div class="section-title">ผังการทำงาน 6 กลุ่มงานหลัก (31 Modules Domain Workflows)</div>
+    <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
+      เจาะลึกกระบวนการทำงานและวงจรสถานะของแต่ละฝ่าย ครอบคลุมทั้ง 31 โมดูลในระบบ พร้อม Mermaid Diagrams และคำอธิบายภาษาไทยฉบับสมบูรณ์
+    </p>
+
+    <div class="categories">
+      
+      <!-- Group 1 -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-architecture">Group 1 &bull; Modules 01-04</span>
+          <h2 class="card-title">Foundation & Security</h2>
+          <p class="card-desc">
+            โครงสร้างองค์กร, สาขารหัส 6 หลัก, ลำดับชั้นสายงาน/แผนก, การจำกัดสิทธิ์ Tenant Isolation (org_id), สิทธิ์ 7 บทบาท และระบบ Audit Trail
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Org & Branch</span>
+            <span class="meta-chip">RBAC 7 Roles</span>
+            <span class="meta-chip">Tenant Isolation</span>
+            <span class="meta-chip">Immutable Logs</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="GROUPS_WORKFLOW.md#group-1-foundation--security-โมดูล-01-04" target="_blank" class="btn-open">ดูผัง Group 1 &rarr;</a>
+          <span class="btn-json">3 Diagrams</span>
+        </div>
+      </div>
+
+      <!-- Group 2 -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-workflow">Group 2 &bull; Modules 05-08</span>
+          <h2 class="card-title">CRM & Sales Pipeline</h2>
+          <p class="card-desc">
+            การรับลูกค้าใหม่ (Lead/Customers), จัดการรายชื่อผู้ติดต่อ (Contacts), ท่อโอกาสการขาย (Deals Funnel) และการออกใบเสนอราคา (Quotations)
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Customers Master</span>
+            <span class="meta-chip">Deal Stages</span>
+            <span class="meta-chip">Quotations</span>
+            <span class="meta-chip">Won/Lost Track</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="GROUPS_WORKFLOW.md#group-2-crm--sales-pipeline-โมดูล-05-08" target="_blank" class="btn-open">ดูผัง Group 2 &rarr;</a>
+          <span class="btn-json">3 Diagrams</span>
+        </div>
+      </div>
+
+      <!-- Group 3 -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-lifecycle">Group 3 &bull; Modules 09-11</span>
+          <h2 class="card-title">Project Delivery & Execution</h2>
+          <p class="card-desc">
+            การแปลง Deal Won สู่ Project, การแบ่งงวดงาน (Milestones), การแจกจ่าย Tasks บน Kanban พร้อมระบบ Blocker Handling และส่งสัญญาณออกบิล
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Projects</span>
+            <span class="meta-chip">Kanban Tasks</span>
+            <span class="meta-chip">Blocker Guard</span>
+            <span class="meta-chip">Milestone Sign-off</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="GROUPS_WORKFLOW.md#group-3-project-delivery--execution-โมดูล-09-11" target="_blank" class="btn-open">ดูผัง Group 3 &rarr;</a>
+          <span class="btn-json">3 Diagrams</span>
+        </div>
+      </div>
+
+      <!-- Group 4 -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-sequence">Group 4 &bull; Modules 12-16</span>
+          <h2 class="card-title">Finance, Billing & Cost Control</h2>
+          <p class="card-desc">
+            แคตตาล็อกสินค้า/บริการ, การออก Invoice แบบ DECIMAL(18,2), การบันทึกรับเงินพร้อม Anti-Overpayment Guard, และการคุมค่าใช้จ่ายคู่ค้า
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Invoices</span>
+            <span class="meta-chip">Anti-Overpayment</span>
+            <span class="meta-chip">Expenses & Costs</span>
+            <span class="meta-chip">Suppliers</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="GROUPS_WORKFLOW.md#group-4-finance-billing--cost-control-โมดูล-12-16" target="_blank" class="btn-open">ดูผัง Group 4 &rarr;</a>
+          <span class="btn-json">3 Diagrams</span>
+        </div>
+      </div>
+
+      <!-- Group 5 -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-dataflow">Group 5 &bull; Modules 17-23</span>
+          <h2 class="card-title">Insights, Platform & Automation</h2>
+          <p class="card-desc">
+            ระบบ Event-Driven Automation, แจ้งเตือน Email/LINE/In-App, แดชบอร์ดผู้บริหาร (Invoiced vs Real Cash), จัดการไฟล์แนบ และ REST API
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Executive KPI</span>
+            <span class="meta-chip">Automation Engine</span>
+            <span class="meta-chip">Notifications</span>
+            <span class="meta-chip">REST API</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="GROUPS_WORKFLOW.md#group-5-insights-platform--automation-โมดูล-17-23" target="_blank" class="btn-open">ดูผัง Group 5 &rarr;</a>
+          <span class="btn-json">3 Diagrams</span>
+        </div>
+      </div>
+
+      <!-- Group 6 -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-architecture">Group 6 &bull; Modules 24-31</span>
+          <h2 class="card-title">Operations & Extensions (V2+)</h2>
+          <p class="card-desc">
+            การสั่งซื้อสินค้า (PO), คลังสินค้า (Inventory), งานบุคคล (HR/Attendance/Payroll), ผู้ช่วย AI, การเชื่อมโปรแกรมบัญชี และ Customer Portal
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">PO & Inventory</span>
+            <span class="meta-chip">HR & Payroll</span>
+            <span class="meta-chip">AI Assistant</span>
+            <span class="meta-chip">Accounting & Portal</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="GROUPS_WORKFLOW.md#group-6-operations--advanced-extensions---v2-โมดูล-24-31" target="_blank" class="btn-open">ดูผัง Group 6 &rarr;</a>
+          <span class="btn-json">3 Diagrams</span>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      Company OS / Lightweight ERP &copy; 2026 &bull; Architecture & System Diagrams Documented with Archify
+    </footer>
+  </div>
+</body>
+</html>

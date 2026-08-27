@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Organization Hierarchy & Multi-Tenancy Architecture",
+    "output": "c:/LocalDevine/www/ERP/document/02_multitenancy_org_hierarchy.html",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "hierarchy-chain", "label": "Organizational Structure", "focus": ["organization", "branch", "division", "department", "user"], "note": "Root organization down to branch, division, department and user assignment." },
+      { "id": "rbac-roles", "label": "RBAC & Permissions", "focus": ["user", "rbac_engine", "role_presets", "permission_checks"], "note": "7 built-in roles and module.action permission enforcement." },
+      { "id": "tenant-isolation", "label": "Tenant Isolation Guard", "focus": ["organization", "tenant_scope", "db_tables"], "note": "Controllers and services constrain organization-owned records with org_id before reading or mutating them." }
+    ]
+  },
+  "components": [
+    { "id": "organization", "type": "backend", "label": "Organization", "sublabel": "Root Tenant (org_id)", "pos": [40, 240], "size": [140, 64], "tag": "Tenant Root" },
+    { "id": "branch", "type": "backend", "label": "Branch", "sublabel": "Code: 6-digits (000001)", "pos": [250, 240], "size": [140, 64] },
+    { "id": "division", "type": "backend", "label": "Division", "sublabel": "Business Division", "pos": [460, 240], "size": [140, 64] },
+    { "id": "department", "type": "backend", "label": "Department", "sublabel": "Functional Team", "pos": [670, 240], "size": [140, 64] },
+    { "id": "user", "type": "external", "label": "User / Member", "sublabel": "1 User = 1 Org", "pos": [880, 240], "size": [140, 64], "tag": "Authenticated" },
+    { "id": "tenant_scope", "type": "security", "label": "Org Query Guard", "sublabel": "Controller / Service Scope", "pos": [250, 80], "size": [140, 64], "tag": "org_id" },
+    { "id": "db_tables", "type": "database", "label": "Tenant Tables", "sublabel": "Deals / Invoices / Tasks", "pos": [480, 80], "size": [140, 64], "tag": "WHERE org_id" },
+    { "id": "role_presets", "type": "frontend", "label": "7 Role Presets", "sublabel": "Owner..Viewer", "pos": [460, 420], "size": [140, 64], "tag": "Predefined" },
+    { "id": "rbac_engine", "type": "security", "label": "RBAC Policy Gate", "sublabel": "Role & Ability Gate", "pos": [670, 420], "size": [140, 64], "tag": "Middleware" },
+    { "id": "permission_checks", "type": "security", "label": "Permissions", "sublabel": "module.action keys", "pos": [880, 420], "size": [140, 64], "tag": "Fine-Grained" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Organizational Hierarchy Structure", "wraps": ["organization", "branch", "division", "department", "user"] },
+    { "kind": "security-group", "label": "Authorization & Governance Engine", "wraps": ["role_presets", "rbac_engine", "permission_checks"] }
+  ],
+  "connections": [
+    { "id": "org_to_branch", "from": "organization", "to": "branch", "variant": "emphasis" },
+    { "id": "branch_to_div", "from": "branch", "to": "division", "variant": "emphasis" },
+    { "id": "div_to_dept", "from": "division", "to": "department", "variant": "emphasis" },
+    { "id": "dept_to_user", "from": "department", "to": "user", "variant": "emphasis" },
+    { "id": "org_to_scope", "from": "organization", "to": "tenant_scope", "label": "tenant key", "variant": "security", "fromSide": "top", "toSide": "left", "via": [[110, 112], [250, 112]] },
+    { "id": "scope_to_db", "from": "tenant_scope", "to": "db_tables", "variant": "security" },
+    { "id": "user_to_permissions", "from": "user", "to": "permission_checks", "label": "assigned roles", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelDy": 48 },
+    { "id": "rbac_to_permissions", "from": "rbac_engine", "to": "permission_checks", "variant": "security" },
+    { "id": "rbac_to_presets", "from": "rbac_engine", "to": "role_presets", "variant": "default" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Structured Hierarchy", "items": ["Clear organizational chain: Organization -> Branch -> Division -> Department -> User", "Display codes use clean 6-digit formatting (e.g. 000001)", "1 User strictly belongs to 1 Organization in MVP to ensure clean scoping"] },
+    { "dot": "rose", "title": "Tenant Security & Scoping", "items": ["Organization-owned records are filtered with org_id in controllers and services", "Model binding is guarded before organization-scoped mutations", "Authenticated requests use the user's organization context"] },
+    { "dot": "cyan", "title": "7 Built-in RBAC Roles", "items": ["Owner, Admin, Sales, Project Manager, Finance, Member, Viewer", "Fine-grained permissions format: module.action (e.g., invoices.create)", "Centralized authorization gates protect UI routes and backend mutations"] }
+  ]
+}

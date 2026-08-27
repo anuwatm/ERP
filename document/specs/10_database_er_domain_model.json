@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ERP Core Database & Domain Entity Relationships",
+    "output": "c:/LocalDevine/www/ERP/document/10_database_er_domain_model.html",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "tenant-and-users", "label": "Tenant & Identity Domain", "focus": ["orgs_table", "branches_table", "users_table", "audit_table"], "note": "Root organization, branch structure, authenticated users, and application audit records." },
+      { "id": "crm-to-projects", "label": "CRM to Project Domain", "focus": ["customers_table", "deals_table", "projects_table", "tasks_table"], "note": "Customer records link to commercial deals, projects, and delivery tasks." },
+      { "id": "financial-ledger", "label": "Financial, Treasury & Ledger", "focus": ["invoices_table", "payments_table", "ledger_table", "treasury_table"], "note": "Invoices and payments generate financial records; treasury operations manage bank-facing settlement work." }
+    ]
+  },
+  "components": [
+    { "id": "orgs_table", "type": "backend", "label": "organizations", "sublabel": "Root Tenant (Ordered UUID PK)", "pos": [40, 100], "size": [150, 64], "tag": "org_id" },
+    { "id": "branches_table", "type": "backend", "label": "branches", "sublabel": "6-digit code (000001)", "pos": [260, 100], "size": [150, 64] },
+    { "id": "users_table", "type": "backend", "label": "users", "sublabel": "7 Roles & Abilities", "pos": [480, 100], "size": [150, 64], "tag": "RBAC" },
+    { "id": "audit_table", "type": "security", "label": "audit_logs", "sublabel": "Application Action History", "pos": [700, 100], "size": [150, 64], "tag": "Traceability" },
+    { "id": "customers_table", "type": "frontend", "label": "customers", "sublabel": "Accounts & Contacts", "pos": [40, 280], "size": [150, 64], "tag": "Master" },
+    { "id": "deals_table", "type": "frontend", "label": "deals", "sublabel": "Opportunities & Value", "pos": [260, 280], "size": [150, 64], "tag": "THB" },
+    { "id": "projects_table", "type": "backend", "label": "projects", "sublabel": "Delivery & Progress", "pos": [480, 280], "size": [150, 64] },
+    { "id": "tasks_table", "type": "backend", "label": "tasks", "sublabel": "Work Items & Kanban", "pos": [700, 280], "size": [150, 64] },
+    { "id": "payments_table", "type": "database", "label": "payments", "sublabel": "Anti-Overpay Receipts", "pos": [260, 440], "size": [150, 64], "tag": "Cash In" },
+    { "id": "invoices_table", "type": "database", "label": "invoices", "sublabel": "DECIMAL(18,2) Balances", "pos": [480, 440], "size": [150, 64], "tag": "Invoice" },
+    { "id": "ledger_table", "type": "database", "label": "journal_entries", "sublabel": "General Ledger Posting", "pos": [700, 600], "size": [150, 64], "tag": "Phase 11" },
+    { "id": "treasury_table", "type": "database", "label": "bank_operations", "sublabel": "Treasury Settlement", "pos": [480, 600], "size": [150, 64], "tag": "Phase 10" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Core ERP Domain Schema", "wraps": ["orgs_table", "branches_table", "users_table", "audit_table", "customers_table", "deals_table", "projects_table", "tasks_table", "payments_table", "invoices_table", "ledger_table", "treasury_table"] }
+  ],
+  "connections": [
+    { "id": "org_to_branch", "from": "orgs_table", "to": "branches_table", "variant": "emphasis" },
+    { "id": "branch_to_user", "from": "branches_table", "to": "users_table", "variant": "emphasis" },
+    { "id": "user_to_audit", "from": "users_table", "to": "audit_table", "variant": "dashed" },
+    { "id": "cust_to_deal", "from": "customers_table", "to": "deals_table", "variant": "emphasis" },
+    { "id": "deal_to_project", "from": "deals_table", "to": "projects_table", "variant": "emphasis" },
+    { "id": "project_to_task", "from": "projects_table", "to": "tasks_table", "variant": "emphasis" },
+    { "id": "project_to_invoice", "from": "projects_table", "to": "invoices_table", "label": "optional reference", "labelDy": 24, "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "invoice_to_payment", "from": "invoices_table", "to": "payments_table", "variant": "security" },
+    { "id": "invoice_to_ledger", "from": "invoices_table", "to": "ledger_table", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Database Conventions", "items": ["Business models use ordered UUID primary keys", "Human-visible reference codes use zero-padded sequences where applicable", "Soft deletes are enabled on selected business models"] },
+    { "dot": "rose", "title": "Tenant Scoping", "items": ["Organization-owned domain records carry org_id", "Controllers and services apply org_id constraints for tenant access", "Organization guards run before supported scoped mutations"] },
+    { "dot": "cyan", "title": "Financial Posting", "items": ["Money columns use decimal casts and DECIMAL schema columns", "Invoice and payment actions post or reverse general-ledger journal entries", "Payment processing protects outstanding balances inside database transactions"] }
+  ]
+}

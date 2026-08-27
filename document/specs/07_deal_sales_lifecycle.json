@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Sales Opportunity & Deal Lifecycle",
+    "output": "c:/LocalDevine/www/ERP/document/07_deal_sales_lifecycle.html",
+    "viewBox": [980, 660],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "sales-funnel", "label": "Open Sales Stages", "focus": ["new", "contacted", "qualified", "proposal", "negotiation"], "note": "The open stage values configured by the Deal model." },
+      { "id": "won-path", "label": "Won Deal", "focus": ["negotiation", "won"], "note": "A won deal can be associated with a project and commercial documents." },
+      { "id": "lost-path", "label": "Lost Deal", "focus": ["negotiation", "lost"], "note": "Lost deals retain their lost reason and timestamp when supplied." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Open Pipeline Stages" },
+    { "id": "terminal", "label": "Lost & Closed Exits" }
+  ],
+  "states": [
+    { "id": "new", "type": "start", "label": "New", "sublabel": "Unqualified Opportunity", "lane": "main", "col": 0, "step": "01", "tag": "Prospect" },
+    { "id": "contacted", "type": "active", "label": "Contacted", "sublabel": "Initial Outreach", "lane": "main", "col": 1, "step": "02", "tag": "Discovery" },
+    { "id": "qualified", "type": "active", "label": "Qualified", "sublabel": "Sales Qualified", "lane": "main", "col": 2, "step": "03", "tag": "Qualified" },
+    { "id": "proposal", "type": "active", "label": "Proposal", "sublabel": "Quotation Issued", "lane": "main", "col": 3, "step": "04", "tag": "Quoting" },
+    { "id": "negotiation", "type": "decision", "label": "Negotiation", "sublabel": "Terms & Pricing", "lane": "main", "col": 4, "step": "05", "tag": "Closing" },
+    { "id": "won", "type": "success", "label": "Won", "sublabel": "Closed Won", "lane": "terminal", "col": 2, "tag": "Won" },
+    { "id": "lost", "type": "failure", "label": "Lost", "sublabel": "Closed Lost", "lane": "terminal", "col": 0, "tag": "Lost" }
+  ],
+  "transitions": [
+    { "id": "new-contacted", "from": "new", "to": "contacted", "variant": "default" },
+    { "id": "contacted-qualified", "from": "contacted", "to": "qualified", "variant": "default" },
+    { "id": "qualified-proposal", "from": "qualified", "to": "proposal", "variant": "default" },
+    { "id": "proposal-negotiation", "from": "proposal", "to": "negotiation", "variant": "default", "route": "straight" },
+    { "id": "negotiate-won", "from": "negotiation", "to": "won", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "negotiate-lost", "from": "negotiation", "to": "lost", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Configured Deal Stages",
+      "items": [
+        "Open stages: New -> Contacted -> Qualified -> Proposal -> Negotiation",
+        "Closed stages: Won and Lost",
+        "Each deal may carry value, probability, expected close date, and an owner"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Commercial Handover",
+      "items": [
+        "A won deal can be linked to one project",
+        "Invoices and quotations can reference a deal",
+        "Project creation is an explicit business action, not an automatic model transition"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Accountable Lost Tracking",
+      "items": [
+        "Lost reason, timestamp, and note can be recorded on a lost deal",
+        "The model has no On Hold or Cancelled stage",
+        "Stage ordering is presented as a common workflow, not a database-enforced transition rule"
+      ]
+    }
+  ]
+}
