@@ -279,7 +279,19 @@ export default function AuthenticatedLayout({
                     active: route().current('e-tax.*'),
                     permission: 'e_tax.view',
                     icon: (
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 3h7l3 3v15H7V3zm3 7h4m-4 4h4m-4 4h4" /></svg>
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M7 3h7l3 3v15H7V3zm3 7h4m-4 4h4m-4 4h4"
+                            />
+                        </svg>
                     ),
                 },
                 {
@@ -509,6 +521,27 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M4 19V5m4 14v-5m4 5V9m4 10V7m4 12H3"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Fixed Assets',
+                    href: route('fixed-assets.index'),
+                    active: route().current('fixed-assets.*'),
+                    permission: 'fixed_assets.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-5h6v5"
                             />
                         </svg>
                     ),

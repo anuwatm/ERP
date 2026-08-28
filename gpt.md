@@ -1,6 +1,6 @@
 # GPT Decision Log (Clean)
 
-Last updated: 2026-08-28 (Phase 12 completed)
+Last updated: 2026-08-28 (Phase 13 completed)
 
 Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, security guardrails, สถานะล่าสุด และแผนงานพัฒนา เพื่อให้ LLM ทุกตัว (GPT, Gemini, Claude) มี context ที่ตรงกัน 100%. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `gemini.md`, `README.md`, และ git diff.
 
@@ -8,7 +8,7 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 
 ## 1. Current Status
 
-- Phase 1-12: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
+- Phase 1-13: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
 
 ---
 
@@ -77,3 +77,11 @@ GPT เห็นด้วยกับ Gemini ว่า Treasury ใน Phase 10 
 - `ETaxSignatureAdapter` และ `ETaxSubmissionAdapter` ค่าเริ่มต้นต้อง fail-closed. ห้ามเปลี่ยน document เป็น `signed`, `submitted` หรือ `accepted` โดยไม่มี adapter ที่ผ่าน onboarding.
 - RD Prep รองรับเฉพาะ ภ.ง.ด. 3/53 ใน Phase 12 และมีข้อความบังคับให้ตรวจ format ปัจจุบันก่อน upload. ภ.ง.ด. 1 เป็น Phase 16 Payroll.
 - ห้าม generate ทับ e-Tax ที่ `submitted` หรือ `accepted`; การปรับยอดหลังส่งต้องออก Credit Note/Debit Note.
+
+## 5. Phase 13 Decisions
+
+- Fixed assets ใช้ straight-line รายเดือนเท่านั้นในระยะแรก; scheduler วันที่ 1 จะ post เดือนก่อนหน้า และ service สามารถ catch up เดือนที่ขาดได้แบบ idempotent.
+- Capitalization จาก Expense เป็น reclassification `Dr Fixed Asset / Cr Operating Expense`; จาก GRN เป็น `Dr Fixed Asset / Cr Inventory`. PO ไม่มี recognition event จึงใช้เป็น reference ผ่าน GRN เท่านั้น เพื่อไม่ให้ลงบัญชีซ้ำ.
+- Category ต้องกำหนด asset, accumulated depreciation และ depreciation expense account ต่อองค์กร. Journal ทุก event ผ่าน `JournalPostingService` จึงถูก period lock และ source-event idempotency.
+- Disposal/write-off ต้องหยุดค่าเสื่อม ณ สิ้นเดือนก่อนจำหน่าย แล้วตัดต้นทุน/ค่าเสื่อมสะสมและรับรู้ proceeds หรือ gain/loss. ห้ามแก้สินทรัพย์ที่ dispose/write-off แล้ว.
+- นโยบายค่าเสื่อมและอายุการใช้งานต้องเป็น organization settings: default method, useful-life by asset class, salvage policy และ tax-book policy. `AssetCategory` ใช้ค่า default จาก settings และสามารถ override รายหมวด/รายสินทรัพย์ได้.

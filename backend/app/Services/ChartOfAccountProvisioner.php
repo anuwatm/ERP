@@ -14,6 +14,8 @@ class ChartOfAccountProvisioner
         ['code' => '1130', 'name' => 'Input VAT', 'account_type' => 'asset'],
         ['code' => '1140', 'name' => 'Inventory', 'account_type' => 'asset'],
         ['code' => '1150', 'name' => 'Goods Received Not Invoiced', 'account_type' => 'asset'],
+        ['code' => '1210', 'name' => 'Fixed Assets', 'account_type' => 'asset'],
+        ['code' => '1219', 'name' => 'Accumulated Depreciation', 'account_type' => 'asset'],
         ['code' => '2110', 'name' => 'Accounts Payable', 'account_type' => 'liability'],
         ['code' => '2120', 'name' => 'Cheque Clearing', 'account_type' => 'liability'],
         ['code' => '2130', 'name' => 'Output VAT', 'account_type' => 'liability'],
@@ -21,6 +23,8 @@ class ChartOfAccountProvisioner
         ['code' => '4100', 'name' => 'Sales Revenue', 'account_type' => 'revenue'],
         ['code' => '5100', 'name' => 'Cost of Goods Sold', 'account_type' => 'expense'],
         ['code' => '5200', 'name' => 'Operating Expenses', 'account_type' => 'expense'],
+        ['code' => '5300', 'name' => 'Gain or Loss on Asset Disposal', 'account_type' => 'revenue'],
+        ['code' => '5310', 'name' => 'Depreciation Expense', 'account_type' => 'expense'],
     ];
 
     public function ensure(string $orgId): void

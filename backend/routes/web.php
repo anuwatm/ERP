@@ -12,6 +12,7 @@ use App\Http\Controllers\Finance\BankStatementController;
 use App\Http\Controllers\Finance\CommercialDocumentController;
 use App\Http\Controllers\Finance\ETaxController;
 use App\Http\Controllers\Finance\ExpenseController;
+use App\Http\Controllers\Finance\FixedAssetController;
 use App\Http\Controllers\Finance\GeneralLedgerController;
 use App\Http\Controllers\Finance\GoodsReceiptController;
 use App\Http\Controllers\Finance\InvoiceController;
@@ -228,6 +229,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/accounting/journals', [GeneralLedgerController::class, 'storeJournal'])->middleware(['permission:accounting.journals.post', 'password.confirm', 'throttle:10,1'])->name('accounting.journals.store');
     Route::post('/accounting/journals/{journalEntry}/reverse', [GeneralLedgerController::class, 'reverseJournal'])->middleware(['permission:accounting.journals.reverse', 'password.confirm', 'throttle:10,1'])->name('accounting.journals.reverse');
     Route::get('/accounting/reports', [GeneralLedgerController::class, 'reports'])->middleware('permission:accounting.reports.view')->name('accounting.reports.index');
+    Route::get('/fixed-assets', [FixedAssetController::class, 'index'])->middleware('permission:fixed_assets.view')->name('fixed-assets.index');
+    Route::post('/fixed-assets/categories', [FixedAssetController::class, 'storeCategory'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.categories.store');
+    Route::post('/fixed-assets', [FixedAssetController::class, 'storeAsset'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.store');
+    Route::post('/fixed-assets/depreciate', [FixedAssetController::class, 'depreciate'])->middleware(['permission:fixed_assets.depreciate', 'password.confirm', 'throttle:5,1'])->name('fixed-assets.depreciate');
+    Route::post('/fixed-assets/{fixedAsset}/dispose', [FixedAssetController::class, 'dispose'])->middleware(['permission:fixed_assets.dispose', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.dispose');
+    Route::post('/fixed-assets/{fixedAsset}/attachment', [FixedAssetController::class, 'storeAttachment'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.attachment.store');
     Route::post('/credit-debit-notes', [CommercialDocumentController::class, 'storeCreditDebitNote'])
         ->middleware(['permission:credit_debit_notes.create', 'password.confirm', 'throttle:10,1'])
         ->name('credit-debit-notes.store');

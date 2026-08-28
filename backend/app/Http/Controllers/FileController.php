@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Expense;
+use App\Models\FixedAsset;
 use App\Models\Payment;
 use App\Models\StoredFile;
 use App\Models\Voucher;
@@ -56,6 +57,14 @@ class FileController extends Controller
             abort_unless($request->user()->hasPermissionCode('vouchers.view'), 403);
             $voucher = Voucher::where('id', $file->entity_id)->where('org_id', $request->user()->org_id)->firstOrFail();
             abort_unless($voucher->attachment_file_id === $file->id, 403);
+
+            return;
+        }
+
+        if ($file->entity_type === 'fixed_asset') {
+            abort_unless($request->user()->hasPermissionCode('fixed_assets.view'), 403);
+            $asset = FixedAsset::where('id', $file->entity_id)->where('org_id', $request->user()->org_id)->firstOrFail();
+            abort_unless($asset->attachment_file_id === $file->id, 403);
 
             return;
         }

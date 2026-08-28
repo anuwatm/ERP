@@ -33,7 +33,7 @@
 | Phase 10 | Done | Treasury, Banking & Cash Management: bank accounts, statement reconciliation, petty cash, cheque/PDC, voucher proof, treasury reports, and feature tests completed |
 | Phase 11 | Done | General Ledger & Double-entry Accounting: COA, periods, immutable journals, source posting, reports, permissions, and regression validation completed |
 | Phase 12 | Done (application layer) | e-Tax XML, private storage, provider integration boundary, RD Prep staging export; production submission requires certified provider onboarding |
-| Phase 13 | Planned | Fixed Assets & Depreciation |
+| Phase 13 | Done | Fixed asset register, capitalization reclassification, straight-line depreciation, GL posting, disposal/write-off, reports and tests |
 | Phase 14 | Planned | Multi-Currency & FX |
 | Phase 15 | Planned | Advanced Inventory & Barcode/QR Operations |
 | Phase 16 | Planned | Payroll, Social Security & Security 2FA |
@@ -783,24 +783,24 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 13 Design Backlog
 
-- [ ] Design asset categories และ fixed asset register schema
-- [ ] Design capitalization source จาก Expense/PO/GRN
-- [ ] Design depreciation methods รอบแรก: straight-line
-- [ ] Design monthly depreciation schedule และ posting to GL
-- [ ] Design disposal/write-off/sale flow
-- [ ] Design asset custody/location fields และ attachment proof
-- [ ] Design permissions และ tests สำหรับ depreciation, disposal, org isolation
+- [x] Design asset categories และ fixed asset register schema
+- [x] Design capitalization source จาก Expense และ GRN; PO เป็น reference ผ่าน GRN เพื่อไม่ให้เกิด duplicate accounting posting
+- [x] Design depreciation methods รอบแรก: straight-line
+- [x] Design monthly depreciation schedule และ posting to GL
+- [x] Design disposal/write-off/sale flow
+- [x] Design asset custody/location fields และ attachment proof
+- [x] Design permissions และ tests สำหรับ depreciation, disposal, org isolation
 
 ### Phase 13 Implementation Backlog
 
-- [ ] สร้าง migrations/models สำหรับ Asset Categories และ Fixed Assets
-- [ ] สร้าง asset register UI
-- [ ] เพิ่ม capitalization from expense/PO flow
-- [ ] สร้าง depreciation schedule service
-- [ ] เพิ่ม monthly depreciation command/job
-- [ ] ผูก depreciation posting เข้า GL
-- [ ] เพิ่ม disposal/write-off flow
-- [ ] เพิ่ม asset reports และ feature tests
+- [x] สร้าง migrations/models สำหรับ Asset Categories, Fixed Assets และ monthly depreciation records
+- [x] สร้าง asset register UI พร้อม category/account mapping, custody/location และ proof upload
+- [x] เพิ่ม capitalization จาก approved/paid Expense และ Goods Receipt (PO ผ่าน GRN)
+- [x] สร้าง straight-line depreciation service แบบ catch-up รายเดือน
+- [x] เพิ่ม `assets:depreciate` command และ schedule รายเดือน
+- [x] ผูก capitalization, depreciation และ disposal posting เข้า immutable GL
+- [x] เพิ่ม disposal/write-off flow พร้อม gain/loss และ proceeds
+- [x] เพิ่ม asset register summary/report และ feature tests
 
 ---
 
@@ -816,6 +816,7 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [ ] Design historical FX rate snapshot บนเอกสาร ไม่ใช้ dynamic join กับ rate ล่าสุด
 - [ ] Design realized/unrealized FX gain/loss posting rules
 - [ ] Design period-end unrealized FX revaluation flow
+- [ ] Design bank account -> GL account mapping และเลือกบัญชีปลายทางสำหรับ fixed asset disposal proceeds เพื่อรองรับ reconciliation
 - [ ] Design UI display สำหรับ document amount vs base amount
 - [ ] Design reports ที่รองรับ currency/base currency
 - [ ] Design tests สำหรับ rate lock, payment partial FX, reversal, org isolation
@@ -829,6 +830,7 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [ ] บันทึก FX rate snapshot ณ วันที่ออกเอกสาร/เกิดรายการ
 - [ ] ผูก FX posting เข้า GL
 - [ ] เพิ่ม realized FX posting ตอนรับ/จ่ายเงิน และ unrealized FX revaluation ตอนสิ้นงวด
+- [ ] เพิ่ม bank account GL mapping และใช้บัญชีที่เลือกเมื่อ post disposal proceeds จาก Fixed Assets
 - [ ] ปรับ reports/export ให้รองรับ currency columns
 - [ ] เพิ่ม feature tests และ regression tests
 

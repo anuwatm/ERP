@@ -205,10 +205,10 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 - **Provider Boundary**: มี signing/submission adapter, certificate reference และ queued retry; ค่าเริ่มต้น fail-closed จนกว่าจะเชื่อม certified provider
 - **RD Prep Text Export**: ส่งออก staging text สำหรับ ภ.ง.ด. 3/53 โดยต้องตรวจสอบ format ปัจจุบันของกรมสรรพากรก่อน upload; ภ.ง.ด. 1 อยู่ใน Phase 16 Payroll
 
-### Phase 13: Fixed Assets & Depreciation (Planned)
-- **Asset Register**: ทะเบียนสินทรัพย์ถาวร และการบันทึกต้นทุนจาก Expense/PO/GRN
-- **Depreciation Engine**: คำนวณค่าเสื่อมราคารายเดือน (Straight-line Method) และบันทึกบัญชีเข้า GL อัตโนมัติ
-- **Disposal & Write-off**: จำหน่ายสินทรัพย์และตัดจำหน่ายทางบัญชี
+### Phase 13: Fixed Assets & Depreciation
+- **Asset Register**: Asset category พร้อม account mapping, custody/location, proof attachment และแหล่งต้นทุนจาก approved Expense หรือ GRN
+- **Depreciation Engine**: คำนวณค่าเสื่อม straight-line รายเดือนแบบ idempotent พร้อม immutable GL posting และ accounting period lock
+- **Disposal & Write-off**: จำหน่าย/ตัดจำหน่าย, รับ proceeds และบันทึกกำไรหรือขาดทุนเข้า GL
 
 ### Phase 14: Multi-Currency & FX Management (Planned)
 - **Currency & Exchange Rates**: ตารางอัตราแลกเปลี่ยนสกุลเงินต่างประเทศ
@@ -247,7 +247,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 10** | **Done** | Treasury, Banking & Cash Management: Bank accounts, CSV statement reconciliation, Petty cash, Cheques/PDC, Treasury reports |
 | **Phase 11** | **Done** | Chart of Accounts, periods, immutable journals, source posting, Trial Balance และ General Ledger |
 | **Phase 12** | **Done (application layer)** | E-Tax XML/private storage, signing-submission adapter boundary, audit/retry และ RD Prep staging export; live submission requires certified provider onboarding |
-| **Phase 13** | *Planned* | Fixed Assets register, monthly depreciation schedule, asset disposal |
+| **Phase 13** | **Done** | Asset register, straight-line monthly depreciation/GL, disposal/write-off, attachment proof และ reports |
 | **Phase 14** | *Planned* | Multi-Currency master, exchange rates snapshot, Realized/Unrealized FX |
 | **Phase 15** | *Planned* | Multi-warehouse & bins, stock transfer, reorder alerts, lot/expiry, Barcode/QR scanning |
 | **Phase 16** | *Planned* | Payroll calculation, ภ.ง.ด. 1/Social Security, Payslip PDF, Two-Factor Authentication (2FA) |

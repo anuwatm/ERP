@@ -71,6 +71,7 @@ Artisan::command('invoices:notify-due-soon {--days=3}', function () {
 
 Schedule::command('invoices:mark-overdue')->daily();
 Schedule::command('invoices:notify-due-soon')->dailyAt('08:00');
+Schedule::command('assets:depreciate')->monthlyOn(1, '01:00');
 
 if (! function_exists('notifyFinanceUsers')) {
     function notifyFinanceUsers(Invoice $invoice, NotificationService $notifications, string $type, string $dedupeKey, string $title): int

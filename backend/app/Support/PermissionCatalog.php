@@ -83,6 +83,10 @@ class PermissionCatalog
             ['code' => 'accounting.journals.post', 'module' => 'accounting_journals', 'action' => 'post', 'description' => 'Post journals'],
             ['code' => 'accounting.journals.reverse', 'module' => 'accounting_journals', 'action' => 'reverse', 'description' => 'Reverse posted journals'],
             ['code' => 'accounting.reports.view', 'module' => 'accounting_reports', 'action' => 'view', 'description' => 'View general ledger reports'],
+            ['code' => 'fixed_assets.view', 'module' => 'fixed_assets', 'action' => 'view', 'description' => 'View fixed assets'],
+            ['code' => 'fixed_assets.manage', 'module' => 'fixed_assets', 'action' => 'manage', 'description' => 'Manage fixed assets and categories'],
+            ['code' => 'fixed_assets.depreciate', 'module' => 'fixed_assets', 'action' => 'depreciate', 'description' => 'Run fixed asset depreciation'],
+            ['code' => 'fixed_assets.dispose', 'module' => 'fixed_assets', 'action' => 'dispose', 'description' => 'Dispose or write off fixed assets'],
             ['code' => 'payments.view', 'module' => 'payments', 'action' => 'view', 'description' => 'View invoice payments'],
             ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
             ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
@@ -143,7 +147,8 @@ class PermissionCatalog
         $phase9Finance = ['credit_debit_notes.view', 'credit_debit_notes.create', 'credit_debit_notes.update', 'credit_debit_notes.approve', 'billing_notes.view', 'billing_notes.create', 'billing_notes.update', 'billing_notes.approve', 'delivery_orders.view', 'delivery_orders.create', 'delivery_orders.update', 'delivery_orders.approve', 'purchase_requests.view', 'purchase_requests.create', 'purchase_requests.update', 'purchase_requests.approve', 'vouchers.view', 'vouchers.create', 'vouchers.update', 'vouchers.approve'];
         $treasury = ['treasury.accounts.view', 'treasury.accounts.manage', 'treasury.reconciliation.view', 'treasury.reconciliation.manage', 'treasury.reports.view', 'petty_cash.view', 'petty_cash.manage', 'petty_cash.approve', 'cheques.view', 'cheques.manage'];
         $accounting = ['accounting.chart_accounts.view', 'accounting.chart_accounts.manage', 'accounting.periods.view', 'accounting.periods.manage', 'accounting.journals.view', 'accounting.journals.create', 'accounting.journals.post', 'accounting.journals.reverse', 'accounting.reports.view'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'e_tax.view', 'e_tax.manage', 'e_tax.submit', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
+        $fixedAssets = ['fixed_assets.view', 'fixed_assets.manage', 'fixed_assets.depreciate', 'fixed_assets.dispose'];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, ...$fixedAssets, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'e_tax.view', 'e_tax.manage', 'e_tax.submit', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [
