@@ -200,9 +200,10 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 - **Automatic Posting**: Invoice, Payment, Expense, CN/DN, Goods Receipt และ Petty Cash Reimbursement สร้าง journal ตาม recognition point; PV/RV, reconciliation และ request เป็น evidence/control จึงไม่ post ซ้ำ
 - **Financial Statements**: งบทดลอง (Trial Balance) และสมุดบัญชีแยกประเภท (General Ledger/Account Ledger)
 
-### Phase 12: E-Tax & RD Online Tax Filing (Planned)
-- **e-Tax Invoice by Email / API**: สร้างไฟล์ XML ตามมาตรฐาน ETDA/กรมสรรพากร พร้อม Digital Signature
-- **RD Prep Text Export**: ส่งออกไฟล์ข้อความสำหรับยื่นแบบภาษีออนไลน์ ภ.ง.ด. 1, ภ.ง.ด. 3, ภ.ง.ด. 53 ผ่านโปรแกรมของกรมสรรพากร
+### Phase 12: E-Tax & RD Preparation
+- **e-Tax Integration Layer**: สร้าง XML ต่อองค์กรสำหรับ Tax Invoice, Receipt, Credit Note และ Debit Note; เก็บ private พร้อม hash และ audit trail
+- **Provider Boundary**: มี signing/submission adapter, certificate reference และ queued retry; ค่าเริ่มต้น fail-closed จนกว่าจะเชื่อม certified provider
+- **RD Prep Text Export**: ส่งออก staging text สำหรับ ภ.ง.ด. 3/53 โดยต้องตรวจสอบ format ปัจจุบันของกรมสรรพากรก่อน upload; ภ.ง.ด. 1 อยู่ใน Phase 16 Payroll
 
 ### Phase 13: Fixed Assets & Depreciation (Planned)
 - **Asset Register**: ทะเบียนสินทรัพย์ถาวร และการบันทึกต้นทุนจาก Expense/PO/GRN
@@ -245,7 +246,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 9** | **Done** | Commercial & Procurement Docs: Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers (PV/RV) |
 | **Phase 10** | **Done** | Treasury, Banking & Cash Management: Bank accounts, CSV statement reconciliation, Petty cash, Cheques/PDC, Treasury reports |
 | **Phase 11** | **Done** | Chart of Accounts, periods, immutable journals, source posting, Trial Balance และ General Ledger |
-| **Phase 12** | *Planned* | E-Tax XML generation, Digital Signature, RD Online Tax Filing exports |
+| **Phase 12** | **Done (application layer)** | E-Tax XML/private storage, signing-submission adapter boundary, audit/retry และ RD Prep staging export; live submission requires certified provider onboarding |
 | **Phase 13** | *Planned* | Fixed Assets register, monthly depreciation schedule, asset disposal |
 | **Phase 14** | *Planned* | Multi-Currency master, exchange rates snapshot, Realized/Unrealized FX |
 | **Phase 15** | *Planned* | Multi-warehouse & bins, stock transfer, reorder alerts, lot/expiry, Barcode/QR scanning |

@@ -274,6 +274,15 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'e-Tax & RD Prep',
+                    href: route('e-tax.index'),
+                    active: route().current('e-tax.*'),
+                    permission: 'e_tax.view',
+                    icon: (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 3h7l3 3v15H7V3zm3 7h4m-4 4h4m-4 4h4" /></svg>
+                    ),
+                },
+                {
                     name: 'Suppliers',
                     href: route('suppliers.index'),
                     active: route().current('suppliers.*'),

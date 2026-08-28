@@ -87,6 +87,9 @@ class PermissionCatalog
             ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
             ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
             ['code' => 'tax_reports.view', 'module' => 'tax_reports', 'action' => 'view', 'description' => 'View tax and accounting reports'],
+            ['code' => 'e_tax.view', 'module' => 'e_tax', 'action' => 'view', 'description' => 'View e-Tax documents and RD Prep exports'],
+            ['code' => 'e_tax.manage', 'module' => 'e_tax', 'action' => 'manage', 'description' => 'Configure and generate e-Tax documents'],
+            ['code' => 'e_tax.submit', 'module' => 'e_tax', 'action' => 'submit', 'description' => 'Queue e-Tax provider submissions'],
             ['code' => 'expenses.view', 'module' => 'expenses', 'action' => 'view', 'description' => 'View expenses'],
             ['code' => 'expenses.create', 'module' => 'expenses', 'action' => 'create', 'description' => 'Create expense drafts'],
             ['code' => 'expenses.update', 'module' => 'expenses', 'action' => 'update', 'description' => 'Update expense drafts'],
@@ -140,7 +143,7 @@ class PermissionCatalog
         $phase9Finance = ['credit_debit_notes.view', 'credit_debit_notes.create', 'credit_debit_notes.update', 'credit_debit_notes.approve', 'billing_notes.view', 'billing_notes.create', 'billing_notes.update', 'billing_notes.approve', 'delivery_orders.view', 'delivery_orders.create', 'delivery_orders.update', 'delivery_orders.approve', 'purchase_requests.view', 'purchase_requests.create', 'purchase_requests.update', 'purchase_requests.approve', 'vouchers.view', 'vouchers.create', 'vouchers.update', 'vouchers.approve'];
         $treasury = ['treasury.accounts.view', 'treasury.accounts.manage', 'treasury.reconciliation.view', 'treasury.reconciliation.manage', 'treasury.reports.view', 'petty_cash.view', 'petty_cash.manage', 'petty_cash.approve', 'cheques.view', 'cheques.manage'];
         $accounting = ['accounting.chart_accounts.view', 'accounting.chart_accounts.manage', 'accounting.periods.view', 'accounting.periods.manage', 'accounting.journals.view', 'accounting.journals.create', 'accounting.journals.post', 'accounting.journals.reverse', 'accounting.reports.view'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'e_tax.view', 'e_tax.manage', 'e_tax.submit', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [

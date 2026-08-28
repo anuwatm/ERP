@@ -10,6 +10,7 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\Finance\BankAccountController;
 use App\Http\Controllers\Finance\BankStatementController;
 use App\Http\Controllers\Finance\CommercialDocumentController;
+use App\Http\Controllers\Finance\ETaxController;
 use App\Http\Controllers\Finance\ExpenseController;
 use App\Http\Controllers\Finance\GeneralLedgerController;
 use App\Http\Controllers\Finance\GoodsReceiptController;
@@ -272,6 +273,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tax-reports/{type}/excel', [TaxReportController::class, 'excel'])
         ->middleware('permission:tax_reports.view')
         ->name('tax-reports.excel');
+    Route::get('/e-tax', [ETaxController::class, 'index'])->middleware('permission:e_tax.view')->name('e-tax.index');
+    Route::patch('/e-tax/config', [ETaxController::class, 'updateConfig'])->middleware(['permission:e_tax.manage', 'password.confirm'])->name('e-tax.config.update');
+    Route::post('/e-tax/documents', [ETaxController::class, 'generate'])->middleware(['permission:e_tax.manage', 'password.confirm', 'throttle:10,1'])->name('e-tax.documents.generate');
+    Route::get('/e-tax/documents/{document}/download', [ETaxController::class, 'download'])->middleware('permission:e_tax.view')->name('e-tax.documents.download');
+    Route::post('/e-tax/documents/{document}/submit', [ETaxController::class, 'submit'])->middleware(['permission:e_tax.submit', 'password.confirm', 'throttle:5,1'])->name('e-tax.documents.submit');
+    Route::get('/e-tax/rd-prep', [ETaxController::class, 'rdPrep'])->middleware('permission:e_tax.view')->name('e-tax.rd-prep');
     Route::get('/goods-receipts', [GoodsReceiptController::class, 'index'])
         ->middleware('permission:inventory.view')
         ->name('goods-receipts.index');

@@ -1,6 +1,6 @@
 # GPT Decision Log (Clean)
 
-Last updated: 2026-08-27 (Gemini Phase 10 Review Reconciled)
+Last updated: 2026-08-28 (Phase 12 completed)
 
 Purpose: เก็บเฉพาะ reference ที่ยังมีผลต่อการพัฒนาต่อ, decision สำคัญ, security guardrails, สถานะล่าสุด และแผนงานพัฒนา เพื่อให้ LLM ทุกตัว (GPT, Gemini, Claude) มี context ที่ตรงกัน 100%. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `gemini.md`, `README.md`, และ git diff.
 
@@ -8,7 +8,7 @@ Purpose: เก็บเฉพาะ reference ที่ยังมีผลต
 
 ## 1. Current Status
 
-- Phase 1-11: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
+- Phase 1-12: completed / closed. รายละเอียดงานที่ปิดแล้วให้ดู `checklist.md`, `README.md`, `gemini.md`, และ Git history.
 
 ---
 
@@ -68,3 +68,12 @@ GPT เห็นด้วยกับ Gemini ว่า Treasury ใน Phase 10 
 
 - ห้ามเพิ่ม feature ใหม่ย้อนกลับเข้า Phase 1-10 โดยไม่มี checklist/decision ใหม่.
 - อนุญาต security fix, data-integrity fix, regression fix และ production-blocking fix ใน phase ที่ปิดแล้ว พร้อม test และบันทึกเหตุผล. การห้ามแก้โดยเด็ดขาดทำให้แก้ช่องโหว่ไม่ได้และขัดกับ security guardrails.
+
+## 4. Phase 12 Decisions
+
+- Phase 12 ปิดในขอบเขต application integration layer: XML mapping, private storage/hash, audit trail, permissions, queue/attempt log และ RD Prep staging export.
+- `provider-mapping-v1` เป็น XML ภายในสำหรับ mapping เท่านั้น ห้ามเรียกว่า ETDA/RD certified XML จนกว่าจะได้ current XSD และผลทดสอบจาก certified provider.
+- เก็บเพียง certificate reference กับวันหมดอายุในฐานข้อมูล; private key ต้องอยู่ vault/KMS หรือ certified provider เสมอ.
+- `ETaxSignatureAdapter` และ `ETaxSubmissionAdapter` ค่าเริ่มต้นต้อง fail-closed. ห้ามเปลี่ยน document เป็น `signed`, `submitted` หรือ `accepted` โดยไม่มี adapter ที่ผ่าน onboarding.
+- RD Prep รองรับเฉพาะ ภ.ง.ด. 3/53 ใน Phase 12 และมีข้อความบังคับให้ตรวจ format ปัจจุบันก่อน upload. ภ.ง.ด. 1 เป็น Phase 16 Payroll.
+- ห้าม generate ทับ e-Tax ที่ `submitted` หรือ `accepted`; การปรับยอดหลังส่งต้องออก Credit Note/Debit Note.

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ETaxDocument xmlns="urn:erp:etax:provider-mapping:v1" profile="provider-mapping-v1">
+  <DocumentType>tax_invoice</DocumentType>
+  <DocumentNumber>INV-2026-0001</DocumentNumber>
+  <IssueDate>2026-08-28</IssueDate>
+  <Seller><TaxId>0105550000001</TaxId><Name>Example Seller Co., Ltd.</Name></Seller>
+  <Buyer><TaxId>0105550000002</TaxId><Name>Example Buyer Co., Ltd.</Name></Buyer>
+  <Totals><NetAmount>100.00</NetAmount><TaxAmount>7.00</TaxAmount><GrandTotal>107.00</GrandTotal></Totals>
+</ETaxDocument>

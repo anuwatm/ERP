@@ -32,7 +32,7 @@
 | Phase 9 | Done | Commercial & Procurement Documents completed: Quotation, CN/DN, Billing Note, Delivery Order, Purchase Request, Voucher, print/PDF, permissions, audit, tests |
 | Phase 10 | Done | Treasury, Banking & Cash Management: bank accounts, statement reconciliation, petty cash, cheque/PDC, voucher proof, treasury reports, and feature tests completed |
 | Phase 11 | Done | General Ledger & Double-entry Accounting: COA, periods, immutable journals, source posting, reports, permissions, and regression validation completed |
-| Phase 12 | Planned | E-Tax & RD Online Tax Filing |
+| Phase 12 | Done (application layer) | e-Tax XML, private storage, provider integration boundary, RD Prep staging export; production submission requires certified provider onboarding |
 | Phase 13 | Planned | Fixed Assets & Depreciation |
 | Phase 14 | Planned | Multi-Currency & FX |
 | Phase 15 | Planned | Advanced Inventory & Barcode/QR Operations |
@@ -752,28 +752,28 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ## Phase 12: E-Tax & RD Online Tax Filing
 
-เป้าหมาย: รองรับเอกสารภาษีอิเล็กทรอนิกส์และ export ไฟล์สำหรับยื่นภาษีออนไลน์.
+เป้าหมาย: รองรับเอกสารภาษีอิเล็กทรอนิกส์, private XML, provider integration boundary และ RD Prep staging export. การลงนาม/ส่งจริงต้องผ่าน certified provider, certificate และ current XSD ของผู้ให้บริการ.
 
 ### Phase 12 Design Backlog
 
-- [ ] ศึกษา/ล็อก scope มาตรฐาน ETDA/RD ที่จะรองรับ: e-Tax by Email หรือ RD API
-- [ ] Design XML data mapping จาก Invoice / Tax Invoice / Receipt / CN / DN
-- [ ] Design digital signature/certificate storage และ rotation policy
-- [ ] Design e-Tax document status: generated, signed, submitted, accepted, rejected
-- [ ] Design RD Prep Text Export สำหรับ ภ.ง.ด. 1, ภ.ง.ด. 3, ภ.ง.ด. 53
-- [ ] Design error handling, retry, idempotency และ submission audit log
-- [ ] Design permissions และ tests สำหรับ XML schema, signature boundary, org isolation
+- [x] ล็อก scope เป็น provider-agnostic e-Tax integration; ไม่อ้างว่า XML ภายในเป็น RD schema ที่รับรอง
+- [x] Design XML data mapping จาก Invoice / Tax Invoice / Receipt / CN / DN
+- [x] Design digital signature/certificate storage และ rotation policy: เก็บเฉพาะ vault/KMS reference และ expiry metadata
+- [x] Design e-Tax document status: generated, signed, submitted, accepted, rejected; submitted/accepted ห้าม generate ทับ ต้องออก CN/DN เพื่อแก้ไข
+- [x] Design RD Prep Text Export สำหรับ ภ.ง.ด. 3 และ ภ.ง.ด. 53; ภ.ง.ด. 1 เป็น scope ของ Phase 16 Payroll
+- [x] Design error handling, retry, idempotency และ submission audit log
+- [x] Design permissions และ tests สำหรับ mapping XML, signature boundary, org isolation
 
 ### Phase 12 Implementation Backlog
 
-- [ ] เพิ่ม e-Tax configuration ต่อ organization
-- [ ] สร้าง XML generator service
-- [ ] สร้าง signature adapter interface
-- [ ] เพิ่ม download XML สำหรับเอกสารภาษี
-- [ ] เพิ่ม submission log/table และ UI status
-- [ ] เพิ่ม queued job สำหรับ submit/retry
-- [ ] เพิ่ม RD Prep text export สำหรับ WHT/payroll tax forms
-- [ ] เพิ่ม feature tests และ sample XML/text fixtures
+- [x] เพิ่ม e-Tax configuration ต่อ organization
+- [x] สร้าง XML generator service สำหรับ provider mapping profile
+- [x] สร้าง signature adapter interface และ disabled adapter แบบ fail-closed
+- [x] เพิ่ม download XML สำหรับเอกสารภาษีจาก private disk
+- [x] เพิ่ม submission log/table, audit log และ UI status
+- [x] เพิ่ม queued job สำหรับ submit/retry ผ่าน provider adapter
+- [x] เพิ่ม RD Prep text staging export สำหรับ WHT ภ.ง.ด. 3/53 (ต้องตรวจ current RD format ก่อน upload)
+- [x] เพิ่ม feature tests และ sample XML/text fixtures
 
 ---
 
