@@ -1,8 +1,8 @@
-# Gemini Review & Audit Notes (Clean)
+# Gemini Review & Architecture Reference (Clean)
 
-Last cleaned: 2026-08-28 (Phase 13 Closed)
+Last audited: 2026-08-29 (Phase 15 Closed, Ready for Phase 16B Payroll, Phase 17 DMS & Phase 18 2FA)
 
-Purpose: รวมข้อมูลอ้างอิงสถาปัตยกรรมและความปลอดภัยหลัก (Security Guardrails), ผลการตรวจสอบและข้อเสนอแนะเชิงสถาปัตยกรรม Phase 13 (Fixed Assets & Depreciation), สถานะโครงการล่าสุด, ข้อปฏิบัติในการขึ้น Production และแผนงานพัฒนาต่อยอด Phase 14+ โดยตัดรายละเอียดงานเก่าที่ปิดเรียบร้อยแล้วออกเพื่อความกระชับและแม่นยำ (รายละเอียดงานที่ปิดแล้วสามารถดูได้ที่ `checklist.md` และ Git history)
+Purpose: บันทึกข้อมูลอ้างอิงสถาปัตยกรรม, Security Guardrails, ข้อกำหนดเชิงระบบที่ยังมีผลต่อการพัฒนา (Decisions That Still Matter), ผลการตรวจสอบ Phase 15, การตรวจประเมินความเข้ากันได้ของข้อมูล Phase 1 - 15 (Cross-Phase Data Compatibility Audit), ข้อสรุปเห็นชอบร่วมต่อข้อเสนอ DMS ของ GPT ใน `gpt.md` (Consensus on GPT DMS Design), ข้อกำหนดการจัดเก็บเอกสารภาษีตามกฎหมายไทย และแผนงานพัฒนา Phase 16B - 18 (รายละเอียดงานที่ปิดแล้วดูได้ที่ `checklist.md`, `README.md` และ Git history)
 
 ---
 
@@ -28,62 +28,94 @@ Purpose: รวมข้อมูลอ้างอิงสถาปัตย�
 - **การจำกัดสิทธิ์พนักงาน (Member Guard):** สมาชิกทั่วไปที่เป็นผู้รับผิดชอบงาน (Assignee) แต่ไม่ได้เป็นเจ้าของโครงการ จะมีสิทธิ์แก้ไขได้เฉพาะสถานะของงาน (`status`) เท่านั้น ระบบหลังบ้านจะป้องกันการแก้ไขชื่อ, รายละเอียด หรือผู้รับผิดชอบงานอย่างปลอดภัย
 - **สถานะขัดข้อง (Blocked Overdue Rule):** งานที่มีสถานะเป็น `blocked` แม้เกินกำหนดเวลาส่งจะไม่ถูกนับเป็นงานล่าช้า (Overdue Task) ในสถิติระบบ
 - **ความถูกต้องทางภาษีและการค้า (Tax & Commercial Integrity):** ห้ามใช้วิธี Void กับใบกำกับภาษีหรือเอกสารการค้าทางการที่ส่งมอบหรือยื่นรอบบัญชีแล้ว ให้ใช้วิธีออก Credit Note / Debit Note เพื่อปรับยอดหนี้และกระทบยอดภาษีขายตามกฎหมายสรรพากร
-- **ระบบบัญชีคู่และงวดบัญชี (GL & Period Lock):** บันทึก Journal Entries อัตโนมัติจากเอกสารต้นทาง (Invoice, Payment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash, Fixed Asset) มี Idempotency Guard ป้องกันการลงซ้ำ และงวดบัญชีที่ปิด (`closed`) ห้าม Post/Void/แก้ไขย้อนหลังเด็ดขาด
+- **ระบบบัญชีคู่และงวดบัญชี (GL & Period Lock):** บันทึก Journal Entries อัตโนมัติจากเอกสารต้นทาง (Invoice, Payment, VendorPayment, Expense, Stock, CN/DN, PV/RV, Bank, Petty Cash, Fixed Asset, FX) มี Idempotency Guard ป้องกันการลงซ้ำ และงวดบัญชีที่ปิด (`closed`) ห้าม Post/Void/แก้ไขย้อนหลังเด็ดขาด
+- **Multi-Currency & Rate Snapshot:** เอกสารทางการค้า/จัดซื้อ/การเงิน ทำการ Snapshot `currency`, `exchange_rate` (`DECIMAL(18,6)`), และ `base_*` amounts (`DECIMAL(18,2)`) เสมอ ห้ามทำ Dynamic Join กับ `exchange_rates` ในการคำนวณย้อนหลัง
+- **AP & Inventory Costing Boundary:** `Expense` (Vendor Invoice) เป็นแหล่งตั้งหนี้ AP (`2110`) เท่านั้น ส่วน `GRN` บันทึกเป็น Inventory เข้าบัญชีพักสินค้า/GRNI (`1150`) และบันทึก `base_unit_cost` / `base_total_cost` บน `StockMovement` เป็น Single Source of Truth
+- **Warehouse & Storage Scope:** ทุกการเคลื่อนไหวสต็อก (Stock Movement) และเอกสารคลัง (GRN, Transfer, Stock Count, DO) ต้องตรวจสอบว่า `warehouse_bin_id` อยู่ใน `warehouse_id` และ `inventory_lot_id` อยู่ใน `product_id` ขององค์กรเดียวกันอย่างเคร่งครัด
 
 ---
 
 ## 3. สถานะโครงการล่าสุด (Current Status)
 
-- **Phase 1 - 13: Complete / Closed**
-  - **Core & Operations (Phase 1 - 7):** Core MVP, Multitenancy, Dashboards แยกตามบทบาท, Number Sequences, Inclusive VAT, Procurement & Suppliers, Project Members.
-  - **Official Documents & Compliance (Phase 8):** Official Print/PDF (Invoice, Tax Invoice/Receipt, PO, 50-Tawi WHT), Inventory/GRN/Costing, Tax Reports/Aging/WHT, In-App & Queued Notifications.
-  - **Commercial & Procurement Documents (Phase 9):** Quotations & Convert to Invoice, Credit Note / Debit Note, Billing Note, Delivery Order, Purchase Request (PR -> PO), Payment/Receipt Voucher (PV/RV) พร้อม Print/PDF.
-  - **Treasury, Banking & Cash Management (Phase 10):** Bank Accounts Master (Encrypted/Masked), Bank Statement Import (CSV) & Fingerprint Deduplication, Bank Reconciliation (Match/Unmatch Audit Trail), Petty Cash Management (Imprest Fund, Independent Approval, Reimbursement), Cheque/PDC Lifecycle Management (Registered, Deposited, Cleared with Statement Line, Bounced, Cancelled), Voucher Attachment (Upload/Download Proof Slip with Org Isolation), Treasury Summary Reports.
-  - **General Ledger & Double-Entry Accounting (Phase 11):** Chart of Accounts (SME Template), Accounting Periods & Period Lock Guard, Journal Entries (Auto-Posting, Source Idempotency, Immutable Policy, Reversal Journal Pattern), Trial Balance, General Ledger & Account Ledger Reports.
-  - **E-Tax & RD Online Tax Filing (Phase 12):** E-Tax Document Generation (Tax Invoice, Receipt, CN, DN) บน Private Storage พร้อม SHA-256 Hash, Fail-Closed Signature/Submission Adapter Architecture, E-Tax Configuration (Vault/KMS Reference Scope), Submission Queue & Attempt History Tracking, RD Prep Staging Text Export สำหรับ ภ.ง.ด. 3 และ ภ.ง.ด. 53.
-  - **Fixed Assets & Depreciation (Phase 13):** Asset Categories & GL Account Mapping (Asset, Accumulated Depreciation, Depreciation Expense), Capitalization Source จาก Expense (`approved`/`paid`) และ Goods Receipt พร้อม Unique Guard ป้องกันบันทึกซ้ำ, Straight-Line Monthly Depreciation (Catch-up Calculation, Scheduled Cron `assets:depreciate`, Idempotent GL Auto-Posting), Asset Disposal & Write-off (Stop Depreciation, Remove Accumulated/Cost, Realize Proceeds & Gain/Loss on Disposal), Proof Attachment Upload & Custody/Location Tracking.
-- **Validation Snapshot:** 217 Tests Passed (1,795 Assertions / 0 Failures), TypeScript/Vite Build Clean, ESLint Clean, Prettier Clean, Pint Clean.
-- *(รายละเอียดประวัติงานที่ปิดแล้วใน Phase 1 - 13 ดูได้ที่ `checklist.md` และ Git history)*
+- **Phase 1 - 15: Complete / Closed**
+  - **Core & Financial Foundations (Phase 1 - 7):** Core MVP, CRM, Finance, Delivery, Multi-role Dashboards, Number Sequences, Inclusive VAT, Suppliers & POs.
+  - **Documents, Compliance & Treasury (Phase 8 - 10):** Official Print/PDF, Tax Reports/Aging/WHT, Commercial Docs (Quotation, CN/DN, Billing Note, DO, PR, Voucher), Bank Accounts (Encrypted), Bank Reconciliation, Petty Cash, Cheques/PDC.
+  - **Accounting, E-Tax & Fixed Assets (Phase 11 - 13):** General Ledger & Double-Entry (COA, Periods, Auto-Posting, Reversal), E-Tax Integration Layer (XML, Hash, RD Prep), Fixed Assets & Monthly Straight-Line Depreciation.
+  - **Multi-Currency, AP Subledger & Treasury (Phase 14 - 14.1):** FX Rate Master & Immutable Snapshots, Realized FX, Month-End AR/AP/FCD Revaluation & Auto-Reversal, AP Subledger (`VendorPayment`), FCD Bank Accounts & Two-Sided Transfers, Inventory FX Bridge.
+  - **Advanced Inventory & Operations (Phase 15):** Warehouses, Bins, Lots & Expiration, Barcode/QR Scanning, Stock Transfer, Stock Count Differencing, Reorder Point & Low Stock In-App/Email Alerts.
+- **Validation Snapshot:** 228 Tests Passed (1,836 Assertions / 0 Failures), TypeScript/Vite Build Clean, ESLint Clean, Prettier Clean, Laravel Pint Clean.
 
 ---
 
-## 4. ผลการตรวจสอบและข้อเสนอแนะเชิงสถาปัตยกรรม Phase 13: Fixed Assets & Depreciation (Phase 13 Review & Recommendations)
-
-จากการตรวจสอบ Source Code, Data Flow, Security และ Test Suite ของ **Phase 13 (Fixed Assets & Depreciation)** มีข้อสรุปและข้อเสนอแนะเชิงสถาปัตยกรรมดังนี้:
+## 4. ผลการตรวจสอบและข้อเสนอแนะ Phase 15: Advanced Inventory & Barcode/QR Operations
 
 ### จุดเด่นที่ผ่านการทดสอบและปฏิบัติตามมาตรฐานสถาปัตยกรรม (Strengths & Verified Architecture):
-1. **Capitalization Recognition & Double-Posting Guard:**
-   - การแปลงเป็นทรัพย์สิน (Capitalization) รองรับ 2 แหล่งที่มา:
-     - **Expense:** สถานะ `approved`/`paid` บันทึก Reclassify: `Dr. Fixed Asset (1210) / Cr. Operating Expense (5200)`
-     - **Goods Receipt (GRN):** ยอดสุทธิก่อนภาษี บันทึก: `Dr. Fixed Asset (1210) / Cr. Inventory (1140)`
-   - **Double-Capitalization Guard:** ตาราง `fixed_assets` มี Database Unique Constraint บน `[org_id, capitalization_source_type, capitalization_source_id]` ป้องกันการแปลงซ้ำจาก Expense หรือ GRN เดิม 100%
-   - ใบสั่งซื้อ (PO) ใช้เป็นเอกสารอ้างอิงผ่าน GRN เพื่อป้องกันไม่ให้เกิด Journal Entry ซ้ำซ้อน
-2. **Catch-up Monthly Straight-Line Depreciation:**
-   - คำนวณค่าเสื่อมราคาแบบเส้นตรงรายเดือน `(cost - salvage_value) / useful_life_months` โดย Net Book Value จะไม่ต่ำกว่าราคาซาก (`salvage_value`) เสมอ
-   - มีกลไก **Catch-up อัตโนมัติ** ใน `FixedAssetService::runThroughMonth()` ซึ่งจะคำนวณและบันทึกย้อนหลังตามลำดับเดือน (Chronological order) หากคำสั่ง Scheduler ไม่ได้รันในเดือนก่อนหน้า
-   - ป้องกันการ Post ค่าเสื่อมซ้ำในเดือนเดียวกันด้วย `posting_event = 'depreciation:YYYY-MM'` ร่วมกับตาราง `asset_depreciations`
-   - ตั้งค่า Scheduler `assets:depreciate` รันทุกวันที่ 1 เวลา 01:00 น. เพื่อตัดรอบค่าเสื่อมราคาเดือนก่อนหน้าเข้า General Ledger
-3. **Disposal & Write-off Integrity:**
-   - ก่อนจำหน่ายหรือตัดจำหน่าย ระบบจะคำนวณและ Post ค่าเสื่อมราคาสะสมจนถึงสิ้นเดือนก่อนวันจำหน่ายก่อนเสมอ
-   - บันทึกตัดราคาทุนทรัพย์สิน, ล้างค่าเสื่อมสะสม, รับรู้เงินที่ได้จากการขาย (Proceeds) และบันทึกผลกำไร/ขาดทุนจากการจำหน่ายทรัพย์สิน (`5300`) เข้า GL ทันที
-   - สินทรัพย์ที่ `disposed` หรือ `written_off` แล้ว จะถูกล็อกสถานะห้ามแก้ไขหรือคิดค่าเสื่อมราคาเพิ่ม
-4. **Org-Scoped File Attachments:**
-   - การอัปโหลดหลักฐานทรัพย์สิน (รูปภาพ, ใบรับประกัน, เอกสารสิทธิ์) ทำงานผ่าน `FileAttachmentManager` บน Private Disk พร้อมตรวจสิทธิ์องค์กรและจำกัดประเภทไฟล์ (`pdf, jpg, jpeg, png, webp`) ปลอดภัย
+1. **Warehouse, Bin & Lot Data Model with Strict Isolation:**
+   - ตาราง `warehouses`, `warehouse_bins`, `inventory_lots`, `stock_transfers`, `stock_counts` มี `org_id` กำกับ พร้อม Unique Constraints ป้องกันรหัสซ้ำข้ามคลัง/ข้ามสินค้า
+   - มี Validation Guard ป้องกันการเลือก Bin นอกคลัง หรือ Lot นอกสินค้า
+2. **Weighted Average Costing on Stock Transfer:**
+   - การโอนย้ายสินค้าระหว่างคลัง (`StockTransfer`) ใช้ Transaction Lock (`lockForUpdate()`) ตรวจสอบยอดสต็อกคงเหลือต้นทาง คำนวณ `base_unit_cost` ถัวเฉลี่ยถ่วงน้ำหนัก และบันทึก `StockMovement` คู่กัน (`transfer_out` และ `transfer_in`) ทำให้มูลค่าสต็อกรวมระดับองค์กรถูกต้อง 100%
+3. **Stock Count Net Differencing & Integrity:**
+   - การตรวจนับสต็อก (`StockCount`) ทำการ Lock สต็อกในคลัง และบันทึกเฉพาะผลต่าง (`difference`) เข้า `StockMovement` (`stock_count_in` / `stock_count_out`) ทำให้ยอดสินค้าในระบบตรงกับยอดนับจริงโดยไม่เกิดความผิดเพี้ยนของยอดสะสม
+4. **Scanner UX & Reorder Alert:**
+   - รองรับการสแกน Barcode/SKU ในหน้า Inventory Operations, Goods Receipts, และ Delivery Orders
+   - การตัดสต็อกสินค้า (Adjustment Out และ Delivery Order) มีระบบตรวจเช็ก `reorder_point` และส่งแจ้งเตือน Low Stock ทันทีเมื่อสต็อกคงเหลือลดลงต่ำกว่าหรือเท่ากับจุดสั่งซื้อซ้ำ
 
-### ข้อเสนอแนะเชิงสถาปัตยกรรมสำหรับการต่อยอด (Architectural Recommendations for Future Enhancements):
-1. **Disposal Proceeds Destination Account Mapping:**
-   - ปัจจุบันยอดรับจากการขายทรัพย์สิน (`proceeds`) ลงเดบิตบัญชีเงินสด/ธนาคารกลาง (`1110`)
-   - *ข้อเสนอแนะ:* ในอนาคต (เชื่อมโยงกับ Phase 10 Treasury) สามารถเพิ่มตัวเลือกระบุบัญชีธนาคารปลายทาง (`bank_account_id`) เพื่อให้ยอดเงินเข้าผูกกับ Bank Statement และกระทบยอด Bank Reconciliation ได้โดยตรง
-2. **Asset Category Account Flexibility:**
-   - หมวดหมู่ทรัพย์สิน (`AssetCategory`) ผูกกับผังบัญชี 3 บัญชี (Asset, Accumulated Depreciation, Depreciation Expense) โดยระบบมี Template เริ่มต้น (1210/1219/5310)
-   - *ข้อเสนอแนะ:* สำหรับองค์กรที่มีทรัพย์สินหลายประเภท สามารถสร้างหมวดหมู่เพิ่มเติมได้ เช่น อาคารและสิ่งปลูกสร้าง (1220/1229/5320), ยานพาหนะ (1230/1239/5330) พร้อมกำหนดอายุการใช้งานตามเกณฑ์สรรพากร (เช่น ยานพาหนะ 5 ปี, อาคารถาวร 20 ปี)
+---
+
+## 4.1 ผลการตรวจประเมินความเข้ากันได้ของข้อมูล Phase 1 - 15 (Cross-Phase Data Compatibility Audit)
+
+ผลการตรวจสอบความสอดคล้องและการเชื่อมต่อข้อมูลระหว่าง Phase ต่างๆ:
+
+| มิติการตรวจสอบ | ความสอดคล้องเชิงสถาปัตยกรรม (Architectural Compatibility) | สถานะ |
+| :--- | :--- | :--- |
+| **Multi-Tenant Isolation (Phase 1 - 15)** | ทุก Model และ Query มีการ Scoping ด้วย `org_id` อย่างรัดกุม ป้องกันการเข้าถึงข้อมูลข้ามองค์กร 100% | **ถูกต้อง / สมบูรณ์** |
+| **Commercial -> GL Chain (Phase 2, 3, 7, 8, 9, 11)** | เอกสารการค้า (Invoice, Payment, Expense, VendorPayment, GRN, CN/DN, Voucher, BankTransfer) ลงบัญชี GL แบบ Double-Entry อัตโนมัติ (Idempotent & Period Locked) | **ถูกต้อง / สมบูรณ์** |
+| **Multi-Currency & Base Costing (Phase 14, 14.1, 15)** | `StockMovement` ยึดถือ `base_unit_cost` และ `base_total_cost` (THB) เป็น Single Source of Truth ทั้งใน GRN, Stock Transfer, Stock Adjustment, และ Stock Count | **ถูกต้อง / สมบูรณ์** |
+| **AP / Inventory Boundary (Phase 7, 14.1, 15)** | GRN บันทึกสต็อกเข้า `1140` คู่บัญชีพัก `1150 (GRNI)` ขณะที่ Expense บันทึกตั้งหนี้ AP `2110` ป้องกันการตั้งหนี้ซ้ำซ้อน | **ถูกต้อง / สมบูรณ์** |
+| **Delivery Orders & Stock Deduction (Phase 9, 15)** | Delivery Order มีการตรวจสอบยอด On-Hand ตามคลังที่เลือก และคำนวณต้นทุนออกด้วย Base Cost พร้อม Trigger แจ้งเตือน Low Stock | **ถูกต้อง / สมบูรณ์** |
+| **Treasury & Reconciliation (Phase 10, 14.1)** | การกระทบยอด Bank Statement รองรับทั้ง THB และ FCD พร้อมระบบโอนเงินข้ามบัญชี Two-Sided Transfer ที่งบทดลองดุล 100% | **ถูกต้อง / สมบูรณ์** |
+
+---
+
+## 4.2 การพิจารณาและข้อตกลงร่วมต่อข้อเสนอ DMS ของ GPT ใน gpt.md (Gemini Consensus on GPT DMS Proposal)
+
+จากการตรวจสอบข้อเสนอแนะและประเด็นแก้ไขของ GPT ใน `gpt.md` หมวด **Section 4 & 5 (Proposal & Response for DMS)** Gemini มีข้อสรุป**เห็นชอบร่วมกัน 100%** โดยมีรายละเอียดทางสถาปัตยกรรมและข้อตกลงร่วมดังนี้:
+
+### 1. การจัดลำดับการพัฒนา (Roadmap Sequencing Consensus):
+- **เห็นชอบ 100%:** จัดลำดับเป็น `Phase 16B (Payroll) -> Phase 17 (Enterprise DMS) -> Phase 18 (Security 2FA)`
+- *เหตุผล:* เป็น Product Decision ที่สมเหตุสมผล โดยการเลื่อน 2FA ไป Phase 18 ไม่ได้ทำให้ระบบหย่อนความปลอดภัย เนื่องจากระบบมี Guardrails เดิมคุ้มครองอย่างเข้มงวดอยู่แล้ว (Password Confirmation, Email Verification, Login Rate Limit, Session Invalidation และ Central Audit Log Redaction)
+
+### 2. โครงสร้างตารางเชื่อมโยง `document_links` (Many-to-Many Join Table):
+- **เห็นชอบ 100%:** ใช้ตาราง `document_links` (`id`, `org_id`, `document_id`, `linkable_type`, `linkable_id`, `role`, `linked_by`, `timestamps`) แทนการใส่ single polymorphic FK บนตาราง `documents`
+- *เหตุผล:* ในทางปฏิบัติ เอกสาร 1 ฉบับ (เช่น สัญญา Master Agreement, ภ.พ.20, หนังสือรับรองบริษัท หรือกรมธรรม์) ต้องสามารถผูกกับหลาย Entity ได้ (เช่น ผูกกับ Customer และหลายๆ Deals หรือ POs) โดยระบุบทบาทของลิงก์ได้ (`primary`, `supporting`, `generated`) และช่วยให้การ Unlink ทำได้อย่างปลอดภัยโดยไม่ต้องลบไฟล์จริง
+
+### 3. การควบคุมความปลอดภัยในการดาวน์โหลด (Private Download Controller):
+- **เห็นชอบ 100%:** ใช้ **Private Download Controller** ที่ตรวจสอบ active session, tenant `org_id`, parent module permission, document sensitivity และ malware scan status ทุกครั้งต่อหนึ่ง Web Request
+- *เหตุผล:* ในระบบ ERP ภายใน การใช้ Signed Temporary URL ถือเป็น Capability Token ที่อาจถูก forward/replay หรือหลุดออกนอก session context ได้ การสตรีมไฟล์ผ่าน Private Controller จึงปลอดภัยและควบคุมการเข้าถึงได้รัดกุมกว่า 100%
+
+### 4. การจัดหมวดหมู่ชั้นความลับ (Sensitivity Taxonomy):
+- **เห็นชอบ 100%:** กำหนด Sensitivity เป็น 5 ระดับ:
+  1. `org_internal`: เข้าถึงได้ตามสิทธิ์ของโมดูลแม่ในองค์กร
+  2. `department_restricted`: เข้าถึงได้เฉพาะสมาชิกในแผนก/โครงการ
+  3. `finance_confidential`: เอกสารการเงินขั้นลับเฉพาะฝ่ายบัญชี/การเงิน
+  4. `hr_confidential`: เอกสารพนักงาน/เงินเดือนเฉพาะฝ่ายบุคคล
+  5. `executive_confidential`: เอกสารลับเฉพาะ Owner / Admin / ผู้บริหารระดับสูง
+- *กฎเหล็ก:* สิทธิ์ของ Parent Module เป็น Baseline และ Sensitivity ทำหน้าที่เป็น **Additional Restriction Guard (ห้ามใช้เป็นช่องทาง Bypass สิทธิ์ของโมดูลแม่)**
+
+### 5. การแจ้งเตือนวันหมดอายุเฉพาะหมวด (Category-Driven Expiry):
+- **เห็นชอบ 100%:** เปิดใช้งานระบบติดตามวันหมดอายุ (`expires_at`, `renewal_alert_days`) เฉพาะหมวดเอกสารที่มี Lifecycle จริง เช่น contracts, warranties, licenses, certificates, insurances เพื่อป้องกัน Notification Noise ในเอกสารทั่วไป
+
+### 6. ข้อกำหนดการจัดเก็บเอกสารทางภาษีตามกฎหมายไทย (Thai Tax & Legal Retention Policy):
+- **ข้อกำหนดทางกฎหมาย:** ตามประมวลรัษฎากร มาตรา 87/3 เอกสารและหลักฐานทางบัญชี/ภาษี (เช่น ใบกำกับภาษี, ใบเสร็จรับเงิน, หนังสือรับรอง 50 ทวิ, ใบสำคัญจ่าย, e-Tax XML) ต้องจัดเก็บไว้**ไม่น้อยกว่า 5 ปี** (และสูงสุด 7 ปีตามดุลยพินิจของอธิบดีกรมสรรพากร)
+- **DMS Guardrail:** เอกสารการเงิน/ภาษีที่ผ่านการ `posted`, `submitted` หรือ `accepted` แล้ว ต้องเป็น **Append-only Version** เท่านั้น ห้ามแก้ไขหรือลบทับเวอร์ชันเดิม และระบบต้องบล็อก Hard Delete บน UI ในช่วงระยะเวลา Legal Retention Window
 
 ---
 
 ## 5. ข้อแนะนำการเตรียมความพร้อมขึ้น Production (Production Deployment & Server Prep)
 
 1. **Background Workers & Scheduler:**
-   - **Laravel Scheduler (Cron):** ตั้งค่า `* * * * * cd /path/to/ERP/backend && php artisan schedule:run >> /dev/null 2>&1` บนเซิร์ฟเวอร์เพื่อให้คำสั่งตรวจเช็กหนี้ แจ้งเตือนอัตโนมัติ คำสั่งตัดค่าเสื่อมราคารายเดือน (`assets:depreciate` ทุกวันที่ 1 เวลา 01:00) ทำงานสม่ำเสมอ
+   - **Laravel Scheduler (Cron):** ตั้งค่า `* * * * * cd /path/to/ERP/backend && php artisan schedule:run >> /dev/null 2>&1` บนเซิร์ฟเวอร์เพื่อให้คำสั่งตรวจเช็กหนี้ แจ้งเตือนอัตโนมัติ คำสั่งตัดค่าเสื่อมราคารายเดือน (`assets:depreciate` ทุกวันที่ 1 เวลา 01:00) และคำสั่ง Revaluation/Reversal สิ้นงวดทำงานสม่ำเสมอ
    - **Queue Worker (Supervisor/Systemd):** รัน `php artisan queue:work --tries=3` เพื่อให้ระบบส่งอีเมลแจ้งเตือนและคิวส่งเอกสาร e-Tax ทำงานเบื้องหลังโดยไม่บล็อก Web Request
 2. **Thai Fonts for DomPDF:**
    - เซิร์ฟเวอร์ Linux Production ต้องติดตั้ง TrueType Fonts ภาษาไทย (เช่น Sarabun หรือ THSarabunNew) ใน `storage/fonts` หรือฝังผ่าน `@font-face` เพื่อป้องกันปัญหาสระลอยหรือภาษาไทยแสดงเป็น `???` ในไฟล์ PDF
@@ -97,33 +129,27 @@ Purpose: รวมข้อมูลอ้างอิงสถาปัตย�
 
 ## 6. แผนงานพัฒนาต่อยอด (Future Roadmap & Architectural Guardrails)
 
-### แผนผังลำดับการพัฒนา Phase 13 - 16:
+### แผนผังลำดับการพัฒนา Phase 16B - 18:
 
 ```
-[Phase 13: Complete]
+[Phase 15: Complete]
        ↓
-[Phase 14: Multi-Currency & FX] (Rate Snapshot, Realized/Unrealized Gain/Loss Revaluation)
+[Phase 16B: Payroll, Social Security & Tax] (Salary, ภ.ง.ด.1/1ก, สปส., Payslip, GL Posting) [พร้อมเริ่มทันที]
        ↓
-[Phase 15: Advanced Inventory & Barcode/QR] (Stock Transfer, Reorder Alert, Lot/Expiry, Scanner UX)
+[Phase 17: Enterprise Document Management (DMS)] (Central Repository, Versioning, document_links, Category Expiry, Retention, Sensitivity RBAC)
        ↓
-[Phase 16: Payroll, Social Security & Security 2FA] (Salary, ภ.ง.ด.1/1ก, สปส., Payslip, 2FA Auth)
+[Phase 18: Security 2FA / Auth OTP] (2FA Enforcement, Recovery Codes, Security Audit)
 ```
 
 ### รายละเอียดและ Architectural Guardrails รายโมดูล:
 
-1. **Phase 14: Multi-Currency & FX (ระบบหลายสกุลเงินและอัตราแลกเปลี่ยน):**
-   - **Currency Master & Base Currency:** กำหนด Base Currency ต่อองค์กร (ค่าเริ่มต้น THB) และตารางอัตราแลกเปลี่ยนรายวัน
-   - **Historical FX Rate Snapshot:** Snapshot อัตราแลกเปลี่ยนลงเอกสาร (Invoice, Payment, Expense, PO, CN/DN) ณ วันที่เกิดรายการ ไม่ใช้ Dynamic Join กับเรตปัจจุบัน
-   - **Realized FX Gain/Loss:** คำนวณและบันทึกกำไร/ขาดทุนจากอัตราแลกเปลี่ยนที่เกิดขึ้นจริง ณ วันที่รับชำระหรือจ่ายเงิน (Payment Settlement) เข้า GL
-   - **Unrealized FX Revaluation:** คำนวณปรับปรุงมูลค่าลูกหนี้/เจ้าหนี้ต่างประเทศ ณ วันสิ้นงวดบัญชี (Period-End Revaluation)
-2. **Phase 15: Advanced Inventory & Barcode/QR Operations:**
-   - **Stock Transfer:** โอนย้ายสินค้าระหว่างคลังสินค้าหรือสาขา (Inter-warehouse transfer)
-   - **Reorder Point & Low Stock Alert:** กำหนดระดับสต็อกขั้นต่ำและแจ้งเตือนเมื่อสินค้าใกล้หมด
-   - **Lot & Expiration Tracking:** คุม Lot Number และวันหมดอายุสินค้า
-   - **Barcode / QR Scanner UX:** สแกนรับสินค้า (GRN), จ่ายสินค้า (DO), ปรับยอด (Adjust) พร้อมระบุ Shelf/Bin Location
-3. **Phase 16: Payroll, Social Security & Security 2FA:**
-   - คำนวณเงินเดือนพนักงาน, ประกันสังคม (สปส.), ภาษีหัก ณ ที่จ่าย ภ.ง.ด. 1 / 1ก และออก Payslip
-   - Two-Factor Authentication (2FA / Authenticator OTP) สำหรับบัญชีผู้ดูแลและฝ่ายการเงิน
+1. **Phase 16B: Payroll, Social Security & Tax:**
+   - คำนวณเงินเดือนพนักงาน, ประกันสังคม (สปส.), ภาษีหัก ณ ที่จ่าย ภ.ง.ด. 1 / 1ก และออก Payslip พร้อมบันทึกบัญชีเข้า GL
+   - ต้องล็อก Versioned Tax/Social Security Policy Tables ก่อนเริ่มโค้ดดิ้ง
+2. **Phase 17: Enterprise Document Management (DMS) & Cross-Module Integration:**
+   - พัฒนาระบบจัดการเอกสารและสัญญาองค์กรแบบรวมศูนย์ รองรับ `document_links` Many-to-Many, Versioning, Expiration Alert, Category Retention (5-7 ปีตามกฎหมายสรรพากร) และ Sensitivity 5 ระดับ
+3. **Phase 18: Security 2FA:**
+   - Two-Factor Authentication (2FA / Authenticator OTP) สำหรับบัญชีผู้ดูแล (Owner/Admin) และฝ่ายการเงิน (Finance) พร้อม Recovery Codes
 
 ---
 
@@ -131,6 +157,6 @@ Purpose: รวมข้อมูลอ้างอิงสถาปัตย�
 
 1. **ห้ามละเมิด Security Guardrails ในข้อ 1 และ 2 ของ `gemini.md` โดยเด็ดขาด** (Org Isolation, Redaction, Permission Check, Session Invalidation)
 2. **ขอบเขตการแก้ไขใน Phase ที่ Closed แล้ว (Closed Phase Governance):**
-   - ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-13 โดยไม่มี Decision/Checklist ใหม่
+   - ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-15 โดยไม่มี Decision/Checklist ใหม่
    - **อนุญาตและให้ดำเนินการได้:** การแก้ไข Security Vulnerability, Data-Integrity Bug, Regression Fix หรือ Production-Blocking Issue ใน Phase ที่ปิดแล้ว โดยต้องมี Test ครอบคลุมและบันทึกเหตุผลชัดเจน
 3. **รักษา Code Quality:** รัน `php artisan test`, `pnpm run build`, `pnpm run lint`, `pnpm run check-format`, และ `pint` ให้ผ่าน 100% ทุกครั้งที่จบ Slice/Phase

@@ -38,6 +38,13 @@ type Source = {
     expense_date?: string;
     items?: { line_total: string; tax_amount: string }[];
 };
+type BankAccount = {
+    id: string;
+    bank_name: string;
+    account_name: string;
+    currency: string;
+    chart_of_account_id: string | null;
+};
 
 const money = (value: string | number) =>
     Number(value).toLocaleString(undefined, {
@@ -52,6 +59,7 @@ export default function FixedAssets({
     users,
     expenses,
     goodsReceipts,
+    bankAccounts,
     summary,
 }: {
     categories: Category[];
@@ -60,6 +68,7 @@ export default function FixedAssets({
     users: { id: string; name: string }[];
     expenses: Source[];
     goodsReceipts: Source[];
+    bankAccounts: BankAccount[];
     summary: {
         cost: string;
         accumulated_depreciation: string;
@@ -75,6 +84,7 @@ export default function FixedAssets({
         new Date().toISOString().slice(0, 10),
     );
     const [disposalProceeds, setDisposalProceeds] = useState('0');
+    const [disposalBankAccountId, setDisposalBankAccountId] = useState('');
     const assetAccounts = useMemo(
         () => accounts.filter((account) => account.account_type === 'asset'),
         [accounts],
@@ -360,6 +370,35 @@ export default function FixedAssets({
                                 className="rounded-md border-slate-300"
                             />
                         </label>
+                        <label className="grid gap-1 text-sm">
+                            Proceeds bank / GL account
+                            <select
+                                value={disposalBankAccountId}
+                                onChange={(event) =>
+                                    setDisposalBankAccountId(event.target.value)
+                                }
+                                className="rounded-md border-slate-300"
+                            >
+                                <option value="">
+                                    Select mapped bank account
+                                </option>
+                                {bankAccounts
+                                    .filter(
+                                        (account) =>
+                                            account.chart_of_account_id,
+                                    )
+                                    .map((account) => (
+                                        <option
+                                            key={account.id}
+                                            value={account.id}
+                                        >
+                                            {account.bank_name} -{' '}
+                                            {account.account_name} (
+                                            {account.currency})
+                                        </option>
+                                    ))}
+                            </select>
+                        </label>
                     </div>
                     <DataTable
                         data={assets}
@@ -468,6 +507,9 @@ export default function FixedAssets({
                                                                 disposalDate,
                                                             disposal_proceeds:
                                                                 disposalProceeds,
+                                                            bank_account_id:
+                                                                disposalBankAccountId ||
+                                                                null,
                                                             disposal_reason:
                                                                 'Disposed',
                                                         },

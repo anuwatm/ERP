@@ -27,6 +27,8 @@ type Expense = {
     category: string;
     title: string;
     amount: string;
+    balance_due?: string;
+    currency?: string;
     tax_mode?: string;
     tax_invoice_no?: string | null;
     tax_amount?: string;
@@ -48,6 +50,7 @@ type ExpenseForm = {
     category: string;
     title: string;
     amount: string;
+    currency: string;
     tax_mode: string;
     tax_invoice_no: string;
     withholding_tax_rate: string;
@@ -65,6 +68,7 @@ const emptyExpense: ExpenseForm = {
     category: 'misc',
     title: '',
     amount: '0.00',
+    currency: 'THB',
     tax_mode: 'no_tax',
     tax_invoice_no: '',
     withholding_tax_rate: '0.00',
@@ -101,7 +105,7 @@ export default function Expenses({
     );
     const form = useForm<ExpenseForm>(emptyExpense);
     const rejectForm = useForm({ note: '' });
-    const payForm = useForm({ paid_at: today, note: '' });
+    const payForm = useForm({ amount: '', payment_date: today, note: '' });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -127,6 +131,7 @@ export default function Expenses({
             category: expense.category,
             title: expense.title,
             amount: expense.amount,
+            currency: expense.currency ?? 'THB',
             tax_mode: expense.tax_mode ?? 'no_tax',
             tax_invoice_no: expense.tax_invoice_no ?? '',
             withholding_tax_rate: expense.withholding_tax_rate ?? '0.00',
@@ -156,11 +161,31 @@ export default function Expenses({
     };
 
     const payExpense = (expense: Expense) => {
-        payForm.post(route('expenses.pay', expense.id), {
-            forceFormData: true,
-            preserveScroll: true,
-            onSuccess: () => payForm.setData({ paid_at: today, note: '' }),
-        });
+        payForm.setData(
+            'amount',
+            payForm.data.amount || expense.balance_due || expense.amount,
+        );
+        router.post(
+            route('expenses.vendor-payments.store', expense.id),
+            {
+                amount:
+                    payForm.data.amount ||
+                    expense.balance_due ||
+                    expense.amount,
+                payment_date: payForm.data.payment_date,
+                note: payForm.data.note,
+            },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () =>
+                    payForm.setData({
+                        amount: '',
+                        payment_date: today,
+                        note: '',
+                    }),
+            },
+        );
     };
 
     const rejectExpense = (event: FormEvent) => {
@@ -319,7 +344,10 @@ export default function Expenses({
                                                     </SecondaryButton>
                                                 )}
                                             {canPayExpenses &&
-                                                row.status === 'approved' && (
+                                                [
+                                                    'approved',
+                                                    'partially_paid',
+                                                ].includes(row.status) && (
                                                     <SecondaryButton
                                                         type="button"
                                                         onClick={() =>
@@ -388,6 +416,18 @@ export default function Expenses({
                                         error={form.errors.amount}
                                         onChange={(value) =>
                                             form.setData('amount', value)
+                                        }
+                                        required
+                                    />
+                                    <Field
+                                        label="Currency"
+                                        value={form.data.currency}
+                                        error={form.errors.currency}
+                                        onChange={(value) =>
+                                            form.setData(
+                                                'currency',
+                                                value.toUpperCase(),
+                                            )
                                         }
                                         required
                                     />
@@ -517,12 +557,26 @@ export default function Expenses({
                             <Card title="Pay Details" description="Used by Pay">
                                 <div className="space-y-3">
                                     <Field
-                                        label="Paid At"
-                                        type="date"
-                                        value={payForm.data.paid_at}
-                                        error={payForm.errors.paid_at}
+                                        label="Amount"
+                                        type="number"
+                                        step="0.01"
+                                        min="0.01"
+                                        value={payForm.data.amount}
+                                        error={payForm.errors.amount}
                                         onChange={(value) =>
-                                            payForm.setData('paid_at', value)
+                                            payForm.setData('amount', value)
+                                        }
+                                    />
+                                    <Field
+                                        label="Payment Date"
+                                        type="date"
+                                        value={payForm.data.payment_date}
+                                        error={payForm.errors.payment_date}
+                                        onChange={(value) =>
+                                            payForm.setData(
+                                                'payment_date',
+                                                value,
+                                            )
                                         }
                                     />
                                     <Field

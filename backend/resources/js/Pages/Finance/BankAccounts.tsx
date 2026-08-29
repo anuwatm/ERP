@@ -16,6 +16,7 @@ type Account = {
     id: string;
     branch_id: string | null;
     branch: Branch | null;
+    chart_of_account_id: string | null;
     bank_name: string;
     bank_code: string | null;
     branch_name: string | null;
@@ -31,6 +32,7 @@ type Account = {
 
 type AccountForm = {
     branch_id: string;
+    chart_of_account_id: string;
     bank_name: string;
     bank_code: string;
     branch_name: string;
@@ -46,6 +48,7 @@ type AccountForm = {
 
 const emptyForm: AccountForm = {
     branch_id: '',
+    chart_of_account_id: '',
     bank_name: '',
     bank_code: '',
     branch_name: '',
@@ -62,11 +65,13 @@ const emptyForm: AccountForm = {
 export default function BankAccounts({
     accounts,
     branches,
+    chartAccounts,
     accountTypes,
     statuses,
 }: {
     accounts: Account[];
     branches: Branch[];
+    chartAccounts: { id: string; code: string; name: string }[];
     accountTypes: string[];
     statuses: string[];
 }) {
@@ -94,6 +99,7 @@ export default function BankAccounts({
         setEditing(account);
         form.setData({
             branch_id: account.branch_id ?? '',
+            chart_of_account_id: account.chart_of_account_id ?? '',
             bank_name: account.bank_name,
             bank_code: account.bank_code ?? '',
             branch_name: account.branch_name ?? '',
@@ -200,6 +206,22 @@ export default function BankAccounts({
                                 {branches.map((branch) => (
                                     <option key={branch.id} value={branch.id}>
                                         {branch.code} - {branch.name}
+                                    </option>
+                                ))}
+                            </SelectField>
+                            <SelectField
+                                label="GL Account"
+                                value={form.data.chart_of_account_id}
+                                onChange={(value) =>
+                                    form.setData('chart_of_account_id', value)
+                                }
+                            >
+                                <option value="">
+                                    Use default bank account
+                                </option>
+                                {chartAccounts.map((account) => (
+                                    <option key={account.id} value={account.id}>
+                                        {account.code} - {account.name}
                                     </option>
                                 ))}
                             </SelectField>

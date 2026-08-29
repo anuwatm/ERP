@@ -16,7 +16,7 @@ class PurchaseOrder extends Model
 
     public const TAX_MODES = ['exclusive', 'inclusive', 'no_tax'];
 
-    protected $fillable = ['org_id', 'supplier_id', 'project_id', 'po_no', 'status', 'order_date', 'expected_date', 'tax_mode', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'currency', 'note', 'created_by', 'updated_by', 'approved_at', 'approved_by', 'cancelled_at'];
+    protected $fillable = ['org_id', 'supplier_id', 'project_id', 'po_no', 'status', 'order_date', 'expected_date', 'tax_mode', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'currency', 'base_currency', 'exchange_rate', 'base_subtotal', 'base_tax_amount', 'base_total', 'note', 'created_by', 'updated_by', 'approved_at', 'approved_by', 'cancelled_at'];
 
     protected function casts(): array
     {
@@ -27,6 +27,10 @@ class PurchaseOrder extends Model
             'discount_amount' => 'decimal:2',
             'tax_amount' => 'decimal:2',
             'total' => 'decimal:2',
+            'exchange_rate' => 'decimal:6',
+            'base_subtotal' => 'decimal:2',
+            'base_tax_amount' => 'decimal:2',
+            'base_total' => 'decimal:2',
             'approved_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];

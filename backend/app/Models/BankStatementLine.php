@@ -11,11 +11,11 @@ class BankStatementLine extends Model
 {
     use UsesOrderedUuid;
 
-    protected $fillable = ['org_id', 'bank_statement_id', 'bank_account_id', 'transaction_date', 'amount_signed', 'balance_after', 'description', 'reference_no', 'row_fingerprint', 'status'];
+    protected $fillable = ['org_id', 'bank_statement_id', 'bank_account_id', 'transaction_date', 'amount_signed', 'balance_after', 'currency', 'base_currency', 'exchange_rate', 'base_amount_signed', 'base_balance_after', 'description', 'reference_no', 'row_fingerprint', 'status'];
 
     protected function casts(): array
     {
-        return ['transaction_date' => 'date', 'amount_signed' => 'decimal:2', 'balance_after' => 'decimal:2'];
+        return ['transaction_date' => 'date', 'amount_signed' => 'decimal:2', 'balance_after' => 'decimal:2', 'exchange_rate' => 'decimal:6', 'base_amount_signed' => 'decimal:2', 'base_balance_after' => 'decimal:2'];
     }
 
     public function statement(): BelongsTo

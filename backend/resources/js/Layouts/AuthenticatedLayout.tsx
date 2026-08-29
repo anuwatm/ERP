@@ -547,6 +547,27 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'Currencies & FX',
+                    href: route('currencies.index'),
+                    active: route().current('currencies.*'),
+                    permission: 'fx.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 6v12m4-9.5a4 4 0 00-8 0c0 2.5 8 1.5 8 5a4 4 0 01-8 0"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Inventory / GRN',
                     href: route('goods-receipts.index'),
                     active: route().current('goods-receipts.*'),
@@ -563,6 +584,27 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M20 7l-8-4-8 4m16 0v10l-8 4m8-14l-8 4m0 10L4 17V7m8 4L4 7"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Inventory Operations',
+                    href: route('inventory-operations.index'),
+                    active: route().current('inventory-operations.*'),
+                    permission: 'inventory.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7l8-4 8 4M4 7l8 4 8-4m-8 4v9"
                             />
                         </svg>
                     ),

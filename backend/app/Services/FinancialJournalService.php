@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\BankAccount;
+use App\Models\BankTransfer;
 use App\Models\CreditDebitNote;
 use App\Models\Expense;
 use App\Models\GoodsReceipt;
@@ -9,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Payment;
 use App\Models\PettyCashReimbursement;
+use App\Models\VendorPayment;
 
 class FinancialJournalService
 {
@@ -16,8 +19,8 @@ class FinancialJournalService
 
     public function postInvoice(Invoice $invoice, ?string $actorId): JournalEntry
     {
-        $tax = round((float) $invoice->tax_amount, 2);
-        $total = round((float) $invoice->total, 2);
+        $tax = round((float) $invoice->base_tax_amount ?: (float) $invoice->tax_amount, 2);
+        $total = round((float) $invoice->base_total ?: (float) $invoice->total, 2);
 
         return $this->journals->post($invoice->org_id, $actorId, 'invoice', $invoice->id, 'issued', $invoice->issue_date->toDateString(), 'Invoice '.$invoice->invoice_no, array_filter([
             ['account_code' => '1120', 'debit' => $total, 'description' => 'Accounts receivable'],
@@ -33,22 +36,34 @@ class FinancialJournalService
 
     public function postPayment(Payment $payment, ?string $actorId): JournalEntry
     {
-        $cashAccount = $payment->bank_account_id ? '1110' : '1100';
+        $cashAccount = $this->cashAccount($payment->bank_account_id, '1100');
         $isReceipt = $payment->entry_type === 'receipt';
+        $cashAmount = round((float) $payment->base_amount, 2);
+        $receivableAmount = round((float) $payment->invoice_base_amount, 2);
+        $difference = round($cashAmount - $receivableAmount, 2);
 
-        return $this->journals->post($payment->org_id, $actorId, 'payment', $payment->id, $payment->entry_type, $payment->payment_date->toDateString(), 'Payment '.$payment->entry_type, $isReceipt ? [
-            ['account_code' => $cashAccount, 'debit' => $payment->amount, 'description' => 'Cash received'],
-            ['account_code' => '1120', 'credit' => $payment->amount, 'description' => 'Accounts receivable'],
+        $lines = $isReceipt ? [
+            ['account_code' => $cashAccount, 'debit' => $cashAmount, 'description' => 'Cash received'],
+            ['account_code' => '1120', 'credit' => $receivableAmount, 'description' => 'Accounts receivable'],
         ] : [
-            ['account_code' => '1120', 'debit' => $payment->amount, 'description' => 'Accounts receivable'],
-            ['account_code' => $cashAccount, 'credit' => $payment->amount, 'description' => 'Cash reversed'],
-        ]);
+            ['account_code' => '1120', 'debit' => $receivableAmount, 'description' => 'Accounts receivable'],
+            ['account_code' => $cashAccount, 'credit' => $cashAmount, 'description' => 'Cash reversed'],
+        ];
+        if ($difference !== 0.0) {
+            $gain = $difference > 0;
+            $lines[] = $isReceipt
+                ? ['account_code' => $gain ? '4300' : '5400', $gain ? 'credit' : 'debit' => abs($difference), 'description' => 'Realized foreign exchange difference']
+                : ['account_code' => $gain ? '4300' : '5400', $gain ? 'debit' : 'credit' => abs($difference), 'description' => 'Reversed foreign exchange difference'];
+        }
+
+        return $this->journals->post($payment->org_id, $actorId, 'payment', $payment->id, $payment->entry_type, $payment->payment_date->toDateString(), 'Payment '.$payment->entry_type, $lines);
     }
 
     public function postExpenseApproval(Expense $expense, ?string $actorId): JournalEntry
     {
-        $tax = round((float) $expense->tax_amount, 2);
-        $gross = $expense->tax_mode === 'exclusive' ? round((float) $expense->amount + $tax, 2) : round((float) $expense->amount, 2);
+        $tax = round((float) $expense->base_tax_amount ?: (float) $expense->tax_amount, 2);
+        $baseAmount = (float) $expense->base_amount ?: (float) $expense->amount;
+        $gross = $expense->tax_mode === 'exclusive' ? round($baseAmount + $tax, 2) : round($baseAmount, 2);
         $expenseAmount = round($gross - $tax, 2);
 
         return $this->journals->post($expense->org_id, $actorId, 'expense', $expense->id, 'approved', $expense->expense_date->toDateString(), 'Expense '.$expense->expense_no.' approved', array_filter([
@@ -60,13 +75,58 @@ class FinancialJournalService
 
     public function postExpensePayment(Expense $expense, ?string $actorId): JournalEntry
     {
-        $tax = round((float) $expense->tax_amount, 2);
-        $gross = $expense->tax_mode === 'exclusive' ? round((float) $expense->amount + $tax, 2) : round((float) $expense->amount, 2);
+        $tax = round((float) $expense->base_tax_amount ?: (float) $expense->tax_amount, 2);
+        $baseAmount = (float) $expense->base_amount ?: (float) $expense->amount;
+        $gross = $expense->tax_mode === 'exclusive' ? round($baseAmount + $tax, 2) : round($baseAmount, 2);
 
         return $this->journals->post($expense->org_id, $actorId, 'expense', $expense->id, 'paid', $expense->paid_at->toDateString(), 'Expense '.$expense->expense_no.' paid', [
             ['account_code' => '2110', 'debit' => $gross, 'description' => 'Accounts payable'],
-            ['account_code' => $expense->bank_account_id ? '1110' : '1100', 'credit' => $gross, 'description' => 'Cash paid'],
+            ['account_code' => $this->cashAccount($expense->bank_account_id, '1100'), 'credit' => $gross, 'description' => 'Cash paid'],
         ]);
+    }
+
+    public function postVendorPayment(VendorPayment $payment, ?string $actorId): JournalEntry
+    {
+        $cash = round((float) $payment->base_amount, 2);
+        $payable = round((float) $payment->expense_base_amount, 2);
+        $difference = round($cash - $payable, 2);
+        $isPayment = $payment->entry_type === 'payment';
+        $lines = $isPayment ? [
+            ['account_code' => '2110', 'debit' => $payable, 'description' => 'Accounts payable settlement'],
+            ['account_code' => $this->cashAccount($payment->bank_account_id, '1100'), 'credit' => $cash, 'description' => 'Cash paid'],
+        ] : [
+            ['account_code' => $this->cashAccount($payment->bank_account_id, '1100'), 'debit' => $cash, 'description' => 'Cash payment reversal'],
+            ['account_code' => '2110', 'credit' => $payable, 'description' => 'Accounts payable restored'],
+        ];
+        if ($difference !== 0.0) {
+            $loss = $difference > 0;
+            $lines[] = $isPayment
+                ? ['account_code' => $loss ? '5400' : '4300', $loss ? 'debit' : 'credit' => abs($difference), 'description' => 'Realized foreign exchange difference']
+                : ['account_code' => $loss ? '5400' : '4300', $loss ? 'credit' : 'debit' => abs($difference), 'description' => 'Reversed foreign exchange difference'];
+        }
+
+        return $this->journals->post($payment->org_id, $actorId, 'vendor_payment', $payment->id, $payment->entry_type, $payment->payment_date->toDateString(), 'Vendor payment '.$payment->entry_type, $lines);
+    }
+
+    public function postBankTransfer(BankTransfer $transfer, ?string $actorId): JournalEntry
+    {
+        $source = $this->cashAccount($transfer->source_bank_account_id, '1110');
+        $destination = $this->cashAccount($transfer->destination_bank_account_id, '1110');
+        $difference = round((float) $transfer->destination_base_amount - (float) $transfer->source_base_amount, 2);
+        $lines = [
+            ['account_code' => $destination, 'debit' => $transfer->destination_base_amount, 'description' => 'Internal bank transfer received'],
+            ['account_code' => $source, 'credit' => $transfer->source_base_amount, 'description' => 'Internal bank transfer sent'],
+        ];
+        if ($difference !== 0.0) {
+            $gain = $difference > 0;
+            $lines[] = [
+                'account_code' => $gain ? '4300' : '5400',
+                $gain ? 'credit' : 'debit' => abs($difference),
+                'description' => 'Realized foreign exchange difference',
+            ];
+        }
+
+        return $this->journals->post($transfer->org_id, $actorId, 'bank_transfer', $transfer->id, 'posted', $transfer->transfer_date->toDateString(), 'Internal bank transfer', $lines);
     }
 
     public function reverseExpenseApproval(Expense $expense, ?string $actorId, string $date): ?JournalEntry
@@ -95,8 +155,8 @@ class FinancialJournalService
     public function postGoodsReceipt(GoodsReceipt $receipt, ?string $actorId): JournalEntry
     {
         $receipt->loadMissing('items');
-        $inventory = round((float) $receipt->items->sum(fn ($item) => (float) $item->line_total - (float) $item->tax_amount), 2);
-        $inputVat = round((float) $receipt->items->sum('tax_amount'), 2);
+        $inventory = round((float) $receipt->items->sum(fn ($item) => (float) $item->base_line_total - (float) $item->base_tax_amount), 2);
+        $inputVat = round((float) $receipt->items->sum('base_tax_amount'), 2);
 
         return $this->journals->post($receipt->org_id, $actorId, 'goods_receipt', $receipt->id, 'received', $receipt->received_date->toDateString(), 'Goods receipt '.$receipt->grn_no, array_filter([
             ['account_code' => '1140', 'debit' => $inventory, 'description' => 'Inventory received'],
@@ -119,5 +179,14 @@ class FinancialJournalService
             ?? JournalEntry::where('org_id', $orgId)->where('source_type', $sourceType)->where('source_id', $sourceId)->where('posting_event', 'approved')->first();
 
         return $entry ? $this->journals->reverse($entry, $actorId, $date, $reason, $event) : null;
+    }
+
+    private function cashAccount(?string $bankAccountId, string $fallback): string
+    {
+        if (! $bankAccountId) {
+            return $fallback;
+        }
+
+        return BankAccount::with('chartOfAccount')->find($bankAccountId)?->chartOfAccount?->code ?: '1110';
     }
 }

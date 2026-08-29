@@ -15,12 +15,15 @@ class Payment extends Model
 
     public const METHODS = ['bank_transfer', 'cash', 'credit_card', 'promptpay', 'other'];
 
-    protected $fillable = ['org_id', 'invoice_id', 'bank_account_id', 'entry_type', 'reversal_of_payment_id', 'amount', 'payment_date', 'payment_method', 'reference_no', 'attachment_file_id', 'note', 'idempotency_key', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'invoice_id', 'bank_account_id', 'entry_type', 'reversal_of_payment_id', 'amount', 'currency', 'base_currency', 'exchange_rate', 'base_amount', 'invoice_base_amount', 'payment_date', 'payment_method', 'reference_no', 'attachment_file_id', 'note', 'idempotency_key', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'exchange_rate' => 'decimal:6',
+            'base_amount' => 'decimal:2',
+            'invoice_base_amount' => 'decimal:2',
             'payment_date' => 'date',
         ];
     }

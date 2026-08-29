@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AssetCategory;
 use App\Models\AssetDepreciation;
 use App\Models\AuditLog;
+use App\Models\BankAccount;
 use App\Models\Expense;
 use App\Models\FixedAsset;
 use App\Models\GoodsReceipt;
@@ -103,9 +104,12 @@ class FixedAssetService
             $accumulated = round((float) $asset->accumulated_depreciation, 2);
             $difference = round($proceeds - $netBookValue, 2);
             $category = $asset->category;
+            $proceedsAccount = filled($data['bank_account_id'] ?? null)
+                ? (BankAccount::with('chartOfAccount')->where('org_id', $asset->org_id)->find($data['bank_account_id'])?->chartOfAccount?->code ?: '1110')
+                : '1110';
             $lines = [
                 $accumulated > 0 ? ['account_code' => $category->accumulatedDepreciationAccount()->value('code'), 'debit' => $accumulated, 'description' => 'Remove accumulated depreciation'] : null,
-                $proceeds > 0 ? ['account_code' => '1110', 'debit' => $proceeds, 'description' => 'Asset disposal proceeds'] : null,
+                $proceeds > 0 ? ['account_code' => $proceedsAccount, 'debit' => $proceeds, 'description' => 'Asset disposal proceeds'] : null,
                 $difference < 0 ? ['account_code' => '5300', 'debit' => abs($difference), 'description' => 'Loss on asset disposal'] : null,
                 ['account_code' => $category->assetAccount()->value('code'), 'credit' => $asset->cost, 'description' => 'Remove fixed asset cost'],
                 $difference > 0 ? ['account_code' => '5300', 'credit' => $difference, 'description' => 'Gain on asset disposal'] : null,

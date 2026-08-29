@@ -16,7 +16,7 @@ class Quotation extends Model
 
     public const TAX_MODES = ['exclusive', 'inclusive', 'no_tax'];
 
-    protected $fillable = ['org_id', 'branch_id', 'quotation_no', 'customer_id', 'deal_id', 'status', 'tax_mode', 'issue_date', 'valid_until', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'currency', 'notes', 'sent_at', 'approved_at', 'rejected_at', 'expired_at', 'converted_at', 'converted_invoice_id', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'branch_id', 'quotation_no', 'customer_id', 'deal_id', 'status', 'tax_mode', 'issue_date', 'valid_until', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'currency', 'base_currency', 'exchange_rate', 'base_subtotal', 'base_tax_amount', 'base_total', 'notes', 'sent_at', 'approved_at', 'rejected_at', 'expired_at', 'converted_at', 'converted_invoice_id', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
@@ -27,6 +27,10 @@ class Quotation extends Model
             'discount_amount' => 'decimal:2',
             'tax_amount' => 'decimal:2',
             'total' => 'decimal:2',
+            'exchange_rate' => 'decimal:6',
+            'base_subtotal' => 'decimal:2',
+            'base_tax_amount' => 'decimal:2',
+            'base_total' => 'decimal:2',
             'sent_at' => 'datetime',
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',

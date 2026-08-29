@@ -8,8 +8,8 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะล่าสุด: **Phase 11 Done** (Phases 0 ถึง 11 เสร็จสมบูรณ์แล้ว | Production Prep และ Phases 12–16 อยู่ในแผน Roadmap)
-ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers) และ Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports)
+สถานะล่าสุด: **Phase 14.1 Done** (Phases 0 ถึง 14.1 เสร็จสมบูรณ์แล้ว | Production Prep และ Phases 15–16 อยู่ในแผน Roadmap)
+ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, และ Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation)
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 
@@ -210,10 +210,11 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 - **Depreciation Engine**: คำนวณค่าเสื่อม straight-line รายเดือนแบบ idempotent พร้อม immutable GL posting และ accounting period lock
 - **Disposal & Write-off**: จำหน่าย/ตัดจำหน่าย, รับ proceeds และบันทึกกำไรหรือขาดทุนเข้า GL
 
-### Phase 14: Multi-Currency & FX Management (Planned)
-- **Currency & Exchange Rates**: ตารางอัตราแลกเปลี่ยนสกุลเงินต่างประเทศ
-- **FX Rate Snapshot**: บันทึกอัตราแลกเปลี่ยน ณ วันที่เกิดรายการ
-- **Realized & Unrealized FX**: คำนวณและบันทึกกำไร/ขาดทุนจากอัตราแลกเปลี่ยนที่เกิดขึ้นจริงและปรับปรุงสิ้นงวด
+### Phase 14: Multi-Currency & FX Management
+- **Currency & Exchange Rates**: Currency master และ exchange rate ต่อ organization โดย `Organization.currency` เป็น base currency
+- **Immutable FX Snapshot**: Invoice, Quotation, PO, Expense, CN/DN และ Payment เก็บ rate/base amount ณ วันที่เกิดรายการ; history ไม่ recalculation ตาม rate ล่าสุด
+- **FX Accounting**: Realized FX ตอนรับชำระ Invoice, unrealized AR revaluation สิ้นงวด, reversible journal และ scheduled commands `fx:revalue` / `fx:reverse-revaluations`
+- **Bank GL Mapping**: Bank account เลือก Chart of Account ได้ และ Fixed Asset disposal proceeds ต้องเลือก bank account ที่มี GL mapping
 
 ### Phase 15: Advanced Inventory & Barcode/QR Operations (Planned)
 - **Multi-Warehouse & Bin Locations**: ระบบหลายคลังสินค้าและระบุตำแหน่งจัดเก็บ (Bin/Rack)
@@ -248,7 +249,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 11** | **Done** | Chart of Accounts, periods, immutable journals, source posting, Trial Balance และ General Ledger |
 | **Phase 12** | **Done (application layer)** | E-Tax XML/private storage, signing-submission adapter boundary, audit/retry และ RD Prep staging export; live submission requires certified provider onboarding |
 | **Phase 13** | **Done** | Asset register, straight-line monthly depreciation/GL, disposal/write-off, attachment proof และ reports |
-| **Phase 14** | *Planned* | Multi-Currency master, exchange rates snapshot, Realized/Unrealized FX |
+| **Phase 14** | **Done** | Currency/rate master, immutable document/payment snapshot, realized FX, AR revaluation/reversal และ bank-to-GL mapping |
 | **Phase 15** | *Planned* | Multi-warehouse & bins, stock transfer, reorder alerts, lot/expiry, Barcode/QR scanning |
 | **Phase 16** | *Planned* | Payroll calculation, ภ.ง.ด. 1/Social Security, Payslip PDF, Two-Factor Authentication (2FA) |
 

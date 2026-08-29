@@ -9,13 +9,16 @@ use App\Http\Controllers\Delivery\TaskController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\Finance\BankAccountController;
 use App\Http\Controllers\Finance\BankStatementController;
+use App\Http\Controllers\Finance\BankTransferController;
 use App\Http\Controllers\Finance\CommercialDocumentController;
+use App\Http\Controllers\Finance\CurrencyController;
 use App\Http\Controllers\Finance\ETaxController;
 use App\Http\Controllers\Finance\ExpenseController;
 use App\Http\Controllers\Finance\FixedAssetController;
 use App\Http\Controllers\Finance\GeneralLedgerController;
 use App\Http\Controllers\Finance\GoodsReceiptController;
 use App\Http\Controllers\Finance\InvoiceController;
+use App\Http\Controllers\Finance\InventoryOperationsController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Finance\ProductController;
 use App\Http\Controllers\Finance\PurchaseOrderController;
@@ -24,6 +27,7 @@ use App\Http\Controllers\Finance\SupplierController;
 use App\Http\Controllers\Finance\TaxReportController;
 use App\Http\Controllers\Finance\TreasuryOperationsController;
 use App\Http\Controllers\Finance\TreasuryReportController;
+use App\Http\Controllers\Finance\VendorPaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
 use App\Http\Controllers\Sales\ContactController;
@@ -202,6 +206,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/bank-statements/import', [BankStatementController::class, 'import'])
         ->middleware(['permission:treasury.reconciliation.manage', 'password.confirm', 'throttle:5,1'])
         ->name('bank-statements.import');
+    Route::post('/bank-transfers', [BankTransferController::class, 'store'])
+        ->middleware(['permission:treasury.accounts.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('bank-transfers.store');
     Route::post('/bank-statement-lines/{line}/match', [BankStatementController::class, 'match'])
         ->middleware(['permission:treasury.reconciliation.manage', 'password.confirm', 'throttle:10,1'])
         ->name('bank-statement-lines.match');
@@ -229,6 +236,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/accounting/journals', [GeneralLedgerController::class, 'storeJournal'])->middleware(['permission:accounting.journals.post', 'password.confirm', 'throttle:10,1'])->name('accounting.journals.store');
     Route::post('/accounting/journals/{journalEntry}/reverse', [GeneralLedgerController::class, 'reverseJournal'])->middleware(['permission:accounting.journals.reverse', 'password.confirm', 'throttle:10,1'])->name('accounting.journals.reverse');
     Route::get('/accounting/reports', [GeneralLedgerController::class, 'reports'])->middleware('permission:accounting.reports.view')->name('accounting.reports.index');
+    Route::get('/currencies', [CurrencyController::class, 'index'])->middleware('permission:fx.view')->name('currencies.index');
+    Route::post('/currencies', [CurrencyController::class, 'storeCurrency'])->middleware(['permission:fx.manage', 'password.confirm', 'throttle:10,1'])->name('currencies.store');
+    Route::post('/exchange-rates', [CurrencyController::class, 'storeRate'])->middleware(['permission:fx.manage', 'password.confirm', 'throttle:10,1'])->name('exchange-rates.store');
+    Route::post('/fx-revaluations', [CurrencyController::class, 'revalue'])->middleware(['permission:fx.revalue', 'password.confirm', 'throttle:5,1'])->name('fx-revaluations.store');
+    Route::post('/fx-revaluations/reverse', [CurrencyController::class, 'reverse'])->middleware(['permission:fx.revalue', 'password.confirm', 'throttle:5,1'])->name('fx-revaluations.reverse');
     Route::get('/fixed-assets', [FixedAssetController::class, 'index'])->middleware('permission:fixed_assets.view')->name('fixed-assets.index');
     Route::post('/fixed-assets/categories', [FixedAssetController::class, 'storeCategory'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.categories.store');
     Route::post('/fixed-assets', [FixedAssetController::class, 'storeAsset'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.store');
@@ -295,6 +307,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/stock-movements', [GoodsReceiptController::class, 'storeMovement'])
         ->middleware(['permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])
         ->name('stock-movements.store');
+    Route::get('/inventory-operations', [InventoryOperationsController::class, 'index'])->middleware('permission:inventory.view')->name('inventory-operations.index');
+    Route::post('/warehouses', [InventoryOperationsController::class, 'storeWarehouse'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('warehouses.store');
+    Route::post('/warehouses/{warehouse}/bins', [InventoryOperationsController::class, 'storeBin'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('warehouses.bins.store');
+    Route::post('/inventory-lots', [InventoryOperationsController::class, 'storeLot'])->middleware(['permission:inventory.receive', 'password.confirm'])->name('inventory-lots.store');
+    Route::post('/stock-transfers', [InventoryOperationsController::class, 'transfer'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('stock-transfers.store');
+    Route::post('/stock-counts', [InventoryOperationsController::class, 'stockCount'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('stock-counts.store');
+    Route::get('/inventory-scan', [InventoryOperationsController::class, 'scan'])->middleware('permission:inventory.view')->name('inventory.scan');
     Route::get('/expenses', [ExpenseController::class, 'index'])
         ->middleware('permission:expenses.view')
         ->name('expenses.index');
@@ -310,6 +329,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/expenses/{expense}/pay', [ExpenseController::class, 'pay'])
         ->middleware(['permission:expenses.pay', 'password.confirm', 'throttle:10,1'])
         ->name('expenses.pay');
+    Route::post('/expenses/{expense}/vendor-payments', [VendorPaymentController::class, 'store'])
+        ->middleware(['permission:expenses.pay', 'password.confirm', 'throttle:10,1'])
+        ->name('expenses.vendor-payments.store');
+    Route::post('/vendor-payments/{vendorPayment}/reverse', [VendorPaymentController::class, 'reverse'])
+        ->middleware(['permission:expenses.pay', 'password.confirm', 'throttle:10,1'])
+        ->name('vendor-payments.reverse');
     Route::post('/expenses/{expense}/reject', [ExpenseController::class, 'reject'])
         ->middleware(['permission:expenses.reject', 'password.confirm', 'throttle:10,1'])
         ->name('expenses.reject');

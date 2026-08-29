@@ -11,17 +11,26 @@ class Expense extends Model
 {
     use SoftDeletes, UsesOrderedUuid;
 
-    public const STATUSES = ['draft', 'approved', 'paid', 'rejected'];
+    public const STATUSES = ['draft', 'approved', 'partially_paid', 'paid', 'rejected'];
 
     public const CATEGORIES = ['salary', 'software', 'marketing', 'travel', 'office', 'contractor', 'hosting', 'misc'];
 
-    protected $fillable = ['org_id', 'expense_no', 'category', 'title', 'amount', 'tax_mode', 'tax_invoice_no', 'tax_amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'bank_account_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'expense_no', 'category', 'title', 'amount', 'currency', 'base_currency', 'exchange_rate', 'base_amount', 'base_tax_amount', 'payable_total', 'base_payable_total', 'paid_amount', 'base_paid_amount', 'balance_due', 'base_balance_due', 'tax_mode', 'tax_invoice_no', 'tax_amount', 'withholding_tax_rate', 'withholding_tax_amount', 'withholding_tax_form', 'expense_date', 'project_id', 'supplier_id', 'purchase_order_id', 'bank_account_id', 'status', 'receipt_file_id', 'approved_by', 'approved_at', 'paid_at', 'note', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
             'tax_amount' => 'decimal:2',
+            'exchange_rate' => 'decimal:6',
+            'base_amount' => 'decimal:2',
+            'base_tax_amount' => 'decimal:2',
+            'payable_total' => 'decimal:2',
+            'base_payable_total' => 'decimal:2',
+            'paid_amount' => 'decimal:2',
+            'base_paid_amount' => 'decimal:2',
+            'balance_due' => 'decimal:2',
+            'base_balance_due' => 'decimal:2',
             'withholding_tax_rate' => 'decimal:2',
             'withholding_tax_amount' => 'decimal:2',
             'expense_date' => 'date',

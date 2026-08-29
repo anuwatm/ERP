@@ -22,6 +22,7 @@ class ProductController extends Controller
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($inner) use ($search) {
                 $inner->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%")
                     ->orWhere('category', 'like', "%{$search}%");
             }))
             ->when($filters['type'] ?? null, fn ($query, $type) => $query->where('type', $type))
@@ -41,6 +42,7 @@ class ProductController extends Controller
         $user = $request->user();
         $validated = $this->validateProduct($request);
         $validated['sku'] = filled($validated['sku'] ?? null) ? $validated['sku'] : null;
+        $validated['barcode'] = filled($validated['barcode'] ?? null) ? $validated['barcode'] : null;
         $validated['org_id'] = $user->org_id;
         $validated['created_by'] = $user->id;
         $validated['cost'] ??= 0;
@@ -58,6 +60,7 @@ class ProductController extends Controller
         $before = $product->only($this->trackedFields());
         $validated = $this->validateProduct($request, $product);
         $validated['sku'] = filled($validated['sku'] ?? null) ? $validated['sku'] : null;
+        $validated['barcode'] = filled($validated['barcode'] ?? null) ? $validated['barcode'] : null;
         $validated['updated_by'] = $request->user()->id;
         $validated['cost'] ??= 0;
         $validated['track_inventory'] = false;
@@ -89,6 +92,8 @@ class ProductController extends Controller
                     ->where('org_id', $request->user()->org_id)
                     ->ignore($product?->id),
             ],
+            'barcode' => ['nullable', 'string', 'max:100', Rule::unique('products', 'barcode')->where('org_id', $request->user()->org_id)->ignore($product?->id)],
+            'reorder_point' => ['nullable', 'numeric', 'min:0'],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::in(['product', 'service', 'package'])],
             'category' => ['nullable', 'string', 'max:100'],
@@ -102,7 +107,7 @@ class ProductController extends Controller
 
     private function trackedFields(): array
     {
-        return ['sku', 'name', 'type', 'category', 'unit', 'price', 'cost', 'is_active', 'description', 'track_inventory'];
+        return ['sku', 'barcode', 'reorder_point', 'name', 'type', 'category', 'unit', 'price', 'cost', 'is_active', 'description', 'track_inventory'];
     }
 
     private function audit(Request $request, string $action, Product $product, ?array $before, ?array $after): void

@@ -34,9 +34,12 @@
 | Phase 11 | Done | General Ledger & Double-entry Accounting: COA, periods, immutable journals, source posting, reports, permissions, and regression validation completed |
 | Phase 12 | Done (application layer) | e-Tax XML, private storage, provider integration boundary, RD Prep staging export; production submission requires certified provider onboarding |
 | Phase 13 | Done | Fixed asset register, capitalization reclassification, straight-line depreciation, GL posting, disposal/write-off, reports and tests |
-| Phase 14 | Planned | Multi-Currency & FX |
-| Phase 15 | Planned | Advanced Inventory & Barcode/QR Operations |
-| Phase 16 | Planned | Payroll, Social Security & Security 2FA |
+| Phase 14 | Done | Multi-Currency & FX: currency/rate master, immutable rate snapshots, realized/unrealized FX, AR revaluation/reversal, bank-to-GL mapping |
+| Phase 14.1 | Done | AP FX, Inventory FX Bridge และ FCD treasury reconciliation implemented; MySQL migration verification passed |
+| Phase 15 | Done | Warehouse/bin, lot/expiry, barcode scanner for GRN/adjustment/DO/stock count, transfer, reorder notification, warehouse-aware stock movements and tests implemented |
+| Phase 16B | Planned | Payroll, Social Security, ภ.ง.ด. 1/1ก, payslip และ GL posting |
+| Phase 17 | Planned | Enterprise Document Management (DMS), versioning, cross-module links, retention and confidentiality controls |
+| Phase 18 | Planned | Security 2FA / Auth OTP for privileged roles; scheduled after Payroll and DMS by product decision |
 
 ---
 
@@ -760,7 +763,7 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [x] Design XML data mapping จาก Invoice / Tax Invoice / Receipt / CN / DN
 - [x] Design digital signature/certificate storage และ rotation policy: เก็บเฉพาะ vault/KMS reference และ expiry metadata
 - [x] Design e-Tax document status: generated, signed, submitted, accepted, rejected; submitted/accepted ห้าม generate ทับ ต้องออก CN/DN เพื่อแก้ไข
-- [x] Design RD Prep Text Export สำหรับ ภ.ง.ด. 3 และ ภ.ง.ด. 53; ภ.ง.ด. 1 เป็น scope ของ Phase 16 Payroll
+- [x] Design RD Prep Text Export สำหรับ ภ.ง.ด. 3 และ ภ.ง.ด. 53; ภ.ง.ด. 1 เป็น scope ของ Phase 16B Payroll
 - [x] Design error handling, retry, idempotency และ submission audit log
 - [x] Design permissions และ tests สำหรับ mapping XML, signature boundary, org isolation
 
@@ -810,29 +813,67 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 14 Design Backlog
 
-- [ ] Design currency master และ exchange rate table ต่อ organization
-- [ ] Design base currency policy และ document currency policy
-- [ ] Design FX rate locking บน Invoice, Payment, Expense, PO
-- [ ] Design historical FX rate snapshot บนเอกสาร ไม่ใช้ dynamic join กับ rate ล่าสุด
-- [ ] Design realized/unrealized FX gain/loss posting rules
-- [ ] Design period-end unrealized FX revaluation flow
-- [ ] Design bank account -> GL account mapping และเลือกบัญชีปลายทางสำหรับ fixed asset disposal proceeds เพื่อรองรับ reconciliation
-- [ ] Design UI display สำหรับ document amount vs base amount
-- [ ] Design reports ที่รองรับ currency/base currency
-- [ ] Design tests สำหรับ rate lock, payment partial FX, reversal, org isolation
+- [x] Design currency master และ exchange rate table ต่อ organization
+- [x] Design base currency policy และ document currency policy: `organizations.currency` เป็น base currency, เอกสารมี `currency` ของตนเอง
+- [x] Design FX rate locking บน Invoice, Payment, Expense, PO
+- [x] Design historical FX rate snapshot บนเอกสาร ไม่ใช้ dynamic join กับ rate ล่าสุด
+- [x] Design realized/unrealized FX gain/loss posting rules: 4300/5400 สำหรับ realized และ 4310/5410 สำหรับ unrealized
+- [x] Design period-end unrealized FX revaluation flow: AR open balance ณ สิ้นเดือน, idempotent posting และ auto-reversal เดือนถัดไป
+- [x] Design bank account -> GL account mapping และเลือกบัญชีปลายทางสำหรับ fixed asset disposal proceeds เพื่อรองรับ reconciliation
+- [x] Design UI display สำหรับ document amount vs base amount ผ่าน currency master/rate และ GL base-currency posting
+- [x] Design reports ที่รองรับ currency/base currency: เอกสารคง document currency, GL/Trial Balance ใช้ base currency
+- [x] Design tests สำหรับ rate lock, payment partial FX, reversal, org isolation
 
 ### Phase 14 Implementation Backlog
 
-- [ ] เพิ่ม currency/exchange rate schema
-- [ ] เพิ่ม currency setup UI
-- [ ] เพิ่ม currency fields ในเอกสารการเงินหลัก
-- [ ] ปรับ totals calculation ให้เก็บ document currency และ base currency
-- [ ] บันทึก FX rate snapshot ณ วันที่ออกเอกสาร/เกิดรายการ
-- [ ] ผูก FX posting เข้า GL
-- [ ] เพิ่ม realized FX posting ตอนรับ/จ่ายเงิน และ unrealized FX revaluation ตอนสิ้นงวด
-- [ ] เพิ่ม bank account GL mapping และใช้บัญชีที่เลือกเมื่อ post disposal proceeds จาก Fixed Assets
-- [ ] ปรับ reports/export ให้รองรับ currency columns
-- [ ] เพิ่ม feature tests และ regression tests
+- [x] เพิ่ม currency/exchange rate schema, FX revaluation ledger และ permissions
+- [x] เพิ่ม currency setup UI สำหรับ currency, rate, revaluation และ reversal
+- [x] เพิ่ม currency/base fields ใน Invoice, Quotation, PO, Expense, CN/DN และ Payment
+- [x] ปรับ totals calculation ให้เก็บ document currency และ base currency ด้วย `DECIMAL(18,6)` rate / `DECIMAL(18,2)` amount
+- [x] บันทึก FX rate snapshot ณ วันที่ออกเอกสาร/เกิดรายการ; base currency ใช้ rate 1.000000
+- [x] ผูก FX posting เข้า immutable GL พร้อม account provisioning
+- [x] เพิ่ม realized FX ตอนรับ Invoice และ unrealized AR revaluation สิ้นงวด พร้อม commands `fx:revalue` / `fx:reverse-revaluations`
+- [x] เพิ่ม bank account GL mapping และใช้บัญชีที่เลือกเมื่อ post disposal proceeds จาก Fixed Assets
+- [x] ให้ document screens แสดง document currency และให้ GL/Trial Balance เป็น base-currency reporting source of truth
+- [x] เพิ่ม `Phase14FxTest` และรัน regression Payments/General Ledger/full test suite
+
+---
+
+## Phase 14.1: AP FX & FCD Treasury
+
+เป้าหมาย: ขยายการบัญชี FX จาก AR ไปยังเจ้าหนี้การค้า, inventory costing และบัญชีเงินฝากสกุลต่างประเทศ (FCD) อย่างตรวจสอบย้อนหลังได้.
+
+### Phase 14.1 Design Backlog
+
+- [x] Design AP subledger และ `VendorPayment` แยกจาก AR `Payment` เพื่อไม่กระทบ invoice receipt flow
+- [x] Design Expense payable lifecycle: `approved` -> `partially_paid` -> `paid`, `balance_due` / `base_balance_due`, partial payment, reversal, idempotency และ `lockForUpdate()` overpay guard
+- [x] Design AP historical/base settlement allocation และ realized FX posting (`2110`, `4300`, `5400`)
+- [x] Design AP posting boundary: Expense เป็น AP source; GRN post Inventory/GRNI เท่านั้น
+- [x] Design AP month-end revaluation และ auto-reversal (`2110`, `4310`, `5410`)
+- [x] Design Inventory FX Bridge: GRN/Stock Movement เก็บ document currency, base currency, exchange-rate snapshot, `base_unit_cost` และ `base_total_cost`; Base-Currency Costing เป็น single source of truth
+- [x] Design GRNI/inventory journal ให้ใช้ base cost และกำหนด rounding/allocation สำหรับ partial GRN จาก PO ต่างสกุล
+- [x] Design FCD bank transaction ledger: foreign amount, base amount, rate snapshot และ opening balance
+- [x] Design reconciliation guard ห้ามจับคู่ statement ข้าม currency และรองรับ partial/matched/unmatched audit trail
+- [x] Design internal bank transfer / FX conversion ระหว่าง FCD และ base-currency bank account พร้อม realized FX และ two-sided statement reconciliation
+- [x] Design FCD month-end revaluation, auto-reversal และ FX exposure report
+- [x] Design scope guard: Phase 14.1 ครอบคลุม AP settlement/FX เท่านั้น; ไม่เพิ่ม ภ.ง.ด.54 หรือ ภ.พ.36
+- [x] Design migration/backfill strategy สำหรับ Expense, Bank Statement และ Bank Reconciliation เดิม
+- [x] Design tests สำหรับ org isolation, rate missing, duplicate settlement, partial payment, reversal, closed period, foreign PO partial GRN และ moving-average base cost
+
+### Phase 14.1 Implementation Backlog
+
+- [x] เพิ่ม AP payable balance/status schema และ `VendorPayment` model/controller/UI พร้อม partial payment / reversal guard
+- [x] เพิ่ม AP payment journal, realized FX และ reversal journal
+- [x] Implement AP posting boundary และ source-event idempotency ระหว่าง Expense/GRN
+- [x] เพิ่ม AP revaluation service, commands, scheduler และ immutable audit trail
+- [x] เพิ่ม GRN/Stock Movement FX snapshot/base-cost schema, backfill และปรับ inventory/GRNI journal ให้ post base currency
+- [x] ปรับ inventory valuation/average cost/report ให้ใช้ `base_total_cost` เท่านั้น และแสดง document currency เป็นข้อมูลอ้างอิง
+- [x] เพิ่ม FCD transaction/base snapshot schema และ bank opening balance conversion
+- [x] ปรับ Bank Statement import/reconciliation ให้ validate account currency และเก็บ FX snapshot
+- [x] เพิ่ม internal bank transfer / FX conversion พร้อม two-sided reconciliation และ realized FX journal
+- [x] เพิ่ม FCD revaluation service, commands และ auto-reversal
+- [x] เพิ่ม AP aging และ FX exposure reports (AR/AP/FCD, document/base currency)
+- [x] เพิ่ม feature/regression tests และตรวจ migration บน MySQL รวม FX inventory bridge
 
 ---
 
@@ -842,34 +883,34 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 15 Design Backlog
 
-- [ ] Design warehouse/location/bin schema สำหรับตำแหน่งจัดเก็บสินค้า
-- [ ] Design stock transfer ระหว่างคลัง/สาขา
-- [ ] Design reorder point และ low stock alert
-- [ ] Design lot number และ expiration tracking
-- [ ] Design barcode/QR field บน Product/SKU/Lot
-- [ ] Design scanner UX สำหรับ GRN, DO, Stock Adjustment, Stock Count
-- [ ] Design duplicate barcode guard, org isolation และ mobile/responsive behavior
-- [ ] Design tests สำหรับ transfer, reorder alert, lot expiry, scan match, negative stock guard
+- [x] Design warehouse/location/bin schema สำหรับตำแหน่งจัดเก็บสินค้า
+- [x] Design stock transfer ระหว่างคลัง/สาขา
+- [x] Design reorder point และ low stock alert
+- [x] Design lot number และ expiration tracking
+- [x] Design barcode/QR field บน Product/SKU/Lot
+- [x] Design scanner UX สำหรับ GRN, DO, Stock Adjustment, Stock Count
+- [x] Design duplicate barcode guard, org isolation และ mobile/responsive behavior
+- [x] Design tests สำหรับ transfer, reorder alert, lot expiry, scan match, negative stock guard
 
 ### Phase 15 Implementation Backlog
 
-- [ ] เพิ่ม warehouse/location/bin schema และ UI พื้นฐาน
-- [ ] ผูก stock movements กับ warehouse/bin location
-- [ ] เพิ่ม stock transfer flow
-- [ ] เพิ่ม reorder point fields และ low stock notification
-- [ ] เพิ่ม lot/expiry schema และ movement tracking
-- [ ] เพิ่ม barcode/QR fields ใน products/lots
-- [ ] เพิ่ม scanner input mode ใน Goods Receipt, Delivery Order, Stock Adjustment
-- [ ] เพิ่ม stock count workflow
-- [ ] เพิ่ม feature tests และ frontend validation
+- [x] เพิ่ม warehouse/location/bin schema และ UI พื้นฐาน
+- [x] ผูก stock movements กับ warehouse/bin location
+- [x] เพิ่ม stock transfer flow
+- [x] เพิ่ม reorder point fields และ low stock notification
+- [x] เพิ่ม lot/expiry schema และ movement tracking
+- [x] เพิ่ม barcode/QR fields ใน products/lots
+- [x] เพิ่ม scanner input mode ใน Goods Receipt, Delivery Order, Stock Adjustment
+- [x] เพิ่ม stock count workflow
+- [x] เพิ่ม feature tests และ frontend validation
 
 ---
 
-## Phase 16: Payroll, Social Security & Security 2FA
+## Phase 16B: Payroll, Social Security & Tax
 
-เป้าหมาย: รองรับเงินเดือน ภาษีเงินได้พนักงาน ประกันสังคม payslip และเพิ่มความปลอดภัยบัญชีสำคัญ.
+เป้าหมาย: รองรับเงินเดือน ภาษีเงินได้พนักงาน ประกันสังคม payslip และ GL posting หลังล็อก payroll/tax policy ที่ versioned แล้ว.
 
-### Phase 16 Design Backlog
+### Phase 16B Design Backlog
 
 - [ ] Design employee payroll profile: salary, tax id, social security, payment method
 - [ ] Design payroll period, payroll run, earnings/deductions, approval flow
@@ -877,11 +918,11 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [ ] Design Social Security contribution rules
 - [ ] Design payslip PDF และ employee access guard
 - [ ] Design payroll posting to GL
-- [ ] Design 2FA/Auth OTP สำหรับ owner/admin/finance roles
-- [ ] Design recovery codes, enforcement policy และ audit log
-- [ ] Design tests สำหรับ payroll calculation, org isolation, payslip privacy, 2FA challenge
+- [ ] Design effective-dated tax/social-security policy tables และ official rule verification ก่อน implement calculation/export
+- [ ] Design payroll payment boundary แยกจาก `VendorPayment` และกำหนด base-currency-only initial scope
+- [ ] Design tests สำหรับ payroll calculation, org isolation, payslip privacy, tax deduction และ GL posting
 
-### Phase 16 Implementation Backlog
+### Phase 16B Implementation Backlog
 
 - [ ] สร้าง payroll profile schema/UI
 - [ ] สร้าง payroll periods/runs schema
@@ -890,5 +931,50 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [ ] สร้าง payslip PDF
 - [ ] เพิ่ม ภ.ง.ด. 1 / 1ก และ Social Security exports
 - [ ] ผูก payroll posting เข้า GL
-- [ ] เพิ่ม 2FA setup/challenge/recovery codes สำหรับ admin/finance
-- [ ] เพิ่ม feature tests และ security regression tests
+- [ ] เพิ่ม feature tests, privacy tests และ tax-policy regression tests
+
+---
+
+## Phase 17: Enterprise Document Management (DMS) & Cross-Module Integration
+
+เป้าหมาย: ศูนย์กลางจัดเก็บเอกสารและสัญญาองค์กรแบบ versioned เชื่อมหลายโมดูลผ่าน `document_links`, private download control, category expiry, retention policy และ sensitivity RBAC.
+
+### Phase 17 Design Backlog
+
+- [ ] Design central document repository, category/folder hierarchy และ tag taxonomy
+- [ ] Design many-to-many `document_links` (`document_id`, `linkable_type`, `linkable_id`, `role`) สำหรับ Customers, Deals, Suppliers, POs, Projects, Tasks, Fixed Assets, Bank Accounts, Accounting Periods และ Employees
+- [ ] Design immutable document versioning (`document_versions`: version no., checksum, uploader, changelog, scan status)
+- [ ] Design category-driven expiry (`expires_at`, `renewal_alert_days`) และ automated scheduled alert สำหรับ contract/warranty/license/certificate/insurance เท่านั้น
+- [ ] Design sensitivity RBAC: `org_internal`, `department_restricted`, `finance_confidential`, `hr_confidential`, `executive_confidential`; parent permission เป็น baseline และ sensitivity เป็น additional restriction
+- [ ] Design tenant-isolated private storage, MIME/content verification, malware guard และ private download controller ที่ตรวจ session/org/parent permission/sensitivity/scan status ทุก request
+- [ ] Design effective-dated retention policy ต่อ category; เอกสาร VAT/ภาษี/บัญชีที่ posted/submitted/accepted append-only และห้าม hard delete ใน legal retention window
+- [ ] Design legacy `StoredFile` backfill/reconciliation แบบ idempotent โดยคง legacy FK/storage จนตรวจครบ
+- [ ] Design tests สำหรับ links, versioning, expiry notifications, retention, confidential access, scan failure, legacy migration และ org isolation
+
+### Phase 17 Implementation Backlog
+
+- [ ] สร้าง `documents`, `document_versions`, `document_links`, categories และ retention policy schema/migration พร้อม org isolation
+- [ ] สร้าง DMS central repository UI (Folder browser, Tag filters, Upload modal with metadata)
+- [ ] พัฒนา Document Versioning service (Upload new version, View history, Download past version)
+- [ ] พัฒนา Document Expiration Scheduler (`documents:check-expiry`) พร้อม Email & In-App Notification เฉพาะ category ที่กำหนด
+- [ ] เพิ่ม Document Tab Component ในหน้ารายละเอียด Customer, Supplier, Project, Asset, PO โดยเชื่อมผ่าน `document_links`
+- [ ] เพิ่ม sensitivity/retention guard, private download controller, scan-state gate และ legacy backfill command/report
+- [ ] เพิ่ม Feature tests, org isolation, confidential access, immutable version, retention, scan failure และ legacy reconciliation regression tests
+
+---
+
+## Phase 18: Security 2FA / Auth OTP
+
+เป้าหมาย: เพิ่ม 2FA ให้ owner/admin/finance หลัง Payroll และ DMS ตาม product decision. ระหว่างยังไม่เริ่ม ต้องคง password confirmation, email verification, rate limit login, session invalidation และ audit log สำหรับ sensitive actions.
+
+### Phase 18 Design Backlog
+
+- [ ] Design TOTP authenticator setup, encrypted secret storage และ recovery codes
+- [ ] Design enforcement policy สำหรับ owner/admin/finance, step-up challenge และ trusted-device/session policy
+- [ ] Design recovery, reset-by-owner, rate limit, audit log และ session invalidation flows
+- [ ] Design tests สำหรับ challenge, recovery, role change, org isolation และ brute-force guard
+
+### Phase 18 Implementation Backlog
+
+- [ ] เพิ่ม 2FA schema/model, setup/verify/recovery UI และ privileged challenge middleware
+- [ ] เพิ่ม enforcement settings, audit log, rate limits และ security regression tests

@@ -5,12 +5,17 @@ namespace App\Http\Controllers\Finance;
 use App\Http\Controllers\Controller;
 use App\Models\GoodsReceipt;
 use App\Models\GoodsReceiptItem;
+use App\Models\InventoryLot;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\StockMovement;
+use App\Models\Warehouse;
+use App\Models\WarehouseBin;
+use App\Models\User;
 use App\Services\FinancialJournalService;
 use App\Services\NumberSequenceService;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -56,10 +61,12 @@ class GoodsReceiptController extends Controller
                 ->where('type', 'product')
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'sku', 'name', 'unit', 'cost']),
+                ->get(['id', 'sku', 'barcode', 'name', 'unit', 'cost']),
+            'warehouses' => Warehouse::where('org_id', $orgId)->orderBy('code')->get(['id', 'code', 'name']),
+            'inventoryLots' => InventoryLot::where('org_id', $orgId)->where(fn ($query) => $query->whereNull('expires_at')->orWhereDate('expires_at', '>=', today()))->orderBy('lot_no')->get(['id', 'product_id', 'lot_no', 'expires_at']),
             'stockSummary' => StockMovement::where('org_id', $orgId)
                 ->whereNotNull('product_id')
-                ->selectRaw('product_id, SUM(quantity) as on_hand, SUM(total_cost) as inventory_value')
+                ->selectRaw('product_id, SUM(quantity) as on_hand, SUM(base_total_cost) as inventory_value')
                 ->with('product:id,sku,name,unit')
                 ->groupBy('product_id')
                 ->get()
@@ -87,14 +94,19 @@ class GoodsReceiptController extends Controller
         $validated = $request->validate([
             'purchase_order_id' => ['required', 'uuid', Rule::exists('purchase_orders', 'id')->where('org_id', $orgId)],
             'received_date' => ['required', 'date'],
+            'warehouse_id' => ['nullable', 'uuid', Rule::exists('warehouses', 'id')->where('org_id', $orgId)],
+            'warehouse_bin_id' => ['nullable', 'uuid', Rule::exists('warehouse_bins', 'id')->where('org_id', $orgId)],
+            'inventory_lot_id' => ['nullable', 'uuid', Rule::exists('inventory_lots', 'id')->where('org_id', $orgId)],
             'note' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.purchase_order_item_id' => ['required', 'uuid', Rule::exists('purchase_order_items', 'id')->where('org_id', $orgId)],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
+            'items.*.inventory_lot_id' => ['nullable', 'uuid', Rule::exists('inventory_lots', 'id')->where('org_id', $orgId)],
         ]);
 
         $po = PurchaseOrder::where('org_id', $orgId)->with('items')->findOrFail($validated['purchase_order_id']);
         abort_unless(in_array($po->status, ['approved', 'partially_received'], true), 422, 'Only approved purchase orders can be received.');
+        $this->validateStorageLocation($validated, $orgId);
 
         $receipt = DB::transaction(function () use ($request, $numbers, $orgId, $validated, $po, $journals): GoodsReceipt {
             $receipt = GoodsReceipt::create([
@@ -102,6 +114,9 @@ class GoodsReceiptController extends Controller
                 'purchase_order_id' => $po->id,
                 'grn_no' => $numbers->next($orgId, 'goods_receipt'),
                 'received_date' => $validated['received_date'],
+                'currency' => $po->currency,
+                'base_currency' => $po->base_currency,
+                'exchange_rate' => $po->exchange_rate,
                 'note' => $validated['note'] ?? null,
                 'created_by' => $request->user()->id,
             ]);
@@ -109,6 +124,9 @@ class GoodsReceiptController extends Controller
             foreach ($validated['items'] as $itemData) {
                 $poItem = $po->items->firstWhere('id', $itemData['purchase_order_item_id']);
                 abort_unless($poItem, 422, 'Item does not belong to purchase order.');
+                if (! empty($itemData['inventory_lot_id'])) {
+                    abort_unless($poItem->product_id && InventoryLot::where('org_id', $orgId)->where('product_id', $poItem->product_id)->whereKey($itemData['inventory_lot_id'])->exists(), 422, 'Lot does not belong to purchase order product.');
+                }
 
                 $remaining = (float) $poItem->quantity - $this->receivedQuantity($poItem->id, $orgId);
                 $quantity = round((float) $itemData['quantity'], 4);
@@ -121,12 +139,17 @@ class GoodsReceiptController extends Controller
                     default => 0.0,
                 };
                 $lineTotal = $po->tax_mode === 'exclusive' ? round($lineBase + $taxAmount, 2) : $lineBase;
+                $rate = (float) ($po->exchange_rate ?: 1);
+                $baseUnitCost = round((float) $poItem->unit_price * $rate, 2);
+                $baseTaxAmount = round($taxAmount * $rate, 2);
+                $baseLineTotal = round($lineTotal * $rate, 2);
 
                 GoodsReceiptItem::create([
                     'org_id' => $orgId,
                     'goods_receipt_id' => $receipt->id,
                     'purchase_order_item_id' => $poItem->id,
                     'product_id' => $poItem->product_id,
+                    'inventory_lot_id' => $itemData['inventory_lot_id'] ?? null,
                     'description' => $poItem->description,
                     'quantity' => $quantity,
                     'unit' => $poItem->unit,
@@ -134,6 +157,12 @@ class GoodsReceiptController extends Controller
                     'tax_rate' => $taxRate,
                     'tax_amount' => $taxAmount,
                     'line_total' => $lineTotal,
+                    'currency' => $po->currency,
+                    'base_currency' => $po->base_currency,
+                    'exchange_rate' => $rate,
+                    'base_unit_cost' => $baseUnitCost,
+                    'base_tax_amount' => $baseTaxAmount,
+                    'base_line_total' => $baseLineTotal,
                 ]);
 
                 StockMovement::create([
@@ -141,11 +170,19 @@ class GoodsReceiptController extends Controller
                     'product_id' => $poItem->product_id,
                     'goods_receipt_id' => $receipt->id,
                     'purchase_order_id' => $po->id,
+                    'warehouse_id' => $validated['warehouse_id'] ?? null,
+                    'warehouse_bin_id' => $validated['warehouse_bin_id'] ?? null,
+                    'inventory_lot_id' => $itemData['inventory_lot_id'] ?? null,
                     'movement_type' => 'receive_from_po',
                     'movement_date' => $validated['received_date'],
                     'quantity' => $quantity,
                     'unit_cost' => $poItem->unit_price,
                     'total_cost' => round($quantity * (float) $poItem->unit_price, 2),
+                    'currency' => $po->currency,
+                    'base_currency' => $po->base_currency,
+                    'exchange_rate' => $rate,
+                    'base_unit_cost' => $baseUnitCost,
+                    'base_total_cost' => round($quantity * $baseUnitCost, 2),
                     'created_by' => $request->user()->id,
                 ]);
 
@@ -172,13 +209,17 @@ class GoodsReceiptController extends Controller
             'movement_date' => ['required', 'date'],
             'quantity' => ['required', 'numeric', 'gt:0'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
+            'warehouse_id' => ['nullable', 'uuid', Rule::exists('warehouses', 'id')->where('org_id', $orgId)],
+            'warehouse_bin_id' => ['nullable', 'uuid', Rule::exists('warehouse_bins', 'id')->where('org_id', $orgId)],
+            'inventory_lot_id' => ['nullable', 'uuid', Rule::exists('inventory_lots', 'id')->where('org_id', $orgId)],
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $quantity = round((float) $validated['quantity'], 4);
+        $this->validateStorageLocation($validated, $orgId);
         $isOutbound = in_array($validated['movement_type'], ['adjustment_out', 'return_to_supplier'], true);
         $signedQuantity = $isOutbound ? -$quantity : $quantity;
-        $onHand = $this->onHand($validated['product_id'], $orgId);
+        $onHand = $this->onHand($validated['product_id'], $orgId, $validated['warehouse_id'] ?? null);
         abort_if($isOutbound && $quantity > $onHand, 422, 'Stock movement cannot make on-hand quantity negative.');
 
         $unitCost = filled($validated['unit_cost'] ?? null)
@@ -188,16 +229,27 @@ class GoodsReceiptController extends Controller
         StockMovement::create([
             'org_id' => $orgId,
             'product_id' => $validated['product_id'],
+            'warehouse_id' => $validated['warehouse_id'] ?? null,
+            'warehouse_bin_id' => $validated['warehouse_bin_id'] ?? null,
+            'inventory_lot_id' => $validated['inventory_lot_id'] ?? null,
             'movement_type' => $validated['movement_type'],
             'movement_date' => $validated['movement_date'],
             'quantity' => $signedQuantity,
             'unit_cost' => $unitCost,
             'total_cost' => round($signedQuantity * $unitCost, 2),
+            'currency' => $request->user()->organization?->currency ?: 'THB',
+            'base_currency' => $request->user()->organization?->currency ?: 'THB',
+            'exchange_rate' => 1,
+            'base_unit_cost' => $unitCost,
+            'base_total_cost' => round($signedQuantity * $unitCost, 2),
             'note' => $validated['note'] ?? null,
             'created_by' => $request->user()->id,
         ]);
 
         Product::where('org_id', $orgId)->whereKey($validated['product_id'])->update(['track_inventory' => true]);
+        if ($isOutbound) {
+            $this->notifyLowStock($validated['product_id'], $orgId, app(NotificationService::class));
+        }
 
         return back()->with('success', 'Stock movement posted.');
     }
@@ -214,16 +266,39 @@ class GoodsReceiptController extends Controller
         return (float) GoodsReceiptItem::where('org_id', $orgId)->where('purchase_order_item_id', $poItemId)->sum('quantity');
     }
 
-    private function onHand(string $productId, string $orgId): float
+    private function onHand(string $productId, string $orgId, ?string $warehouseId = null): float
     {
-        return (float) StockMovement::where('org_id', $orgId)->where('product_id', $productId)->sum('quantity');
+        return (float) StockMovement::where('org_id', $orgId)->where('product_id', $productId)->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))->sum('quantity');
+    }
+
+    private function validateStorageLocation(array $validated, string $orgId): void
+    {
+        if (! empty($validated['warehouse_bin_id'])) {
+            abort_unless(! empty($validated['warehouse_id']), 422, 'Warehouse is required when bin is selected.');
+            abort_unless(WarehouseBin::where('org_id', $orgId)->where('warehouse_id', $validated['warehouse_id'])->whereKey($validated['warehouse_bin_id'])->exists(), 422, 'Bin does not belong to warehouse.');
+        }
+        if (! empty($validated['inventory_lot_id']) && ! empty($validated['product_id'])) {
+            abort_unless(InventoryLot::where('org_id', $orgId)->where('product_id', $validated['product_id'])->whereKey($validated['inventory_lot_id'])->exists(), 422, 'Lot does not belong to product.');
+        }
+    }
+
+    private function notifyLowStock(string $productId, string $orgId, NotificationService $notifications): void
+    {
+        $product = Product::where('org_id', $orgId)->where('reorder_point', '>', 0)->find($productId);
+        if (! $product) return;
+        $onHand = (float) StockMovement::where('org_id', $orgId)->where('product_id', $productId)->sum('quantity');
+        if ($onHand > (float) $product->reorder_point) return;
+
+        User::where('org_id', $orgId)->where('status', 'active')->whereHas('roles.permissions', fn ($query) => $query->whereIn('code', ['inventory.view', 'inventory.adjust']))->get()->each(function (User $user) use ($notifications, $product, $onHand): void {
+            $notifications->notify($user, 'inventory.low_stock', "inventory.low_stock:{$product->id}:".today()->toDateString(), "Low stock: {$product->name}", "On hand: {$onHand} {$product->unit}; reorder point: {$product->reorder_point}.", route('inventory-operations.index'));
+        });
     }
 
     private function averageCost(string $productId, string $orgId): float
     {
         $summary = StockMovement::where('org_id', $orgId)
             ->where('product_id', $productId)
-            ->selectRaw('SUM(quantity) as on_hand, SUM(total_cost) as inventory_value')
+            ->selectRaw('SUM(quantity) as on_hand, SUM(base_total_cost) as inventory_value')
             ->first();
         $onHand = (float) ($summary?->on_hand ?? 0);
 

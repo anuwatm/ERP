@@ -87,6 +87,9 @@ class PermissionCatalog
             ['code' => 'fixed_assets.manage', 'module' => 'fixed_assets', 'action' => 'manage', 'description' => 'Manage fixed assets and categories'],
             ['code' => 'fixed_assets.depreciate', 'module' => 'fixed_assets', 'action' => 'depreciate', 'description' => 'Run fixed asset depreciation'],
             ['code' => 'fixed_assets.dispose', 'module' => 'fixed_assets', 'action' => 'dispose', 'description' => 'Dispose or write off fixed assets'],
+            ['code' => 'fx.view', 'module' => 'fx', 'action' => 'view', 'description' => 'View currencies and exchange rates'],
+            ['code' => 'fx.manage', 'module' => 'fx', 'action' => 'manage', 'description' => 'Manage currencies and exchange rates'],
+            ['code' => 'fx.revalue', 'module' => 'fx', 'action' => 'revalue', 'description' => 'Run FX revaluation and reversal'],
             ['code' => 'payments.view', 'module' => 'payments', 'action' => 'view', 'description' => 'View invoice payments'],
             ['code' => 'payments.create', 'module' => 'payments', 'action' => 'create', 'description' => 'Record invoice payment receipts'],
             ['code' => 'payments.reverse', 'module' => 'payments', 'action' => 'reverse', 'description' => 'Reverse invoice payment receipts'],
@@ -148,7 +151,7 @@ class PermissionCatalog
         $treasury = ['treasury.accounts.view', 'treasury.accounts.manage', 'treasury.reconciliation.view', 'treasury.reconciliation.manage', 'treasury.reports.view', 'petty_cash.view', 'petty_cash.manage', 'petty_cash.approve', 'cheques.view', 'cheques.manage'];
         $accounting = ['accounting.chart_accounts.view', 'accounting.chart_accounts.manage', 'accounting.periods.view', 'accounting.periods.manage', 'accounting.journals.view', 'accounting.journals.create', 'accounting.journals.post', 'accounting.journals.reverse', 'accounting.reports.view'];
         $fixedAssets = ['fixed_assets.view', 'fixed_assets.manage', 'fixed_assets.depreciate', 'fixed_assets.dispose'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, ...$fixedAssets, 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'e_tax.view', 'e_tax.manage', 'e_tax.submit', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, ...$fixedAssets, 'fx.view', 'fx.manage', 'fx.revalue', 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'e_tax.view', 'e_tax.manage', 'e_tax.submit', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [

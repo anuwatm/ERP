@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Services\BahtText;
 use App\Services\FinancialJournalService;
+use App\Services\FxRateService;
 use App\Services\NumberSequenceService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -75,7 +76,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(Request $request, NumberSequenceService $numbers, FinancialJournalService $journals): RedirectResponse
+    public function store(Request $request, NumberSequenceService $numbers, FinancialJournalService $journals, FxRateService $fxRates): RedirectResponse
     {
         $user = $request->user();
         $validated = $this->validateInvoice($request);
@@ -83,13 +84,16 @@ class InvoiceController extends Controller
         $this->assertProjectMatchesCustomer($validated);
         $totals = $this->calculateTotals($validated);
 
-        $invoice = DB::transaction(function () use ($request, $user, $validated, $totals, $numbers, $journals): Invoice {
-            $invoice = Invoice::create(array_merge($this->invoicePayload($validated, $totals), [
+        $snapshot = $fxRates->snapshot($user->org_id, $validated['currency'], $validated['issue_date'], $totals);
+        $invoice = DB::transaction(function () use ($request, $user, $validated, $totals, $snapshot, $numbers, $journals): Invoice {
+            $invoice = Invoice::create(array_merge($this->invoicePayload($validated, $totals), $snapshot, [
                 'org_id' => $user->org_id,
                 'branch_id' => $user->branch_id,
                 'invoice_no' => $numbers->next($user->org_id, 'invoice'),
                 'paid_amount' => 0,
                 'balance_due' => $totals['total'],
+                'base_paid_amount' => 0,
+                'base_balance_due' => $snapshot['base_total'],
                 'created_by' => $user->id,
             ]));
 
@@ -105,7 +109,7 @@ class InvoiceController extends Controller
         return back()->with('success', "Invoice {$invoice->invoice_no} created.");
     }
 
-    public function update(Request $request, Invoice $invoice, FinancialJournalService $journals): RedirectResponse
+    public function update(Request $request, Invoice $invoice, FinancialJournalService $journals, FxRateService $fxRates): RedirectResponse
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);
         abort_unless($invoice->status === 'draft', 422, 'Only draft invoices can be edited after GL posting is enabled.');
@@ -114,11 +118,13 @@ class InvoiceController extends Controller
         $this->assertDealMatchesCustomer($validated);
         $this->assertProjectMatchesCustomer($validated);
         $totals = $this->calculateTotals($validated);
+        $snapshot = $fxRates->snapshot($invoice->org_id, $validated['currency'], $validated['issue_date'], $totals);
         $before = $this->snapshot($invoice);
 
-        DB::transaction(function () use ($request, $invoice, $validated, $totals, $before, $journals): void {
-            $invoice->update(array_merge($this->invoicePayload($validated, $totals), [
+        DB::transaction(function () use ($request, $invoice, $validated, $totals, $snapshot, $before, $journals): void {
+            $invoice->update(array_merge($this->invoicePayload($validated, $totals), $snapshot, [
                 'balance_due' => $totals['total'] - (float) $invoice->paid_amount,
+                'base_balance_due' => $snapshot['base_total'] - (float) $invoice->base_paid_amount,
                 'updated_by' => $request->user()->id,
             ]));
             $invoice->items()->delete();
@@ -469,7 +475,7 @@ class InvoiceController extends Controller
 
     private function snapshot(Invoice $invoice): array
     {
-        return $invoice->fresh(['items'])->only(['invoice_no', 'customer_id', 'deal_id', 'project_id', 'status', 'tax_mode', 'issue_date', 'due_date', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'paid_amount', 'balance_due', 'currency', 'notes']);
+        return $invoice->fresh(['items'])->only(['invoice_no', 'customer_id', 'deal_id', 'project_id', 'status', 'tax_mode', 'issue_date', 'due_date', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'paid_amount', 'balance_due', 'currency', 'base_currency', 'exchange_rate', 'base_total', 'base_paid_amount', 'base_balance_due', 'notes']);
     }
 
     private function audit(Request $request, string $action, Invoice $invoice, ?array $before, ?array $after): void

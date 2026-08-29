@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\GoodsReceiptItem;
+use App\Models\InventoryLot;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
@@ -77,6 +78,23 @@ class Phase8InventoryTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame('received', $po->fresh()->status);
+    }
+
+    public function test_goods_receipt_rejects_lot_that_belongs_to_another_product(): void
+    {
+        $finance = User::factory()->create();
+        $this->attachRole($finance, 'finance', ['inventory.receive']);
+        [$po, $poItem] = $this->purchaseOrderWithItem($finance, 5);
+        $otherProduct = Product::create(['org_id' => $finance->org_id, 'sku' => 'LOT-OTHER', 'name' => 'Other lot product', 'type' => 'product', 'unit' => 'pcs', 'price' => 10, 'cost' => 10, 'is_active' => true]);
+        $lot = InventoryLot::create(['org_id' => $finance->org_id, 'product_id' => $otherProduct->id, 'lot_no' => 'OTHER-LOT']);
+
+        $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
+            ->post(route('goods-receipts.store'), [
+                'purchase_order_id' => $po->id, 'received_date' => '2026-08-23',
+                'items' => [['purchase_order_item_id' => $poItem->id, 'quantity' => '1', 'inventory_lot_id' => $lot->id]],
+            ])->assertStatus(422);
+
+        $this->assertSame(0, GoodsReceiptItem::count());
     }
 
     public function test_goods_receipt_index_is_org_scoped(): void

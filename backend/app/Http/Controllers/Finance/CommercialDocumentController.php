@@ -12,8 +12,12 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\StockMovement;
 use App\Models\Voucher;
+use App\Models\Warehouse;
+use App\Models\User;
 use App\Services\FinancialJournalService;
+use App\Services\FxRateService;
 use App\Services\NumberSequenceService;
+use App\Services\NotificationService;
 use App\Support\FileAttachmentManager;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -36,12 +40,14 @@ class CommercialDocumentController extends Controller
             'creditDebitNotes' => CreditDebitNote::where('org_id', $orgId)->with('invoice:id,invoice_no')->latest()->get(),
             'billingNotes' => BillingNote::where('org_id', $orgId)->with('customer:id,company_name')->latest()->get(),
             'deliveryOrders' => DeliveryOrder::where('org_id', $orgId)->with('invoice:id,invoice_no')->latest()->get(),
+            'invoices' => Invoice::where('org_id', $orgId)->where('status', '!=', 'void')->with('items.product:id,barcode,sku,name')->orderByDesc('issue_date')->get(['id', 'invoice_no', 'issue_date']),
             'purchaseRequests' => PurchaseRequest::where('org_id', $orgId)->with(['supplier:id,name', 'items'])->latest()->get(),
             'vouchers' => Voucher::where('org_id', $orgId)->with('attachment:id,file_name,mime_type,size_bytes')->latest()->get(),
+            'warehouses' => Warehouse::where('org_id', $orgId)->orderBy('code')->get(['id', 'code', 'name']),
         ]);
     }
 
-    public function storeCreditDebitNote(Request $request, NumberSequenceService $numbers, FinancialJournalService $journals): RedirectResponse
+    public function storeCreditDebitNote(Request $request, NumberSequenceService $numbers, FinancialJournalService $journals, FxRateService $fxRates): RedirectResponse
     {
         $orgId = $request->user()->org_id;
         $validated = $request->validate([
@@ -56,10 +62,11 @@ class CommercialDocumentController extends Controller
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
-        DB::transaction(function () use ($request, $numbers, $orgId, $validated, $journals): void {
+        DB::transaction(function () use ($request, $numbers, $orgId, $validated, $journals, $fxRates): void {
             $invoice = Invoice::where('org_id', $orgId)->lockForUpdate()->findOrFail($validated['invoice_id']);
             abort_if($invoice->status === 'void', 422, 'Cannot issue CN/DN for void invoice.');
             $totals = $this->simpleTotals($validated['items'], $invoice->tax_mode);
+            $snapshot = $fxRates->snapshot($orgId, $invoice->currency, $validated['issue_date'], $totals);
             abort_if($validated['type'] === 'credit' && $totals['total'] > (float) $invoice->balance_due, 422, 'Credit note exceeds invoice balance due.');
 
             $note = CreditDebitNote::create([
@@ -72,6 +79,8 @@ class CommercialDocumentController extends Controller
                 'subtotal' => $totals['subtotal'],
                 'tax_amount' => $totals['tax_amount'],
                 'total' => $totals['total'],
+                'currency' => $invoice->currency,
+                ...$snapshot,
                 'reason' => $validated['reason'] ?? null,
                 'created_by' => $request->user()->id,
             ]);
@@ -93,6 +102,10 @@ class CommercialDocumentController extends Controller
                 'tax_amount' => max(0, round((float) $invoice->tax_amount + ($sign * $totals['tax_amount']), 2)),
                 'total' => max(0, round((float) $invoice->total + ($sign * $totals['total']), 2)),
                 'balance_due' => max(0, round((float) $invoice->balance_due + ($sign * $totals['total']), 2)),
+                'base_subtotal' => max(0, round((float) $invoice->base_subtotal + ($sign * $snapshot['base_subtotal']), 2)),
+                'base_tax_amount' => max(0, round((float) $invoice->base_tax_amount + ($sign * $snapshot['base_tax_amount']), 2)),
+                'base_total' => max(0, round((float) $invoice->base_total + ($sign * $snapshot['base_total']), 2)),
+                'base_balance_due' => max(0, round((float) $invoice->base_balance_due + ($sign * $snapshot['base_total']), 2)),
                 'updated_by' => $request->user()->id,
             ]);
 
@@ -155,12 +168,14 @@ class CommercialDocumentController extends Controller
             'delivery_date' => ['required', 'date'],
             'status' => ['required', Rule::in(['draft', 'delivered'])],
             'receiver_name' => ['nullable', 'string', 'max:255'],
+            'warehouse_id' => ['nullable', 'uuid', Rule::exists('warehouses', 'id')->where('org_id', $orgId)],
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
         DB::transaction(function () use ($request, $numbers, $orgId, $validated): void {
-            $invoice = Invoice::where('org_id', $orgId)->with('items')->findOrFail($validated['invoice_id']);
+            $invoice = Invoice::where('org_id', $orgId)->with('items')->lockForUpdate()->findOrFail($validated['invoice_id']);
             abort_if($invoice->status === 'void', 422, 'Cannot create delivery order from void invoice.');
+            abort_if(DeliveryOrder::where('org_id', $orgId)->where('invoice_id', $invoice->id)->where('status', 'delivered')->lockForUpdate()->exists(), 422, 'Invoice has already been delivered.');
             $order = DeliveryOrder::create([
                 'org_id' => $orgId,
                 'invoice_id' => $invoice->id,
@@ -176,9 +191,14 @@ class CommercialDocumentController extends Controller
             foreach ($invoice->items as $item) {
                 $order->items()->create(['org_id' => $orgId, 'product_id' => $item->product_id, 'description' => $item->description, 'quantity' => $item->quantity, 'unit' => $item->unit]);
                 if ($validated['status'] === 'delivered' && $item->product_id) {
-                    $onHand = (float) StockMovement::where('org_id', $orgId)->where('product_id', $item->product_id)->sum('quantity');
+                    $stock = StockMovement::where('org_id', $orgId)->where('product_id', $item->product_id)
+                        ->when($validated['warehouse_id'] ?? null, fn ($query, $warehouseId) => $query->where('warehouse_id', $warehouseId));
+                    $onHand = (float) $stock->sum('quantity');
                     abort_if((float) $item->quantity > $onHand, 422, 'Delivery order cannot make stock negative.');
-                    StockMovement::create(['org_id' => $orgId, 'product_id' => $item->product_id, 'movement_type' => 'deliver_to_customer', 'movement_date' => $validated['delivery_date'], 'quantity' => -((float) $item->quantity), 'unit_cost' => 0, 'total_cost' => 0, 'note' => $order->do_no, 'created_by' => $request->user()->id]);
+                    $unitCost = $onHand > 0 ? round((float) $stock->sum('base_total_cost') / $onHand, 2) : 0;
+                    $currency = $request->user()->organization?->currency ?: 'THB';
+                    StockMovement::create(['org_id' => $orgId, 'product_id' => $item->product_id, 'warehouse_id' => $validated['warehouse_id'] ?? null, 'movement_type' => 'deliver_to_customer', 'movement_date' => $validated['delivery_date'], 'quantity' => -((float) $item->quantity), 'unit_cost' => $unitCost, 'total_cost' => -((float) $item->quantity * $unitCost), 'currency' => $currency, 'base_currency' => $currency, 'exchange_rate' => 1, 'base_unit_cost' => $unitCost, 'base_total_cost' => -((float) $item->quantity * $unitCost), 'note' => $order->do_no, 'created_by' => $request->user()->id]);
+                    $this->notifyLowStock($item->product_id, $orgId, app(NotificationService::class));
                 }
             }
 
@@ -314,6 +334,17 @@ class CommercialDocumentController extends Controller
         $tax = $taxMode === 'no_tax' ? 0 : collect($items)->sum(fn ($item) => round((float) $item['quantity'] * (float) $item['unit_price'] * (float) ($item['tax_rate'] ?? 0) / 100, 2));
 
         return ['subtotal' => round($subtotal, 2), 'tax_amount' => round($tax, 2), 'total' => round($subtotal + $tax, 2)];
+    }
+
+    private function notifyLowStock(string $productId, string $orgId, NotificationService $notifications): void
+    {
+        $product = \App\Models\Product::where('org_id', $orgId)->where('reorder_point', '>', 0)->find($productId);
+        if (! $product) return;
+        $onHand = (float) StockMovement::where('org_id', $orgId)->where('product_id', $productId)->sum('quantity');
+        if ($onHand > (float) $product->reorder_point) return;
+        User::where('org_id', $orgId)->where('status', 'active')->whereHas('roles.permissions', fn ($query) => $query->whereIn('code', ['inventory.view', 'inventory.adjust']))->get()->each(function (User $user) use ($notifications, $product, $onHand): void {
+            $notifications->notify($user, 'inventory.low_stock', "inventory.low_stock:{$product->id}:".today()->toDateString(), "Low stock: {$product->name}", "On hand: {$onHand} {$product->unit}; reorder point: {$product->reorder_point}.", route('inventory-operations.index'));
+        });
     }
 
     private function audit(Request $request, string $action, string $entityType, string $entityId, ?array $before, ?array $after): void

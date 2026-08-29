@@ -9,6 +9,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Services\BahtText;
+use App\Services\FxRateService;
 use App\Services\NotificationService;
 use App\Services\NumberSequenceService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -37,14 +38,15 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function store(Request $request, NumberSequenceService $numbers, NotificationService $notifications): RedirectResponse
+    public function store(Request $request, NumberSequenceService $numbers, NotificationService $notifications, FxRateService $fxRates): RedirectResponse
     {
         $user = $request->user();
         $validated = $this->validatePurchaseOrder($request);
         $totals = $this->calculateTotals($validated);
+        $snapshot = $fxRates->snapshot($user->org_id, $validated['currency'], $validated['order_date'], $totals);
 
-        $po = DB::transaction(function () use ($user, $validated, $totals, $numbers): PurchaseOrder {
-            $po = PurchaseOrder::create(array_merge($validated, $totals, [
+        $po = DB::transaction(function () use ($user, $validated, $totals, $snapshot, $numbers): PurchaseOrder {
+            $po = PurchaseOrder::create(array_merge($validated, $totals, $snapshot, [
                 'org_id' => $user->org_id,
                 'po_no' => $numbers->next($user->org_id, 'purchase_order'),
                 'created_by' => $user->id,
@@ -61,15 +63,16 @@ class PurchaseOrderController extends Controller
         return back()->with('success', 'Purchase order created.');
     }
 
-    public function update(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    public function update(Request $request, PurchaseOrder $purchaseOrder, FxRateService $fxRates): RedirectResponse
     {
         abort_unless($purchaseOrder->org_id === $request->user()->org_id, 404);
         abort_unless($purchaseOrder->status === 'draft', 422, 'Only draft purchase orders can be edited.');
         $validated = $this->validatePurchaseOrder($request);
         $totals = $this->calculateTotals($validated);
+        $snapshot = $fxRates->snapshot($purchaseOrder->org_id, $validated['currency'], $validated['order_date'], $totals);
 
-        DB::transaction(function () use ($request, $purchaseOrder, $validated, $totals): void {
-            $purchaseOrder->update(array_merge($validated, $totals, ['updated_by' => $request->user()->id]));
+        DB::transaction(function () use ($request, $purchaseOrder, $validated, $totals, $snapshot): void {
+            $purchaseOrder->update(array_merge($validated, $totals, $snapshot, ['updated_by' => $request->user()->id]));
             $purchaseOrder->items()->delete();
             $this->syncItems($purchaseOrder, $validated['items']);
         });

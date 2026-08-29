@@ -21,10 +21,14 @@ class ChartOfAccountProvisioner
         ['code' => '2130', 'name' => 'Output VAT', 'account_type' => 'liability'],
         ['code' => '3100', 'name' => 'Owner Equity', 'account_type' => 'equity'],
         ['code' => '4100', 'name' => 'Sales Revenue', 'account_type' => 'revenue'],
+        ['code' => '4300', 'name' => 'Realized Foreign Exchange Gain', 'account_type' => 'revenue'],
+        ['code' => '4310', 'name' => 'Unrealized Foreign Exchange Gain', 'account_type' => 'revenue'],
         ['code' => '5100', 'name' => 'Cost of Goods Sold', 'account_type' => 'expense'],
         ['code' => '5200', 'name' => 'Operating Expenses', 'account_type' => 'expense'],
         ['code' => '5300', 'name' => 'Gain or Loss on Asset Disposal', 'account_type' => 'revenue'],
         ['code' => '5310', 'name' => 'Depreciation Expense', 'account_type' => 'expense'],
+        ['code' => '5400', 'name' => 'Realized Foreign Exchange Loss', 'account_type' => 'expense'],
+        ['code' => '5410', 'name' => 'Unrealized Foreign Exchange Loss', 'account_type' => 'expense'],
     ];
 
     public function ensure(string $orgId): void

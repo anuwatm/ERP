@@ -53,7 +53,7 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->uuid('created_by')->nullable();
             $table->timestamps();
-            $table->index(['org_id', 'petty_cash_fund_id', 'reimbursed_at']);
+            $table->index(['org_id', 'petty_cash_fund_id', 'reimbursed_at'], 'petty_reimb_org_fund_date_idx');
         });
         Schema::create('cheques', function (Blueprint $table) {
             $table->uuid('id')->primary();

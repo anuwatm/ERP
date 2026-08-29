@@ -8,8 +8,10 @@ use App\Models\BankAccount;
 use App\Models\Expense;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
+use App\Models\VendorPayment;
 use App\Services\BahtText;
 use App\Services\FinancialJournalService;
+use App\Services\FxRateService;
 use App\Services\NumberSequenceService;
 use App\Support\FileAttachmentManager;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -17,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -58,17 +61,18 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function store(Request $request, NumberSequenceService $numbers, FileAttachmentManager $files): RedirectResponse
+    public function store(Request $request, NumberSequenceService $numbers, FileAttachmentManager $files, FxRateService $fxRates): RedirectResponse
     {
         $user = $request->user();
         $validated = $this->validateExpense($request);
+        $payload = $this->withholdingPayload($this->taxPayload($validated));
+        $snapshot = $fxRates->snapshot($user->org_id, $payload['currency'], $payload['expense_date'], ['amount' => $payload['amount'], 'tax_amount' => $payload['tax_amount']]);
 
-        $expense = DB::transaction(function () use ($request, $user, $validated, $numbers, $files): Expense {
-            $expensePayload = $validated;
+        $expense = DB::transaction(function () use ($request, $user, $payload, $snapshot, $numbers, $files): Expense {
+            $expensePayload = $payload;
             unset($expensePayload['receipt']);
-            $expensePayload = $this->withholdingPayload($this->taxPayload($expensePayload));
 
-            $expense = Expense::create(array_merge($expensePayload, [
+            $expense = Expense::create(array_merge($expensePayload, $snapshot, [
                 'org_id' => $user->org_id,
                 'expense_no' => $numbers->next($user->org_id, 'expense'),
                 'status' => 'draft',
@@ -89,7 +93,7 @@ class ExpenseController extends Controller
         return back()->with('success', "Expense {$expense->expense_no} created.");
     }
 
-    public function update(Request $request, Expense $expense, FileAttachmentManager $files): RedirectResponse
+    public function update(Request $request, Expense $expense, FileAttachmentManager $files, FxRateService $fxRates): RedirectResponse
     {
         abort_unless($expense->org_id === $request->user()->org_id, 403);
         abort_unless($expense->status === 'draft', 422, 'Only draft expenses can be edited.');
@@ -100,8 +104,9 @@ class ExpenseController extends Controller
         $expensePayload = $validated;
         unset($expensePayload['receipt']);
         $expensePayload = $this->withholdingPayload($this->taxPayload($expensePayload));
+        $snapshot = $fxRates->snapshot($expense->org_id, $expensePayload['currency'], $expensePayload['expense_date'], ['amount' => $expensePayload['amount'], 'tax_amount' => $expensePayload['tax_amount']]);
 
-        $expense->update(array_merge($expensePayload, [
+        $expense->update(array_merge($expensePayload, $snapshot, [
             'updated_by' => $request->user()->id,
         ]));
 
@@ -125,6 +130,10 @@ class ExpenseController extends Controller
         DB::transaction(function () use ($expense, $request, $journals, $before): void {
             $expense->update([
                 'status' => 'approved',
+                'payable_total' => $this->grossAmount($expense),
+                'base_payable_total' => $this->baseGrossAmount($expense),
+                'balance_due' => $this->grossAmount($expense),
+                'base_balance_due' => $this->baseGrossAmount($expense),
                 'approved_by' => $request->user()->id,
                 'approved_at' => now(),
                 'updated_by' => $request->user()->id,
@@ -136,10 +145,10 @@ class ExpenseController extends Controller
         return back()->with('success', "Expense {$expense->expense_no} approved.");
     }
 
-    public function pay(Request $request, Expense $expense, FinancialJournalService $journals): RedirectResponse
+    public function pay(Request $request, Expense $expense, FinancialJournalService $journals, FxRateService $fxRates): RedirectResponse
     {
         abort_unless($expense->org_id === $request->user()->org_id, 403);
-        abort_unless($expense->status === 'approved', 422, 'Only approved expenses can be paid.');
+        abort_unless(in_array($expense->status, ['approved', 'partially_paid'], true), 422, 'Only approved expenses can be paid.');
 
         $validated = $request->validate([
             'paid_at' => ['nullable', 'date'],
@@ -148,15 +157,21 @@ class ExpenseController extends Controller
         ]);
 
         $before = $this->snapshot($expense);
-        DB::transaction(function () use ($expense, $request, $validated, $journals, $before): void {
-            $expense->update([
-                'status' => 'paid',
-                'paid_at' => filled($validated['paid_at'] ?? null) ? $validated['paid_at'] : now(),
-                'bank_account_id' => $validated['bank_account_id'] ?? null,
-                'note' => $this->appendStatusNote($expense->note, 'Paid', $validated['note'] ?? null),
-                'updated_by' => $request->user()->id,
+        DB::transaction(function () use ($expense, $request, $validated, $journals, $before, $fxRates): void {
+            $date = filled($validated['paid_at'] ?? null) ? $validated['paid_at'] : now()->toDateString();
+            $payableTotal = (float) $expense->payable_total ?: $this->grossAmount($expense);
+            $basePayableTotal = (float) $expense->base_payable_total ?: $this->baseGrossAmount($expense);
+            $amount = round((float) $expense->balance_due ?: $payableTotal, 2);
+            $baseBalanceDue = (float) $expense->base_balance_due ?: $basePayableTotal;
+            $snapshot = $fxRates->snapshot($expense->org_id, $expense->currency, $date, ['amount' => $amount]);
+            $payment = VendorPayment::create([
+                'org_id' => $expense->org_id, 'expense_id' => $expense->id, 'bank_account_id' => $validated['bank_account_id'] ?? null,
+                'entry_type' => 'payment', 'payment_date' => $date, 'amount' => $amount, 'currency' => $expense->currency,
+                'base_currency' => $snapshot['base_currency'], 'exchange_rate' => $snapshot['exchange_rate'], 'base_amount' => $snapshot['base_amount'],
+                'expense_base_amount' => $baseBalanceDue, 'note' => $validated['note'] ?? null, 'idempotency_key' => (string) Str::uuid(), 'created_by' => $request->user()->id,
             ]);
-            $journals->postExpensePayment($expense->fresh(), $request->user()->id);
+            $expense->update(['payable_total' => $payableTotal, 'base_payable_total' => $basePayableTotal, 'paid_amount' => $payableTotal, 'base_paid_amount' => $basePayableTotal, 'balance_due' => 0, 'base_balance_due' => 0, 'status' => 'paid', 'paid_at' => $date, 'bank_account_id' => $validated['bank_account_id'] ?? null, 'note' => $this->appendStatusNote($expense->note, 'Paid', $validated['note'] ?? null), 'updated_by' => $request->user()->id]);
+            $journals->postVendorPayment($payment, $request->user()->id);
             $this->audit($request, 'expense.pay', $expense, $before, $this->snapshot($expense));
         });
 
@@ -223,10 +238,11 @@ class ExpenseController extends Controller
 
     private function validateExpense(Request $request): array
     {
-        return Validator::make($request->all(), [
+        $validated = Validator::make($request->all(), [
             'category' => ['required', Rule::in(Expense::CATEGORIES)],
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'gt:0', 'max:999999999999.99'],
+            'currency' => ['nullable', 'string', 'size:3'],
             'tax_mode' => ['nullable', Rule::in(['no_tax', 'exclusive', 'inclusive'])],
             'tax_invoice_no' => ['nullable', 'string', 'max:50'],
             'withholding_tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -251,6 +267,10 @@ class ExpenseController extends Controller
                 $validator->errors()->add('purchase_order_id', 'Purchase order must belong to selected supplier.');
             }
         })->validate();
+
+        $validated['currency'] = strtoupper((string) ($request->input('currency') ?: $request->user()->organization?->currency ?: 'THB'));
+
+        return $validated;
     }
 
     private function appendStatusNote(?string $note, string $label, ?string $statusNote): ?string
@@ -284,6 +304,19 @@ class ExpenseController extends Controller
         $payload['tax_invoice_no'] = filled($payload['tax_invoice_no'] ?? null) ? $payload['tax_invoice_no'] : null;
 
         return $payload;
+    }
+
+    private function grossAmount(Expense $expense): float
+    {
+        return $expense->tax_mode === 'exclusive' ? round((float) $expense->amount + (float) $expense->tax_amount, 2) : round((float) $expense->amount, 2);
+    }
+
+    private function baseGrossAmount(Expense $expense): float
+    {
+        $amount = (float) $expense->base_amount ?: (float) $expense->amount;
+        $tax = (float) $expense->base_tax_amount ?: (float) $expense->tax_amount;
+
+        return $expense->tax_mode === 'exclusive' ? round($amount + $tax, 2) : round($amount, 2);
     }
 
     private function withholdingPayload(array $payload): array

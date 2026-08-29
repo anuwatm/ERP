@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\BankAccount;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\FinancialJournalService;
+use App\Services\FxRateService;
 use App\Support\FileAttachmentManager;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -19,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
-    public function store(Request $request, Invoice $invoice, FileAttachmentManager $files, FinancialJournalService $journals): RedirectResponse
+    public function store(Request $request, Invoice $invoice, FileAttachmentManager $files, FinancialJournalService $journals, FxRateService $fxRates): RedirectResponse
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);
 
@@ -44,7 +46,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $payment = DB::transaction(function () use ($request, $invoice, $validated, $idempotencyKey, $files, $journals): Payment {
+            $payment = DB::transaction(function () use ($request, $invoice, $validated, $idempotencyKey, $files, $journals, $fxRates): Payment {
                 $lockedInvoice = $this->lockInvoice($request, $invoice->id);
                 $existing = $this->existingIdempotentPayment($request, $idempotencyKey);
 
@@ -59,6 +61,13 @@ class PaymentController extends Controller
                 $amount = round((float) $validated['amount'], 2);
                 $balanceDue = round((float) $lockedInvoice->balance_due, 2);
                 abort_if($amount > $balanceDue, 422, 'Payment exceeds balance due.');
+                $bankAccount = filled($validated['bank_account_id'] ?? null) ? BankAccount::find($validated['bank_account_id']) : null;
+                abort_if($bankAccount && strtoupper($bankAccount->currency) !== strtoupper($lockedInvoice->currency), 422, 'Bank account currency must match invoice currency.');
+                $baseSnapshot = $fxRates->snapshot($lockedInvoice->org_id, $lockedInvoice->currency, $validated['payment_date'], ['amount' => $amount]);
+                $invoiceBaseBalance = (float) $lockedInvoice->base_balance_due ?: (float) $lockedInvoice->balance_due;
+                $invoiceBaseAmount = $balanceDue > 0
+                    ? round($amount * ($invoiceBaseBalance / $balanceDue), 2)
+                    : 0.0;
 
                 $payment = Payment::create([
                     'org_id' => $lockedInvoice->org_id,
@@ -66,6 +75,11 @@ class PaymentController extends Controller
                     'bank_account_id' => $validated['bank_account_id'] ?? null,
                     'entry_type' => 'receipt',
                     'amount' => $amount,
+                    'currency' => $lockedInvoice->currency,
+                    'base_currency' => $baseSnapshot['base_currency'],
+                    'exchange_rate' => $baseSnapshot['exchange_rate'],
+                    'base_amount' => $baseSnapshot['base_amount'],
+                    'invoice_base_amount' => $invoiceBaseAmount,
                     'payment_date' => $validated['payment_date'],
                     'payment_method' => $validated['payment_method'],
                     'reference_no' => $validated['reference_no'] ?? null,
@@ -138,6 +152,11 @@ class PaymentController extends Controller
                     'entry_type' => 'reversal',
                     'reversal_of_payment_id' => $receipt->id,
                     'amount' => $receipt->amount,
+                    'currency' => $receipt->currency,
+                    'base_currency' => $receipt->base_currency,
+                    'exchange_rate' => $receipt->exchange_rate,
+                    'base_amount' => $receipt->base_amount,
+                    'invoice_base_amount' => $receipt->invoice_base_amount,
                     'payment_date' => now()->toDateString(),
                     'payment_method' => $receipt->payment_method,
                     'reference_no' => $receipt->reference_no,
@@ -223,12 +242,17 @@ class PaymentController extends Controller
             ->sum('amount');
         $netPaid = round($paidAmount - $reversedAmount, 2);
         $newBalance = max(0, round((float) $invoice->total - $netPaid, 2));
+        $basePaid = round((float) Payment::where('invoice_id', $invoice->id)->where('entry_type', 'receipt')->sum('invoice_base_amount') - (float) Payment::where('invoice_id', $invoice->id)->where('entry_type', 'reversal')->sum('invoice_base_amount'), 2);
+        $baseTotal = (float) $invoice->base_total ?: (float) $invoice->total;
+        $baseBalance = max(0, round($baseTotal - $basePaid, 2));
 
         $isPastDue = $invoice->due_date && $invoice->due_date->isPast() && ! $invoice->due_date->isToday();
 
         $invoice->update([
             'paid_amount' => $netPaid,
             'balance_due' => $newBalance,
+            'base_paid_amount' => $basePaid,
+            'base_balance_due' => $baseBalance,
             'status' => $newBalance <= 0 ? 'paid' : ($isPastDue ? 'overdue' : ($netPaid > 0 ? 'partially_paid' : 'sent')),
             'paid_at' => $newBalance <= 0 ? now() : null,
             'updated_by' => $actorId,
@@ -264,6 +288,9 @@ class PaymentController extends Controller
             'entry_type' => $payment->entry_type,
             'reversal_of_payment_id' => $payment->reversal_of_payment_id,
             'amount' => $payment->amount,
+            'currency' => $payment->currency,
+            'base_amount' => $payment->base_amount,
+            'invoice_base_amount' => $payment->invoice_base_amount,
             'payment_date' => $payment->payment_date,
             'payment_method' => $payment->payment_method,
             'bank_account_id' => $payment->bank_account_id,
@@ -271,6 +298,7 @@ class PaymentController extends Controller
             'attachment_file_id' => $payment->attachment_file_id,
             'invoice_paid_amount' => $invoice->paid_amount,
             'invoice_balance_due' => $invoice->balance_due,
+            'invoice_base_balance_due' => $invoice->base_balance_due,
             'invoice_status' => $invoice->status,
         ];
     }

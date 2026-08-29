@@ -116,6 +116,12 @@ class Phase9CommercialDocumentsTest extends TestCase
 
         $this->assertSame('delivered', DeliveryOrder::firstOrFail()->status);
         $this->assertSame('3.0000', number_format((float) StockMovement::where('product_id', $product->id)->sum('quantity'), 4, '.', ''));
+
+        $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
+            ->post(route('delivery-orders.store'), [
+                'invoice_id' => $invoice->id, 'delivery_date' => '2026-08-25', 'status' => 'delivered',
+            ])->assertStatus(422);
+        $this->assertSame(1, DeliveryOrder::count());
     }
 
     public function test_purchase_request_approval_converts_to_purchase_order(): void

@@ -40,7 +40,7 @@ return new class extends Migration
             $table->string('status', 20)->default('unreconciled');
             $table->timestamps();
             $table->unique(['bank_account_id', 'row_fingerprint']);
-            $table->index(['org_id', 'bank_account_id', 'transaction_date']);
+            $table->index(['org_id', 'bank_account_id', 'transaction_date'], 'bank_stmt_line_org_account_date_idx');
             $table->index(['bank_statement_id', 'status']);
         });
 

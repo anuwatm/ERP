@@ -9,6 +9,7 @@ use App\Models\Deal;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Services\FxRateService;
 use App\Services\NumberSequenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,15 +46,16 @@ class QuotationController extends Controller
         ]);
     }
 
-    public function store(Request $request, NumberSequenceService $numbers): RedirectResponse
+    public function store(Request $request, NumberSequenceService $numbers, FxRateService $fxRates): RedirectResponse
     {
         $user = $request->user();
         $validated = $this->validateQuotation($request);
         $this->assertDealMatchesCustomer($validated);
         $totals = $this->calculateTotals($validated);
+        $snapshot = $fxRates->snapshot($user->org_id, $validated['currency'], $validated['issue_date'], $totals);
 
-        $quotation = DB::transaction(function () use ($request, $user, $validated, $totals, $numbers): Quotation {
-            $quotation = Quotation::create(array_merge($this->quotationPayload($validated, $totals), [
+        $quotation = DB::transaction(function () use ($request, $user, $validated, $totals, $snapshot, $numbers): Quotation {
+            $quotation = Quotation::create(array_merge($this->quotationPayload($validated, $totals), $snapshot, [
                 'org_id' => $user->org_id,
                 'branch_id' => $user->branch_id,
                 'quotation_no' => $numbers->next($user->org_id, 'quotation', $user->branch_id),
@@ -69,7 +71,7 @@ class QuotationController extends Controller
         return back()->with('success', "Quotation {$quotation->quotation_no} created.");
     }
 
-    public function update(Request $request, Quotation $quotation): RedirectResponse
+    public function update(Request $request, Quotation $quotation, FxRateService $fxRates): RedirectResponse
     {
         abort_unless($quotation->org_id === $request->user()->org_id, 403);
         abort_unless(in_array($quotation->status, ['draft', 'sent'], true), 422, 'Only draft or sent quotations can be edited.');
@@ -77,10 +79,11 @@ class QuotationController extends Controller
         $validated = $this->validateQuotation($request);
         $this->assertDealMatchesCustomer($validated);
         $totals = $this->calculateTotals($validated);
+        $snapshot = $fxRates->snapshot($quotation->org_id, $validated['currency'], $validated['issue_date'], $totals);
         $before = $this->snapshot($quotation);
 
-        DB::transaction(function () use ($request, $quotation, $validated, $totals, $before): void {
-            $quotation->update(array_merge($this->quotationPayload($validated, $totals), [
+        DB::transaction(function () use ($request, $quotation, $validated, $totals, $snapshot, $before): void {
+            $quotation->update(array_merge($this->quotationPayload($validated, $totals), $snapshot, [
                 'updated_by' => $request->user()->id,
             ]));
             $quotation->items()->delete();
@@ -125,6 +128,13 @@ class QuotationController extends Controller
                 'paid_amount' => 0,
                 'balance_due' => $quotation->total,
                 'currency' => $quotation->currency,
+                'base_currency' => $quotation->base_currency,
+                'exchange_rate' => $quotation->exchange_rate,
+                'base_subtotal' => $quotation->base_subtotal,
+                'base_tax_amount' => $quotation->base_tax_amount,
+                'base_total' => $quotation->base_total,
+                'base_paid_amount' => 0,
+                'base_balance_due' => $quotation->base_total,
                 'notes' => $quotation->notes,
                 'created_by' => $request->user()->id,
             ]);

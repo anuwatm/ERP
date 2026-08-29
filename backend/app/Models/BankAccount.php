@@ -15,7 +15,7 @@ class BankAccount extends Model
 
     public const STATUSES = ['active', 'inactive'];
 
-    protected $fillable = ['org_id', 'branch_id', 'bank_name', 'bank_code', 'branch_name', 'account_name', 'account_number', 'account_number_hash', 'account_type', 'currency', 'is_cash_account', 'status', 'opening_balance', 'opening_balance_date', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'branch_id', 'chart_of_account_id', 'bank_name', 'bank_code', 'branch_name', 'account_name', 'account_number', 'account_number_hash', 'account_type', 'currency', 'is_cash_account', 'status', 'opening_balance', 'base_opening_balance', 'base_balance', 'opening_balance_date', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
@@ -23,6 +23,8 @@ class BankAccount extends Model
             'account_number' => 'encrypted',
             'is_cash_account' => 'boolean',
             'opening_balance' => 'decimal:2',
+            'base_opening_balance' => 'decimal:2',
+            'base_balance' => 'decimal:2',
             'opening_balance_date' => 'date',
         ];
     }
@@ -30,6 +32,11 @@ class BankAccount extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function chartOfAccount(): BelongsTo
+    {
+        return $this->belongsTo(ChartOfAccount::class);
     }
 
     public function maskedAccountNumber(): string

@@ -1,0 +1,2 @@
+<?php
+namespace App\Models; use App\Models\Concerns\UsesOrderedUuid; use Illuminate\Database\Eloquent\Model; class StockTransfer extends Model { use UsesOrderedUuid; protected $fillable=['org_id','product_id','source_warehouse_id','source_bin_id','destination_warehouse_id','destination_bin_id','inventory_lot_id','transfer_date','quantity','base_unit_cost','idempotency_key','note','created_by']; protected function casts(): array { return ['transfer_date'=>'date','quantity'=>'decimal:4','base_unit_cost'=>'decimal:2']; } }

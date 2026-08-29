@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\BankAccount;
 use App\Models\Branch;
+use App\Models\ChartOfAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -21,11 +22,12 @@ class BankAccountController extends Controller
 
         return Inertia::render('Finance/BankAccounts', [
             'accounts' => BankAccount::where('org_id', $user->org_id)
-                ->with('branch:id,code,name')
+                ->with(['branch:id,code,name', 'chartOfAccount:id,code,name'])
                 ->latest()
                 ->get()
                 ->map(fn (BankAccount $account) => $this->payload($account)),
             'branches' => Branch::where('org_id', $user->org_id)->where('status', 'active')->orderBy('name')->get(['id', 'code', 'name']),
+            'chartAccounts' => ChartOfAccount::where('org_id', $user->org_id)->where('status', 'active')->where('is_postable', true)->where('account_type', 'asset')->orderBy('code')->get(['id', 'code', 'name']),
             'accountTypes' => BankAccount::ACCOUNT_TYPES,
             'statuses' => BankAccount::STATUSES,
         ]);
@@ -66,6 +68,7 @@ class BankAccountController extends Controller
         $orgId = $request->user()->org_id;
         $validated = $request->validate([
             'branch_id' => ['nullable', 'uuid', Rule::exists('branches', 'id')->where('org_id', $orgId)->where('status', 'active')],
+            'chart_of_account_id' => ['nullable', 'uuid', Rule::exists('chart_of_accounts', 'id')->where('org_id', $orgId)->where('status', 'active')->where('is_postable', true)],
             'bank_name' => ['required', 'string', 'max:100'],
             'bank_code' => ['nullable', 'string', 'max:20'],
             'branch_name' => ['nullable', 'string', 'max:100'],
@@ -101,6 +104,8 @@ class BankAccountController extends Controller
         return [
             'id' => $account->id,
             'branch_id' => $account->branch_id,
+            'chart_of_account_id' => $account->chart_of_account_id,
+            'chart_of_account' => $account->chartOfAccount ? ['id' => $account->chartOfAccount->id, 'code' => $account->chartOfAccount->code, 'name' => $account->chartOfAccount->name] : null,
             'branch' => $account->branch ? ['id' => $account->branch->id, 'code' => $account->branch->code, 'name' => $account->branch->name] : null,
             'bank_name' => $account->bank_name,
             'bank_code' => $account->bank_code,
@@ -120,6 +125,7 @@ class BankAccountController extends Controller
     {
         return [
             'branch_id' => $account->branch_id,
+            'chart_of_account_id' => $account->chart_of_account_id,
             'bank_name' => $account->bank_name,
             'bank_code' => $account->bank_code,
             'branch_name' => $account->branch_name,

@@ -15,6 +15,8 @@ import { money } from '@/Utils/format';
 type Product = {
     id: string;
     sku?: string | null;
+    barcode?: string | null;
+    reorder_point?: string;
     name: string;
     type: string;
     category?: string | null;
@@ -27,6 +29,8 @@ type Product = {
 
 type ProductForm = {
     sku: string;
+    barcode: string;
+    reorder_point: string;
     name: string;
     type: string;
     category: string;
@@ -39,6 +43,8 @@ type ProductForm = {
 
 const emptyProduct: ProductForm = {
     sku: '',
+    barcode: '',
+    reorder_point: '0',
     name: '',
     type: 'service',
     category: '',
@@ -74,6 +80,8 @@ export default function Products({ products }: { products: Product[] }) {
         setEditingProduct(product);
         form.setData({
             sku: product.sku ?? '',
+            barcode: product.barcode ?? '',
+            reorder_point: product.reorder_point ?? '0',
             name: product.name ?? '',
             type: product.type ?? 'service',
             category: product.category ?? '',
@@ -198,6 +206,8 @@ export default function Products({ products }: { products: Product[] }) {
                                 error={form.errors.sku}
                                 onChange={(value) => form.setData('sku', value)}
                             />
+                            <Field label="Barcode" value={form.data.barcode} error={form.errors.barcode} onChange={(value) => form.setData('barcode', value)} />
+                            <Field label="Reorder Point" type="number" value={form.data.reorder_point} error={form.errors.reorder_point} onChange={(value) => form.setData('reorder_point', value)} />
                             <Field
                                 label="Name"
                                 value={form.data.name}

@@ -10,7 +10,7 @@ class StockMovement extends Model
 {
     use UsesOrderedUuid;
 
-    protected $fillable = ['org_id', 'product_id', 'goods_receipt_id', 'purchase_order_id', 'movement_type', 'movement_date', 'quantity', 'unit_cost', 'total_cost', 'note', 'created_by'];
+    protected $fillable = ['org_id', 'product_id', 'goods_receipt_id', 'purchase_order_id', 'warehouse_id', 'warehouse_bin_id', 'inventory_lot_id', 'stock_transfer_id', 'stock_count_id', 'movement_type', 'movement_date', 'quantity', 'unit_cost', 'total_cost', 'currency', 'base_currency', 'exchange_rate', 'base_unit_cost', 'base_total_cost', 'note', 'created_by'];
 
     protected function casts(): array
     {
@@ -19,6 +19,9 @@ class StockMovement extends Model
             'quantity' => 'decimal:4',
             'unit_cost' => 'decimal:2',
             'total_cost' => 'decimal:2',
+            'exchange_rate' => 'decimal:6',
+            'base_unit_cost' => 'decimal:2',
+            'base_total_cost' => 'decimal:2',
         ];
     }
 

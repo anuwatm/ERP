@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Finance;
 use App\Http\Controllers\Controller;
 use App\Models\AssetCategory;
 use App\Models\AuditLog;
+use App\Models\BankAccount;
 use App\Models\ChartOfAccount;
 use App\Models\Expense;
 use App\Models\FixedAsset;
@@ -34,6 +35,7 @@ class FixedAssetController extends Controller
             'assets' => FixedAsset::where('org_id', $orgId)->with(['category:id,code,name', 'custodian:id,name', 'attachment:id,file_name,mime_type,size_bytes', 'depreciations'])->latest('available_for_use_date')->get(),
             'accounts' => ChartOfAccount::where('org_id', $orgId)->where('status', 'active')->where('is_postable', true)->orderBy('code')->get(['id', 'code', 'name', 'account_type']),
             'users' => User::where('org_id', $orgId)->where('status', 'active')->orderBy('name')->get(['id', 'name']),
+            'bankAccounts' => BankAccount::where('org_id', $orgId)->where('status', 'active')->with('chartOfAccount:id,code,name')->orderBy('account_name')->get(['id', 'bank_name', 'account_name', 'currency', 'chart_of_account_id']),
             'expenses' => Expense::where('org_id', $orgId)->whereIn('status', ['approved', 'paid'])->latest('expense_date')->take(100)->get(['id', 'expense_no', 'title', 'amount', 'expense_date', 'status']),
             'goodsReceipts' => GoodsReceipt::where('org_id', $orgId)->with('items:id,goods_receipt_id,line_total,tax_amount')->latest('received_date')->take(100)->get(['id', 'grn_no', 'received_date']),
             'summary' => [
@@ -106,6 +108,7 @@ class FixedAssetController extends Controller
             'status' => ['required', Rule::in(['disposed', 'written_off'])],
             'disposed_at' => ['required', 'date'],
             'disposal_proceeds' => ['nullable', 'numeric', 'min:0'],
+            'bank_account_id' => ['nullable', 'uuid', Rule::exists('bank_accounts', 'id')->where('org_id', $request->user()->org_id)->where('status', 'active')],
             'disposal_reason' => ['required', 'string', 'max:2000'],
         ]);
         try {

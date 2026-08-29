@@ -16,7 +16,7 @@ class Invoice extends Model
 
     public const TAX_MODES = ['exclusive', 'inclusive', 'no_tax'];
 
-    protected $fillable = ['org_id', 'branch_id', 'invoice_no', 'customer_id', 'project_id', 'quotation_id', 'deal_id', 'status', 'tax_mode', 'issue_date', 'due_date', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'paid_amount', 'balance_due', 'currency', 'notes', 'sent_at', 'paid_at', 'voided_at', 'created_by', 'updated_by'];
+    protected $fillable = ['org_id', 'branch_id', 'invoice_no', 'customer_id', 'project_id', 'quotation_id', 'deal_id', 'status', 'tax_mode', 'issue_date', 'due_date', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'paid_amount', 'balance_due', 'currency', 'base_currency', 'exchange_rate', 'base_subtotal', 'base_tax_amount', 'base_total', 'base_paid_amount', 'base_balance_due', 'notes', 'sent_at', 'paid_at', 'voided_at', 'created_by', 'updated_by'];
 
     protected function casts(): array
     {
@@ -29,6 +29,12 @@ class Invoice extends Model
             'total' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'balance_due' => 'decimal:2',
+            'exchange_rate' => 'decimal:6',
+            'base_subtotal' => 'decimal:2',
+            'base_tax_amount' => 'decimal:2',
+            'base_total' => 'decimal:2',
+            'base_paid_amount' => 'decimal:2',
+            'base_balance_due' => 'decimal:2',
             'sent_at' => 'datetime',
             'paid_at' => 'datetime',
             'voided_at' => 'datetime',

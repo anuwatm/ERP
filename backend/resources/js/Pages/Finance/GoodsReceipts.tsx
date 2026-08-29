@@ -7,7 +7,7 @@ import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEvent, useMemo } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 
 type Supplier = { id: string; name: string };
 type PoItem = {
@@ -45,10 +45,13 @@ type StockSummary = {
 type Product = {
     id: string;
     sku?: string | null;
+    barcode?: string | null;
     name: string;
     unit?: string | null;
     cost?: string | null;
 };
+type Warehouse = { id: string; code: string; name: string };
+type InventoryLot = { id: string; product_id: string; lot_no: string; expires_at?: string | null };
 type StockMovement = {
     id: string;
     movement_type: string;
@@ -62,8 +65,9 @@ type StockMovement = {
 type GrnForm = {
     purchase_order_id: string;
     received_date: string;
+    warehouse_id: string;
     note: string;
-    items: Array<{ purchase_order_item_id: string; quantity: string }>;
+    items: Array<{ purchase_order_item_id: string; quantity: string; inventory_lot_id: string }>;
 };
 type MovementForm = {
     product_id: string;
@@ -71,6 +75,7 @@ type MovementForm = {
     movement_date: string;
     quantity: string;
     unit_cost: string;
+    warehouse_id: string;
     note: string;
 };
 
@@ -82,16 +87,23 @@ export default function GoodsReceipts({
     products,
     stockSummary,
     stockMovements,
+    warehouses,
+    inventoryLots,
 }: {
     goodsReceipts: GoodsReceipt[];
     purchaseOrders: PurchaseOrder[];
     products: Product[];
     stockSummary: StockSummary[];
     stockMovements: StockMovement[];
+    warehouses: Warehouse[];
+    inventoryLots: InventoryLot[];
 }) {
+    const [scanCode, setScanCode] = useState('');
+    const [scanResult, setScanResult] = useState('');
     const form = useForm<GrnForm>({
         purchase_order_id: '',
         received_date: today,
+        warehouse_id: '',
         note: '',
         items: [],
     });
@@ -101,6 +113,7 @@ export default function GoodsReceipts({
         movement_date: today,
         quantity: '',
         unit_cost: '',
+        warehouse_id: '',
         note: '',
     });
     const selectedPo = useMemo(
@@ -120,6 +133,7 @@ export default function GoodsReceipts({
                     .map((item) => ({
                         purchase_order_item_id: item.id,
                         quantity: item.remaining_quantity,
+                        inventory_lot_id: '',
                     })) ?? [],
         });
     };
@@ -135,6 +149,10 @@ export default function GoodsReceipts({
         );
     };
 
+    const setLot = (itemId: string, inventoryLotId: string) => {
+        form.setData('items', form.data.items.map((item) => item.purchase_order_item_id === itemId ? { ...item, inventory_lot_id: inventoryLotId } : item));
+    };
+
     const submit = (event: FormEvent) => {
         event.preventDefault();
         form.post(route('goods-receipts.store'), {
@@ -143,6 +161,7 @@ export default function GoodsReceipts({
                 form.setData({
                     purchase_order_id: '',
                     received_date: today,
+                    warehouse_id: '',
                     note: '',
                     items: [],
                 }),
@@ -160,6 +179,7 @@ export default function GoodsReceipts({
                     movement_date: today,
                     quantity: '',
                     unit_cost: '',
+                    warehouse_id: '',
                     note: '',
                 }),
         });
@@ -173,6 +193,12 @@ export default function GoodsReceipts({
                     title="Inventory / GRN"
                     description="Receive goods from approved purchase orders and post stock movements."
                 />
+                <Card title="Barcode Scanner">
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        <TextInput value={scanCode} onChange={(event) => setScanCode(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); const product = products.find((item) => item.barcode === scanCode || item.sku === scanCode); if (product) { movementForm.setData('product_id', product.id); setScanResult(`${product.name} selected for stock adjustment.`); } else setScanResult('Barcode / SKU not found.'); } }} placeholder="Scan barcode or enter SKU" className="w-full" />
+                    </div>
+                    {scanResult && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{scanResult}</p>}
+                </Card>
 
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
                     <div className="space-y-6">
@@ -326,6 +352,10 @@ export default function GoodsReceipts({
                                     }
                                     className="w-full"
                                 />
+                                <select className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900" value={form.data.warehouse_id} onChange={(event) => form.setData('warehouse_id', event.target.value)}>
+                                    <option value="">No warehouse location</option>
+                                    {warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.code} - {warehouse.name}</option>)}
+                                </select>
                                 {selectedPo && (
                                     <div className="space-y-3">
                                         {selectedPo.items.map((item) => {
@@ -373,6 +403,7 @@ export default function GoodsReceipts({
                                                         }
                                                         className="mt-2 w-full"
                                                     />
+                                                    {item.product_id && <select className="mt-2 block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900" value={selectedItem?.inventory_lot_id ?? ''} onChange={(event) => setLot(item.id, event.target.value)}><option value="">No lot</option>{inventoryLots.filter((lot) => lot.product_id === item.product_id).map((lot) => <option key={lot.id} value={lot.id}>{lot.lot_no}{lot.expires_at ? ` - expires ${lot.expires_at}` : ''}</option>)}</select>}
                                                 </div>
                                             );
                                         })}
@@ -432,6 +463,10 @@ export default function GoodsReceipts({
                                             {product.name}
                                         </option>
                                     ))}
+                                </select>
+                                <select className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900" value={movementForm.data.warehouse_id} onChange={(event) => movementForm.setData('warehouse_id', event.target.value)}>
+                                    <option value="">No warehouse location</option>
+                                    {warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.code} - {warehouse.name}</option>)}
                                 </select>
                                 <select
                                     className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
