@@ -8,16 +8,17 @@ use App\Models\BillingNote;
 use App\Models\CreditDebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\StockMovement;
+use App\Models\User;
 use App\Models\Voucher;
 use App\Models\Warehouse;
-use App\Models\User;
 use App\Services\FinancialJournalService;
 use App\Services\FxRateService;
-use App\Services\NumberSequenceService;
 use App\Services\NotificationService;
+use App\Services\NumberSequenceService;
 use App\Support\FileAttachmentManager;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -338,10 +339,14 @@ class CommercialDocumentController extends Controller
 
     private function notifyLowStock(string $productId, string $orgId, NotificationService $notifications): void
     {
-        $product = \App\Models\Product::where('org_id', $orgId)->where('reorder_point', '>', 0)->find($productId);
-        if (! $product) return;
+        $product = Product::where('org_id', $orgId)->where('reorder_point', '>', 0)->find($productId);
+        if (! $product) {
+            return;
+        }
         $onHand = (float) StockMovement::where('org_id', $orgId)->where('product_id', $productId)->sum('quantity');
-        if ($onHand > (float) $product->reorder_point) return;
+        if ($onHand > (float) $product->reorder_point) {
+            return;
+        }
         User::where('org_id', $orgId)->where('status', 'active')->whereHas('roles.permissions', fn ($query) => $query->whereIn('code', ['inventory.view', 'inventory.adjust']))->get()->each(function (User $user) use ($notifications, $product, $onHand): void {
             $notifications->notify($user, 'inventory.low_stock', "inventory.low_stock:{$product->id}:".today()->toDateString(), "Low stock: {$product->name}", "On hand: {$onHand} {$product->unit}; reorder point: {$product->reorder_point}.", route('inventory-operations.index'));
         });

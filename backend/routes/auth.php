@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -22,6 +23,8 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::get('two-factor-challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
+    Route::post('two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->middleware('throttle:5,1')->name('two-factor.challenge.verify');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
@@ -37,6 +40,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('two-factor/setup', [TwoFactorController::class, 'setup'])->middleware('password.confirm')->name('two-factor.setup');
+    Route::post('two-factor/setup', [TwoFactorController::class, 'confirmSetup'])->middleware(['password.confirm', 'throttle:5,1'])->name('two-factor.setup.confirm');
+    Route::post('users/{user}/two-factor/reset', [TwoFactorController::class, 'resetByOwner'])->middleware(['password.confirm', 'throttle:5,1'])->name('two-factor.reset');
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

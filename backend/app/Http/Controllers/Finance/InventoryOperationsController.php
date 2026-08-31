@@ -3,12 +3,20 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Models\{InventoryLot, Organization, Product, StockMovement, StockTransfer, Warehouse, WarehouseBin};
-use Illuminate\Http\{RedirectResponse, Request};
+use App\Models\InventoryLot;
+use App\Models\Organization;
+use App\Models\Product;
+use App\Models\StockMovement;
+use App\Models\StockTransfer;
+use App\Models\Warehouse;
+use App\Models\WarehouseBin;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Inertia\{Inertia, Response};
+use Inertia\Inertia;
+use Inertia\Response;
 
 class InventoryOperationsController extends Controller
 {
@@ -30,6 +38,7 @@ class InventoryOperationsController extends Controller
     {
         $data = $request->validate(['code' => ['required', 'max:30'], 'name' => ['required', 'max:150']]);
         Warehouse::create($data + ['org_id' => $request->user()->org_id]);
+
         return back();
     }
 
@@ -38,6 +47,7 @@ class InventoryOperationsController extends Controller
         abort_unless($warehouse->org_id === $request->user()->org_id, 404);
         $data = $request->validate(['code' => ['required', 'max:50'], 'name' => ['nullable', 'max:150']]);
         WarehouseBin::create($data + ['org_id' => $warehouse->org_id, 'warehouse_id' => $warehouse->id]);
+
         return back();
     }
 
@@ -50,6 +60,7 @@ class InventoryOperationsController extends Controller
             'expires_at' => ['nullable', 'date', 'after_or_equal:manufactured_at'], 'barcode' => ['nullable', 'max:100'],
         ]);
         InventoryLot::create($data + ['org_id' => $orgId]);
+
         return back();
     }
 
@@ -63,7 +74,9 @@ class InventoryOperationsController extends Controller
             'quantity' => ['required', 'numeric', 'gt:0'], 'transfer_date' => ['required', 'date'],
             'inventory_lot_id' => ['nullable', 'uuid', Rule::exists('inventory_lots', 'id')->where('org_id', $orgId)], 'note' => ['nullable', 'max:2000'],
         ]);
-        if (! empty($data['inventory_lot_id'])) abort_unless(InventoryLot::where('org_id', $orgId)->where('product_id', $data['product_id'])->whereKey($data['inventory_lot_id'])->exists(), 422, 'Lot does not belong to product.');
+        if (! empty($data['inventory_lot_id'])) {
+            abort_unless(InventoryLot::where('org_id', $orgId)->where('product_id', $data['product_id'])->whereKey($data['inventory_lot_id'])->exists(), 422, 'Lot does not belong to product.');
+        }
 
         DB::transaction(function () use ($data, $request, $orgId): void {
             $sourceStock = StockMovement::where('org_id', $orgId)->where('product_id', $data['product_id'])->where('warehouse_id', $data['source_warehouse_id'])->when($data['inventory_lot_id'] ?? null, fn ($query, $lotId) => $query->where('inventory_lot_id', $lotId))->lockForUpdate();
@@ -76,6 +89,7 @@ class InventoryOperationsController extends Controller
                 StockMovement::create(['org_id' => $orgId, 'product_id' => $data['product_id'], 'warehouse_id' => $warehouseId, 'inventory_lot_id' => $data['inventory_lot_id'] ?? null, 'stock_transfer_id' => $transfer->id, 'movement_type' => $type, 'movement_date' => $data['transfer_date'], 'quantity' => $sign * (float) $data['quantity'], 'unit_cost' => $baseUnitCost, 'total_cost' => $sign * $baseUnitCost * (float) $data['quantity'], 'currency' => $currency, 'base_currency' => $currency, 'exchange_rate' => 1, 'base_unit_cost' => $baseUnitCost, 'base_total_cost' => $sign * $baseUnitCost * (float) $data['quantity'], 'note' => $data['note'] ?? null, 'created_by' => $request->user()->id]);
             }
         });
+
         return back();
     }
 
@@ -83,6 +97,7 @@ class InventoryOperationsController extends Controller
     {
         $code = trim((string) $request->query('code'));
         abort_if($code === '', 422, 'Barcode or SKU is required.');
+
         return Product::where('org_id', $request->user()->org_id)->where(fn ($query) => $query->where('barcode', $code)->orWhere('sku', $code))->firstOrFail(['id', 'sku', 'barcode', 'name', 'unit', 'reorder_point']);
     }
 
@@ -99,12 +114,18 @@ class InventoryOperationsController extends Controller
             $currency = Organization::findOrFail($orgId)->currency;
             foreach ($data['items'] as $item) {
                 $stock = StockMovement::where('org_id', $orgId)->where('warehouse_id', $data['warehouse_id'])->where('product_id', $item['product_id'])->lockForUpdate();
-                $systemQuantity = (float) $stock->sum('quantity'); $countedQuantity = round((float) $item['counted_quantity'], 4); $difference = round($countedQuantity - $systemQuantity, 4); $baseUnitCost = $systemQuantity > 0 ? round((float) $stock->sum('base_total_cost') / $systemQuantity, 2) : 0;
+                $systemQuantity = (float) $stock->sum('quantity');
+                $countedQuantity = round((float) $item['counted_quantity'], 4);
+                $difference = round($countedQuantity - $systemQuantity, 4);
+                $baseUnitCost = $systemQuantity > 0 ? round((float) $stock->sum('base_total_cost') / $systemQuantity, 2) : 0;
                 DB::table('stock_count_items')->insert(['id' => (string) Str::orderedUuid(), 'stock_count_id' => $countId, 'product_id' => $item['product_id'], 'system_quantity' => $systemQuantity, 'counted_quantity' => $countedQuantity, 'created_at' => now(), 'updated_at' => now()]);
-                if ($difference === 0.0) continue;
+                if ($difference === 0.0) {
+                    continue;
+                }
                 StockMovement::create(['org_id' => $orgId, 'product_id' => $item['product_id'], 'warehouse_id' => $data['warehouse_id'], 'stock_count_id' => $countId, 'movement_type' => $difference > 0 ? 'stock_count_in' : 'stock_count_out', 'movement_date' => $data['count_date'], 'quantity' => $difference, 'unit_cost' => $baseUnitCost, 'total_cost' => $difference * $baseUnitCost, 'currency' => $currency, 'base_currency' => $currency, 'exchange_rate' => 1, 'base_unit_cost' => $baseUnitCost, 'base_total_cost' => $difference * $baseUnitCost, 'created_by' => $request->user()->id]);
             }
         });
+
         return back();
     }
 }

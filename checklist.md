@@ -37,9 +37,9 @@
 | Phase 14 | Done | Multi-Currency & FX: currency/rate master, immutable rate snapshots, realized/unrealized FX, AR revaluation/reversal, bank-to-GL mapping |
 | Phase 14.1 | Done | AP FX, Inventory FX Bridge และ FCD treasury reconciliation implemented; MySQL migration verification passed |
 | Phase 15 | Done | Warehouse/bin, lot/expiry, barcode scanner for GRN/adjustment/DO/stock count, transfer, reorder notification, warehouse-aware stock movements and tests implemented |
-| Phase 16B | Planned | Payroll, Social Security, ภ.ง.ด. 1/1ก, payslip และ GL posting |
-| Phase 17 | Planned | Enterprise Document Management (DMS), versioning, cross-module links, retention and confidentiality controls |
-| Phase 18 | Planned | Security 2FA / Auth OTP for privileged roles; scheduled after Payroll and DMS by product decision |
+| Phase 16B | Done | Payroll, Social Security, ภ.ง.ด. 1/1ก workpaper CSV, payslip, policy versioning และ GL posting |
+| Phase 17 | Done | Enterprise Document Management (DMS), versioning, cross-module links, retention and confidentiality controls |
+| Phase 18 | Done | Security 2FA / Auth OTP for privileged roles; offline TOTP, recovery, trusted devices and owner reset implemented |
 
 ---
 
@@ -912,26 +912,26 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 16B Design Backlog
 
-- [ ] Design employee payroll profile: salary, tax id, social security, payment method
-- [ ] Design payroll period, payroll run, earnings/deductions, approval flow
-- [ ] Design Thai withholding tax ภ.ง.ด. 1 / 1ก calculation/export scope
-- [ ] Design Social Security contribution rules
-- [ ] Design payslip PDF และ employee access guard
-- [ ] Design payroll posting to GL
-- [ ] Design effective-dated tax/social-security policy tables และ official rule verification ก่อน implement calculation/export
-- [ ] Design payroll payment boundary แยกจาก `VendorPayment` และกำหนด base-currency-only initial scope
-- [ ] Design tests สำหรับ payroll calculation, org isolation, payslip privacy, tax deduction และ GL posting
+- [x] Design employee payroll profile: salary, tax id, social security, payment method
+- [x] Design payroll period, payroll run, earnings/deductions, approval flow
+- [x] Design Thai withholding tax ภ.ง.ด. 1 / 1ก calculation/export scope เป็น workpaper CSV; ผู้ใช้ต้องตรวจรูปแบบ/กฎล่าสุดก่อนยื่น
+- [x] Design Social Security contribution rules แบบ effective-dated policy
+- [x] Design payslip PDF และ employee access guard
+- [x] Design payroll posting to GL
+- [x] Design effective-dated tax/social-security policy tables และ official rule verification ก่อน implement calculation/export
+- [x] Design payroll payment boundary แยกจาก `VendorPayment` และกำหนด THB-only initial scope
+- [x] Design tests สำหรับ payroll calculation, org isolation, payslip privacy, tax deduction และ GL posting
 
 ### Phase 16B Implementation Backlog
 
-- [ ] สร้าง payroll profile schema/UI
-- [ ] สร้าง payroll periods/runs schema
-- [ ] เพิ่ม payroll calculation service
-- [ ] เพิ่ม approval/payment status flow
-- [ ] สร้าง payslip PDF
-- [ ] เพิ่ม ภ.ง.ด. 1 / 1ก และ Social Security exports
-- [ ] ผูก payroll posting เข้า GL
-- [ ] เพิ่ม feature tests, privacy tests และ tax-policy regression tests
+- [x] สร้าง payroll profile schema/UI
+- [x] สร้าง payroll periods/runs schema
+- [x] เพิ่ม payroll calculation service
+- [x] เพิ่ม approval/payment status flow
+- [x] สร้าง payslip PDF
+- [x] เพิ่ม ภ.ง.ด. 1 / 1ก workpaper และ Social Security CSV exports
+- [x] ผูก payroll posting เข้า GL
+- [x] เพิ่ม feature tests, privacy tests และ tax-policy regression tests
 
 ---
 
@@ -941,25 +941,25 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 17 Design Backlog
 
-- [ ] Design central document repository, category/folder hierarchy และ tag taxonomy
-- [ ] Design many-to-many `document_links` (`document_id`, `linkable_type`, `linkable_id`, `role`) สำหรับ Customers, Deals, Suppliers, POs, Projects, Tasks, Fixed Assets, Bank Accounts, Accounting Periods และ Employees
-- [ ] Design immutable document versioning (`document_versions`: version no., checksum, uploader, changelog, scan status)
-- [ ] Design category-driven expiry (`expires_at`, `renewal_alert_days`) และ automated scheduled alert สำหรับ contract/warranty/license/certificate/insurance เท่านั้น
-- [ ] Design sensitivity RBAC: `org_internal`, `department_restricted`, `finance_confidential`, `hr_confidential`, `executive_confidential`; parent permission เป็น baseline และ sensitivity เป็น additional restriction
-- [ ] Design tenant-isolated private storage, MIME/content verification, malware guard และ private download controller ที่ตรวจ session/org/parent permission/sensitivity/scan status ทุก request
-- [ ] Design effective-dated retention policy ต่อ category; เอกสาร VAT/ภาษี/บัญชีที่ posted/submitted/accepted append-only และห้าม hard delete ใน legal retention window
-- [ ] Design legacy `StoredFile` backfill/reconciliation แบบ idempotent โดยคง legacy FK/storage จนตรวจครบ
-- [ ] Design tests สำหรับ links, versioning, expiry notifications, retention, confidential access, scan failure, legacy migration และ org isolation
+- [x] Design central document repository, category/folder hierarchy และ tag taxonomy
+- [x] Design many-to-many `document_links` (`document_id`, `linkable_type`, `linkable_id`, `role`) สำหรับ Customers, Deals, Suppliers, POs, Projects, Tasks, Fixed Assets, Bank Accounts, Accounting Periods และ Employees
+- [x] Design immutable document versioning (`document_versions`: version no., checksum, uploader, changelog, scan status)
+- [x] Design category-driven expiry (`expires_at`, `renewal_alert_days`) และ automated scheduled alert สำหรับ contract/warranty/license/certificate/insurance เท่านั้น
+- [x] Design sensitivity RBAC: `org_internal`, `department_restricted`, `finance_confidential`, `hr_confidential`, `executive_confidential`; parent permission เป็น baseline และ sensitivity เป็น additional restriction
+- [x] Design tenant-isolated private storage, MIME/content verification, malware guard และ private download controller ที่ตรวจ session/org/parent permission/sensitivity/scan status ทุก request
+- [x] Design effective-dated retention policy ต่อ category; เอกสาร VAT/ภาษี/บัญชีที่ posted/submitted/accepted append-only และห้าม hard delete ใน legal retention window
+- [x] Design legacy `StoredFile` backfill/reconciliation แบบ idempotent โดยคง legacy FK/storage จนตรวจครบ
+- [x] Design tests สำหรับ links, versioning, expiry notifications, retention, confidential access, scan failure, legacy migration และ org isolation
 
 ### Phase 17 Implementation Backlog
 
-- [ ] สร้าง `documents`, `document_versions`, `document_links`, categories และ retention policy schema/migration พร้อม org isolation
-- [ ] สร้าง DMS central repository UI (Folder browser, Tag filters, Upload modal with metadata)
-- [ ] พัฒนา Document Versioning service (Upload new version, View history, Download past version)
-- [ ] พัฒนา Document Expiration Scheduler (`documents:check-expiry`) พร้อม Email & In-App Notification เฉพาะ category ที่กำหนด
-- [ ] เพิ่ม Document Tab Component ในหน้ารายละเอียด Customer, Supplier, Project, Asset, PO โดยเชื่อมผ่าน `document_links`
-- [ ] เพิ่ม sensitivity/retention guard, private download controller, scan-state gate และ legacy backfill command/report
-- [ ] เพิ่ม Feature tests, org isolation, confidential access, immutable version, retention, scan failure และ legacy reconciliation regression tests
+- [x] สร้าง `documents`, `document_versions`, `document_links`, categories และ retention policy schema/migration พร้อม org isolation
+- [x] สร้าง DMS central repository UI (repository list, upload metadata, category/retention settings และ cross-module link panel)
+- [x] พัฒนา Document Versioning service (Upload new version, View history, Download past version)
+- [x] พัฒนา Document Expiration Scheduler (`documents:check-expiry`) พร้อม Email & In-App Notification เฉพาะ category ที่กำหนด
+- [x] เพิ่ม Document Tab Component ใน DMS repository สำหรับ Customer, Supplier, Project, Asset, PO และ parent ที่ allowlist ผ่าน `document_links`
+- [x] เพิ่ม sensitivity/retention guard, private download controller, scan-state gate และ legacy backfill command/report
+- [x] เพิ่ม Feature tests, org isolation, confidential access, immutable version, retention, scan failure และ legacy reconciliation regression tests
 
 ---
 
@@ -969,12 +969,12 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 18 Design Backlog
 
-- [ ] Design TOTP authenticator setup, encrypted secret storage และ recovery codes
-- [ ] Design enforcement policy สำหรับ owner/admin/finance, step-up challenge และ trusted-device/session policy
-- [ ] Design recovery, reset-by-owner, rate limit, audit log และ session invalidation flows
-- [ ] Design tests สำหรับ challenge, recovery, role change, org isolation และ brute-force guard
+- [x] Design TOTP authenticator setup, encrypted secret storage และ recovery codes
+- [x] Design enforcement policy สำหรับ owner/admin/finance, step-up challenge และ trusted-device/session policy
+- [x] Design recovery, reset-by-owner, rate limit, audit log และ session invalidation flows
+- [x] Design tests สำหรับ challenge, recovery, role change, org isolation และ brute-force guard
 
 ### Phase 18 Implementation Backlog
 
-- [ ] เพิ่ม 2FA schema/model, setup/verify/recovery UI และ privileged challenge middleware
-- [ ] เพิ่ม enforcement settings, audit log, rate limits และ security regression tests
+- [x] เพิ่ม 2FA schema/model, setup/verify/recovery UI และ privileged challenge middleware
+- [x] เพิ่ม enforcement settings, audit log, rate limits และ security regression tests

@@ -13,7 +13,7 @@
 | **Group 3** | [Project Delivery & Execution](#group-3-project-delivery--execution-โมดูล-09-11) | `09-11` (Projects, Tasks, Milestones) | 3 | แปลง Deal สู่ Project &rarr; จ่ายงาน Tasks &rarr; ตรวจรับ Milestones |
 | **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses) | 3 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; บันทึกรายจ่ายและคู่ค้า |
 | **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, Import/Export, API) | 3 | Event Trigger, Data Pipeline ขึ้น Dashboard, และระบบไฟล์แนบ |
-| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions---v2-โมดูล-24-31) | `24-31` (PO, Inventory, HR, Attendance, Payroll, AI, Accounting, Portal) | 3 | สั่งซื้อสินค้า, สต็อก, งานบุคคล/เงินเดือน, และเชื่อมระบบภายนอก |
+| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-18) | `24-31` (PO, Inventory, Payroll, AI, Accounting, Portal) | 3 | สั่งซื้อสินค้า, สต็อก, เงินเดือน และเชื่อมระบบภายนอก |
 
 ---
 
@@ -50,7 +50,7 @@ flowchart LR
         Auto["Automation & Notify"]
     end
 
-    subgraph G6 ["Group 6: Operations (V2+)"]
+    subgraph G6 ["Group 6: Operations & Extensions (Phase 7-18)"]
         Stock["PO & Inventory"]
         HR["HR & Payroll"]
         Ext["External Accounting"]
@@ -535,7 +535,7 @@ sequenceDiagram
 
 ---
 
-## Group 6: Operations & Advanced Extensions — V2+ (โมดูล 24-31)
+## Group 6: Operations & Advanced Extensions (Phase 7-18)
 **โมดูลที่เกี่ยวข้อง:** `24-purchase-orders`, `25-inventory`, `26-employees`, `27-attendance-leave`, `28-payroll`, `29-ai-assistant`, `30-accounting-integration`, `31-customer-portal`
 
 ### 6.1 Diagram: Procurement & Inventory Movement Flow
@@ -564,35 +564,23 @@ flowchart TD
 
 ---
 
-### 6.2 Diagram: HR, Attendance & Payroll Calculation Flow
-ผังการทำงานของงานบุคคล การลงเวลา และการตัดจ่ายเงินเดือน
+### 6.2 Diagram: Phase 16B Payroll, Policy & GL Flow
+Phase 16B ใช้ `users` เป็น employee identity; attendance, leave และ OT ยังไม่อยู่ใน calculation scope
 
 ```mermaid
 flowchart TD
-    subgraph EmployeeMaster ["ฐานข้อมูลพนักงาน (Employees)"]
-        EmpData["ข้อมูลพนักงาน (เงินเดือนฐาน, แผนก, ตำแหน่ง, เลขบัญชี)"]
-    end
-
-    subgraph TimeTracking ["บันทึกเวลาและการลา (Attendance & Leave)"]
-        ClockIn["บันทึกเวลาเข้า-ออกงาน (Check-in/out)"]
-        Leaves["บันทึกคำขอลา (ลาป่วย/ลากิจ/ลาพักร้อน)"]
-        OT["บันทึกการทำงานล่วงเวลา (Overtime)"]
-    end
-
-    subgraph PayrollEngine ["ประมวลผลเงินเดือน (Monthly Payroll)"]
-        CalcBase["คำนวณรายรับ: ฐานเงินเดือน + OT + เบี้ยเลี้ยง"]
-        CalcDeduct["คำนวณรายการหัก: ขาด/ลาเกิน + ประกันสังคม (5%) + ภาษีหัก ณ ที่จ่าย"]
-        NetPay["สรุปยอดเงินเดือนสุทธิ (Net Salary Payable)"]
-    end
-
-    EmpData --> CalcBase
-    ClockIn & OT --> CalcBase
-    Leaves --> CalcDeduct
-    CalcBase & CalcDeduct --> NetPay
-    
-    NetPay --> BankFile["สร้างไฟล์โอนเงินธนาคาร (Bank Payroll File)"]
-    NetPay --> Payslip["ออกสลิปเงินเดือนให้พนักงาน (Payslip)"]
-    NetPay --> ExpSync["บันทึกก้อนเงินเดือนเป็น Expense ใน Group 4"]
+    User["User"] --> Profile["Employee Payroll Profile<br>salary / recurring allowance & deduction"]
+    TaxPolicy["Tax Policy<br>effective-dated brackets"] --> Run["Payroll Run: draft<br>lock policy IDs"]
+    SocialPolicy["Social Security Policy<br>effective-dated rates & ceiling"] --> Run
+    Profile --> Calculate["Calculate payroll"]
+    Run --> Calculate
+    Calculate --> Items["Payroll Items<br>immutable calculation snapshot"]
+    Items --> Approve["Approve run"]
+    Approve --> GLAccrual["GL: debit salary/SS expense<br>credit payroll/tax/SS liabilities"]
+    Approve --> Payslip["Owner-or-finance payslip PDF"]
+    Approve --> Workpaper["PND1 / SSO workpaper CSV"]
+    Approve --> Pay["Mark paid"]
+    Pay --> GLSettlement["GL: debit payroll payable<br>credit mapped bank/cash"]
 ```
 
 ---

@@ -20,6 +20,7 @@
 | **08** | [Invoice Status & Payment Lifecycle](#08-invoice-status--payment-lifecycle) | Lifecycle | [`08_invoice_lifecycle.html`](./08_invoice_lifecycle.html) | [`specs/08_invoice_lifecycle.json`](./specs/08_invoice_lifecycle.json) |
 | **09** | [Task Status Lifecycle](#09-task-status-lifecycle) | Lifecycle | [`09_task_project_lifecycle.html`](./09_task_project_lifecycle.html) | [`specs/09_task_project_lifecycle.json`](./specs/09_task_project_lifecycle.json) |
 | **10** | [Database ER & Domain Model](#10-database-er--domain-model) | Architecture | [`10_database_er_domain_model.html`](./10_database_er_domain_model.html) | [`specs/10_database_er_domain_model.json`](./specs/10_database_er_domain_model.json) |
+| **11** | [Payroll Policy, Approval & GL Flow](#11-payroll-policy-approval--gl-flow) | Workflow | [`11_payroll_policy_gl_flow.html`](./11_payroll_policy_gl_flow.html) | [`specs/11_payroll_policy_gl_flow.json`](./specs/11_payroll_policy_gl_flow.json) |
 | **All** | [Full Database ER Diagram (38+ Tables)](#-full-database-er-diagram-38-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
 
 ---
@@ -37,7 +38,7 @@
 | **Group 3: Project Delivery & Execution** | `09-11` (Projects, Tasks, Milestones) | • Project Delivery Workflow<br>• Task Kanban Lifecycle<br>• Milestone Sign-off Trigger |
 | **Group 4: Finance, Billing & Cost Control** | `12-16` (Products, Suppliers, Invoices, Payments, Expenses) | • Order-to-Cash & Expenses<br>• Invoice Anti-Overpay Sequence<br>• Project Cost Allocation |
 | **Group 5: Insights, Platform & Automation** | `17-23` (Dashboard, Reports, Files, Notifications, Automation, API, Import/Export) | • Event & Automation Engine<br>• Executive Metric Lineage<br>• Tenant File Storage Flow |
-| **Group 6: Operations & Advanced Extensions (V2+)** | `24-31` (PO, Inventory, HR, Attendance, Payroll, AI, Accounting, Portal) | • Procurement & Stock Movement<br>• HR & Payroll Calculation<br>• External Accounting & Portal Grid |
+| **Group 6: Operations & Advanced Extensions (Phase 7-18)** | `24-31` (PO, Inventory, Payroll, AI, Accounting, Portal) | • Procurement & Stock Movement<br>• Payroll Policy, Payslip & GL<br>• External Accounting & Portal Grid |
 
 ---
 
@@ -311,7 +312,14 @@ erDiagram
 
 ---
 
-### 11. Full Database ER Diagram (38+ Tables)
+### 11. Payroll Policy, Approval & GL Flow
+- **ไฟล์ HTML:** [`11_payroll_policy_gl_flow.html`](./11_payroll_policy_gl_flow.html)
+- **วัตถุประสงค์:** แสดง Payroll Phase 16B ตามที่ใช้งานจริง: โปรไฟล์เงินเดือนและ policy แบบ effective-dated, การคำนวณ item snapshot, การอนุมัติ, การบันทึก GL แยก accrual/settlement และ output payslip/CSV
+- **ขอบเขต:** ใช้ `users`, `employee_payroll_profiles`, `payroll_runs`, `payroll_items` โดย PND1/SSO CSV เป็น workpaper สำหรับตรวจทานก่อนยื่น
+
+---
+
+### 12. Full Database ER Diagram (38+ Tables)
 - **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
 - **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 38+ ตาราง ครอบคลุม 7 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
 - **Mermaid Preview (Master Cross-Domain):**
@@ -331,13 +339,14 @@ erDiagram
     INVOICES ||--o{ PAYMENTS : "1:N"
     SUPPLIERS ||--o{ PURCHASE_ORDERS : "1:N"
     WAREHOUSES ||--o{ STOCK_LEVELS : "1:N"
-    EMPLOYEES ||--o{ ATTENDANCES : "1:N"
-    EMPLOYEES ||--o{ PAYSLIPS : "1:N"
+    USERS ||--o| EMPLOYEE_PAYROLL_PROFILES : "0..1:1"
+    PAYROLL_RUNS ||--o{ PAYROLL_ITEMS : "1:N"
+    USERS ||--o{ PAYROLL_ITEMS : "1:N"
 ```
 
 ---
 
-### 12. 6 Domain Group Workflows (31 Modules)
+### 13. 6 Domain Group Workflows (31 Modules)
 - **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
 - **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 19 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
 - **Mermaid Preview (Inter-Group Interaction):**
@@ -349,7 +358,7 @@ flowchart LR
     G2 --> G4["4. Finance & Billing"]
     G3 -. Milestone Done .-> G4
     G4 --> G5["5. Insights & Dashboard"]
-    G4 -. Procure/Sync .-> G6["6. Operations & V2+"]
+    G4 -. Procure/Sync .-> G6["6. Operations & Extensions"]
 ```
 
 ---

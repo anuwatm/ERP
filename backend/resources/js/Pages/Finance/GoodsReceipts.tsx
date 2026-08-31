@@ -51,7 +51,12 @@ type Product = {
     cost?: string | null;
 };
 type Warehouse = { id: string; code: string; name: string };
-type InventoryLot = { id: string; product_id: string; lot_no: string; expires_at?: string | null };
+type InventoryLot = {
+    id: string;
+    product_id: string;
+    lot_no: string;
+    expires_at?: string | null;
+};
 type StockMovement = {
     id: string;
     movement_type: string;
@@ -67,7 +72,11 @@ type GrnForm = {
     received_date: string;
     warehouse_id: string;
     note: string;
-    items: Array<{ purchase_order_item_id: string; quantity: string; inventory_lot_id: string }>;
+    items: Array<{
+        purchase_order_item_id: string;
+        quantity: string;
+        inventory_lot_id: string;
+    }>;
 };
 type MovementForm = {
     product_id: string;
@@ -150,7 +159,14 @@ export default function GoodsReceipts({
     };
 
     const setLot = (itemId: string, inventoryLotId: string) => {
-        form.setData('items', form.data.items.map((item) => item.purchase_order_item_id === itemId ? { ...item, inventory_lot_id: inventoryLotId } : item));
+        form.setData(
+            'items',
+            form.data.items.map((item) =>
+                item.purchase_order_item_id === itemId
+                    ? { ...item, inventory_lot_id: inventoryLotId }
+                    : item,
+            ),
+        );
     };
 
     const submit = (event: FormEvent) => {
@@ -195,9 +211,42 @@ export default function GoodsReceipts({
                 />
                 <Card title="Barcode Scanner">
                     <div className="flex flex-col gap-2 sm:flex-row">
-                        <TextInput value={scanCode} onChange={(event) => setScanCode(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); const product = products.find((item) => item.barcode === scanCode || item.sku === scanCode); if (product) { movementForm.setData('product_id', product.id); setScanResult(`${product.name} selected for stock adjustment.`); } else setScanResult('Barcode / SKU not found.'); } }} placeholder="Scan barcode or enter SKU" className="w-full" />
+                        <TextInput
+                            value={scanCode}
+                            onChange={(event) =>
+                                setScanCode(event.target.value)
+                            }
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    const product = products.find(
+                                        (item) =>
+                                            item.barcode === scanCode ||
+                                            item.sku === scanCode,
+                                    );
+                                    if (product) {
+                                        movementForm.setData(
+                                            'product_id',
+                                            product.id,
+                                        );
+                                        setScanResult(
+                                            `${product.name} selected for stock adjustment.`,
+                                        );
+                                    } else
+                                        setScanResult(
+                                            'Barcode / SKU not found.',
+                                        );
+                                }
+                            }}
+                            placeholder="Scan barcode or enter SKU"
+                            className="w-full"
+                        />
                     </div>
-                    {scanResult && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{scanResult}</p>}
+                    {scanResult && (
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                            {scanResult}
+                        </p>
+                    )}
                 </Card>
 
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
@@ -352,9 +401,27 @@ export default function GoodsReceipts({
                                     }
                                     className="w-full"
                                 />
-                                <select className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900" value={form.data.warehouse_id} onChange={(event) => form.setData('warehouse_id', event.target.value)}>
-                                    <option value="">No warehouse location</option>
-                                    {warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.code} - {warehouse.name}</option>)}
+                                <select
+                                    className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                                    value={form.data.warehouse_id}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'warehouse_id',
+                                            event.target.value,
+                                        )
+                                    }
+                                >
+                                    <option value="">
+                                        No warehouse location
+                                    </option>
+                                    {warehouses.map((warehouse) => (
+                                        <option
+                                            key={warehouse.id}
+                                            value={warehouse.id}
+                                        >
+                                            {warehouse.code} - {warehouse.name}
+                                        </option>
+                                    ))}
                                 </select>
                                 {selectedPo && (
                                     <div className="space-y-3">
@@ -403,7 +470,49 @@ export default function GoodsReceipts({
                                                         }
                                                         className="mt-2 w-full"
                                                     />
-                                                    {item.product_id && <select className="mt-2 block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900" value={selectedItem?.inventory_lot_id ?? ''} onChange={(event) => setLot(item.id, event.target.value)}><option value="">No lot</option>{inventoryLots.filter((lot) => lot.product_id === item.product_id).map((lot) => <option key={lot.id} value={lot.id}>{lot.lot_no}{lot.expires_at ? ` - expires ${lot.expires_at}` : ''}</option>)}</select>}
+                                                    {item.product_id && (
+                                                        <select
+                                                            className="mt-2 block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                                                            value={
+                                                                selectedItem?.inventory_lot_id ??
+                                                                ''
+                                                            }
+                                                            onChange={(event) =>
+                                                                setLot(
+                                                                    item.id,
+                                                                    event.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        >
+                                                            <option value="">
+                                                                No lot
+                                                            </option>
+                                                            {inventoryLots
+                                                                .filter(
+                                                                    (lot) =>
+                                                                        lot.product_id ===
+                                                                        item.product_id,
+                                                                )
+                                                                .map((lot) => (
+                                                                    <option
+                                                                        key={
+                                                                            lot.id
+                                                                        }
+                                                                        value={
+                                                                            lot.id
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            lot.lot_no
+                                                                        }
+                                                                        {lot.expires_at
+                                                                            ? ` - expires ${lot.expires_at}`
+                                                                            : ''}
+                                                                    </option>
+                                                                ))}
+                                                        </select>
+                                                    )}
                                                 </div>
                                             );
                                         })}
@@ -464,9 +573,27 @@ export default function GoodsReceipts({
                                         </option>
                                     ))}
                                 </select>
-                                <select className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900" value={movementForm.data.warehouse_id} onChange={(event) => movementForm.setData('warehouse_id', event.target.value)}>
-                                    <option value="">No warehouse location</option>
-                                    {warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.code} - {warehouse.name}</option>)}
+                                <select
+                                    className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                                    value={movementForm.data.warehouse_id}
+                                    onChange={(event) =>
+                                        movementForm.setData(
+                                            'warehouse_id',
+                                            event.target.value,
+                                        )
+                                    }
+                                >
+                                    <option value="">
+                                        No warehouse location
+                                    </option>
+                                    {warehouses.map((warehouse) => (
+                                        <option
+                                            key={warehouse.id}
+                                            value={warehouse.id}
+                                        >
+                                            {warehouse.code} - {warehouse.name}
+                                        </option>
+                                    ))}
                                 </select>
                                 <select
                                     className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"

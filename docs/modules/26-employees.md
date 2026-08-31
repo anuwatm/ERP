@@ -24,7 +24,7 @@
 - map กับ user account (`user_id`)
 - เก็บเอกสารพนักงาน (ผ่าน Files)
 
-ไม่รวม payroll เต็ม (แยก module V3)
+Phase 16B payroll ใช้ `users` + `employee_payroll_profiles` โดยตรง. ตาราง `employees` และข้อมูล attendance/leave ยังเป็น scope อนาคต จึงห้ามอ้างเป็น input ของ payroll ปัจจุบัน.
 
 ---
 
@@ -62,11 +62,12 @@ employment_status=resigned, end_date
 users / departments / branches
             │
             ▼
-        employees
+        employees (planned)
             │
-            ├──► attendances / leave_* (V2)
-            ├──► payslips (V3)
-            └──► files (documents)
+            ├──► attendances / leave_* (future)
+            └──► files (future DMS)
+
+users ──► employee_payroll_profiles ──► payroll_items (Phase 16B)
 ```
 
 ---

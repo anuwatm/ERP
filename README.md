@@ -8,8 +8,8 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะล่าสุด: **Phase 14.1 Done** (Phases 0 ถึง 14.1 เสร็จสมบูรณ์แล้ว | Production Prep และ Phases 15–16 อยู่ในแผน Roadmap)
-ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, และ Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation)
+สถานะล่าสุด: **Phase 18 Done** (Phases 0 ถึง 18 เสร็จสมบูรณ์แล้ว)
+ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation), และ Payroll (effective-dated policy, payslip, PND1/SSO workpapers, GL posting)
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 
@@ -20,9 +20,11 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 ระบบมีชุด Diagram สถาปัตยกรรม เวิร์กโฟลว์ และผังฐานข้อมูลฉบับสมบูรณ์ (Archify Interactive HTML + Mermaid Diagrams):
 
 * 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML (เปิดดูบน Browser ได้ทันที)
-* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 10 ชุดหลัก
+* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 11 ชุดหลัก
 * 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก
 * 🗄️ **[Full Database ER Diagram (38+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 7 โดเมน
+* 💰 **[Payroll Phase 16B Design](docs/PHASE_16B_PAYROLL_DESIGN.md)** — ขอบเขต payroll, policy snapshot, privacy, payslip/workpaper และ GL boundary
+* 🔄 **[Payroll Policy, Approval & GL Flow](document/11_payroll_policy_gl_flow.html)** — Interactive workflow ของการคำนวณ อนุมัติ จ่ายเงิน และลงบัญชี
 
 ---
 
@@ -32,7 +34,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 - **ฝ่ายบริหาร (Executive & Management)**: เห็นภาพรวมสุขภาพบริษัท รายได้ ค่าใช้จ่าย กำไร กระแสเงินสด Pipeline โครงการ ความเสี่ยง และ Task Overdue แบบ Real-time
 - **ฝ่ายขาย (Sales & CRM)**: จัดการรายชื่อลูกค้า (Customers), ผู้ติดต่อ (Contacts), ดีลการขาย (Deals Pipeline), ใบเสนอราคา (Quotations), กิจกรรมติดตาม (Activities/Follow-ups)
-- **ฝ่ายบัญชีและการเงิน (Finance & Treasury)**: ออกใบแจ้งหนี้ (Invoices), ใบลดหนี้/เพิ่มหนี้ (CN/DN), ใบวางบิล (Billing Notes), รับชำระเงิน (Payments), ใบสำคัญรับ/จ่าย (PV/RV), บันทึกค่าใช้จ่าย (Expenses), จัดการบัญชีธนาคาร (Bank Accounts), กระทบยอดสเตทเมนต์ (Bank Reconciliation), เงินสดย่อย (Petty Cash), ทะเบียนเช็ค (Cheques/PDC) และออกรายงานภาษี/อายุหนี้ (Tax & Aging Reports)
+- **ฝ่ายบัญชีและการเงิน (Finance & Treasury)**: ออกใบแจ้งหนี้ (Invoices), ใบลดหนี้/เพิ่มหนี้ (CN/DN), ใบวางบิล (Billing Notes), รับชำระเงิน (Payments), ใบสำคัญรับ/จ่าย (PV/RV), บันทึกค่าใช้จ่าย (Expenses), จัดการบัญชีธนาคาร (Bank Accounts), กระทบยอดสเตทเมนต์ (Bank Reconciliation), เงินสดย่อย (Petty Cash), ทะเบียนเช็ค (Cheques/PDC), payroll, payslip และ workpaper ภ.ง.ด.1/ประกันสังคม
 - **ฝ่ายจัดซื้อและคลังสินค้า (Procurement & Inventory)**: จัดการคู่ค้า (Suppliers), ใบขอซื้อ (Purchase Requests), ใบสั่งซื้อ (Purchase Orders), ใบรับสินค้าเข้าคลัง (Goods Receipts/GRN), ทะเบียนการเคลื่อนไหวสต็อก (Stock Movement Ledger) และคำนวณต้นทุนเฉลี่ย (Moving Average Cost)
 - **ฝ่ายปฏิบัติการและส่งมอบ (Delivery & Operations)**: จัดการโครงการ (Projects) จาก Won Deals, จัดสรรทีมงาน (Project Members), บริหารงานย่อย (Tasks, Checklists, Comments) และควบคุมต้นทุนโครงการจริง (Actual Cost จาก Expenses)
 - **ผู้ดูแลระบบ (Admin & Security)**: จัดการโครงสร้างองค์กร (Branches, Divisions, Departments), ผู้ใช้งาน (Users, Invites, Disable/Enable), สิทธิ์ตามบทบาท (RBAC Permission Matrix) และบันทึกประวัติการใช้งาน (Audit Logs)
@@ -78,6 +80,9 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Commercial Docs** | ใบลดหนี้/เพิ่มหนี้ (CN/DN), ใบวางบิล (Billing Note), ใบส่งของ (DO), ใบขอซื้อ (PR), ใบสำคัญ (PV/RV) | Phase 9 |
 | **Treasury & Banking** | บัญชีธนาคารเข้ารหัส, นำเข้า CSV Bank Statement & Reconciliation, เงินสดย่อย, ทะเบียนเช็ค | Phase 10 |
 | **General Ledger** | Chart of Accounts, accounting periods, immutable double-entry journals, source posting, trial balance และ account ledger | Phase 11 |
+| **Payroll** | Payroll profile, tax/social-security policy แบบ effective-dated, calculation snapshot, payslip PDF, PND1/SSO workpaper CSV และ GL posting | Phase 16B |
+| **Fixed Assets** | Asset register, depreciation, disposal/write-off, attachment proof และ GL posting | Phase 13 |
+| **Multi-Currency & FX** | Currency/rate master, document snapshots, realized/unrealized FX และ AR revaluation | Phase 14 |
 | **Projects & Tasks** | แปลงจาก Won Deal, สมาชิกโครงการ (Project Members), งานย่อย (Tasks, Checklists, Comments) | Phase 4, 7 |
 | **Notifications** | กระดิ่งแจ้งเตือน In-App, อีเมลคิวแจ้งเตือน (PO, Invoice Due, Assign, Invite), Preferences | Phase 8 |
 | **Dashboards** | Admin, Executive, Finance, Delivery, Sales Dashboards พร้อมตัวกรองช่วงเวลาและกราฟสรุป | Phase 1, 2, 3, 4, 5, 6 |
@@ -186,7 +191,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 ---
 
-## แผนการพัฒนาในอนาคต (Roadmap: Production Prep & Phases 11–16)
+## แผนการพัฒนาและสถานะ (Roadmap: Production Prep & Phases 11–18)
 
 ### Production Prep: Deployment Readiness (Planned)
 - **Scheduler & Queues**: ตั้งค่า Laravel Scheduler สำหรับ Cron Jobs และ Supervisor สำหรับ Worker Process
@@ -216,16 +221,22 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 - **FX Accounting**: Realized FX ตอนรับชำระ Invoice, unrealized AR revaluation สิ้นงวด, reversible journal และ scheduled commands `fx:revalue` / `fx:reverse-revaluations`
 - **Bank GL Mapping**: Bank account เลือก Chart of Account ได้ และ Fixed Asset disposal proceeds ต้องเลือก bank account ที่มี GL mapping
 
-### Phase 15: Advanced Inventory & Barcode/QR Operations (Planned)
+### Phase 15: Advanced Inventory & Barcode/QR Operations (Done)
 - **Multi-Warehouse & Bin Locations**: ระบบหลายคลังสินค้าและระบุตำแหน่งจัดเก็บ (Bin/Rack)
 - **Stock Transfer**: โอนย้ายสินค้าระหว่างคลังและสาขา
 - **Reorder Points & Alerts**: กำหนดจุดสั่งซื้อซ้ำและแจ้งเตือนเมื่อสินค้าใกล้หมด
 - **Barcode & QR Scanner**: รองรับการสแกน Barcode/QR ผ่านกล้องมือถือหรือเครื่องสแกนในการรับ/ส่งสินค้า
 
-### Phase 16: Payroll, Social Security & Security 2FA (Planned)
-- **Payroll Profile & Salary Calculation**: คำนวณเงินเดือน ค่าล่วงเวลา รายการหัก ภาษีหัก ณ ที่จ่าย ภ.ง.ด. 1 และเงินสมทบประกันสังคม
-- **Payslip PDF**: สร้างสลิปเงินเดือนแบบ PDF สำหรับพนักงาน
-- **Two-Factor Authentication (2FA)**: ยืนยันตัวตน 2 ขั้นตอนด้วย OTP/Authenticator App สำหรับ Admin และ Finance
+### Phase 16B: Payroll, Social Security & Tax (Done)
+- **Payroll Profile & Policy Versioning**: profile พนักงานผูก User, policy ภาษี/ประกันสังคมแบบ effective-dated และ snapshot ต่อ run
+- **Payroll Lifecycle & GL**: `draft -> calculated -> approved -> paid`, post salary/social-security expense และ payroll liabilities เข้า GL; payment ไม่ใช้ `VendorPayment`
+- **Payslip / Workpapers**: payslip PDF แบบ owner-or-finance guard และ CSV workpaper ภ.ง.ด.1/ประกันสังคม; ต้องตรวจรูปแบบและข้อกำหนดล่าสุดก่อนยื่นจริง
+
+### Phase 17: Enterprise Document Management (Planned)
+- repository, versioning, `document_links`, retention, sensitivity RBAC และ private download control
+
+### Phase 18: Security 2FA (Done)
+- Offline TOTP สำหรับ Owner/Admin/Finance, encrypted secret, recovery codes, trusted device 30 วัน, owner reset, rate limit และ audit log
 
 ---
 
@@ -250,8 +261,10 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 12** | **Done (application layer)** | E-Tax XML/private storage, signing-submission adapter boundary, audit/retry และ RD Prep staging export; live submission requires certified provider onboarding |
 | **Phase 13** | **Done** | Asset register, straight-line monthly depreciation/GL, disposal/write-off, attachment proof และ reports |
 | **Phase 14** | **Done** | Currency/rate master, immutable document/payment snapshot, realized FX, AR revaluation/reversal และ bank-to-GL mapping |
-| **Phase 15** | *Planned* | Multi-warehouse & bins, stock transfer, reorder alerts, lot/expiry, Barcode/QR scanning |
-| **Phase 16** | *Planned* | Payroll calculation, ภ.ง.ด. 1/Social Security, Payslip PDF, Two-Factor Authentication (2FA) |
+| **Phase 15** | **Done** | Multi-warehouse & bins, stock transfer, reorder alerts, lot/expiry, Barcode/QR scanning |
+| **Phase 16B** | **Done** | Payroll profile/policy versioning, calculation, payslip PDF, workpaper CSV and GL posting |
+| **Phase 17** | **Done** | DMS core schema, versioned private documents, cross-module links, retention, expiry alerts and sensitivity RBAC |
+| **Phase 18** | **Done** | Offline TOTP, recovery codes, trusted devices, owner reset and privileged-role enforcement |
 
 ---
 
@@ -281,6 +294,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/cheques` | Cheque & PDC Register (ทะเบียนเช็ค) | `cheques.view` |
 | `/treasury-reports` | Treasury & Position Reports | `treasury.reports.view` |
 | `/expenses` | Expenses & Approvals | `expenses.view` |
+| `/payroll` | Payroll, policy versions, runs, payslips and workpaper exports | `payroll.view` |
 | `/projects` | Projects & Project Members | `projects.view` |
 | `/tasks` | Tasks, Checklists & Comments | `tasks.view` |
 | `/users` | User Management & Invitations | `users.view` |

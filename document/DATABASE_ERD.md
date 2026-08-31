@@ -12,7 +12,7 @@
 4. [Domain 3: การบริหารโครงการและงานส่งมอบ (Projects & Delivery)](#4-domain-3-การบริหารโครงการและงานส่งมอบ-projects--delivery)
 5. [Domain 4: การเงิน ใบแจ้งหนี้ รับชำระ และการจัดซื้อ (Finance, Billing & Procurement)](#5-domain-4-การเงิน-ใบแจ้งหนี้-รับชำระ-และการจัดซื้อ-finance-billing--procurement)
 6. [Domain 5: คลังสินค้าและสินค้าคงคลัง (Warehouse & Inventory)](#6-domain-5-คลังสินค้าและสินค้าคงคลัง-warehouse--inventory)
-7. [Domain 6: ทรัพยากรบุคคล เวลาทำงาน และเงินเดือน (HR & Payroll)](#7-domain-6-ทรัพยากรบุคคล-เวลาทำงาน-และเงินเดือน-hr--payroll)
+7. [Domain 6: Payroll (Phase 16B)](#7-domain-6-payroll-phase-16b)
 8. [Domain 7: แพลตฟอร์ม บันทึกประวัติ และการเชื่อมต่อระบบ (Platform & Integrations)](#8-domain-7-แพลตฟอร์ม-บันทึกประวัติ-และการเชื่อมต่อระบบ-platform--integrations)
 9. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#9-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
 
@@ -34,7 +34,7 @@ erDiagram
     ORGANIZATIONS ||--o{ PRODUCTS : "1:N แคตตาล็อกสินค้า"
     ORGANIZATIONS ||--o{ SUPPLIERS : "1:N คู่ค้า/ผู้จำหน่าย"
     ORGANIZATIONS ||--o{ WAREHOUSES : "1:N คลังสินค้า"
-    ORGANIZATIONS ||--o{ EMPLOYEES : "1:N พนักงาน"
+    ORGANIZATIONS ||--o{ EMPLOYEE_PAYROLL_PROFILES : "1:N payroll profiles"
 
     CUSTOMERS ||--o{ CONTACTS : "1:N รายชื่อผู้ติดต่อ"
     CUSTOMERS ||--o{ DEALS : "1:N เปิดโอกาสการขาย"
@@ -61,9 +61,11 @@ erDiagram
     WAREHOUSES ||--o{ STOCK_LEVELS : "1:N จัดเก็บในคลัง"
     PRODUCTS ||--o{ STOCK_LEVELS : "1:N ยอดคงเหลือ"
 
-    EMPLOYEES ||--o{ ATTENDANCES : "1:N บันทึกเวลาเข้า-ออก"
-    EMPLOYEES ||--o{ LEAVE_REQUESTS : "1:N ยื่นใบลา"
-    EMPLOYEES ||--o{ PAYSLIPS : "1:N สลิปเงินเดือน"
+    USERS ||--o| EMPLOYEE_PAYROLL_PROFILES : "0..1:1 profile"
+    PAYROLL_TAX_POLICIES ||--o{ PAYROLL_RUNS : "locked policy"
+    SOCIAL_SECURITY_POLICIES ||--o{ PAYROLL_RUNS : "locked policy"
+    PAYROLL_RUNS ||--o{ PAYROLL_ITEMS : "1:N calculation"
+    USERS ||--o{ PAYROLL_ITEMS : "receives payslip"
 ```
 
 ---
@@ -480,91 +482,78 @@ erDiagram
 
 ---
 
-## 7. Domain 6: ทรัพยากรบุคคล เวลาทำงาน และเงินเดือน (HR & Payroll)
+## 7. Domain 6: Payroll (Phase 16B)
 
-ครอบคลุมประวัติพนักงาน, บันทึกเวลาเข้างาน (Attendance), คำขอลา (Leave), และการคำนวณเงินเดือน (Payroll & Payslips)
+Phase 16B implement payroll บน `users` โดยตรง. Employee master, attendance, leave และ OT เป็น scope อนาคต จึงไม่แสดงเป็นตารางจริงใน ERD นี้.
 
 ```mermaid
 erDiagram
-    EMPLOYEES {
+    EMPLOYEE_PAYROLL_PROFILES {
         uuid id PK
         uuid org_id FK
-        char employee_code "รหัสพนักงาน 6 หลัก"
-        uuid user_id FK "ผูกกับบัญชีผู้ใช้ระบบ (Nullable)"
-        uuid department_id FK "สังกัดแผนก"
-        varchar first_name "ชื่อ"
-        varchar last_name "นามสกุล"
-        varchar national_id "เลขบัตรประชาชน"
-        date hire_date "วันเริ่มงาน"
-        varchar employment_status "active, probation, terminated, resigned"
-        decimal base_salary "ฐานเงินเดือน DECIMAL(18,2)"
-        varchar bank_account_no "เลขที่บัญชีธนาคาร"
+        uuid user_id FK "UNIQUE per organization"
+        decimal monthly_salary
+        decimal fixed_allowance
+        decimal fixed_deduction
+        decimal annual_tax_allowance
+        boolean social_security_enabled
+        varchar payment_method
+        varchar status "active, inactive"
     }
-
-    ATTENDANCES {
+    PAYROLL_TAX_POLICIES {
         uuid id PK
         uuid org_id FK
-        uuid employee_id FK
-        date work_date "วันที่ทำงาน"
-        timestamp check_in_time "เวลาเข้างาน"
-        timestamp check_out_time "เวลาออกงาน"
-        decimal ot_hours "จำนวนชั่วโมง OT"
-        varchar status "present, late, absent, on_leave"
+        date effective_from
+        date effective_to
+        decimal employment_expense_rate
+        decimal employment_expense_cap
+        json brackets_json
+        varchar source_url
     }
-
-    LEAVE_REQUESTS {
+    SOCIAL_SECURITY_POLICIES {
         uuid id PK
         uuid org_id FK
-        uuid employee_id FK
-        varchar leave_type "sick, annual, personal, unpaid"
-        date start_date "วันเริ่มลา"
-        date end_date "วันสิ้นสุดการลา"
-        decimal total_days "จำนวนวันลา"
-        varchar status "pending, approved, rejected, cancelled"
-        uuid approved_by FK "ผู้อนุมัติ (users.id)"
+        date effective_from
+        date effective_to
+        decimal employee_rate
+        decimal employer_rate
+        decimal wage_ceiling
+        varchar source_url
     }
-
-    LEAVE_BALANCES {
-        uuid id PK
-        uuid org_id FK
-        uuid employee_id FK
-        int year "ปี พ.ศ./ค.ศ."
-        varchar leave_type "ประเภทการลา"
-        decimal allocated_days "วันลาที่ได้รับ"
-        decimal used_days "วันลาที่ใช้ไป"
-        decimal remaining_days "วันลาคงเหลือ"
-    }
-
     PAYROLL_RUNS {
         uuid id PK
         uuid org_id FK
-        int period_year "ปีที่จ่าย"
-        int period_month "เดือนที่จ่าย (1-12)"
-        varchar status "draft, processing, approved, paid, cancelled"
-        decimal total_gross_pay "ยอดเงินได้รวมทั้งบริษัท"
-        decimal total_deductions "ยอดหักรวม (ประกันสังคม+ภาษี)"
-        decimal total_net_pay "ยอดเงินเดือนสุทธิที่จ่ายจริง"
+        varchar run_no
+        date period_start
+        date period_end
+        date payment_date
+        uuid payroll_tax_policy_id FK
+        uuid social_security_policy_id FK
+        uuid bank_account_id FK
+        varchar status "draft, calculated, approved, paid"
+        decimal gross_amount
+        decimal net_pay_amount
     }
-
-    PAYSLIPS {
+    PAYROLL_ITEMS {
         uuid id PK
         uuid org_id FK
-        uuid payroll_run_id FK "รอบเงินเดือน"
-        uuid employee_id FK "พนักงานผู้รับ"
-        decimal base_salary "เงินเดือนฐาน"
-        decimal ot_amount "ค่าล่วงเวลา"
-        decimal bonus_amount "โบนัส/เบี้ยเลี้ยง"
-        decimal social_security_amount "หักประกันสังคม (5% สูงสุด 750 บาท)"
-        decimal tax_withholding_amount "หักภาษี ณ ที่จ่าย"
-        decimal other_deductions "รายการหักอื่นๆ"
-        decimal net_salary "เงินได้สุทธิ (Net Pay)"
+        uuid payroll_run_id FK
+        uuid employee_payroll_profile_id FK
+        uuid user_id FK
+        decimal salary_amount
+        decimal allowance_amount
+        decimal employee_social_security_amount
+        decimal employer_social_security_amount
+        decimal withholding_tax_amount
+        decimal net_pay_amount
+        json calculation_snapshot
     }
-
-    EMPLOYEES ||--o{ ATTENDANCES : "records"
-    EMPLOYEES ||--o{ LEAVE_REQUESTS : "submits"
-    EMPLOYEES ||--o{ LEAVE_BALANCES : "maintains"
-    PAYROLL_RUNS ||--o{ PAYSLIPS : "generates"
-    EMPLOYEES ||--o{ PAYSLIPS : "receives"
+    USERS ||--o| EMPLOYEE_PAYROLL_PROFILES : "has"
+    PAYROLL_TAX_POLICIES ||--o{ PAYROLL_RUNS : "locked_for"
+    SOCIAL_SECURITY_POLICIES ||--o{ PAYROLL_RUNS : "locked_for"
+    PAYROLL_RUNS ||--o{ PAYROLL_ITEMS : "contains"
+    EMPLOYEE_PAYROLL_PROFILES ||--o{ PAYROLL_ITEMS : "source"
+    USERS ||--o{ PAYROLL_ITEMS : "payslip owner"
 ```
 
 ---

@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Warehouse;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -77,7 +78,7 @@ class Phase15InventoryOperationsTest extends TestCase
         $user = User::factory()->create();
         $this->product($user, 'BC-001', '885000000001');
 
-        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+        $this->expectException(UniqueConstraintViolationException::class);
         $this->product($user, 'BC-002', '885000000001');
     }
 

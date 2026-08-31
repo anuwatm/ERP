@@ -75,7 +75,7 @@ organizations
   ├── suppliers ── purchase_orders ── purchase_order_items
   ├── products ── inventory / stock_movements
   ├── expenses
-  ├── employees ── attendances / leave_requests / payslips
+  ├── users ── employee_payroll_profiles ── payroll_items
   ├── files / notifications / audit_logs
   ├── automation_rules / webhook_events
   └── settings / api_tokens
@@ -701,35 +701,63 @@ organizations
 | used_days | DECIMAL(5,1) | DEFAULT 0 | |
 | UNIQUE | | (employee_id, leave_type, year) | |
 
-### 8.5 `payroll_runs` (V3)
+### 8.5 `employee_payroll_profiles` (Phase 16B)
 
 | Column | Type | Constraints | Description |
 | --- | --- | --- | --- |
 | id | UUID | PK | |
 | org_id | UUID | FK organizations NOT NULL | |
-| period_year | INT | NOT NULL | |
-| period_month | INT | NOT NULL | 1–12 |
-| status | VARCHAR(20) | NOT NULL | draft, approved, paid |
-| total_gross | DECIMAL(18,2) | DEFAULT 0 | |
-| total_deduction | DECIMAL(18,2) | DEFAULT 0 | |
-| total_net | DECIMAL(18,2) | DEFAULT 0 | |
-| approved_at | TIMESTAMP | | |
-| created_at / updated_at / created_by / updated_by | | | |
+| user_id | UUID | FK users NOT NULL, UNIQUE(org_id, user_id) | employee identity for payroll |
+| monthly_salary / fixed_allowance / fixed_deduction | DECIMAL(18,2) | NOT NULL / DEFAULT 0 | monthly recurring values |
+| annual_tax_allowance | DECIMAL(18,2) | DEFAULT 60000 | configured allowance |
+| tax_id | VARCHAR(20) | nullable | tax identity for workpaper |
+| social_security_enabled | BOOLEAN | DEFAULT true | apply social-security policy |
+| payment_method / payment_reference | VARCHAR | NOT NULL / nullable | transfer or cash reference |
+| status | VARCHAR(20) | active, inactive | only active profiles are calculated |
 
-### 8.6 `payslips` (V3)
+### 8.6 `payroll_tax_policies` and `social_security_policies` (Phase 16B)
+
+| Table | Effective-dated values |
+| --- | --- |
+| `payroll_tax_policies` | `effective_from/to`, employment expense rate/cap, progressive `brackets_json`, official `source_url` |
+| `social_security_policies` | `effective_from/to`, employee/employer rate, wage ceiling, official `source_url` |
+
+`payroll_runs` stores both policy IDs at creation. A later policy version cannot change a historical run.
+
+### 8.7 `payroll_runs` (Phase 16B)
+
+| Column | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| org_id | UUID | FK organizations NOT NULL | |
+| run_no | VARCHAR(50) | UNIQUE(org_id, run_no) | generated number |
+| period_start / period_end / payment_date | DATE | NOT NULL | payroll period and settlement date |
+| payroll_tax_policy_id / social_security_policy_id | UUID | FK NOT NULL | locked policy version |
+| bank_account_id | UUID | FK nullable | mapped cash/bank source |
+| currency | CHAR(3) | THB | Phase 16B scope |
+| status | VARCHAR(20) | draft, calculated, approved, paid | immutable after calculation except status transition |
+| gross_amount / employee_social_security_amount / employer_social_security_amount / withholding_tax_amount / net_pay_amount | DECIMAL(18,2) | DEFAULT 0 | run totals |
+| approved_by / approved_at / paid_by / paid_at | UUID / TIMESTAMP | nullable | lifecycle evidence |
+
+### 8.8 `payroll_items` (Phase 16B; payslip source)
 
 | Column | Type | Constraints | Description |
 | --- | --- | --- | --- |
 | id | UUID | PK | |
 | org_id | UUID | FK organizations NOT NULL | |
 | payroll_run_id | UUID | FK payroll_runs NOT NULL | |
-| employee_id | UUID | FK employees NOT NULL | |
-| base_salary | DECIMAL(18,2) | DEFAULT 0 | |
-| allowance | DECIMAL(18,2) | DEFAULT 0 | |
-| deduction | DECIMAL(18,2) | DEFAULT 0 | |
-| net_pay | DECIMAL(18,2) | DEFAULT 0 | |
-| details_json | JSON | | breakdown |
-| created_at / updated_at | | | |
+| employee_payroll_profile_id / user_id | UUID | FK NOT NULL | source profile and payslip owner |
+| salary_amount / allowance_amount / other_deduction_amount | DECIMAL(18,2) | NOT NULL / DEFAULT 0 | earning and other deduction |
+| employee_social_security_amount / employer_social_security_amount | DECIMAL(18,2) | DEFAULT 0 | contribution split |
+| withholding_tax_amount / net_pay_amount | DECIMAL(18,2) | DEFAULT 0 / NOT NULL | tax and net payment |
+| calculation_snapshot | JSON | NOT NULL | frozen calculation inputs/result |
+| UNIQUE | | (payroll_run_id, employee_payroll_profile_id) | one item per profile/run |
+
+### 8.9 Payroll accounting boundary
+
+- approval posts source `payroll_run/approved`: salary and employer social-security expenses; payroll, withholding-tax and social-security liabilities.
+- payment posts source `payroll_run/paid`: debit payroll payable and credit selected bank/cash account.
+- ภ.ง.ด.1 and SSO exports are workpapers; no `payslips` table or certified filing payload exists.
 
 ---
 
@@ -994,7 +1022,8 @@ organizations
 | expenses | supplier_id | suppliers.id (Post-MVP FK) |
 | purchase_orders | supplier_id | suppliers.id |
 | stock_levels | product_id | products.id |
-| employees | user_id | users.id |
+| employee_payroll_profiles | user_id | users.id |
+| payroll_items | payroll_run_id, employee_payroll_profile_id, user_id | payroll_runs.id, employee_payroll_profiles.id, users.id |
 | files | entity_* | polymorphic |
 | activities | entity_* | polymorphic |
 
@@ -1020,9 +1049,8 @@ organizations
 | Expenses | expenses | projects, suppliers, files |
 | Purchase Orders | purchase_orders, purchase_order_items | suppliers, products |
 | Inventory | warehouses, stock_levels, stock_movements | products |
-| Employees | employees | users, branches, divisions, departments |
-| Attendance / Leave | attendances, leave_requests, leave_balances | employees |
-| Payroll | payroll_runs, payslips | employees |
+| Employees / Attendance / Leave | planned employee-domain tables | users, branches, divisions, departments |
+| Payroll | employee_payroll_profiles, payroll_tax_policies, social_security_policies, payroll_runs, payroll_items | users, bank_accounts, journal_entries |
 | Files | files | ทุก module ที่ attach |
 | Notifications | notifications | users |
 | Audit Log | audit_logs | ทุก module เขียน event |

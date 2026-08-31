@@ -19,6 +19,10 @@ class ChartOfAccountProvisioner
         ['code' => '2110', 'name' => 'Accounts Payable', 'account_type' => 'liability'],
         ['code' => '2120', 'name' => 'Cheque Clearing', 'account_type' => 'liability'],
         ['code' => '2130', 'name' => 'Output VAT', 'account_type' => 'liability'],
+        ['code' => '2140', 'name' => 'Payroll Payable', 'account_type' => 'liability'],
+        ['code' => '2150', 'name' => 'Withholding Tax Payable', 'account_type' => 'liability'],
+        ['code' => '2160', 'name' => 'Social Security Payable', 'account_type' => 'liability'],
+        ['code' => '2170', 'name' => 'Other Payroll Deductions Payable', 'account_type' => 'liability'],
         ['code' => '3100', 'name' => 'Owner Equity', 'account_type' => 'equity'],
         ['code' => '4100', 'name' => 'Sales Revenue', 'account_type' => 'revenue'],
         ['code' => '4300', 'name' => 'Realized Foreign Exchange Gain', 'account_type' => 'revenue'],
@@ -29,6 +33,8 @@ class ChartOfAccountProvisioner
         ['code' => '5310', 'name' => 'Depreciation Expense', 'account_type' => 'expense'],
         ['code' => '5400', 'name' => 'Realized Foreign Exchange Loss', 'account_type' => 'expense'],
         ['code' => '5410', 'name' => 'Unrealized Foreign Exchange Loss', 'account_type' => 'expense'],
+        ['code' => '5500', 'name' => 'Salary Expense', 'account_type' => 'expense'],
+        ['code' => '5510', 'name' => 'Employer Social Security Expense', 'account_type' => 'expense'],
     ];
 
     public function ensure(string $orgId): void

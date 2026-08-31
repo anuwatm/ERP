@@ -76,7 +76,7 @@
 | [25-inventory.md](./25-inventory.md) | Inventory / Stock | V2 | P2 |
 | [26-employees.md](./26-employees.md) | HR: Employees | V1 light / V2 | P1 |
 | [27-attendance-leave.md](./27-attendance-leave.md) | Attendance / Leave | V2 | P2 |
-| [28-payroll.md](./28-payroll.md) | Payroll | V3 | P3 |
+| [28-payroll.md](./28-payroll.md) | Payroll | Phase 16B implemented | Done |
 | [29-ai-assistant.md](./29-ai-assistant.md) | AI Assistant | V2 | P2 |
 | [30-accounting-integration.md](./30-accounting-integration.md) | Accounting Integration | V2 | P2 |
 | [31-customer-portal.md](./31-customer-portal.md) | Customer Portal | V3 | P3 |

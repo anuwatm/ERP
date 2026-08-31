@@ -442,6 +442,27 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'Payroll',
+                    href: route('payroll.index'),
+                    active: route().current('payroll.*'),
+                    permission: 'payroll.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 4v16m8-8H4m3-5h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Chart of Accounts',
                     href: route('accounting.chart-of-accounts.index'),
                     active: route().current('accounting.chart-of-accounts.*'),

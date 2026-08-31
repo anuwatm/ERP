@@ -206,8 +206,23 @@ export default function Products({ products }: { products: Product[] }) {
                                 error={form.errors.sku}
                                 onChange={(value) => form.setData('sku', value)}
                             />
-                            <Field label="Barcode" value={form.data.barcode} error={form.errors.barcode} onChange={(value) => form.setData('barcode', value)} />
-                            <Field label="Reorder Point" type="number" value={form.data.reorder_point} error={form.errors.reorder_point} onChange={(value) => form.setData('reorder_point', value)} />
+                            <Field
+                                label="Barcode"
+                                value={form.data.barcode}
+                                error={form.errors.barcode}
+                                onChange={(value) =>
+                                    form.setData('barcode', value)
+                                }
+                            />
+                            <Field
+                                label="Reorder Point"
+                                type="number"
+                                value={form.data.reorder_point}
+                                error={form.errors.reorder_point}
+                                onChange={(value) =>
+                                    form.setData('reorder_point', value)
+                                }
+                            />
                             <Field
                                 label="Name"
                                 value={form.data.name}

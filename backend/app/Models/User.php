@@ -38,7 +38,7 @@ use Illuminate\Notifications\Notifiable;
     'created_by',
     'updated_by',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -85,6 +85,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'invite_expires_at' => 'datetime',
             'invite_accepted_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
         ];
     }
 }

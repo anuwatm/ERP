@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "ERP Payroll Policy, Approval & GL Flow",
+    "subtitle": "Phase 16B payroll processing and accounting boundary",
+    "output": "document/11_payroll_policy_gl_flow.html",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "viewBox": [1200, 860],
+    "views": [
+      { "id": "calculation", "label": "Calculation", "focus": ["finance", "profile", "policy", "run", "items"], "note": "Active payroll profiles are calculated with policy versions locked to the payroll run." },
+      { "id": "approval-and-payment", "label": "Approval & payment", "focus": ["run", "items", "approve", "gl_accrual", "pay", "gl_settlement"], "note": "Approval and payment create distinct idempotent journal events." },
+      { "id": "employee-output", "label": "Employee outputs", "focus": ["items", "payslip"], "note": "Payslip access is owner-or-payroll.view; filing CSV is a review workpaper." }
+    ]
+  },
+  "lanes": [
+    { "id": "finance", "label": "Finance user" },
+    { "id": "configuration", "label": "Payroll configuration" },
+    { "id": "processing", "label": "Payroll processing" },
+    { "id": "accounting", "label": "General ledger" },
+    { "id": "output", "label": "Employee and filing outputs" }
+  ],
+  "phases": [
+    { "id": "prepare", "label": "Prepare", "fromCol": 0, "toCol": 1 },
+    { "id": "calculate", "label": "Calculate", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "authorize", "label": "Authorize and settle", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "groups": [
+    { "id": "policy-lock", "label": "Effective-dated inputs", "lane": "configuration", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "posting", "label": "Idempotent accounting events", "lane": "accounting", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["run", "items", "approve", "pay", "gl_settlement"],
+  "nodes": [
+    { "id": "finance", "lane": "finance", "col": 4, "type": "external", "label": "Finance" },
+    { "id": "profile", "lane": "configuration", "col": 0, "type": "backend", "label": "Pay Profile" },
+    { "id": "policy", "lane": "configuration", "col": 2, "type": "security", "label": "Policies" },
+    { "id": "run", "lane": "processing", "col": 0, "type": "backend", "label": "Run", "tag": "THB" },
+    { "id": "items", "lane": "processing", "col": 2, "type": "database", "label": "Items" },
+    { "id": "approve", "lane": "processing", "col": 4, "type": "security", "label": "Approve", "tag": "payroll.approve" },
+    { "id": "pay", "lane": "processing", "col": 5, "type": "backend", "label": "Paid", "tag": "payroll.pay" },
+    { "id": "gl_accrual", "lane": "accounting", "col": 4, "type": "database", "label": "Accrual" },
+    { "id": "gl_settlement", "lane": "accounting", "col": 5, "type": "database", "label": "Settlement" },
+    { "id": "payslip", "lane": "output", "col": 2, "type": "frontend", "label": "Outputs" }
+  ],
+  "edges": [
+    { "from": "finance", "to": "approve", "variant": "security", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "profile", "to": "run", "variant": "emphasis", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "run", "to": "items", "variant": "emphasis", "role": "main" },
+    { "from": "items", "to": "approve", "variant": "security", "role": "main" },
+    { "from": "approve", "to": "gl_accrual", "variant": "emphasis", "role": "branch", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "approve", "to": "pay", "variant": "security", "role": "main" },
+    { "from": "pay", "to": "gl_settlement", "variant": "emphasis", "role": "main", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "items", "to": "payslip", "variant": "dashed", "role": "branch", "route": "drop", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Calculation Integrity", "items": ["Only active profiles are calculated", "Tax and social-security policy IDs are locked on the run", "Each payroll item preserves a calculation snapshot"] },
+    { "dot": "cyan", "title": "Accounting Boundary", "items": ["Approval records expense and payroll liabilities", "Payment settles payroll payable against mapped cash or bank", "Payroll never uses VendorPayment"] },
+    { "dot": "rose", "title": "Privacy & Compliance", "items": ["Payslip is guarded by owner or payroll.view", "PND1 and SSO files are review workpapers", "Current rules and filing format require operational verification"] }
+  ]
+}

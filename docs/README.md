@@ -14,6 +14,7 @@
 | [`SECURITY_REQUIREMENTS.md`](./SECURITY_REQUIREMENTS.md) | ข้อกำหนด security |
 | [PHASE_1_LOGIN_IMPLEMENTATION.md](./PHASE_1_LOGIN_IMPLEMENTATION.md) | Phase 1 foundation (auth/RBAC/invite) |
 | [PHASE_1_1_MASTER_DATA.md](./PHASE_1_1_MASTER_DATA.md) | Phase 1.1 admin master data & access management scope |
+| [PHASE_16B_PAYROLL_DESIGN.md](./PHASE_16B_PAYROLL_DESIGN.md) | Phase 16B payroll, policy, payslip and GL design |
 | [VALIDATION_RULES.md](./VALIDATION_RULES.md) | กฎ validation ฝั่ง server |
 | [PHASE_ACCEPTANCE_CRITERIA.md](./PHASE_ACCEPTANCE_CRITERIA.md) | DoD ราย Phase |
 | [ROUTES_AND_SCREENS.md](./ROUTES_AND_SCREENS.md) | หน้าและ route ราย Phase |

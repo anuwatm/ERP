@@ -10,6 +10,7 @@ use App\Models\GoodsReceipt;
 use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Payment;
+use App\Models\PayrollRun;
 use App\Models\PettyCashReimbursement;
 use App\Models\VendorPayment;
 
@@ -170,6 +171,35 @@ class FinancialJournalService
         return $this->journals->post($reimbursement->org_id, $actorId, 'petty_cash_reimbursement', $reimbursement->id, 'reimbursed', $reimbursement->reimbursed_at->toDateString(), 'Petty cash reimbursement', [
             ['account_code' => '1112', 'debit' => $reimbursement->amount, 'description' => 'Petty cash replenishment'],
             ['account_code' => $reimbursement->bank_account_id ? '1110' : '1100', 'credit' => $reimbursement->amount, 'description' => 'Cash source'],
+        ]);
+    }
+
+    public function postPayrollApproval(PayrollRun $run, ?string $actorId): JournalEntry
+    {
+        $gross = round((float) $run->gross_amount, 2);
+        $employeeSocial = round((float) $run->employee_social_security_amount, 2);
+        $employerSocial = round((float) $run->employer_social_security_amount, 2);
+        $tax = round((float) $run->withholding_tax_amount, 2);
+        $net = round((float) $run->net_pay_amount, 2);
+        $otherDeductions = round(max(0, $gross - $employeeSocial - $tax - $net), 2);
+
+        return $this->journals->post($run->org_id, $actorId, 'payroll_run', $run->id, 'approved', $run->payment_date->toDateString(), 'Payroll '.$run->run_no.' approved', array_filter([
+            $gross > 0 ? ['account_code' => '5500', 'debit' => $gross, 'description' => 'Salary expense'] : null,
+            $employerSocial > 0 ? ['account_code' => '5510', 'debit' => $employerSocial, 'description' => 'Employer social security expense'] : null,
+            $net > 0 ? ['account_code' => '2140', 'credit' => $net, 'description' => 'Payroll payable'] : null,
+            $tax > 0 ? ['account_code' => '2150', 'credit' => $tax, 'description' => 'Withholding tax payable'] : null,
+            ($employeeSocial + $employerSocial) > 0 ? ['account_code' => '2160', 'credit' => $employeeSocial + $employerSocial, 'description' => 'Social security payable'] : null,
+            $otherDeductions > 0 ? ['account_code' => '2170', 'credit' => $otherDeductions, 'description' => 'Other payroll deductions payable'] : null,
+        ]));
+    }
+
+    public function postPayrollPayment(PayrollRun $run, ?string $actorId): JournalEntry
+    {
+        $net = round((float) $run->net_pay_amount, 2);
+
+        return $this->journals->post($run->org_id, $actorId, 'payroll_run', $run->id, 'paid', $run->payment_date->toDateString(), 'Payroll '.$run->run_no.' paid', [
+            ['account_code' => '2140', 'debit' => $net, 'description' => 'Payroll payable settlement'],
+            ['account_code' => $this->cashAccount($run->bank_account_id, '1100'), 'credit' => $net, 'description' => 'Payroll payment'],
         ]);
     }
 

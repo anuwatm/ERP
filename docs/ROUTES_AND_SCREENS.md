@@ -143,6 +143,20 @@
 | Stock Movement Adjustment / Return | `POST /stock-movements` | `inventory.adjust` |
 | Notification Settings | `GET /settings/notifications`, `PATCH /settings/notifications` | `settings.organization.view/update` |
 
+## Phase 16B: Payroll, Social Security & Tax
+
+| Screen / Action | Route | Permission |
+| --- | --- | --- |
+| Payroll workspace | `GET /payroll` | `payroll.view` |
+| Save employee payroll profile | `POST /payroll/profiles` | `payroll.manage` + reauth |
+| Save new effective-dated policy version | `POST /payroll/policies` | `payroll.manage` + reauth |
+| Create payroll run | `POST /payroll/runs` | `payroll.manage` + reauth |
+| Calculate payroll run | `POST /payroll/runs/{payrollRun}/calculate` | `payroll.manage` + reauth |
+| Approve and post GL | `POST /payroll/runs/{payrollRun}/approve` | `payroll.approve` + reauth |
+| Mark paid and post settlement | `POST /payroll/runs/{payrollRun}/pay` | `payroll.pay` + reauth |
+| Workpaper CSV | `GET /payroll/runs/{payrollRun}/exports/{type}` | `payroll.export` |
+| Payslip print/PDF | `GET /payroll/payslips/{payrollItem}/print` or `/pdf` | authenticated owner or `payroll.view` |
+
 ## Empty States
 
 - ไม่มี user invited: แสดงปุ่ม invite.

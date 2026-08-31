@@ -29,6 +29,11 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = $request->user();
+        if ($user->roles()->whereIn('code', ['owner', 'admin', 'finance'])->exists() && $user->two_factor_confirmed_at && ! $this->hasTrustedDevice($request, $user)) {
+            $request->session()->put('two_factor_pending_user_id', $user->id);
+            Auth::logout();
+            return redirect()->route('two-factor.challenge');
+        }
         $user->forceFill(['last_login_at' => now()])->save();
 
         AuditLog::create([
@@ -43,6 +48,9 @@ class AuthenticatedSessionController extends Controller
             'request_id' => $request->headers->get('X-Request-Id'),
         ]);
 
+        if ($user->roles()->whereIn('code', ['owner', 'admin', 'finance'])->exists() && ! $user->two_factor_confirmed_at) {
+            return redirect()->route('two-factor.setup');
+        }
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -55,5 +63,15 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function hasTrustedDevice(Request $request, \App\Models\User $user): bool
+    {
+        $token = $request->cookie('erp_2fa_trusted');
+        if (! $token) return false;
+        $device = \App\Models\TwoFactorTrustedDevice::where('user_id', $user->id)->where('token_hash', hash('sha256', $token))->where('expires_at', '>', now())->first();
+        if (! $device) return false;
+        $device->update(['last_used_at' => now()]);
+        return true;
     }
 }
