@@ -21,6 +21,7 @@ class OrganizationSettingsController extends Controller
         $data = $organization->only(['id', 'name', 'legal_name', 'tax_id', 'email', 'phone', 'address', 'currency', 'timezone', 'status']);
         $data['logo_url'] = Organization::formatLogoUrl($organization->logo_url);
         $formats = $this->numberingFormats($organization->id);
+        $twoFactorPolicy = $this->twoFactorPolicy($organization->id);
 
         return Inertia::render('Settings/Organization', [
             'organization' => $data,
@@ -32,6 +33,7 @@ class OrganizationSettingsController extends Controller
                     return [$docType => 'Requires branch'];
                 }
             })->all(),
+            'twoFactorPolicy' => $twoFactorPolicy,
         ]);
     }
 
@@ -107,6 +109,37 @@ class OrganizationSettingsController extends Controller
         return back()->with('success', 'Document numbering updated.');
     }
 
+    public function updateTwoFactor(Request $request): RedirectResponse
+    {
+        $organization = $request->user()->organization;
+        $validated = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'required_for_privileged_roles' => ['required', 'boolean'],
+            'allow_trusted_devices' => ['required', 'boolean'],
+            'trusted_device_days' => ['required', 'integer', 'min:1', 'max:90'],
+        ]);
+        $before = $this->twoFactorPolicy($organization->id);
+
+        Setting::updateOrCreate(
+            ['org_id' => $organization->id, 'key' => 'security.two_factor'],
+            ['value_json' => $validated, 'updated_by' => $request->user()->id]
+        );
+
+        AuditLog::create([
+            'org_id' => $organization->id,
+            'actor_user_id' => $request->user()->id,
+            'action' => 'organization.two_factor_policy_update',
+            'entity_type' => 'organization',
+            'entity_id' => $organization->id,
+            'before_json' => $before,
+            'after_json' => $validated,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return back()->with('success', 'Two-factor security policy updated.');
+    }
+
     private function numberingFormats(string $orgId): array
     {
         $defaults = [
@@ -120,6 +153,14 @@ class OrganizationSettingsController extends Controller
         $stored = Setting::where('org_id', $orgId)->where('key', 'document_numbering.formats')->value('value_json') ?? [];
 
         return array_replace_recursive($defaults, $stored);
+    }
+
+    private function twoFactorPolicy(string $orgId): array
+    {
+        $defaults = ['enabled' => false, 'required_for_privileged_roles' => true, 'allow_trusted_devices' => true, 'trusted_device_days' => 30];
+        $stored = Setting::where('org_id', $orgId)->where('key', 'security.two_factor')->value('value_json') ?? [];
+
+        return array_replace($defaults, $stored);
     }
 
     private function deleteOldLogo(?string $logoUrl): void

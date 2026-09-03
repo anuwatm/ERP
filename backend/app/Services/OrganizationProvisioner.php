@@ -142,6 +142,16 @@ class OrganizationProvisioner
                 'timezone' => 'Asia/Bangkok',
             ],
         ]);
+        Setting::create([
+            'org_id' => $organization->id,
+            'key' => 'security.two_factor',
+            'value_json' => [
+                'enabled' => false,
+                'required_for_privileged_roles' => true,
+                'allow_trusted_devices' => true,
+                'trusted_device_days' => 30,
+            ],
+        ]);
     }
 
     private function seedNumberSequences(Organization $organization, Branch $branch): void

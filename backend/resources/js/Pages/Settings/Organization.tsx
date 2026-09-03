@@ -38,15 +38,23 @@ type NumberingFormat = {
     reset: string;
     scope: string;
 };
+type TwoFactorPolicy = {
+    enabled: boolean;
+    required_for_privileged_roles: boolean;
+    allow_trusted_devices: boolean;
+    trusted_device_days: number;
+};
 
 export default function Organization({
     organization,
     numberingFormats,
     numberingPreviews,
+    twoFactorPolicy,
 }: {
     organization: Organization;
     numberingFormats: Record<string, NumberingFormat>;
     numberingPreviews: Record<string, string>;
+    twoFactorPolicy: TwoFactorPolicy;
 }) {
     const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
     const logoPreview = selectedLogoFile
@@ -65,6 +73,7 @@ export default function Organization({
             logo: null,
         });
     const numberingForm = useForm({ formats: numberingFormats });
+    const twoFactorForm = useForm<TwoFactorPolicy>(twoFactorPolicy);
 
     const updateLogo: ChangeEventHandler<HTMLInputElement> = (event) => {
         const file = event.target.files?.[0] ?? null;
@@ -360,6 +369,130 @@ export default function Organization({
                         <div className="flex justify-end">
                             <PrimaryButton disabled={numberingForm.processing}>
                                 Save Numbering
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </Card>
+
+                <Card
+                    title="Two-Factor Authentication"
+                    description="Control organization-wide sign-in security"
+                >
+                    <form
+                        className="max-w-2xl space-y-4"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            twoFactorForm.patch(
+                                route(
+                                    'settings.organization.two-factor.update',
+                                ),
+                                { preserveScroll: true },
+                            );
+                        }}
+                    >
+                        <label className="flex items-start justify-between gap-4 rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                            <span>
+                                <span className="block font-medium text-slate-900 dark:text-white">
+                                    Enable two-factor authentication
+                                </span>
+                                <span className="mt-1 block text-sm text-slate-500">
+                                    Disabled users sign in with their password
+                                    only.
+                                </span>
+                            </span>
+                            <input
+                                type="checkbox"
+                                checked={twoFactorForm.data.enabled}
+                                onChange={(event) =>
+                                    twoFactorForm.setData(
+                                        'enabled',
+                                        event.target.checked,
+                                    )
+                                }
+                            />
+                        </label>
+                        <label className="flex items-start justify-between gap-4 rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                            <span>
+                                <span className="block font-medium text-slate-900 dark:text-white">
+                                    Require for privileged roles
+                                </span>
+                                <span className="mt-1 block text-sm text-slate-500">
+                                    Applies to owner, admin, and finance roles.
+                                </span>
+                            </span>
+                            <input
+                                type="checkbox"
+                                disabled={!twoFactorForm.data.enabled}
+                                checked={
+                                    twoFactorForm.data
+                                        .required_for_privileged_roles
+                                }
+                                onChange={(event) =>
+                                    twoFactorForm.setData(
+                                        'required_for_privileged_roles',
+                                        event.target.checked,
+                                    )
+                                }
+                            />
+                        </label>
+                        <label className="flex items-start justify-between gap-4 rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                            <span>
+                                <span className="block font-medium text-slate-900 dark:text-white">
+                                    Allow trusted devices
+                                </span>
+                                <span className="mt-1 block text-sm text-slate-500">
+                                    Skip TOTP on a remembered device until it
+                                    expires.
+                                </span>
+                            </span>
+                            <input
+                                type="checkbox"
+                                disabled={!twoFactorForm.data.enabled}
+                                checked={
+                                    twoFactorForm.data.allow_trusted_devices
+                                }
+                                onChange={(event) =>
+                                    twoFactorForm.setData(
+                                        'allow_trusted_devices',
+                                        event.target.checked,
+                                    )
+                                }
+                            />
+                        </label>
+                        <div>
+                            <InputLabel
+                                htmlFor="trusted_device_days"
+                                value="Trusted device duration (days)"
+                                className="mb-1 text-xs font-semibold uppercase text-slate-700"
+                            />
+                            <TextInput
+                                id="trusted_device_days"
+                                type="number"
+                                min="1"
+                                max="90"
+                                disabled={
+                                    !twoFactorForm.data.enabled ||
+                                    !twoFactorForm.data.allow_trusted_devices
+                                }
+                                value={twoFactorForm.data.trusted_device_days}
+                                onChange={(event) =>
+                                    twoFactorForm.setData(
+                                        'trusted_device_days',
+                                        Number(event.target.value),
+                                    )
+                                }
+                                className="block w-40"
+                            />
+                            <InputError
+                                message={
+                                    twoFactorForm.errors.trusted_device_days
+                                }
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <PrimaryButton disabled={twoFactorForm.processing}>
+                                Save Security Policy
                             </PrimaryButton>
                         </div>
                     </form>

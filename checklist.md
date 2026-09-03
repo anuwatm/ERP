@@ -38,8 +38,19 @@
 | Phase 14.1 | Done | AP FX, Inventory FX Bridge และ FCD treasury reconciliation implemented; MySQL migration verification passed |
 | Phase 15 | Done | Warehouse/bin, lot/expiry, barcode scanner for GRN/adjustment/DO/stock count, transfer, reorder notification, warehouse-aware stock movements and tests implemented |
 | Phase 16B | Done | Payroll, Social Security, ภ.ง.ด. 1/1ก workpaper CSV, payslip, policy versioning และ GL posting |
-| Phase 17 | Done | Enterprise Document Management (DMS), versioning, cross-module links, retention and confidentiality controls |
-| Phase 18 | Done | Security 2FA / Auth OTP for privileged roles; offline TOTP, recovery, trusted devices and owner reset implemented |
+| Phase 17 | Closed (Remediation Needed) | Enterprise Document Management (DMS), versioning, cross-module links, retention (Parent permission & policy enforcement in Phase 18.1) |
+| Phase 18 | Done (Polish Track) | Security 2FA / Auth OTP for privileged roles; offline TOTP, recovery, trusted devices and owner reset implemented |
+| Phase 18.1 | Planned | DMS Security & Compliance Remediation: parent permission on download/link, retention_until & legal hold enforcement |
+| Phase 19 | Planned | HR Core, Attendance & Leave Foundation: clock-in/out (opt-in GPS/IP), leave policy/balance, payroll summary bridge (No bespoke approval) |
+| Phase 20 | Planned | Dynamic Approval Workflow Engine: threshold-based chains, delegation, multi-level state transitions, audit trail |
+| Phase 21 | Planned | Operational Notifications & Outbox: LINE OA / Slack / Telegram, retry/backoff, quiet hours (no cash balance) |
+| Phase 22 | Planned | Customer & Supplier Self-Service Portals: external identity, quotation acceptance, vendor bills, WHT download |
+| Phase 23 | Planned | Thai PromptPay QR & Payment Gateway Integration: dynamic QR, signature verified webhooks, auto-reconciliation |
+| Phase 24 | Planned | Direct E-Tax Invoice & RD API Gateway: certified provider bridge, HSM/vault key management, XML-CAdES filing |
+| Phase 25 | Planned | Cash Flow Forecasting & Financial Health: 30-90 day liquidity projection, working capital & DSO/DPO ratios |
+| Phase 26 | Planned | AI OCR Document Ingestion: assisted drafts for receipts/slips/bills with confidence score and human-in-the-loop |
+| Phase 27 | Planned (Vertical) | Manufacturing & Bill of Materials (BOM): multi-level BOM, work orders, stock issue & finished goods costing |
+| Phase 28 | Planned (Vertical) | Point of Sale (POS) & Retail Counter: cash drawer shifts, barcode scanning, thermal receipt, store stock sync |
 
 ---
 
@@ -641,12 +652,16 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [ ] ตรวจ file upload path และ permission บน production storage
 - [ ] เพิ่ม smoke test/manual checklist สำหรับ upload/download logo, receipt, attachments
 
-### Environment Security & Backup
+### Environment Security, Backup & Release Gates
 
 - [ ] เพิ่ม production `.env` security checklist: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true`
 - [ ] ตรวจ session/cookie/domain settings ให้เหมาะกับ HTTPS production
+- [ ] จัดทำ Migration Backup & Rollback Plan ก่อนรัน migration บน Production
+- [ ] จัดทำ Deploy Smoke Test Checklist ตรวจสอบ Health check, Core routes, และ DB connection หลัง release
+- [ ] จัดทำ Failed-job Replay Runbook และระบบ Monitoring/Alerting สำหรับ Queue / Scheduler
+- [ ] จัดทำ Log Redaction Review ตรวจสอบว่าไม่มี Password, Token, 2FA Secret หรือ PII หลุดไปใน Log files
 - [ ] กำหนดนโยบาย automated database backup รายวัน
-- [ ] เพิ่ม restore drill checklist และทดสอบกู้คืนข้อมูลอย่างน้อย 1 รอบก่อน go-live
+- [ ] เพิ่ม restore drill checklist และทดสอบกู้คืนข้อมูล (Restore Verification) พร้อมบันทึกหลักฐานผลการทดสอบอย่างน้อย 1 รอบก่อน go-live
 - [ ] ระบุ retention policy และที่เก็บ backup แยกจาก production server
 
 ---
@@ -965,7 +980,7 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ## Phase 18: Security 2FA / Auth OTP
 
-เป้าหมาย: เพิ่ม 2FA ให้ owner/admin/finance หลัง Payroll และ DMS ตาม product decision. ระหว่างยังไม่เริ่ม ต้องคง password confirmation, email verification, rate limit login, session invalidation และ audit log สำหรับ sensitive actions.
+เป้าหมาย: เพิ่ม 2FA ให้ owner/admin/finance หลัง Payroll และ DMS ตาม product decision (นโยบาย default เป็น `enabled = false` ต่อองค์กร และบังคับ privileged role เฉพาะเมื่อเปิด policy). ระหว่างยังไม่เริ่ม ต้องคง password confirmation, email verification, rate limit login, session invalidation และ audit log สำหรับ sensitive actions.
 
 ### Phase 18 Design Backlog
 
@@ -978,3 +993,241 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 - [x] เพิ่ม 2FA schema/model, setup/verify/recovery UI และ privileged challenge middleware
 - [x] เพิ่ม enforcement settings, audit log, rate limits และ security regression tests
+- [ ] Polish: Recovery code one-time display ผ่าน Inertia flash/dedicated UI โดยไม่ persist ลง browser history/log
+- [ ] Polish: เปลี่ยน invalid TOTP setup จาก `abort(422)` เป็น validation error แสดงใต้ช่องกรอกรหัส
+- [ ] Polish: เก็บ TOTP setup secret ไว้ใน session ระหว่างกรอกรหัสผิด และล้างเมื่อ verify สำเร็จหรือหมดอายุ
+- [ ] Polish: Challenge UI รับ `allow_trusted_devices` และ `trusted_device_days` จาก organization policy (ซ่อน checkbox เมื่อปิด และไม่ hardcode 30 วัน)
+
+---
+
+## Phase 18.1: DMS Security & Compliance Remediation
+
+เป้าหมาย: ปิดช่องว่างด้าน Security และ Data-Compliance ของระบบจัดการเอกสาร (Phase 17) ตามหลักฐานโค้ด ก่อนเริ่มพัฒนา Feature Phase ถัดไป
+
+### Phase 18.1 Design Backlog
+
+- [ ] Design Parent-Permission Authorization Guard สำหรับการดาวน์โหลดเอกสาร (ตรวจสอบสิทธิ์การเข้าถึง Parent Record: Expense, PO, Deal, Customer, Supplier)
+- [ ] Design Source Entity Permission Check เมื่อสร้าง `document_link` (ป้องกันการผูกเอกสารข้าม entity ที่ผู้ใช้ไม่มีสิทธิ์)
+- [ ] Design Category-based Retention Engine: คำนวณ `retention_until` อัตโนมัติ, บังคับใช้ `legal_hold`, และ Default Renewal ตาม Policy (Tax/VAT $\ge$ 5 ปี, General, Accounting)
+- [ ] Design Automated Retention Purge/Archive Command & Scan Failure Re-evaluation Job
+
+### Phase 18.1 Implementation Backlog
+
+- [ ] ปรับปรุง `DocumentDownloadController` ให้ตรวจสอบสิทธิ์ของ Parent Model ผ่าน `document_links` นอกเหนือจาก `documents.download` และ `sensitivity`
+- [ ] ปรับปรุง `DocumentLinkController` ตรวจสอบว่าผู้ใช้มีสิทธิ์ใน Entity ต้นทางก่อนอนุญาตให้ผูกเอกสาร
+- [ ] พัฒนา `RetentionPolicyService` คำนวณ `retention_until` ตามประเภทเอกสาร และป้องกันการลบเมื่อติด `legal_hold`
+- [ ] เพิ่ม Feature Tests: Parent permission download guard, Unauthorized link prevention, Retention expiry calculation, Legal hold delete block, และ Scan-state failure tests
+
+---
+
+## Phase 19: HR Core, Attendance & Leave Foundation
+
+เป้าหมาย: วางโครงสร้างประวัติพนักงาน, ระบบลงเวลาเข้า-ออกงาน (Clock-in/out), สิทธิ์การลา (Leave Balance) และการยื่นคำขอลา เพื่อเป็นฐานข้อมูลต้นทางที่ถูกต้องก่อนส่งสรุปเข้าสู่ระบบ Payroll (Phase 16B)
+**Scope Rule:** ห้ามทำ Bespoke Approval Engine ใน Phase 19 (การอนุมัติวันลาหลายระดับ, Delegation, SoD จะทำใน Phase 20 Central Workflow Engine)
+
+### Phase 19 Design Backlog
+
+- [ ] Design Employee Work Profile, Shift/Schedule, Holiday Calendar และ Work Hours Definition
+- [ ] Design Attendance Schema (Check-in/out events, source: web/mobile) พร้อม Privacy Guard (GPS/IP Range เป็น Opt-in ต่อองค์กร)
+- [ ] Design Leave Policy Engine (ประเภทการลา, สิทธิ์สะสม, นโยบายยกยอดวันลา) และ Leave Request Draft/Submit Flow
+- [ ] Design Payroll Summary Bridge (Cutoff Date, Summary of Working Hours / OT / Leave Without Pay, Correction & Reversal mechanism)
+- [ ] Design RBAC & Privacy (พนักงานดูได้เฉพาะเวลาและวันลาของตนเอง; ผู้จัดการดูทีม; HR/Admin ดูทั้งองค์กร)
+
+### Phase 19 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `employee_shifts`, `attendances`, `leave_types`, `leave_balances`, `leave_requests`, `attendance_summaries`
+- [ ] เพิ่ม UI: Employee Self-Service Clock-in/out, Leave Request Form, Leave Balance Card และ Employee/Manager Attendance Summary List
+- [ ] เพิ่ม Setting: Attendance Privacy & Location Verification Settings (Opt-in GPS/IP with Employee Consent)
+- [ ] เพิ่ม Payroll Bridge: สรุปยอดชั่วโมงทำงานและวันลาขาด/เกินสิทธิ์ พร้อมระบบ Lock งวดก่อนส่งเข้า `payroll_runs` (ห้าม auto-post โดยไม่มี period lock)
+- [ ] เพิ่ม Feature Tests: Attendance logging, Leave accrual & deduction, Org isolation, Privacy guards, และ Payroll summary cutoff tests
+
+---
+
+## Phase 20: Dynamic Approval Workflow Engine
+
+เป้าหมาย: สร้างระบบจัดการสายการอนุมัติกลาง (Central Workflow Engine) ที่กำหนดเงื่อนไขตามวงเงินและระดับตำแหน่ง สำหรับใช้งานร่วมกันใน Leave, PR, PO, Expense และเอกสารสำคัญ
+
+### Phase 20 Design Backlog
+
+- [ ] Design Workflow Definition Schema (Versioned workflow templates, Module triggers: Leave, PR, PO, Expense, Document)
+- [ ] Design Rule & Step Engine (Threshold amounts, Department/Hierarchy matching, Multi-level sequential/parallel approvals)
+- [ ] Design Execution State Machine (Pending, Approved, Rejected, Revision Requested, Delegated, Cancelled)
+- [ ] Design Delegation & Segregation of Duties (SoD Guard: ห้ามผู้อนุมัติอนุมัติเอกสารที่ตนเองเป็นผู้สร้าง, การมอบอำนาจชั่วคราว)
+- [ ] Design Deterministic Document Snapshot (Snapshot approver chain ณ เวลาที่เอกสาร Submit เพื่อป้องกันผลกระทบจากการเปลี่ยนตำแหน่งย้อนหลัง)
+
+### Phase 20 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `workflow_definitions`, `workflow_steps`, `workflow_instances`, `workflow_approvals`, `workflow_delegations`
+- [ ] เพิ่ม Workflow Engine Service: Evaluator, Step Transition Handler, Snapshot Capture, และ Permission Authorizer
+- [ ] เพิ่ม UI: Workflow Builder & Rule Configurator (Admin), Approval Inbox & Action Modal (Approve / Reject / Revise), Document Approval History Timeline
+- [ ] เชื่อมต่อโมดูล: PR, PO, Expense, Leave Requests เข้าสู่ Approval Engine กลาง
+- [ ] เพิ่ม Feature Tests: Threshold evaluation, Segregation of duties, Delegation expiry, Immutable history audit, และ State transition idempotency tests
+
+---
+
+## Phase 21: Operational Notifications & Outbox Engine
+
+เป้าหมาย: สร้างระบบส่งข้อความแจ้งเตือนการปฏิบัติงานไปยังช่องทางภายนอก (LINE Official Account, Slack, Telegram) ผ่าน Outbox Queue ที่ปลอดภัย เชื่อถือได้ และเคารพความเป็นส่วนตัว
+
+### Phase 21 Design Backlog
+
+- [ ] Design Notification Outbox Architecture (Outbox table, worker with exponential backoff retry, idempotency key, dead-letter log)
+- [ ] Design Channel Adapters: LINE OA Webhook / Push Message, Slack Webhook, Telegram Bot
+- [ ] Design Organization Channel Settings & Credential Vault (เก็บบันทึก Channel Token/Secrets แบบ Encrypted)
+- [ ] Design User Preferences & Quiet Hours (กำหนดช่วงเวลาห้ามรบกวน, เลือกรับเฉพาะเรื่องด่วน)
+- [ ] Design Security Guardrail: **ห้ามส่ง Cash Balance ดิบใน Daily Digest**; ส่งเฉพาะ AR/AP Aging, Due Items, ยอดขาย, ค่าใช้จ่าย, Low Stock, Overdue Tasks
+
+### Phase 21 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `notification_channels`, `notification_outbox`, `notification_dispatches`, `user_channel_preferences`
+- [ ] พัฒนา Channel Drivers: `LineMessagingDriver`, `SlackWebhookDriver`, `TelegramBotDriver`
+- [ ] พัฒนา Outbox Dispatcher Worker & Scheduled Command สำหรับ Daily Morning Executive Digest
+- [ ] เพิ่ม UI: Channel Configuration & Test Ping (Admin), Notification Preference Toggles (User Profile)
+- [ ] เพิ่ม Feature Tests: Outbox retry, Idempotency, Encryption of webhook secrets, Quiet hours compliance, และ Non-leakage of cash balance tests
+
+---
+
+## Phase 22: Customer & Supplier Self-Service Portals
+
+เป้าหมาย: เพิ่มพอร์ทัลบริการตนเองสำหรับลูกค้า (Customer Portal) และคู่ค้า (Supplier Portal) เพื่อดูเอกสาร ยอมรับใบเสนอราคา วางบิล และดาวน์โหลดหนังสือรับรองภาษี
+
+### Phase 22 Design Backlog
+
+- [ ] Design External Identity & Authentication (Magic Link / Passwordless OTP แยกจาก Staff Authentication)
+- [ ] Design Scoped Access & Permission Matrix (Customer: Quotation, Invoice, Receipt, Statement; Supplier: PO, Bill Submission, Payment Status, 50 ทวิ)
+- [ ] Design Quotation Acceptance Flow (Digital Confirmation, Audit Trail IP/Timestamp, Auto-create Order/Invoice)
+- [ ] Design Vendor Billing Submission (Upload vendor invoice/slip เข้าสู่ระบบเพื่อรอตรวจสอบใน AP)
+- [ ] Design Upload Security & Intake Guard (Malware/quarantine scan state, MIME whitelist, size quota, DMS audit trail, และ Human review gate ก่อนสร้าง AP draft)
+- [ ] Design Document Download Security (ดาวน์โหลดผ่าน Private Scoped Controller; ไม่มี Public Document Links)
+
+### Phase 22 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `portal_users`, `portal_access_tokens`, `portal_sessions`, `quotation_acceptances`, `vendor_bill_submissions`
+- [ ] เพิ่ม Portal Guest/Auth Layout และหน้าจอ: Customer Portal Dashboard, Supplier Portal Dashboard, Document Viewer/Downloader
+- [ ] พัฒนา Quotation Online Acceptance Controller และ Vendor Invoice Intake Controller
+- [ ] เพิ่ม Portal Security Guard: Rate limiting, Org/Customer/Supplier isolation, Session revocation, File scan status gate
+- [ ] เพิ่ม Feature Tests: Magic Link authentication, Customer/Supplier data isolation, Quotation online signing, และ Document download protection tests
+
+---
+
+## Phase 23: Thai PromptPay QR & Payment Gateway Integration
+
+เป้าหมาย: เพิ่มระบบชำระเงินดิจิทัล สร้าง PromptPay QR Code ที่ระบุยอดเงินเฉพาะบิล และเชื่อมต่อ Payment Gateway Webhooks เพื่อกระทบยอดรับชำระเงินอัตโนมัติ
+
+### Phase 23 Design Backlog
+
+- [ ] Design EMVCo Thai PromptPay QR Generator (รองรับ Tax ID/Biller ID + Amount + Reference 1/2)
+- [ ] Design Gateway Adapter Architecture (Omise, GB Prime Pay, 2C2P)
+- [ ] Design Webhook Intake & Verification (HMAC-SHA256 Signature verification, Idempotency tracking, Replay attack protection)
+- [ ] Design Settlement & Reconciliation Gate (ตรวจสอบ Signature, Idempotency, Event ordering, Amount/Currency matching และ Final Settlement status ก่อนสร้าง Payment/GL)
+
+### Phase 23 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `payment_gateway_configs`, `gateway_transactions`, `webhook_events`
+- [ ] พัฒนา Thai QR Code Generator Utility (ฝังลงใน Invoice Print / PDF และ Customer Portal)
+- [ ] พัฒนา Webhook Receiver Controller พร้อม Signature Verification และ Idempotency Guard
+- [ ] พัฒนา Payment Reconciliation Service: ตรวจสอบสถานะ Settled, อัปเดต Invoice เป็น paid, สร้าง `payments` record, และ Trigger Double-Entry GL Posting
+- [ ] เพิ่ม Feature Tests: PromptPay payload structure, Webhook signature verification, Duplicate webhook rejection, และ Settlement-verified GL posting tests
+
+---
+
+## Phase 24: Direct E-Tax Invoice & RD API Gateway
+
+เป้าหมาย: เชื่อมต่อระบบนำส่ง e-Tax Invoice by Email / e-Tax by Time-stamp เข้าสู่กรมสรรพากรโดยตรงผ่าน Service Provider ที่ได้รับอนุญาต
+
+### Phase 24 Design Backlog
+
+- [ ] Design Provider Connector Architecture (INET, PromptTax หรือ RD Direct Gateway)
+- [ ] Design XML-CAdES Signing & Certificate Management (HSM / Cloud Key Vault integration, ห้ามเก็บ Private Key ใน Database)
+- [ ] Design Transmission Outbox & Status Tracker (Pending, Submitting, Accepted, Rejected, Error with Resubmission)
+- [ ] Design PDF/A-3 Conversion Engine (ฝัง Signed XML เข้าไปใน PDF Invoice ตามมาตรฐานกรมสรรพากร)
+
+### Phase 24 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `etax_transmissions`, `etax_providers`, `etax_responses`
+- [ ] พัฒนา PDF/A-3 Generator & XML Attachment Embedder
+- [ ] พัฒนา Provider API Client พร้อมระบบ Signed Outbox Queue
+- [ ] เพิ่ม UI: E-Tax Transmission Status Dashboard, Retry/Error Detail Viewer
+- [ ] เพิ่ม Feature Tests: XML-CAdES payload generation, Provider mock transmission, Retry logic, และ Error handling tests
+
+---
+
+## Phase 25: Cash Flow Forecasting & Financial Health Analytics
+
+เป้าหมาย: เพิ่มระบบพยากรณ์กระแสเงินสดล่วงหน้า 30-90 วัน และแดชบอร์ดวิเคราะห์อัตราส่วนสุขภาพทางการเงินขององค์กร
+
+### Phase 25 Design Backlog
+
+- [ ] Design Cash Flow Projection Engine (คำนวณจาก AR Aging Weighted by Deal Probability, AP Aging, Recurring Payroll, และ Fixed Expenses)
+- [ ] Design Scenario & Assumption Modeling (Base Case, Best Case, Worst Case)
+- [ ] Design Financial Health Metrics (Current Ratio, Quick Ratio, DSO, DPO, Working Capital Runway)
+- [ ] Design Privacy & Access Control (จำกัดเฉพาะบทบาท Owner, Admin, Executive Dashboard View)
+
+### Phase 25 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `cash_flow_forecast_snapshots`, `forecast_scenarios`, `financial_metric_logs`
+- [ ] พัฒนา Cash Flow Forecasting Service พร้อมระบบ Snapshot ประจำสัปดาห์/เดือน
+- [ ] เพิ่ม UI: Cash Flow Projection Chart, Working Capital Runway Card, Financial Ratio Dashboard
+- [ ] เพิ่ม Feature Tests: Projection algorithm accuracy, Scenario weighting, Org isolation, และ Executive permission guards
+
+---
+
+## Phase 26: AI OCR Document Ingestion
+
+เป้าหมาย: ใช้ Vision AI ช่วยสแกนและอ่านข้อมูลจากใบเสร็จ, สลิปโอนเงิน และใบกำกับภาษี เพื่อร่างเอกสาร Expense และตรวจสอบเอกสารจัดซื้อได้อย่างรวดเร็ว
+
+### Phase 26 Design Backlog
+
+- [ ] Design AI Vision Integration Adapter (Gemini Vision API / Cloud Document AI)
+- [ ] Design Assisted Draft Flow: สกัด Tax ID, ยอดรวม, VAT 7%, วันที่, และ Vendor Name
+- [ ] Design Human-in-the-loop Guard: แสดงรูปต้นฉบับคู่กับฟอร์มร่าง พร้อม Confidence Scores (ห้าม Auto-post เข้า GL โดยปราศจากการตรวจทาน)
+- [ ] Design Source File Retention & Privacy Guard (บันทึกภาพเข้า DMS ใต้ Organization storage ปลอดภัย)
+
+### Phase 26 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `ocr_extractions`, `ocr_field_results`, `ocr_templates`
+- [ ] พัฒนา AI OCR Service: Image Preprocessing, Vision API Caller, Parser & Field Extractor
+- [ ] เพิ่ม UI: OCR Upload & Split-Screen Draft Reviewer (รูปภาพต้นฉบับด้านซ้าย + ฟอร์มแก้ไขด้านขวา)
+- [ ] เพิ่ม Feature Tests: OCR parser fallback, Validation of extracted amounts, Human approval gate, และ Document isolation tests
+
+---
+
+## Phase 27: Manufacturing & Bill of Materials (BOM) [Optional Vertical]
+
+เป้าหมาย: เพิ่มระบบจัดการสูตรการผลิต (BOM), ใบสั่งผลิต (Work Orders), และการคำนวณต้นทุนสินค้าสำเร็จรูป สำหรับธุรกิจผลิตหรือแปรรูป
+
+### Phase 27 Design Backlog
+
+- [ ] Design Multi-Level BOM Schema (Raw Materials, Sub-assemblies, Labor Cost, Overhead Cost)
+- [ ] Design Work Order Lifecycle (Draft, Planned, In-Progress, Quality-Check, Completed, Cancelled)
+- [ ] Design Stock Movement Integration: เบิกวัตถุดิบ (Stock Issue) $\rightarrow$ ผลิต $\rightarrow$ รับสินค้าสำเร็จรูป (Finished Goods Receipt) พร้อมคำนวณต้นทุนต่อหน่วย
+- [ ] Design GL Auto-Posting (Dr. Work-in-Progress 1160 / Cr. Raw Materials 1140 $\rightarrow$ Dr. Finished Goods 1140 / Cr. Work-in-Progress 1160)
+
+### Phase 27 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `bill_of_materials`, `bom_items`, `work_orders`, `work_order_items`, `production_costs`
+- [ ] พัฒนา Production Costing Service & Stock Movement Dispatcher
+- [ ] เพิ่ม UI: BOM Builder, Work Order Management, Production Run & Cost Breakdown View
+- [ ] เพิ่ม Feature Tests: BOM multi-level explosion, Stock deduction, Work order state transitions, และ Production GL posting tests
+
+---
+
+## Phase 28: Point of Sale (POS) & Retail Counter [Optional Vertical]
+
+เป้าหมาย: หน้าจอขายหน้าร้านสำหรับธุรกิจค้าปลีก จัดการกะแคชเชียร์ รองรับเครื่องสแกนบาร์โค้ด พิมพ์สลิป และตัดสต็อกแบบ Real-time
+**Guardrail:** การกระทบยอดเงินในกะ (Shift Reconciliation) จำกัดอยู่เฉพาะขอบเขต POS เท่านั้น และห้ามส่งต่อเป็น Organization-wide Cash Balance ใน Dashboard, Props หรือ API
+
+### Phase 28 Design Backlog
+
+- [ ] Design POS Session & Cash Drawer Shift Management (Open Float, Cash In/Out, Shift End Reconciliation, Overage/Shortage)
+- [ ] Design Fast Checkout Screen (Barcode Scanner, Touch Grid, Discount, Multi-tender: Cash, PromptPay, Credit Card)
+- [ ] Design Offline Capability & Sync Engine (Local cache for products/pricing, offline queue for transactions)
+- [ ] Design Daily Shift Settlement & GL Auto-Posting (Dr. Cash/Bank / Cr. Sales 4100, Output VAT 2130)
+
+### Phase 28 Implementation Backlog
+
+- [ ] เพิ่ม Schema/Models: `pos_terminals`, `pos_shifts`, `pos_orders`, `pos_order_items`, `pos_payments`
+- [ ] เพิ่ม UI: Touch-friendly POS Cashier Interface, Shift Open/Close Modal, Thermal Receipt Print Layout
+- [ ] พัฒนา Barcode Lookup & Instant Stock Reduction Engine
+- [ ] เพิ่ม Feature Tests: Shift cash reconciliation, Multi-tender payments, Stock movements from POS, และ Shift settlement GL posting tests
+

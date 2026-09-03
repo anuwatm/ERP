@@ -19,5 +19,9 @@ return new class extends Migration
             $table->index(['user_id', 'expires_at']);
         });
     }
-    public function down(): void { Schema::dropIfExists('two_factor_trusted_devices'); }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('two_factor_trusted_devices');
+    }
 };

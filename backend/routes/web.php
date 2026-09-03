@@ -407,6 +407,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/settings/organization/numbering', [OrganizationSettingsController::class, 'updateNumbering'])
         ->middleware(['permission:settings.organization.update', 'password.confirm'])
         ->name('settings.organization.numbering.update');
+    Route::patch('/settings/organization/two-factor', [OrganizationSettingsController::class, 'updateTwoFactor'])
+        ->middleware(['permission:settings.organization.update', 'password.confirm'])
+        ->name('settings.organization.two-factor.update');
     Route::get('/settings/notifications', [NotificationPreferenceController::class, 'edit'])
         ->middleware('permission:settings.organization.view')
         ->name('settings.notifications.edit');
