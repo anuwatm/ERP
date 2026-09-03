@@ -8,12 +8,12 @@
 
 | กลุ่ม | ชื่อกลุ่มงาน | โมดูลที่ครอบคลุม | จำนวน Diagram | รายละเอียดโดยสังเขป |
 |:---:|---|---|:---:|---|
-| **Group 1** | [Foundation & Security](#group-1-foundation--security-โมดูล-01-04) | `01-04` (Org, User/Role, Settings, Audit) | 3 | โครงสร้างองค์กร, สิทธิ์ RBAC 7 บทบาท, และ Audit Trail |
+| **Group 1** | [Foundation & Security](#group-1-foundation--security-โมดูล-01-04) | `01-04` (Org, User/Role, Settings, Audit, 2FA) | 4 | โครงสร้างองค์กร, สิทธิ์ RBAC 7 บทบาท, Audit Trail และ 2FA TOTP |
 | **Group 2** | [CRM & Sales Pipeline](#group-2-crm--sales-pipeline-โมดูล-05-08) | `05-08` (Customers, Contacts, Deals, Quotations) | 3 | รับ Lead &rarr; จัดการผู้ติดต่อ &rarr; ดัน Deal &rarr; ออกใบเสนอราคา |
 | **Group 3** | [Project Delivery & Execution](#group-3-project-delivery--execution-โมดูล-09-11) | `09-11` (Projects, Tasks, Milestones) | 3 | แปลง Deal สู่ Project &rarr; จ่ายงาน Tasks &rarr; ตรวจรับ Milestones |
-| **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses) | 3 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; บันทึกรายจ่ายและคู่ค้า |
-| **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, Import/Export, API) | 3 | Event Trigger, Data Pipeline ขึ้น Dashboard, และระบบไฟล์แนบ |
-| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-18) | `24-31` (PO, Inventory, Payroll, AI, Accounting, Portal) | 3 | สั่งซื้อสินค้า, สต็อก, เงินเดือน และเชื่อมระบบภายนอก |
+| **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses, Assets, FX, E-Tax) | 4 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; รายจ่าย &rarr; สินทรัพย์, FX & e-Tax |
+| **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, DMS) | 4 | Event Trigger, Dashboard, ระบบไฟล์แนบ และ DMS Lifecycle & Retention |
+| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-18) | `24-31` (PO, Multi-Warehouse/Bins/Lots, Payroll, Accounting, Portal) | 3 | จัดซื้อ, Multi-Warehouse โอนย้ายสต็อก/Lot, เงินเดือน และเชื่อมระบบภายนอก |
 
 ---
 
@@ -170,6 +170,40 @@ flowchart LR
 **คำอธิบายกฎการบันทึก (Audit Rules):**
 1. ทุกเหตุการณ์ที่เปลี่ยนแปลงข้อมูลการเงิน, สถานะสิทธิ์, หรือข้อมูลธุรกิจหลัก จะถูกบันทึกอัตโนมัติ
 2. ตาราง `audit_logs` เป็นแบบ Append-Only ไม่เปิดให้ลบหรือแก้ไข เพื่อความโปร่งใสและตรวจสอบย้อนหลังได้ 100%
+
+---
+
+### 1.4 Diagram: Two-Factor Authentication (2FA) & Trusted Device Gate (Phase 18)
+ลำดับขั้นตอนการยืนยันตัวตนสองขั้นตอน (TOTP RFC 6238 / Recovery Codes) และการตรวจสอบนโยบายระดับองค์กร
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as ผู้ใช้งาน (User)
+    participant Web as Web Router / Middleware
+    participant Auth as Auth Controller
+    participant Policy as TwoFactorPolicyService
+    participant TOTP as TotpService
+    participant DB as MariaDB Table
+
+    User->>Web: POST /login (email, password)
+    Web->>Auth: ตรวจสอบรหัสผ่านถูกต้อง
+    Auth->>Policy: shouldChallenge(user)
+    alt ต้องยืนยัน 2FA (Role บังคับ หรือเปิดใช้งานไว้)
+        Policy-->>Auth: ต้องผ่าน 2FA Challenge
+        Auth-->>User: 302 Redirect ไปที่ /two-factor-challenge
+        User->>Web: POST /two-factor-challenge (OTP / Recovery Code)
+        Web->>Auth: ตรวจสอบรหัส
+        Auth->>TOTP: verify(secret, code)
+        TOTP-->>Auth: รหัสถูกต้อง
+        opt ผู้ใช้เลือก "จำอุปกรณ์นี้ 30 วัน"
+            Auth->>DB: บันทึกโทเค็นอุปกรณ์ลงตาราง two_factor_trusted_devices
+        end
+        Auth-->>User: Set-Cookie (Session + Trusted Device) เข้าสู่ระบบสำเร็จ
+    else ไม่ต้องยืนยัน 2FA
+        Auth-->>User: Set-Cookie เข้าสู่ระบบทันที
+    end
+```
 
 ---
 
@@ -432,6 +466,32 @@ flowchart LR
 
 ---
 
+### 4.4 Diagram: Fixed Assets, Multi-Currency FX & E-Tax Compliance (Phase 12-14)
+การจัดการสินทรัพย์ถาวร, การรับชำระเงินหลายสกุลเงินพร้อมบันทึกกำไร/ขาดทุนจากอัตราแลกเปลี่ยน (Realized FX), และการออกใบกำกับภาษีอิเล็กทรอนิกส์ e-Tax
+
+```mermaid
+flowchart TD
+    subgraph Assets ["สินทรัพย์ถาวร (Fixed Assets)"]
+        AssetAcq["ซื้อสินทรัพย์ (จาก Expense หรือ GRN)"] --> RegAsset["บันทึกทะเบียนสินทรัพย์ (Asset Register)"]
+        RegAsset --> DeprecRun["คำนวณค่าเสื่อมราคาเส้นตรงรายเดือน (Straight-Line)"]
+        DeprecRun --> PostDeprecGL["ลงบัญชี GL อัตโนมัติ (Idempotent Posting)"]
+    end
+
+    subgraph FX ["สกุลเงินและ FX (Multi-Currency)"]
+        FXInv["ออกใบแจ้งหนี้สกุลต่างประเทศ (e.g. USD)"] --> SnapshotRate["Snapshot อัตราแลกเปลี่ยน ณ วันทำรายการ"]
+        SnapshotRate --> PayFX["รับชำระเงินสกุลต่างประเทศ"]
+        PayFX --> RealizedGainLoss["คำนวณ Realized Gain/Loss ลงสมุดรายวัน GL"]
+    end
+
+    subgraph ETax ["ใบกำกับภาษีอิเล็กทรอนิกส์ (e-Tax)"]
+        TaxInv["ออกใบกำกับภาษีเต็มรูป"] --> GenXML["สร้าง XML ตามมาตรฐาน ETDA พร้อม SHA256 Hash"]
+        GenXML --> StorePrivate["จัดเก็บใน Private Storage แยก Tenant"]
+        StorePrivate --> RDPrep["ส่งออกข้อมูลสำหรับ RD Prep ยื่นสรรพากร"]
+    end
+```
+
+---
+
 ## Group 5: Insights, Platform & Automation (โมดูล 17-23)
 **โมดูลที่เกี่ยวข้อง:** `17-dashboard`, `18-reports`, `19-files`, `20-notifications`, `21-automation`, `22-import-export`, `23-api`
 
@@ -535,31 +595,46 @@ sequenceDiagram
 
 ---
 
+### 5.4 Diagram: Enterprise Document Management (DMS) Lifecycle & Retention (Phase 17)
+วงจรชีวิตเอกสารองค์กร, การควบคุมระดับชั้นความลับ (Sensitivity RBAC: Public, Internal, Confidential, Restricted), ประวัติเวอร์ชันพร้อม SHA256 Checksum, และนโยบายจัดเก็บ/ทำลาย (Retention Policy)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft : สร้างเอกสาร (Draft)
+    Draft --> Uploading : อัปโหลดไฟล์เวอร์ชันใหม่
+    Uploading --> Scanning : คำนวณ SHA256 & ตรวจสอบความปลอดภัย
+    Scanning --> Active : ผ่านการตรวจ (Clean) เปิดใช้งาน
+    Active --> Versioning : อัปโหลดเวอร์ชันใหม่ (New Version)
+    Versioning --> Active : เลื่อนสถานะเป็น Current Version
+    Active --> Expiring : ใกล้วันหมดอายุ (Renewal Alert)
+    Expiring --> Active : ต่ออายุเอกสาร (Renewed)
+    Active --> Archived : ครบกำหนดตาม Retention Policy
+    Archived --> Purged : ทำลายถาวร (ไม่มี Legal Hold)
+    Archived --> LegalHold : ระงับการทำลายตามกฎหมาย
+    LegalHold --> Archived : ปลด Legal Hold
+    Purged --> [*]
+```
+
+---
+
 ## Group 6: Operations & Advanced Extensions (Phase 7-18)
 **โมดูลที่เกี่ยวข้อง:** `24-purchase-orders`, `25-inventory`, `26-employees`, `27-attendance-leave`, `28-payroll`, `29-ai-assistant`, `30-accounting-integration`, `31-customer-portal`
 
-### 6.1 Diagram: Procurement & Inventory Movement Flow
-กระบวนการจัดซื้อและการเคลื่อนไหวของสินค้าคงคลัง
+### 6.1 Diagram: Multi-Warehouse, Bin Locations & Lot Tracking Flow (Phase 15)
+กระบวนการจัดซื้อ, รับสินค้าแยกตามคลังและ Bin, ควบคุม Lot และวันหมดอายุ, และการโอนย้ายสต็อกระหว่างคลัง
 
 ```mermaid
 flowchart TD
-    Start(["ต้องการสั่งซื้อสินค้า/วัตถุดิบ"]) --> CreatePO["1. สร้างใบสั่งซื้อ (Purchase Order - PO)<br>ระบุ Supplier, รายการสินค้า และราคา"]
-    CreatePO --> ApprovePO["2. ขออนุมัติใบสั่งซื้อ (PO Approval)"]
-    ApprovePO --> SendSupplier["3. ส่ง PO ให้ Supplier จัดส่งสินค้า"]
+    PO["1. ออกใบสั่งซื้อ (Purchase Order)"] --> GRN["2. รับสินค้าเข้าคลัง (Goods Receipt)"]
+    GRN --> SelectBin["3. ระบุคลัง (Warehouse) และตำแหน่งจัดเก็บ (Bin Location)"]
+    SelectBin --> GenLot["4. บันทึกรุ่นผลิต (Lot No.) และวันหมดอายุ (Expiry Date)"]
+    GenLot --> StockIn["5. บันทึกสต็อกคงเหลือแยกตาม Bin & Lot พร้อม Movement Log"]
     
-    SendSupplier --> GoodsReceipt["4. รับสินค้าเข้าคลัง (Goods Receipt / Receive)"]
-    GoodsReceipt --> CheckQC{"ตรวจนับและ QC สินค้า"}
-    
-    CheckQC -- ผ่านเกณฑ์ --> UpdateStock["5. เพิ่มสต็อกสินค้าในคลัง (Inventory In)<br>บันทึก Movement Log (IN)"]
-    CheckQC -- ไม่ผ่าน --> ReturnGoods["ส่งคืนสินค้า / เคลมสินค้ากับ Supplier"]
-    
-    UpdateStock --> MatchInvoice["6. จับคู่ใบแจ้งหนี้ Supplier กับ PO (3-Way Matching)"]
-    MatchInvoice --> RecordExpense["7. บันทึกเป็น Expense / เจ้าหนี้การค้า"]
-
-    classDef blue fill:#0284c7,stroke:#38bdf8,stroke-width:2px,color:#fff;
-    classDef green fill:#16a34a,stroke:#4ade80,stroke-width:2px,color:#fff;
-    class CreatePO,ApprovePO,SendSupplier,GoodsReceipt,CheckQC blue;
-    class UpdateStock,MatchInvoice,RecordExpense green;
+    StockIn --> MoveStock{"ต้องการโอนย้าย<br>ระหว่างคลัง/Bin?"}
+    MoveStock -- โอนย้าย --> Transfer["6. เปิดใบโอนย้ายสินค้า (Stock Transfer)"]
+    Transfer --> MoveOut["ตัดสต็อกคลังต้นทาง (In-Transit)"]
+    MoveOut --> MoveIn["รับเข้าสต็อกคลังปลายทาง (Completed)"]
+    MoveStock -- สั่งขาย/ตัดจ่าย --> StockOut["7. ตัดสต็อกตาม FIFO หรือ FEFO (ตามวันหมดอายุ)"]
 ```
 
 ---

@@ -408,6 +408,27 @@
         </div>
       </div>
 
+      <!-- 13 Two-Factor Authentication Sequence -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-sequence">Sequence</span>
+          <h2 class="card-title">13. Two-Factor Authentication & Privileged Access Flow</h2>
+          <p class="card-desc">
+            การล็อกอินสองขั้นตอน (TOTP RFC 6238 / Recovery Codes), การจำแนกสิทธิ์ตามนโยบายองค์กร (Owner/Admin/Finance), การตรวจสอบ Trusted Device (30 วัน) และ Middleware Guard
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Offline TOTP</span>
+            <span class="meta-chip">Trusted Device (30d)</span>
+            <span class="meta-chip">Recovery Codes</span>
+            <span class="meta-chip">Policy Enforcement</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="13_two_factor_auth_sequence.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/13_two_factor_auth_sequence.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
     </div>
 
     <div class="section-title">การไหลของข้อมูล & สรุปผล (Dataflow)</div>
@@ -496,6 +517,27 @@
         <div class="card-actions">
           <a href="09_task_project_lifecycle.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
           <a href="specs/09_task_project_lifecycle.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+      <!-- 12 Document Lifecycle & Retention -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-lifecycle">Lifecycle</span>
+          <h2 class="card-title">12. Enterprise Document Lifecycle & Retention Governance</h2>
+          <p class="card-desc">
+            วงจรชีวิตเอกสารองค์กร (DMS): Upload &rarr; AV Scan &rarr; Active (RBAC Tiers & Entity Links) &rarr; Expiring Alert &rarr; Retention Review &rarr; Immutable Archive / Purge
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">Private Storage</span>
+            <span class="meta-chip">4 Sensitivity Tiers</span>
+            <span class="meta-chip">Retention & Legal Hold</span>
+            <span class="meta-chip">SHA256 Versioning</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="12_document_management_lifecycle.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/12_document_management_lifecycle.json" target="_blank" class="btn-json">JSON Spec</a>
         </div>
       </div>
 

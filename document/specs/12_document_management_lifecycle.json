@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Enterprise Document Lifecycle & Retention Governance",
+    "output": "c:/LocalDevine/www/ERP/document/12_document_management_lifecycle.html",
+    "viewBox": [980, 660],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "upload-and-active", "label": "Upload to Active Governance", "focus": ["uploaded", "scanning", "active"], "note": "Documents undergo SHA256 checksum generation and security scanning before entering active circulation." },
+      { "id": "retention-and-review", "label": "Expiry & Retention Evaluation", "focus": ["active", "expiring", "review"], "note": "Approaching expiry triggers owner notification; retention policies then schedule archival or legal hold review." },
+      { "id": "terminal-outcomes", "label": "Terminal Lifecycle Outcomes", "focus": ["review", "archived", "purged"], "note": "Compliant documents transition to immutable archive, while unheld expired files are purged." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Active Document Lifecycle" },
+    { "id": "terminal", "label": "Terminal & Archive Outcomes" }
+  ],
+  "states": [
+    { "id": "uploaded", "type": "start", "label": "Uploaded", "sublabel": "v1 Private Storage", "lane": "main", "col": 0, "step": "01", "tag": "Draft" },
+    { "id": "scanning", "type": "active", "label": "Scanning", "sublabel": "SHA256 & Security", "lane": "main", "col": 1, "step": "02", "tag": "Gate" },
+    { "id": "active", "type": "active", "label": "Active", "sublabel": "RBAC & Entity Links", "lane": "main", "col": 2, "step": "03", "tag": "Published" },
+    { "id": "expiring", "type": "waiting", "label": "Expiring", "sublabel": "Renewal Alert Window", "lane": "main", "col": 3, "step": "04", "tag": "Alert" },
+    { "id": "review", "type": "decision", "label": "Retention", "sublabel": "Policy & Legal Hold", "lane": "main", "col": 4, "step": "05", "tag": "Evaluate" },
+    { "id": "archived", "type": "success", "label": "Archived", "sublabel": "Retention Preserved", "lane": "terminal", "col": 2, "tag": "Immutable" },
+    { "id": "purged", "type": "failure", "label": "Purged", "sublabel": "Purged Post-Hold", "lane": "terminal", "col": 0, "tag": "Purged" }
+  ],
+  "transitions": [
+    { "id": "t-upload-scan", "from": "uploaded", "to": "scanning", "variant": "default" },
+    { "id": "t-scan-active", "from": "scanning", "to": "active", "variant": "emphasis" },
+    { "id": "t-active-expiring", "from": "active", "to": "expiring", "variant": "default" },
+    { "id": "t-expiring-review", "from": "expiring", "to": "review", "variant": "default", "route": "straight" },
+    { "id": "t-review-archived", "from": "review", "to": "archived", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "t-review-purged", "from": "review", "to": "purged", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Versioned Private Storage",
+      "items": [
+        "All uploaded documents stored in private tenant-isolated storage",
+        "Every file modification generates an immutable version record with SHA256 checksum",
+        "Polymorphic links connect documents to Invoices, Expenses, Assets, and Employees"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Granular Sensitivity RBAC",
+      "items": [
+        "Four sensitivity tiers: Public, Internal, Confidential, and Restricted",
+        "Confidential documents require elevated department permissions (e.g. Finance/Admin)",
+        "Direct disk access blocked; downloads streamed via authorized controller tokens"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Retention & Legal Hold",
+      "items": [
+        "Configurable retention policies trigger automated archival or scheduled purge",
+        "Legal hold flag immediately overrides automated purge actions to prevent data loss",
+        "Configurable renewal alerts notify document owners prior to expiration dates"
+      ]
+    }
+  ]
+}

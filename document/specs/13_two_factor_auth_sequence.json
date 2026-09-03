@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Two-Factor Authentication & Privileged Access Flow",
+    "output": "c:/LocalDevine/www/ERP/document/13_two_factor_auth_sequence.html",
+    "viewBox": [880, 910],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "credential-and-policy", "label": "Login & Policy Gate", "focus": ["client", "router", "auth_ctrl", "policy_svc", "db"], "note": "Valid credentials trigger policy check against user role and organization enforcement rules." },
+      { "id": "totp-challenge-flow", "label": "TOTP Verification & Device Trust", "focus": ["client", "auth_ctrl", "totp_svc", "db"], "note": "RFC 6238 TOTP code verified offline; 30-day trusted device token issued." },
+      { "id": "middleware-enforcement", "label": "Privileged Middleware Gate", "focus": ["client", "router", "policy_svc"], "note": "EnsureTwoFactorEnrollment middleware protects sensitive administration screens." }
+    ]
+  },
+  "participants": [
+    { "id": "client", "type": "external", "label": "Browser", "sublabel": "User Device" },
+    { "id": "router", "type": "frontend", "label": "Router", "sublabel": "web.php & CSRF" },
+    { "id": "auth_ctrl", "type": "backend", "label": "Auth Engine", "sublabel": "Session & Challenge" },
+    { "id": "policy_svc", "type": "security", "label": "2FA Policy", "sublabel": "Org Rules & Roles" },
+    { "id": "totp_svc", "type": "security", "label": "TOTP Service", "sublabel": "RFC 6238 & Recovery" },
+    { "id": "db", "type": "database", "label": "MariaDB", "sublabel": "Users & Devices" }
+  ],
+  "segments": [
+    { "from": 150, "to": 415, "label": "Credential Login & Policy Evaluation" },
+    { "from": 430, "to": 650, "label": "TOTP Challenge & Trusted Device Issuance" },
+    { "from": 665, "to": 820, "label": "Privileged Middleware Guard & Page Render" }
+  ],
+  "messages": [
+    { "id": "post-login", "from": "client", "to": "router", "y": 180, "label": "POST /login (credentials)", "variant": "emphasis" },
+    { "id": "auth-req", "from": "router", "to": "auth_ctrl", "y": 215, "label": "authenticate()", "variant": "emphasis" },
+    { "id": "verify-user", "from": "auth_ctrl", "to": "db", "y": 250, "label": "verify password & roles", "variant": "default" },
+    { "id": "user-ok", "from": "db", "to": "auth_ctrl", "y": 285, "label": "password ok (owner/admin/finance)", "variant": "return" },
+    { "id": "check-policy", "from": "auth_ctrl", "to": "policy_svc", "y": 320, "label": "shouldChallenge(user)", "variant": "security" },
+    { "id": "challenge-needed", "from": "policy_svc", "to": "auth_ctrl", "y": 355, "label": "challenge required", "variant": "return" },
+    { "id": "redirect-challenge", "from": "auth_ctrl", "to": "client", "y": 390, "label": "302 Redirect /two-factor-challenge", "variant": "return" },
+    { "id": "submit-totp", "from": "client", "to": "router", "y": 450, "label": "POST /two-factor-challenge (code, trust_device)", "variant": "emphasis" },
+    { "id": "verify-totp-req", "from": "router", "to": "auth_ctrl", "y": 485, "label": "verifyChallenge()", "variant": "emphasis" },
+    { "id": "validate-code", "from": "auth_ctrl", "to": "totp_svc", "y": 520, "label": "verify(secret, code)", "variant": "security" },
+    { "id": "code-valid", "from": "totp_svc", "to": "auth_ctrl", "y": 555, "label": "code valid", "variant": "return" },
+    { "id": "save-trusted-dev", "from": "auth_ctrl", "to": "db", "y": 590, "label": "store trusted device (30-day token)", "variant": "default" },
+    { "id": "login-complete", "from": "auth_ctrl", "to": "client", "y": 625, "label": "Set-Cookie + 302 Redirect", "variant": "return" },
+    { "id": "access-privileged", "from": "client", "to": "router", "y": 685, "label": "GET /settings/organization", "variant": "emphasis" },
+    { "id": "middleware-check", "from": "router", "to": "policy_svc", "y": 720, "label": "EnsureTwoFactorEnrollment", "variant": "security" },
+    { "id": "middleware-allow", "from": "policy_svc", "to": "router", "y": 755, "label": "authorized", "variant": "return" },
+    { "id": "render-privileged-ui", "from": "router", "to": "client", "y": 790, "label": "Inertia::render('Settings/Organization')", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "router", "from": 175, "to": 220, "type": "frontend" },
+    { "participant": "auth_ctrl", "from": 210, "to": 395, "type": "backend" },
+    { "participant": "db", "from": 245, "to": 290, "type": "database" },
+    { "participant": "policy_svc", "from": 315, "to": 360, "type": "security" },
+    { "participant": "router", "from": 445, "to": 490, "type": "frontend" },
+    { "participant": "auth_ctrl", "from": 480, "to": 630, "type": "backend" },
+    { "participant": "totp_svc", "from": 515, "to": 560, "type": "security" },
+    { "participant": "db", "from": 585, "to": 600, "type": "database" },
+    { "participant": "router", "from": 680, "to": 795, "type": "frontend" },
+    { "participant": "policy_svc", "from": 715, "to": 760, "type": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Offline RFC 6238 TOTP Engine",
+      "items": [
+        "Native PHP TOTP implementation without external cloud API dependencies",
+        "Secret keys stored with AES-256-GCM encryption in users table",
+        "Time window verification with clock drift tolerance"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Trusted Device & Recovery",
+      "items": [
+        "Users can opt to trust devices for 30 days via cryptographically secure cookie tokens",
+        "8 single-use recovery codes generated during initial 2FA enrollment",
+        "Used recovery codes are permanently consumed to prevent replay attacks"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Organization-Wide Governance",
+      "items": [
+        "Organization setting can mandate 2FA for Owner, Admin, and Finance roles",
+        "EnsureTwoFactorEnrollment middleware halts access to all business screens until enrolled",
+        "Company Owners can securely reset 2FA credentials for locked-out employees"
+      ]
+    }
+  ]
+}

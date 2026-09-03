@@ -21,13 +21,15 @@
 | **09** | [Task Status Lifecycle](#09-task-status-lifecycle) | Lifecycle | [`09_task_project_lifecycle.html`](./09_task_project_lifecycle.html) | [`specs/09_task_project_lifecycle.json`](./specs/09_task_project_lifecycle.json) |
 | **10** | [Database ER & Domain Model](#10-database-er--domain-model) | Architecture | [`10_database_er_domain_model.html`](./10_database_er_domain_model.html) | [`specs/10_database_er_domain_model.json`](./specs/10_database_er_domain_model.json) |
 | **11** | [Payroll Policy, Approval & GL Flow](#11-payroll-policy-approval--gl-flow) | Workflow | [`11_payroll_policy_gl_flow.html`](./11_payroll_policy_gl_flow.html) | [`specs/11_payroll_policy_gl_flow.json`](./specs/11_payroll_policy_gl_flow.json) |
-| **All** | [Full Database ER Diagram (38+ Tables)](#-full-database-er-diagram-38-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
+| **12** | [Enterprise Document Lifecycle & Retention](#12-enterprise-document-lifecycle--retention-governance) | Lifecycle | [`12_document_management_lifecycle.html`](./12_document_management_lifecycle.html) | [`specs/12_document_management_lifecycle.json`](./specs/12_document_management_lifecycle.json) |
+| **13** | [Two-Factor Authentication & Privileged Access Flow](#13-two-factor-authentication--privileged-access-flow) | Sequence | [`13_two_factor_auth_sequence.html`](./13_two_factor_auth_sequence.html) | [`specs/13_two_factor_auth_sequence.json`](./specs/13_two_factor_auth_sequence.json) |
+| **All** | [Full Database ER Diagram (50+ Tables)](#14-full-database-er-diagram-50-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
 
 ---
 
 ## 🧩 ไดอะแกรมรายกลุ่มการทำงาน 6 กลุ่ม (31 Modules Workflow)
 
-นอกจากภาพรวมสถาปัตยกรรมระดับระบบ 10 ชุดด้านบนแล้ว ยังมีเอกสารผังการทำงานเจาะลึกเฉพาะ **6 กลุ่มงานหลัก ครอบคลุม 31 โมดูลทั้งหมด** พร้อมคำอธิบายภาษาไทยและ Mermaid Diagrams รวม 18 ชุด:
+นอกจากภาพรวมสถาปัตยกรรมระดับระบบ 13 ชุดด้านบนแล้ว ยังมีเอกสารผังการทำงานเจาะลึกเฉพาะ **6 กลุ่มงานหลัก ครอบคลุม 31 โมดูลทั้งหมด** พร้อมคำอธิบายภาษาไทยและ Mermaid Diagrams รวม 19 ชุด:
 
 📄 **ดูรายละเอียดฉบับเต็ม:** [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
 
@@ -319,9 +321,69 @@ erDiagram
 
 ---
 
-### 12. Full Database ER Diagram (38+ Tables)
+### 12. Enterprise Document Lifecycle & Retention Governance
+- **ไฟล์ HTML:** [`12_document_management_lifecycle.html`](./12_document_management_lifecycle.html)
+- **วัตถุประสงค์:** แสดงวงจรชีวิตเอกสารองค์กร (Phase 17 DMS): การอัปโหลดไฟล์เก็บ private storage แยก tenant, ตรวจสอบความปลอดภัยด้วย SHA256 checksum และ AV scan, สถานะ Active พร้อมผูกความสัมพันธ์กับ Invoices/Expenses/Assets/Contracts/Employees, การแจ้งเตือนใกล้หมดอายุ (Expiring), การทบทวน Retention Policy และ Legal Hold, จนถึงการจัดเก็บถาวร (Archive) หรือทำลายตามนโยบาย (Purged)
+- **Mermaid Preview:**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Uploaded
+    Uploaded --> Scanning: Upload v1 to Private Storage
+    Scanning --> Active: Checksum & AV Pass
+    Scanning --> Quarantined: Infected / Blocked
+    Active --> Expiring: Renewal Alert Window
+    Expiring --> RetentionReview: Policy Expiry Due
+    RetentionReview --> Archived: Compliant Retention Archive
+    RetentionReview --> Purged: Purged (No Legal Hold)
+    Archived --> [*]
+    Purged --> [*]
+    Quarantined --> [*]
+```
+
+---
+
+### 13. Two-Factor Authentication & Privileged Access Flow
+- **ไฟล์ HTML:** [`13_two_factor_auth_sequence.html`](./13_two_factor_auth_sequence.html)
+- **วัตถุประสงค์:** แสดงกระบวนการยืนยันตัวตนสองขั้นตอน (Phase 18 2FA/TOTP): การตรวจสอบรหัสผ่าน, ประเมินนโยบายความปลอดภัยระดับองค์กร (บังคับใช้กับ Owner, Admin, Finance), การส่งคำขอ OTP (RFC 6238) หรือรหัสกู้คืนฉุกเฉิน (Recovery Codes), การออกโทเค็น Trusted Device 30 วัน, และการบังคับผ่าน `EnsureTwoFactorEnrollment` Middleware
+- **Mermaid Preview:**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Browser / User Device
+    participant Router as Laravel Router (web.php)
+    participant Auth as Auth Controller
+    participant Policy as TwoFactorPolicyService
+    participant TOTP as TOTP Engine (RFC 6238)
+    participant DB as MariaDB (Users & Devices)
+
+    User->>Router: POST /login (credentials)
+    Router->>Auth: authenticate()
+    Auth->>DB: verify password & roles
+    DB-->>Auth: valid credentials (privileged role)
+    Auth->>Policy: shouldChallenge(user)
+    Policy-->>Auth: challenge required (2FA enabled)
+    Auth-->>User: 302 Redirect to /two-factor-challenge
+
+    User->>Router: POST /two-factor-challenge (code, trust_device)
+    Router->>Auth: verifyChallenge()
+    Auth->>TOTP: verify(secret, code)
+    TOTP-->>Auth: code valid
+    Auth->>DB: store trusted device token (30 days)
+    Auth-->>User: Set-Cookie + 302 Redirect to App
+
+    User->>Router: GET /settings/organization
+    Router->>Policy: EnsureTwoFactorEnrollment
+    Policy-->>Router: authorized
+    Router-->>User: Inertia::render('Settings/Organization')
+```
+
+---
+
+### 14. Full Database ER Diagram (50+ Tables)
 - **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
-- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 38+ ตาราง ครอบคลุม 7 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
+- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 50+ ตาราง ครอบคลุม 12 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
 - **Mermaid Preview (Master Cross-Domain):**
 
 ```mermaid
@@ -338,15 +400,19 @@ erDiagram
     CUSTOMERS ||--o{ INVOICES : "1:N"
     INVOICES ||--o{ PAYMENTS : "1:N"
     SUPPLIERS ||--o{ PURCHASE_ORDERS : "1:N"
-    WAREHOUSES ||--o{ STOCK_LEVELS : "1:N"
+    WAREHOUSES ||--o{ WAREHOUSE_BINS : "1:N"
+    WAREHOUSES ||--o{ STOCK_MOVEMENTS : "1:N"
     USERS ||--o| EMPLOYEE_PAYROLL_PROFILES : "0..1:1"
     PAYROLL_RUNS ||--o{ PAYROLL_ITEMS : "1:N"
-    USERS ||--o{ PAYROLL_ITEMS : "1:N"
+    ORGANIZATIONS ||--o{ DOCUMENTS : "1:N"
+    DOCUMENTS ||--o{ DOCUMENT_VERSIONS : "1:N"
+    DOCUMENTS ||--o{ DOCUMENT_LINKS : "1:N"
+    USERS ||--o{ TWO_FACTOR_TRUSTED_DEVICES : "1:N"
 ```
 
 ---
 
-### 13. 6 Domain Group Workflows (31 Modules)
+### 15. 6 Domain Group Workflows (31 Modules)
 - **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
 - **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 19 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
 - **Mermaid Preview (Inter-Group Interaction):**
