@@ -4,6 +4,7 @@ use App\Models\AuditLog;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\NotificationOutboxService;
 use App\Services\NotificationService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -95,6 +96,37 @@ Artisan::command('documents:check-expiry', function () {
 
 Schedule::command('documents:check-expiry')->dailyAt('08:15');
 Schedule::command('documents:enforce-retention')->dailyAt('08:30');
+
+Artisan::command('notifications:dispatch {--limit=100}', function () {
+    $count = app(NotificationOutboxService::class)->dispatchPending(max(1, min(500, (int) $this->option('limit'))));
+    $this->info("Dispatched {$count} notification(s).");
+
+    return self::SUCCESS;
+})->purpose('Dispatch pending operational notification outbox records.');
+
+Schedule::command('notifications:dispatch --limit=100')->everyMinute()->withoutOverlapping();
+
+Artisan::command('notifications:daily-digest', function () {
+    $notifications = app(NotificationService::class);
+    $count = 0;
+    User::where('status', 'active')
+        ->whereHas('roles.permissions', fn ($query) => $query->where('code', 'executive.dashboard.view'))
+        ->orderBy('id')
+        ->chunkById(100, function ($users) use ($notifications, &$count): void {
+            foreach ($users as $user) {
+                $due = Invoice::where('org_id', $user->org_id)->whereIn('status', ['sent', 'partially_paid'])->whereDate('due_date', '<=', now()->toDateString())->count();
+                $overdue = Invoice::where('org_id', $user->org_id)->where('status', 'overdue')->count();
+                if ($notifications->notify($user, 'operational.digest', 'operational.digest:'.$user->org_id.':'.today()->toDateString(), 'Daily operations digest', "Invoices due: {$due}; overdue invoices: {$overdue}.", route('finance.dashboard', [], false))) {
+                    $count++;
+                }
+            }
+        });
+    $this->info("Queued {$count} daily digest notification(s).");
+
+    return self::SUCCESS;
+})->purpose('Queue a daily operations digest without cash balance data.');
+
+Schedule::command('notifications:daily-digest')->dailyAt('08:45')->withoutOverlapping();
 
 if (! function_exists('notifyFinanceUsers')) {
     function notifyFinanceUsers(Invoice $invoice, NotificationService $notifications, string $type, string $dedupeKey, string $title): int

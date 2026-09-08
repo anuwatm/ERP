@@ -8,7 +8,7 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะล่าสุด: **Phase 20 Done**; Central Approval Workflow พร้อม versioned definition, approver snapshot, SoD และ delegation
+สถานะล่าสุด: **Phase 21 Done**; Operational Notification Outbox พร้อม retry/dead-letter, encrypted LINE/Slack/Telegram channels และ quiet hours
 ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation), และ Payroll (effective-dated policy, payslip, PND1/SSO workpapers, GL posting)
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
@@ -71,6 +71,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Two-Factor Auth (2FA)** | TOTP RFC 6238, Recovery Codes, trusted device 1-90 วัน และ Role-based policy (ปิดเป็นค่าเริ่มต้น) | Phase 18 |
 | **HR & Attendance** | Employee work profile, shift, holiday, clock-in/out, leave balance/request, privacy policy และ locked payroll summary bridge | Phase 19 |
 | **Approval Workflow** | Versioned workflow definition, threshold, user/manager/role approver, snapshot, delegation, SoD และ approval inbox | Phase 20 |
+| **Operational Notifications** | Durable outbox, retry/dead-letter, encrypted LINE/Slack/Telegram, opt-in preferences, quiet hours และ safe daily digest | Phase 21 |
 | **Audit Log** | บันทึกประวัติการทำงานสำคัญทุกจุด พร้อม Before/After Snapshot และ User Tracker | Phase 1, 1.1 |
 | **CRM** | ฐานข้อมูลลูกค้า (Customers), ผู้ติดต่อ (Contacts), Primary Contact, ข้อมูลภาษี | Phase 2 |
 | **Sales Pipeline** | ดีลการขาย (Deals), Stage Flow, Won/Lost Rules, กิจกรรม (Activities & Timeline) | Phase 2 |
@@ -280,6 +281,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 18.1** | **Done** | Parent authorization, retention calculation/legal hold, scheduled quarantine/archive and explicit purge |
 | **Phase 19** | **Done** | HR core, attendance clock-in/out, leave balance/requests, shift/holiday and locked payroll summary |
 | **Phase 20** | **Done** | Dynamic approval workflow engine, multi-step routing, SoD guard, temporary delegations, and approval inbox |
+| **Phase 21** | **Done** | Operational notification outbox, encrypted external channels, retry/dead-letter, quiet hours and safe digest |
 
 ---
 
@@ -325,7 +327,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/two-factor/setup` | 2FA TOTP Enrollment & Recovery Codes | `auth` |
 | `/two-factor-challenge` | 2FA Login Challenge & Trusted Device | `auth` |
 | `/settings/organization` | Organization, Sequences & 2FA Policy Settings | `settings.organization.view` |
-| `/settings/notifications` | Notification Preferences | `settings.organization.view` |
+| `/settings/notifications` | Notification Preferences and External Channel Opt-in | authenticated user |
 | `/settings/organization-structure` | Branches, Divisions, Departments | `settings.structure.view` |
 
 ---

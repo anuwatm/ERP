@@ -43,7 +43,7 @@
 | Phase 18.1 | Done | Parent authorization guard, category retention calculation, legal hold, scheduled quarantine/archive and explicit purge implemented with feature tests |
 | Phase 19 | Done | HR Core, attendance, leave foundation and locked payroll summary bridge completed; approval remains explicitly deferred to Phase 20 |
 | Phase 20 | Done | Central approval workflow: versioned definitions, approver snapshot, threshold evaluation, SoD, delegation, inbox and audit trail |
-| Phase 21 | Planned | Operational Notifications & Outbox: LINE OA / Slack / Telegram, retry/backoff, quiet hours (no cash balance) |
+| Phase 21 | Done | Operational notification outbox, encrypted LINE/Slack/Telegram configuration, retry/dead-letter, user preferences/quiet hours, and safe daily digest |
 | Phase 22 | Planned | Customer & Supplier Self-Service Portals: external identity, quotation acceptance, vendor bills, WHT download |
 | Phase 23 | Planned | Thai PromptPay QR & Payment Gateway Integration: dynamic QR, signature verified webhooks, auto-reconciliation |
 | Phase 24 | Planned | Direct E-Tax Invoice & RD API Gateway: certified provider bridge, HSM/vault key management, XML-CAdES filing |
@@ -1071,19 +1071,19 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 21 Design Backlog
 
-- [ ] Design Notification Outbox Architecture (Outbox table, worker with exponential backoff retry, idempotency key, dead-letter log)
-- [ ] Design Channel Adapters: LINE OA Webhook / Push Message, Slack Webhook, Telegram Bot
-- [ ] Design Organization Channel Settings & Credential Vault (เก็บบันทึก Channel Token/Secrets แบบ Encrypted)
-- [ ] Design User Preferences & Quiet Hours (กำหนดช่วงเวลาห้ามรบกวน, เลือกรับเฉพาะเรื่องด่วน)
-- [ ] Design Security Guardrail: **ห้ามส่ง Cash Balance ดิบใน Daily Digest**; ส่งเฉพาะ AR/AP Aging, Due Items, ยอดขาย, ค่าใช้จ่าย, Low Stock, Overdue Tasks
+- [x] Design Notification Outbox Architecture (Outbox table, worker with exponential backoff retry, idempotency key, dead-letter log)
+- [x] Design Channel Adapters: LINE OA Webhook / Push Message, Slack Webhook, Telegram Bot
+- [x] Design Organization Channel Settings & Credential Vault (เก็บบันทึก Channel Token/Secrets แบบ Encrypted)
+- [x] Design User Preferences & Quiet Hours (กำหนดช่วงเวลาห้ามรบกวน, เลือกรับเฉพาะเรื่องด่วน)
+- [x] Design Security Guardrail: **ห้ามส่ง Cash Balance ดิบใน Daily Digest**; ส่งเฉพาะ AR/AP Aging, Due Items, ยอดขาย, ค่าใช้จ่าย, Low Stock, Overdue Tasks
 
 ### Phase 21 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `notification_channels`, `notification_outbox`, `notification_dispatches`, `user_channel_preferences`
-- [ ] พัฒนา Channel Drivers: `LineMessagingDriver`, `SlackWebhookDriver`, `TelegramBotDriver`
-- [ ] พัฒนา Outbox Dispatcher Worker & Scheduled Command สำหรับ Daily Morning Executive Digest
-- [ ] เพิ่ม UI: Channel Configuration & Test Ping (Admin), Notification Preference Toggles (User Profile)
-- [ ] เพิ่ม Feature Tests: Outbox retry, Idempotency, Encryption of webhook secrets, Quiet hours compliance, และ Non-leakage of cash balance tests
+- [x] เพิ่ม Schema/Models: `notification_channels`, `notification_outbox`, `notification_dispatches`, `user_channel_preferences`
+- [x] พัฒนา Channel Drivers: `LineMessagingDriver`, `SlackWebhookDriver`, `TelegramBotDriver`
+- [x] พัฒนา Outbox Dispatcher Worker & Scheduled Command สำหรับ Daily Morning Executive Digest
+- [x] เพิ่ม UI: Channel Configuration & Test Ping (Admin), Notification Preference Toggles (User Profile)
+- [x] เพิ่ม Feature Tests: Outbox retry, Idempotency, Encryption of webhook secrets, Quiet hours compliance, และ Non-leakage of cash balance tests
 
 ---
 

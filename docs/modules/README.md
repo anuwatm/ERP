@@ -60,7 +60,7 @@
 | File | Module | Version | Priority |
 | --- | --- | --- | --- |
 | [19-files.md](./19-files.md) | Files / Documents | Phase 17 DMS current | P0 |
-| [20-notifications.md](./20-notifications.md) | Notifications | Phase 8 in-app + queued mail implemented | Done |
+| [20-notifications.md](./20-notifications.md) | Notifications | Phase 8 in-app/email plus Phase 21 durable outbox, external channels and quiet hours | Done |
 | [21-automation.md](./21-automation.md) | Automation | Planned | Planned |
 | [22-import-export.md](./22-import-export.md) | Import / Export | Partial: tax/payroll/e-Tax exports and statement import | Partial |
 | [23-api.md](./23-api.md) | API | V1 หลัง MVP | P1 |

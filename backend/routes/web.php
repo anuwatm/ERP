@@ -432,11 +432,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['permission:settings.organization.update', 'password.confirm'])
         ->name('settings.organization.two-factor.update');
     Route::get('/settings/notifications', [NotificationPreferenceController::class, 'edit'])
-        ->middleware('permission:settings.organization.view')
         ->name('settings.notifications.edit');
     Route::patch('/settings/notifications', [NotificationPreferenceController::class, 'update'])
-        ->middleware(['permission:settings.organization.update', 'password.confirm'])
         ->name('settings.notifications.update');
+    Route::patch('/settings/notifications/external-preferences', [NotificationPreferenceController::class, 'updateExternal'])
+        ->name('settings.notifications.external-preferences.update');
+    Route::post('/settings/notification-channels', [NotificationPreferenceController::class, 'storeChannel'])
+        ->middleware(['permission:settings.organization.update', 'password.confirm', 'throttle:10,1'])
+        ->name('settings.notification-channels.store');
+    Route::patch('/settings/notification-channels/{channel}', [NotificationPreferenceController::class, 'updateChannel'])
+        ->middleware(['permission:settings.organization.update', 'password.confirm', 'throttle:10,1'])
+        ->name('settings.notification-channels.update');
+    Route::post('/settings/notification-channels/{channel}/test', [NotificationPreferenceController::class, 'testChannel'])
+        ->middleware(['permission:settings.organization.update', 'password.confirm', 'throttle:5,1'])
+        ->name('settings.notification-channels.test');
 
     Route::get('/settings/organization-structure', [OrganizationStructureController::class, 'index'])
         ->middleware('permission:settings.structure.view')

@@ -1245,6 +1245,26 @@ export default function AuthenticatedLayout({
                                         <span>Profile Settings</span>
                                     </Dropdown.Link>
                                     <Dropdown.Link
+                                        href={route(
+                                            'settings.notifications.edit',
+                                        )}
+                                    >
+                                        <svg
+                                            className="h-4 w-4 text-slate-400 group-hover:text-indigo-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9"
+                                            />
+                                        </svg>
+                                        <span>Notification Settings</span>
+                                    </Dropdown.Link>
+                                    <Dropdown.Link
                                         href={route('logout')}
                                         method="post"
                                         as="button"

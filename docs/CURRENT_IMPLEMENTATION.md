@@ -1,6 +1,6 @@
 # Current Implementation Reference
 
-เอกสารนี้เป็นภาพรวม implementation ณ Phase 19. ใช้สำหรับอ่านระบบปัจจุบันร่วมกับ source code; ไม่แทน migration, route หรือ test ซึ่งเป็น source of truth ของ runtime.
+เอกสารนี้เป็นภาพรวม implementation ณ Phase 21. ใช้สำหรับอ่านระบบปัจจุบันร่วมกับ source code; ไม่แทน migration, route หรือ test ซึ่งเป็น source of truth ของ runtime.
 
 ## Runtime
 
@@ -8,7 +8,7 @@
 | --- | --- |
 | Backend | PHP 8.3, Laravel 13, Inertia 2 |
 | Frontend | React 18, TypeScript, Vite |
-| Database | MySQL/MariaDB compatible, 45 migrations |
+| Database | MySQL/MariaDB compatible, 48 migrations |
 | Runtime drivers | database session/cache/queue, log mailer in local |
 | Locale / timezone | `th` locale; Laravel application timezone `UTC` |
 | Auth | Laravel Breeze local auth, email verification, RBAC, optional organization 2FA |
@@ -29,6 +29,7 @@
 | 18 | 2FA | Offline TOTP, recovery codes, trusted devices, owner reset, audit and policy-controlled privileged-role enforcement |
 | 19 | HR core, attendance & leave | Work profile/manager/shift/holiday, self-service clock-in/out, opt-in IP hash/GPS with consent, leave balances and draft/submit/cancel flow, locked time summary with reversal |
 | 20 | Dynamic approval workflow | Versioned definition, threshold matching, user/manager/role approver snapshot, sequential/parallel steps, SoD, temporary delegation, inbox and immutable action history |
+| 21 | Operational notifications | Durable outbox, in-app/email compatibility, encrypted LINE/Slack/Telegram channels, per-user opt-in/quiet hours, retry/dead-letter dispatch log and safe daily digest |
 
 ## Current Boundaries
 
@@ -39,8 +40,9 @@
 | E-Tax | The system produces/stores XML and supports a provider boundary. Certified provider onboarding, certificates and direct Revenue Department filing are not implemented |
 | 2FA | Policy defaults to off. When enabled, enrollment/challenge depends on organization policy and privileged role; trusted-device lifetime is 1-90 days |
 | HR to payroll | Attendance summaries are manually created with a cutoff, then locked or reversed into a replacement draft. They do not create `payroll_runs`, payroll items or GL entries automatically |
-| Workflow | Approval starts only when a creator submits a supported document to a matching active definition. Workflow final approval updates source status but intentionally does not auto-post GL; financial posting integration needs its own idempotent contract |
-| Future domains | External notification channels, portals, gateway payments, direct e-Tax gateway, forecasting, OCR, manufacturing and POS are planned from Phase 21 onward |
+| Workflow | Approval starts only when a creator submits a supported document to a matching active definition. Final expense approval posts GL through the existing idempotent financial-journal contract; rejection/revision returns each source to its domain-defined state |
+| Notifications | `NotificationService` records a dedupe event then writes delivery records to `notification_outbox`. The dispatcher retries failures with exponential backoff up to five attempts, retaining failed records and dispatch attempts. External channels are disabled until configured and opted into by each user |
+| Future domains | Portals, gateway payments, direct e-Tax gateway, forecasting, OCR, manufacturing and POS are planned from Phase 22 onward |
 
 ## Source Navigation
 

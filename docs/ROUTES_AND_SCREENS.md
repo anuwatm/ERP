@@ -139,7 +139,8 @@
 | Goods Receipt List / GRN | `GET /goods-receipts` | `inventory.view` |
 | Goods Receipt Create | `POST /goods-receipts` | `inventory.receive` |
 | Stock Movement Adjustment / Return | `POST /stock-movements` | `inventory.adjust` |
-| Notification Settings | `GET /settings/notifications`, `PATCH /settings/notifications` | `settings.organization.view/update` |
+| Notification Settings | `GET /settings/notifications`, `PATCH /settings/notifications`, `PATCH /settings/notifications/external-preferences` | authenticated user; personal preferences |
+| Notification Channel Administration | `POST/PATCH /settings/notification-channels`, `POST /settings/notification-channels/{channel}/test` | `settings.organization.update` + reauth |
 
 ## Phase 16B: Payroll, Social Security & Tax
 

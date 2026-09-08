@@ -1,90 +1,52 @@
-# Module: Notifications
+# Module: Operational Notifications
 
 | Meta | Value |
 | --- | --- |
 | Module code | `notifications` |
-| Version | V1 หลัง MVP (in-app/email), LINE ใน V2 |
-| Priority | P1 |
-| Schema กลาง | [`../database/DATABASE.md`](../database/DATABASE.md) §9.2 |
+| Phase | 8 foundation, 21 operational outbox |
+| Runtime source | `NotificationService`, `NotificationOutboxService`, `routes/console.php` |
 
----
+## Scope
 
-## 1. ชื่อ Module
+- In-app and email notifications remain compatible with existing event call sites.
+- LINE Messaging API, Slack webhook and Telegram bot are external organization channels.
+- Delivery is durable: a domain event creates a deduplicated `notification_events` row and per-channel `notification_outbox` records.
+- External delivery is disabled by default. It requires both an enabled organization channel and a user opt-in preference.
 
-**Notifications** — แจ้งเตือนสิ่งที่ต้องทำ
-
----
-
-## 2. รายละเอียด / หน้าที่
-
-- In-app notification + unread count
-- Email notification (Post-MVP)
-- LINE notification (V2)
-- ตั้งค่า preferences (อนาคต / settings)
-- Mark read
-
-### Event หลัก
-
-- assigned task
-- task overdue
-- deal follow-up due
-- invoice overdue
-- expense approval needed
-- payment received
-
----
-
-## 3. Workflow
-
-### 3.1 สร้างแจ้งเตือน
+## Delivery Flow
 
 ```text
-Domain event (เช่น task assigned)
-→ Notification service
-→ insert notifications (user_id, type, title, body, entity_*)
-→ optional enqueue email/LINE
+Domain event
+  -> NotificationService dedupe (`notification_events`)
+  -> notification_outbox per permitted channel
+  -> notifications:dispatch (every minute)
+  -> in_app | email | LINE | Slack | Telegram
+  -> notification_dispatches audit
+  -> sent | retrying (exponential backoff) | failed (after 5 attempts)
 ```
 
-### 3.2 ผู้ใช้รับสาร
+## Tables
 
-```text
-เปิด bell icon → list unread
-→ คลิก → mark read + ไป entity
-→ mark all read
-```
-
----
-
-## 4. Data Flow
-
-```text
-Tasks / Deals / Invoices / Payments / Expenses / Automation
-                        │
-                        ▼
-              Notification service
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-     notifications   Email provider  LINE (V2)
-      (in_app DB)
-```
-
----
-
-## 5. โครงสร้าง Database
-
-### ตารางหลัก (own)
-
-| Table | Role |
+| Table | Responsibility |
 | --- | --- |
-| `notifications` | กล่องแจ้งเตือนต่อ user |
+| `in_app_notifications` | User-facing bell feed and read state |
+| `notification_events` | Per-user domain-event dedupe key |
+| `notification_preferences` | Per-event email/in-app choices from Phase 8 |
+| `notification_channels` | Organization external configuration; `config` is encrypted |
+| `user_channel_preferences` | Per-user external opt-in, quiet hours and urgent-only rule |
+| `notification_outbox` | Durable delivery work, idempotency, status and retry schedule |
+| `notification_dispatches` | Immutable attempt result history |
 
-### Field สำคัญ
+## Security and Privacy
 
-`user_id`, `type`, `title`, `body`, `entity_type`, `entity_id`, `channel`, `is_read`, `read_at`
+- Channel config is encrypted at rest and never returned through Inertia props or audit payloads.
+- External configuration and test ping require `settings.organization.update`, password confirmation and throttling.
+- User preference changes are available to every authenticated user; channel administration remains admin-only.
+- Failure records are generic and do not retain provider response bodies, webhook URLs, tokens or secrets.
+- Daily digest contains only operational counts for due and overdue invoices. It never includes raw cash balance.
 
-### Business rules
+## Operations
 
-- แจ้งเฉพาะ user ที่เกี่ยวข้อง + อยู่ใน org เดียวกัน
-- อย่า spam: debounce event ซ้ำ
-- email ใช้ settings email.sender
+- `php artisan notifications:dispatch --limit=100` sends due outbox items. Scheduler runs it every minute with `withoutOverlapping()`.
+- `php artisan notifications:daily-digest` queues the safe executive digest at 08:45.
+- Failed records remain in `notification_outbox` with status `failed` after five attempts for operational visibility and manual remediation.
