@@ -23,7 +23,8 @@
 | **11** | [Payroll Policy, Approval & GL Flow](#11-payroll-policy-approval--gl-flow) | Workflow | [`11_payroll_policy_gl_flow.html`](./11_payroll_policy_gl_flow.html) | [`specs/11_payroll_policy_gl_flow.json`](./specs/11_payroll_policy_gl_flow.json) |
 | **12** | [Enterprise Document Lifecycle & Compliance](#12-enterprise-document-lifecycle--compliance) | Lifecycle | [`12_document_management_lifecycle.html`](./12_document_management_lifecycle.html) | [`specs/12_document_management_lifecycle.json`](./specs/12_document_management_lifecycle.json) |
 | **13** | [Two-Factor Authentication & Privileged Access Flow](#13-two-factor-authentication--privileged-access-flow) | Sequence | [`13_two_factor_auth_sequence.html`](./13_two_factor_auth_sequence.html) | [`specs/13_two_factor_auth_sequence.json`](./specs/13_two_factor_auth_sequence.json) |
-| **All** | [Full Database ER Diagram (50+ Tables)](#14-full-database-er-diagram-50-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
+| **14** | [Approval Workflow Instance Lifecycle](#14-approval-workflow-instance-lifecycle) | Lifecycle | [`14_approval_workflow_engine.html`](./14_approval_workflow_engine.html) | [`specs/14_approval_workflow_engine.json`](./specs/14_approval_workflow_engine.json) |
+| **All** | [Full Database ER Diagram (55+ Tables)](#15-full-database-er-diagram-55-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
 
 ---
 
@@ -381,9 +382,34 @@ sequenceDiagram
 
 ---
 
-### 14. Full Database ER Diagram (50+ Tables)
+### 14. Approval Workflow Instance Lifecycle
+- **ไฟล์ HTML:** [`14_approval_workflow_engine.html`](./14_approval_workflow_engine.html)
+- **ไฟล์ JSON Spec:** [`specs/14_approval_workflow_engine.json`](./specs/14_approval_workflow_engine.json)
+- **วัตถุประสงค์:** แสดงกระบวนการทำงานของ Central Approval Workflow Engine (Phase 20) ตั้งแต่การส่งเอกสารเข้าตรวจ, การจับคู่นิยามและบันทึก snapshot, การตรวจสอบ SoD และการมอบหมายสิทธิ์แทน (Delegation), ลำดับการอนุมัติ (Sequential vs Parallel), ไปจนถึงการสะท้อนสถานะปลายทางและการบันทึกบัญชี GL / คืนสิทธิ์วันลา
+- **Mermaid Preview:**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft: Subject Created
+    Draft --> Pending: Submit to Workflow
+    note right of Pending: Matched Definition & Subject Frozen in Snapshot
+    Pending --> UnderReview: Queue Assigned Approvers
+    note right of UnderReview: SoD Excludes Requester / Resolves Active Delegation
+    UnderReview --> Approved: Final Step Approved
+    note right of Approved: Target status updated & GL posted (Expenses)
+    UnderReview --> Rejected: Rejected
+    note right of Rejected: Subject marked rejected & Leave balance refunded
+    UnderReview --> RevisionNeeded: Revision Requested
+    RevisionNeeded --> Draft: Returned to Creator
+    Approved --> [*]
+    Rejected --> [*]
+```
+
+---
+
+### 15. Full Database ER Diagram (55+ Tables)
 - **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
-- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 50+ ตาราง ครอบคลุม 12 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
+- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 55+ ตาราง ครอบคลุม 13 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
 - **Mermaid Preview (Master Cross-Domain):**
 
 ```mermaid
@@ -408,13 +434,18 @@ erDiagram
     DOCUMENTS ||--o{ DOCUMENT_VERSIONS : "1:N"
     DOCUMENTS ||--o{ DOCUMENT_LINKS : "1:N"
     USERS ||--o{ TWO_FACTOR_TRUSTED_DEVICES : "1:N"
+    ORGANIZATIONS ||--o{ WORKFLOW_DEFINITIONS : "1:N"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_STEPS : "1:N"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_INSTANCES : "1:N"
+    WORKFLOW_INSTANCES ||--o{ WORKFLOW_APPROVALS : "1:N"
+    ORGANIZATIONS ||--o{ WORKFLOW_DELEGATIONS : "1:N"
 ```
 
 ---
 
-### 15. 6 Domain Group Workflows (31 Modules)
+### 16. 6 Domain Group Workflows (31 Modules)
 - **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
-- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 19 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
+- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 20 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
 - **Mermaid Preview (Inter-Group Interaction):**
 
 ```mermaid

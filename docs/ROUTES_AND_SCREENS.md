@@ -170,6 +170,8 @@
 | DMS workspace | `GET /documents`, upload/version/link/category/retention-policy actions | `documents.*` |
 | 2FA setup/challenge | `GET|POST /two-factor/setup`, `GET|POST /two-factor-challenge` | authenticated + password confirm for setup; pending-login guest for challenge |
 | Organization 2FA policy | `PATCH /settings/organization/two-factor` | `settings.organization.update` + password confirm |
+| Phase 19: HR & Attendance | `GET /hr/attendance`, clock-in/out, leave requests, summary locks | `attendance.*` |
+| Phase 20: Workflow definitions & inbox | `GET /workflows`, step config, delegations, `/workflows/inbox` actions | `workflows.*` |
 
 ## Empty States
 

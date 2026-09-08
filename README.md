@@ -57,7 +57,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | PDF Engine | DomPDF | สร้างเอกสาร PDF ทางการ (รองรับ BahtText, Original/Copy, VOID) |
 | Auth | Laravel Breeze | Local Auth, Password Confirmation, Verification |
 | Queue & Mail | Laravel Queue & Mailable | Async background jobs, In-App notifications, Mail queue |
-| Test Suite | PHPUnit | Automated Feature/Unit Tests (246 passed tests, 1,921 assertions) |
+| Test Suite | PHPUnit | Automated Feature/Unit Tests (257 passed tests, 1,968 assertions) |
 | Code Quality | Laravel Pint, ESLint, Prettier | Code Formatting & Static Analysis |
 
 ---
@@ -277,8 +277,9 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 15** | **Done** | Multi-warehouse & bins, stock transfer, reorder alerts, lot/expiry, Barcode/QR scanning |
 | **Phase 16B** | **Done** | Payroll profile/policy versioning, calculation, payslip PDF, workpaper CSV and GL posting |
 | **Phase 17** | **Done** | DMS core, private versioned documents, links, sensitivity and expiry alerts |
-| **Phase 18** | **Done - polish planned** | Offline TOTP, recovery codes, policy-controlled trusted devices, owner reset and privileged-role enforcement |
 | **Phase 18.1** | **Done** | Parent authorization, retention calculation/legal hold, scheduled quarantine/archive and explicit purge |
+| **Phase 19** | **Done** | HR core, attendance clock-in/out, leave balance/requests, shift/holiday and locked payroll summary |
+| **Phase 20** | **Done** | Dynamic approval workflow engine, multi-step routing, SoD guard, temporary delegations, and approval inbox |
 
 ---
 
@@ -314,6 +315,8 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/expenses` | Expenses & Approvals | `expenses.view` |
 | `/payroll` | Payroll, policy versions, runs, payslips and workpaper exports | `payroll.view` |
 | `/documents` | Enterprise Document Management (DMS) | `documents.view` |
+| `/hr/attendance` | Attendance Clock-In/Out, Leave Requests & Payroll Summary | `attendance.view` |
+| `/workflows` | Dynamic Approval Definitions, Step Config & Approval Inbox | `workflows.view` |
 | `/projects` | Projects & Project Members | `projects.view` |
 | `/tasks` | Tasks, Checklists & Comments | `tasks.view` |
 | `/users` | User Management & Invitations | `users.view` |
@@ -428,7 +431,7 @@ vendor\bin\pint
 
 ผลการทดสอบล่าสุด:
 ```text
-Pass: 246 passed, 1921 assertions
+Pass: 257 passed, 1968 assertions
 ```
 
 ---

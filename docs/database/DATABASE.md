@@ -1,10 +1,10 @@
 # Central Database Schema
 
-> **สถานะ: planning baseline (MVP historical document).** Schema runtime ปัจจุบันให้ยึด migration ใน `backend/database/migrations` เป็น source of truth และดู [`../../document/DATABASE_ERD.md`](../../document/DATABASE_ERD.md) สำหรับ ERD ที่ sync หลัง Phase 18. ไฟล์นี้ยังเก็บไว้เพื่ออธิบายเจตนาเดิมของ MVP เท่านั้น
+> **สถานะ: planning baseline (MVP historical document).** Schema runtime ปัจจุบันให้ยึด migration ใน `backend/database/migrations` เป็น source of truth และดู [`../../document/DATABASE_ERD.md`](../../document/DATABASE_ERD.md) สำหรับ ERD ที่ sync หลัง Phase 20. ไฟล์นี้ยังเก็บไว้เพื่ออธิบายเจตนาเดิมของ MVP เท่านั้น
 
 อ้างอิงแผน: [`ERP_FEATURE_PLAN.md`](../../ERP_FEATURE_PLAN.md)
 
-> เนื้อหาด้านล่างสะท้อน scope ก่อน Phase 8 จึงไม่ครอบคลุม Treasury, GL, E-Tax, Assets, FX, Inventory operations, Payroll, DMS และ 2FA runtime schema. ห้ามใช้ตัดสิน schema ใหม่โดยไม่ตรวจ migration.
+> เนื้อหาด้านล่างสะท้อน scope ก่อน Phase 8 จึงไม่ครอบคลุม Treasury, GL, E-Tax, Assets, FX, Inventory operations, Payroll, DMS, 2FA, HR Attendance และ Dynamic Approval Workflow runtime schema. ห้ามใช้ตัดสิน schema ใหม่โดยไม่ตรวจ migration.
 
 ---
 

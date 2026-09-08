@@ -427,6 +427,44 @@ Gemini เห็นพ้อง 100% กับข้อเสนอของ GPT
 
 ---
 
+### 4.12 ผลการตรวจรับรองการแก้ไข Phase 20 (Phase 20 Remediation Verification & Approval Gate)
+
+จากการตรวจสอบซอร์สโค้ดและรันชุดทดสอบระบบอย่างครบวงจรหลัง GPT ทำการแก้ไขข้อบกพร่องตามรายการในข้อ 4.11 พบว่าปัญหาทั้งหมดได้รับการแก้ไขอย่างถูกต้องสมบูรณ์ 100%:
+
+1. **Expense Double-entry GL Posting:**
+   - ใน `WorkflowEngineService::markSubjectApproved()` มีการคำนวณ `payable_total`, `base_payable_total`, `balance_due`, `base_balance_due` และเรียกใช้ `$this->journals->postExpenseApproval($subject->fresh(), $actor->id)` สมบูรณ์
+   - ยืนยันด้วย Feature Test `test_expense_final_approval_sets_payable_and_posts_gl` ตรวจสอบทั้งยอดหนี้และ `journal_entries` ในฐานข้อมูลจริง
+2. **Leave Balance Refund & Status Sync on Reject/Revise:**
+   - พัฒนาฟังก์ชัน `markSubjectNotApproved()` รองรับการคืนยอดวันลาเข้า `leave_balances` สำหรับวันลาที่จ่ายค่าจ้าง (`is_paid`) และปรับสถานะ `LeaveRequest` เป็น `rejected` (หรือ `draft` กรณีขอแก้ไข)
+   - โมดูล Expense, Purchase Request, และ Purchase Order ได้รับการปรับสถานะเป็น `rejected` / `draft` สอดคล้องกัน
+   - ยืนยันด้วย Feature Test `test_rejection_refunds_paid_leave_and_revision_returns_to_draft`
+3. **Approved Leaves in Attendance Summary:**
+   - ใน `HrAttendanceService::createSummary()` ปรับเงื่อนไขการดึงวันลาเป็น `whereIn('status', ['submitted', 'approved'])` ครอบคลุมวันลาที่อนุมัติแล้วอย่างแม่นยำ
+4. **SoD Role Deadlock Prevention & Execution Mode:**
+   - กรอง Requester ออกจากรายชื่อ Assignee ของ Step นั้นตั้งแต่ขั้นตอน Snapshot (`reject(fn (string $id) => $id === $requester->id)`) ป้องกันปัญหา Deadlock
+   - กำหนดพฤติกรรม `execution_mode`:
+     - `parallel`: รองรับแบบ First-to-Approve โดยเมื่อมีผู้อนุมัติคนแรก รายการที่เหลือใน Step จะถูกปรับเป็น `superseded`
+     - `sequential`: บังคับให้ทุกคนใน Step ต้องดำเนินการครบถ้วน
+5. **Delegated Approvals Visibility in Inbox UI:**
+   - ใน `WorkflowController::index` เพิ่มการค้นหา Active Delegations ที่มอบหมายให้ `$user->id` และดึง Approval ค้างอยู่มาแสดงผลใน Inbox พร้อมตั้งค่าความสัมพันธ์ `delegatedFromUser` แสดงผลว่า "Delegated from [Name]"
+6. **Multi-Step Workflow Builder UI:**
+   - หน้าจอ `Workflows/Index.tsx` พัฒนาเป็น Dynamic Step Builder รองรับการเพิ่ม/ลบขั้นตอนได้สูงสุด 10 Steps (`builderSteps`) และส่งข้อมูลเป็น JSON Array ไปยัง Backend โดยตรง
+7. **Submit Approval Triggers in Source Modules:**
+   - เพิ่มปุ่ม "Submit Approval" ในสถานะ Draft ของหน้า Expenses (`Expenses.tsx`), Purchase Orders (`PurchaseOrders.tsx`), และ Commercial Documents Purchase Requests (`CommercialDocuments.tsx`)
+8. **Action Confirmation & Comment Mandate:**
+   - มี Confirmation Prompt ในการกด Action ทุกครั้ง และบังคับกรอกเหตุผล (Comment Required) ในกรณี `rejected` และ `revision_requested` ทั้งฝั่ง UI และ Backend Form Validation
+9. **Static Analysis & CI/CD Gates Pass 100%:**
+   - **PHP Pint:** Passed (0 errors / 0 issues)
+   - **TypeScript (`tsc`):** Clean (0 errors)
+   - **ESLint:** 0 errors / 0 warnings (กำจัด `any` ทั้ง 39 จุดและประกาศ Interface ครบถ้วน)
+   - **Prettier:** Passed (All matched files use Prettier code style)
+   - **Vite Build:** 1,051 modules transformed / build clean
+   - **PHPUnit / Feature Tests:** **257 Tests Passed (1,968 assertions / 0 failures)**
+
+**สรุป:** Phase 20 ผ่านการตรวจรับรอง (Approved & Closed) อย่างเป็นทางการ พร้อมส่งมอบเข้าสู่ Phase 21 ต่อไป
+
+---
+
 ## 6. แผนงานพัฒนาต่อยอด (Future Roadmap & Architectural Guardrails)
 
 ### แผนผังลำดับการพัฒนาที่เห็นชอบร่วมกัน (Consensus Roadmap Phase 1 - 28):
@@ -434,7 +472,7 @@ Gemini เห็นพ้อง 100% กับข้อเสนอของ GPT
 ```
 [Phase 1 - 18.1 & Phase 19: Core, Financials, Treasury, Inventory, Payroll, DMS, 2FA & HR Foundation] (Closed)
        ↓
-[Phase 20: Dynamic Approval Workflow Engine] (Thresholds, Multi-level, Delegation, Leave/PR/PO/Expense Chains) (Under Review & Remediation)
+[Phase 20: Dynamic Approval Workflow Engine] (Thresholds, Multi-level, Delegation, Leave/PR/PO/Expense Chains) (Closed)
        ↓
 [Phase 21: Operational Notifications & Outbox] (LINE OA / Slack / Telegram, Quiet Hours, No Cash Balance) (Next Gate)
        ↓
@@ -452,13 +490,14 @@ Gemini เห็นพ้อง 100% กับข้อเสนอของ GPT
 ```
 
 ### สรุปสถานะโครงการ:
-- **Phase 1 ถึง Phase 19 (รวม Phase 18.1 Remediation):** เสร็จสมบูรณ์แล้วทุก Phase (100% Complete & Closed)
-- **Phase 20 Dynamic Approval Workflow Engine:** พัฒนาโครงสร้างตาราง, Service กลาง, Inbox UI, และ Delegation เสร็จสิ้นแล้ว อยู่ในระหว่าง **Audit & Remediation Gate** เพื่อแก้ไขจุดบกพร่องทางบัญชี (GL Posting Bypass), การคืนยอดวันลา (Leave Balance Refund on Reject), ข้อผิดพลาด Code Standards (Pint, ESLint Any, Prettier), และการป้องกัน Role-based SoD Deadlock ก่อนปิด Phase อย่างเป็นทางการ
+- **Phase 1 ถึง Phase 20 (รวม Phase 18.1 Remediation):** เสร็จสมบูรณ์แล้วทุก Phase (100% Complete & Closed)
+- **Phase 20 Dynamic Approval Workflow Engine:** พัฒนาโครงสร้างตาราง, Service กลาง, Inbox UI, Multi-Step Builder, Delegation Resolution, และเชื่อมต่อ Leave/PR/PO/Expense พร้อมแก้ไขจุดบกพร่อง Double-Entry GL posting, Leave balance refund, SoD role deadlock, และผ่าน Code Quality Standards (Pint, Prettier, ESLint 0 warnings, TypeScript) ครบถ้วน 100%
 - **สถานะการทดสอบระบบ (Test Verification):**
-  - Backend Feature Tests: **255 Tests Passed (1,963 Assertions / 0 Failures)**
+  - Backend Feature Tests: **257 Tests Passed (1,968 Assertions / 0 Failures)**
   - Frontend Build: **Vite Build Clean (1,051 modules transformed / 0 errors)**
-  - Static Code Analysis: รอแก้ไข Pint formatting, Prettier, และ TypeScript explicit types ให้ผ่าน 100%
-- **ประตูสู่ Phase ถัดไป (Next Gate):** ปิดรายการ Remediation ของ Phase 20 ให้สมบูรณ์ ก่อนเปิดประตูสู่ **Phase 21: Operational Notifications & Outbox**
+  - TypeScript Compilation: **`tsc` Clean (0 errors)**
+  - Static Code Analysis: **ESLint Clean (0 warnings / 0 errors)**, **Prettier Clean**, **Laravel Pint Passed**
+- **ประตูสู่ Phase ถัดไป (Next Gate):** พร้อมเปิดประตูสู่ **Phase 21: Operational Notifications & Outbox**
 
 ---
 

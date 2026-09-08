@@ -55,5 +55,5 @@
 ## Verification Snapshot
 
 - `php artisan about`: Laravel 13.22.0, PHP 8.3.1, MySQL driver
-- `php artisan route:list --except-vendor`: 212 routes
-- 50 PHPUnit test files and 45 migrations were present during the documentation audit
+- `php artisan route:list --except-vendor`: 231 routes
+- 53 PHPUnit test files (257 passed tests, 1,968 assertions) and 47 migrations were present during the documentation audit

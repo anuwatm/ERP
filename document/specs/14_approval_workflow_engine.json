@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Approval Workflow Instance Lifecycle",
+    "subtitle": "Phase 20 dynamic approval evaluation, multi-step progression, and atomic outcomes",
+    "output": "document/14_approval_workflow_engine.html",
+    "viewBox": [980, 660],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "creation-and-inbox",
+        "label": "Creation & Inbox Routing",
+        "focus": ["draft", "pending", "in_review"],
+        "note": "Document submission matches definition, freezes snapshots, and queues approvals for active assignees or delegates."
+      },
+      {
+        "id": "step-progression",
+        "label": "Step Progression & Supercedence",
+        "focus": ["pending", "in_review", "approved"],
+        "note": "Parallel steps supersede peers on first approval; sequential steps advance step_no until complete."
+      },
+      {
+        "id": "terminal-outcomes",
+        "label": "Terminal & Accounting Outcomes",
+        "focus": ["approved", "rejected", "revised"],
+        "note": "Approved triggers GL or target status; rejection or revision releases holds and refunds leave atomically."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Workflow Instance Lifecycle" },
+    { "id": "terminal", "label": "Resolution & Domain Outcomes" }
+  ],
+  "states": [
+    { "id": "draft", "type": "start", "label": "Draft Subject", "sublabel": "Leave / Expense / PO", "lane": "main", "col": 0, "step": "01", "tag": "Unsubmitted" },
+    { "id": "pending", "type": "active", "label": "Instance Queued", "sublabel": "Definition matched & frozen", "lane": "main", "col": 1, "step": "02", "tag": "Snapshot" },
+    { "id": "in_review", "type": "active", "label": "Under Review", "sublabel": "Assigned inbox & delegates", "lane": "main", "col": 2, "step": "03", "tag": "SoD Enforced" },
+    { "id": "approved", "type": "success", "label": "Approved", "sublabel": "Target marked approved", "lane": "main", "col": 3, "step": "04", "tag": "GL Posted" },
+    { "id": "rejected", "type": "failure", "label": "Rejected", "sublabel": "Terminal refusal & audit", "lane": "terminal", "col": 1, "tag": "Refund Balances" },
+    { "id": "revised", "type": "waiting", "label": "Revision Needed", "sublabel": "Returned to creator draft", "lane": "terminal", "col": 2, "tag": "Draft Reopened" }
+  ],
+  "transitions": [
+    { "id": "t-draft-pending", "from": "draft", "to": "pending", "variant": "emphasis" },
+    { "id": "t-pending-review", "from": "pending", "to": "in_review", "variant": "default" },
+    { "id": "t-review-approved", "from": "in_review", "to": "approved", "variant": "emphasis" },
+    { "id": "t-review-rejected", "from": "in_review", "to": "rejected", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "t-review-revised", "from": "in_review", "to": "revised", "variant": "default", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Versioned Definition & Snapshot Integrity",
+      "items": [
+        "Active workflow definitions match on organization, subject type, and amount threshold [min, max]",
+        "Submission freezes both definition configuration and subject payload into immutable JSON snapshots",
+        "Subsequent edits to definition steps do not alter currently running workflow instances"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Segregation of Duties (SoD) & Delegations",
+      "items": [
+        "Requesters are strictly excluded from approval assignees to prevent self-approval deadlocks",
+        "Assignees can be explicit users, organizational reporting managers, or privileged roles",
+        "Active delegations allow appointed delegates to act during a configured time window without permission leakage"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Execution Modes & Boundary Transitions",
+      "items": [
+        "Parallel steps execute on first-response, marking remaining peer assignees as superseded",
+        "Sequential steps require every ordered step to approve before advancing",
+        "Final approval transitions subject status and posts double-entry GL journals (Expense) or refunds deducted balances (Leave rejection)"
+      ]
+    }
+  ]
+}

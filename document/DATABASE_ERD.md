@@ -1,6 +1,6 @@
-# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 50+ Tables)
+# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 55+ Tables)
 
-เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 50+ ตาราง** อ้างอิงตามโครงสร้างฐานข้อมูลกลาง [`docs/database/DATABASE.md`](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md) (Single Source of Truth) ครอบคลุมฟังก์ชันตั้งแต่ Phase 0 ถึง Phase 18 พร้อมคำอธิบายความสัมพันธ์, Primary Keys, Foreign Keys, Constraints, และกฎทางธุรกิจภาษาไทยอย่างละเอียด
+เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 55+ ตาราง** อ้างอิงตามโครงสร้างฐานข้อมูลกลาง [`docs/database/DATABASE.md`](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md) (Single Source of Truth) ครอบคลุมฟังก์ชันตั้งแต่ Phase 0 ถึง Phase 20 พร้อมคำอธิบายความสัมพันธ์, Primary Keys, Foreign Keys, Constraints, และกฎทางธุรกิจภาษาไทยอย่างละเอียด
 
 ---
 
@@ -19,7 +19,8 @@
 11. [Domain 10: ระบบจัดการเอกสารองค์กร (Enterprise DMS & Retention - Phase 17)](#11-domain-10-ระบบจัดการเอกสารองค์กร-enterprise-dms--retention---phase-17)
 12. [Domain 11: ความปลอดภัยและการยืนยันตัวตน 2FA (Security & Two-Factor - Phase 18)](#12-domain-11-ความปลอดภัยและการยืนยันตัวตน-2fa-security--two-factor---phase-18)
 13. [Domain 12: แพลตฟอร์ม บันทึกประวัติ และการเชื่อมต่อระบบ (Platform & Integrations)](#13-domain-12-แพลตฟอร์ม-บันทึกประวัติ-และการเชื่อมต่อระบบ-platform--integrations)
-14. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#14-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
+14. [Domain 13: เครื่องมือกำหนดและควบคุมสายอนุมัติพลวัต (Dynamic Approval Workflow Engine - Phase 20)](#14-domain-13-เครื่องมือกำหนดและควบคุมสายอนุมัติพลวัต-dynamic-approval-workflow-engine---phase-20)
+15. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#15-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
 
 ---
 
@@ -78,6 +79,11 @@ erDiagram
     USERS ||--o{ TWO_FACTOR_TRUSTED_DEVICES : "1:N trusted devices"
     DOCUMENTS ||--o{ DOCUMENT_VERSIONS : "1:N version history"
     DOCUMENTS ||--o{ DOCUMENT_LINKS : "1:N polymorphic links"
+    ORGANIZATIONS ||--o{ WORKFLOW_DEFINITIONS : "1:N definitions"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_STEPS : "1:N steps"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_INSTANCES : "1:N execution instances"
+    WORKFLOW_INSTANCES ||--o{ WORKFLOW_APPROVALS : "1:N step approvals"
+    ORGANIZATIONS ||--o{ WORKFLOW_DELEGATIONS : "1:N delegations"
 ```
 
 ---
@@ -1012,7 +1018,97 @@ erDiagram
 
 ---
 
-## 14. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
+## 14. Domain 13: เครื่องมือกำหนดและควบคุมสายอนุมัติพลวัต (Dynamic Approval Workflow Engine - Phase 20)
+
+ครอบคลุมนิยามสายอนุมัติแบบเวอร์ชัน (Workflow Definitions), ขั้นตอนการตรวจ (Workflow Steps), ประวัติการรันและสแนปช็อตเอกสาร (Workflow Instances), ประวัติการตัดสินใจและคิวงาน (Workflow Approvals), และการมอบหมายสิทธิ์อนุมัติแทนตามกรอบเวลา (Workflow Delegations)
+
+```mermaid
+erDiagram
+    WORKFLOW_DEFINITIONS {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        varchar code "รหัสสายอนุมัติ (e.g. WF-EXP-01)"
+        varchar name "ชื่อสายการอนุมัติ"
+        varchar subject_type "ประเภทเอกสาร (leave_request, purchase_request, purchase_order, expense)"
+        int version "เลขเวอร์ชันนิยาม (default 1)"
+        decimal amount_min "วงเงินขั้นต่ำ (DECIMAL 18,2)"
+        decimal amount_max "วงเงินสูงสุด (DECIMAL 18,2)"
+        uuid department_id FK "แผนกที่บังคับใช้ (Nullable)"
+        boolean is_active "สถานะใช้งาน"
+        uuid created_by "ผู้สร้างนิยาม"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WORKFLOW_STEPS {
+        uuid id PK
+        uuid workflow_definition_id FK "ผูกกับนิยามสายอนุมัติ"
+        int step_no "ลำดับขั้นตอน (1, 2, 3...)"
+        varchar assignment_type "รูปแบบผู้ตรวจ (user, manager, role)"
+        uuid approver_user_id FK "ผู้ตรวจรายบุคคล (Nullable)"
+        varchar approver_role_code "รหัสบทบาทผู้ตรวจ (Nullable)"
+        varchar execution_mode "โหมดการตรวจ (sequential, parallel)"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WORKFLOW_INSTANCES {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        uuid workflow_definition_id FK "นิยามที่จับคู่"
+        varchar subject_type "ประเภทเอกสาร"
+        uuid subject_id "ID เอกสารต้นทาง"
+        uuid requester_user_id FK "ผู้ยื่นขออนุมัติ"
+        varchar status "สถานะ (pending, approved, rejected, revision_requested)"
+        int current_step_no "ขั้นตอนปัจจุบันที่รอตรวจ"
+        json definition_snapshot "สแนปช็อตนิยามขณะยื่น (Immutable)"
+        json subject_snapshot "สแนปช็อตข้อมูลเอกสารขณะยื่น (Immutable)"
+        timestamp submitted_at "เวลาที่ยื่นตรวจ"
+        timestamp completed_at "เวลาที่สิ้นสุดกระบวนการ"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WORKFLOW_APPROVALS {
+        uuid id PK
+        uuid workflow_instance_id FK "ผูกกับอินสแตนซ์สายอนุมัติ"
+        int step_no "ขั้นตอนที่ตรวจ"
+        uuid assigned_user_id FK "ผู้ใช้ที่ได้รับมอบหมาย"
+        uuid delegated_from_user_id FK "ผู้มอบหมายสิทธิ์แทน (Nullable)"
+        varchar status "สถานะ (queued, pending, approved, rejected, revision_requested, superseded)"
+        uuid acted_by_user_id FK "ผู้ลงนามจริง (Nullable)"
+        text comment "ความเห็นประกอบการตัดสินใจ"
+        timestamp acted_at "เวลาที่ลงนาม"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WORKFLOW_DELEGATIONS {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        uuid delegator_user_id FK "ผู้มอบอำนาจ"
+        uuid delegate_user_id FK "ผู้รับมอบอำนาจ"
+        varchar subject_type "จำกัดประเภทเอกสาร (Nullable = ทุกประเภท)"
+        timestamp starts_at "วันเวลาเริ่มต้นมอบอำนาจ"
+        timestamp ends_at "วันเวลาสิ้นสุดมอบอำนาจ"
+        boolean is_active "สถานะเปิดใช้งาน"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ORGANIZATIONS ||--o{ WORKFLOW_DEFINITIONS : "owns"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_STEPS : "has steps"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_INSTANCES : "instances"
+    WORKFLOW_INSTANCES ||--o{ WORKFLOW_APPROVALS : "records"
+    ORGANIZATIONS ||--o{ WORKFLOW_DELEGATIONS : "configures"
+    USERS ||--o{ WORKFLOW_INSTANCES : "requests"
+    USERS ||--o{ WORKFLOW_APPROVALS : "assignee"
+    USERS ||--o{ WORKFLOW_DELEGATIONS : "delegates"
+```
+
+---
+
+## 15. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
 
 1. **ระบบคีย์หลัก (Primary Keys):**  
    - ทุกตารางใช้ Primary Key ชื่อ `id` เป็นชนิด **Time-Ordered UUID (UUIDv7)** เพื่อประสิทธิภาพในการทำ Indexing และป้องกันการคาดเดา ID ข้อมูล

@@ -13,7 +13,7 @@
 | **Group 3** | [Project Delivery & Execution](#group-3-project-delivery--execution-โมดูล-09-11) | `09-11` (Projects, Tasks, Milestones) | 3 | แปลง Deal สู่ Project &rarr; จ่ายงาน Tasks &rarr; ตรวจรับ Milestones |
 | **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses, Assets, FX, E-Tax) | 5 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; รายจ่าย &rarr; Treasury/GL &rarr; สินทรัพย์, FX, e-Tax |
 | **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, DMS) | 4 | Event Trigger, Dashboard, ระบบไฟล์แนบ และ DMS Lifecycle & Retention |
-| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-18) | `24-31` (PO, Multi-Warehouse/Bins/Lots, Payroll, Accounting, Portal) | 3 | จัดซื้อ, Multi-Warehouse โอนย้ายสต็อก/Lot, เงินเดือน และเชื่อมระบบภายนอก |
+| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-20) | `24-31` (PO, Multi-Warehouse/Bins/Lots, Payroll, Accounting, Portal, Workflows) | 4 | จัดซื้อ, Multi-Warehouse โอนย้ายสต็อก/Lot, เงินเดือน, เชื่อมระบบภายนอก และ Central Approval Workflow Engine |
 
 ---
 
@@ -719,6 +719,53 @@ flowchart LR
     AccountingSync --> FlowAccount
     AccountingSync --> PEAK
     AccountingSync --> XeroQB
+```
+
+---
+
+### 6.4 Diagram: Central Dynamic Approval Workflow Engine (Phase 20)
+ผังกระบวนการทำงานของ Central Approval Engine ครอบคลุมการจับคู่นิยาม (Definition Match), การสร้างสแนปช็อต (Immutable Snapshot), การตรวจสอบ SoD และผู้ปฏิบัติหน้าที่แทน (Delegation), ลำดับการอนุมัติแบบคู่ขนาน/เรียงลำดับ, และการสะท้อนสถานะกลับสู่โมดูลต้นทางพร้อมบันทึกบัญชี GL / คืนสิทธิ์วันลา
+
+```mermaid
+flowchart TD
+    subgraph Creator ["1. ผู้ยื่นขออนุมัติ (Requester & Creator)"]
+        SubmitDoc["ส่งเอกสารเข้าสายอนุมัติ<br>(Leave / Expense / PO / PR)"]
+    end
+
+    subgraph Engine ["2. Central Workflow Engine"]
+        MatchDef["จับคู่นิยามตามเงื่อนไข<br>subject_type + amount threshold [min, max]"]
+        FreezeSnap["บันทึก Immutable Snapshot<br>(definition_snapshot + subject_snapshot)"]
+        AssignSteps["คำนวณผู้ตรวจตาม Step<br>• user (รายคน)<br>• manager (สายบังคับบัญชา)<br>• role (ตามรหัสบทบาท)"]
+        SoDGuard{"ตรวจสอบ SoD Guard<br>(ผู้ยื่นห้ามตรวจเอกสารตนเอง)"}
+        Delegation{"ตรวจสอบ Delegation<br>(มีตัวแทนที่เปิดใช้ในเวลานี้หรือไม่?)"}
+        StepExec{"โหมดการตรวจ (Execution Mode)"}
+        SuperPeers["Parallel Mode:<br>คนแรกที่อนุมัติถือว่าผ่านทันที<br>(ผู้ตรวจร่วมถูกปรับเป็น superseded)"]
+        SeqSteps["Sequential Mode:<br>ต้องรออนุมัติครบทุกคน<br>จึงจะเลื่อนไปยัง Step ถัดไป"]
+    end
+
+    subgraph Decision ["3. การตัดสินใจ & ผลลัพธ์ (Action & Outcomes)"]
+        InboxAct["ผู้ตรวจลงนามผ่าน Inbox<br>(Approve / Reject / Revision)"]
+        ApprovedOutcome["Final Step Approved:<br>อัปเดตสถานะเอกสารเป็น approved"]
+        ExpenseGL["กรณี Expense:<br>บันทึกเดบิต/เครดิตสมุดรายวันทั่วไป (GL Journal)"]
+        RejectOutcome["Rejected / Revision:<br>เปลี่ยนสถานะเอกสารเป็น rejected / draft"]
+        LeaveRefund["กรณี Leave Request:<br>คืนยอดวันลาที่ถูกหักชั่วคราวกลับเข้า Balance ทันที"]
+    end
+
+    SubmitDoc --> MatchDef
+    MatchDef --> FreezeSnap
+    FreezeSnap --> AssignSteps
+    AssignSteps --> SoDGuard
+    SoDGuard -- ผู้ยื่นไม่ได้ตรวจเอง --> Delegation
+    Delegation -- มีตัวแทน --> InboxAct
+    Delegation -- ผู้ตรวจหลัก --> InboxAct
+    InboxAct -- อนุมัติ --> StepExec
+    StepExec -- Parallel --> SuperPeers
+    StepExec -- Sequential --> SeqSteps
+    SuperPeers --> ApprovedOutcome
+    SeqSteps --> ApprovedOutcome
+    ApprovedOutcome --> ExpenseGL
+    InboxAct -- ส่งกลับแก้ไข/ปฏิเสธ --> RejectOutcome
+    RejectOutcome --> LeaveRefund
 ```
 
 ---
