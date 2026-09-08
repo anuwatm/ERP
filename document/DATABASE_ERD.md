@@ -136,14 +136,11 @@ erDiagram
 
     TWO_FACTOR_TRUSTED_DEVICES {
         uuid id PK
-        uuid org_id FK
         uuid user_id FK "อ้างอิงผู้ใช้งาน"
-        varchar device_name "ชื่ออุปกรณ์ที่เชื่อถือ"
-        varchar device_token_hash "แฮชโทเค็นอุปกรณ์ 30 วัน"
-        varchar ip_address "IP Address ล่าสุด"
-        text user_agent "เบราว์เซอร์และระบบปฏิบัติการ"
+        varchar token_hash "unique hashed token"
         timestamp last_used_at "ใช้งานล่าสุด"
-        timestamp expires_at "วันหมดอายุ (30 วัน)"
+        timestamp expires_at "วันหมดอายุตาม policy 1-90 วัน"
+        varchar user_agent_hash "Nullable"
     }
 
     ROLES {
@@ -802,27 +799,31 @@ erDiagram
 
 ## 11. Domain 10: ระบบจัดการเอกสารองค์กร (Enterprise DMS & Retention - Phase 17)
 
-ครอบคลุมระบบคลังเอกสารอิเล็กทรอนิกส์ (DMS), การแบ่งหมวดหมู่, การควบคุมระดับชั้นความลับ (Sensitivity RBAC), ประวัติเวอร์ชันเอกสารพร้อม SHA256 Checksum, การเชื่อมโยงแบบ Polymorphic กับเอกสารธุรกิจ, และนโยบายการจัดเก็บ/ทำลาย (Retention Policy) พร้อม Legal Hold
+ครอบคลุมระบบคลังเอกสารอิเล็กทรอนิกส์ (DMS), การแบ่งหมวดหมู่, การควบคุมระดับชั้นความลับ, ประวัติเวอร์ชันพร้อม SHA256 checksum, การเชื่อมโยงแบบ polymorphic และ retention/legal hold enforcement. `DocumentRetentionService` คำนวณ retention, scheduler quarantine failed scan/archive และ explicit purge; download/link บังคับ parent authorization ของ entity ที่ถูก link
 
 ```mermaid
 erDiagram
     DOCUMENT_CATEGORIES {
         uuid id PK
         uuid org_id FK
-        varchar name "ชื่อหมวดหมู่เอกสาร (e.g. สัญญา, ใบรับรอง, ภาษี)"
         varchar code "รหัสหมวดหมู่"
-        text description
-        boolean is_active
+        varchar name "ชื่อหมวดหมู่เอกสาร"
+        uuid retention_policy_id FK "Nullable"
+        varchar default_sensitivity "org_internal เป็นต้น"
+        boolean expiry_tracking_enabled
+        int default_renewal_alert_days "Nullable"
+        boolean status
     }
 
     RETENTION_POLICIES {
         uuid id PK
         uuid org_id FK
+        varchar code
         varchar name "ชื่อนโยบายการเก็บรักษา"
-        int retention_period_days "ระยะเวลาเก็บรักษา (วัน)"
-        varchar action "archive, purge"
-        text description
-        boolean is_active
+        int minimum_retention_days
+        date effective_from
+        date effective_to "Nullable"
+        boolean legal_hold_required
     }
 
     DOCUMENTS {
@@ -833,8 +834,8 @@ erDiagram
         uuid owner_user_id FK "ผู้รับผิดชอบเอกสาร"
         varchar document_no "เลขที่เอกสาร DOC-YYYYMM-XXXX"
         varchar title "ชื่อหัวข้อเอกสาร"
-        varchar sensitivity "public, internal, confidential, restricted"
-        varchar status "active, archived, expired"
+        varchar sensitivity "org_internal, department_restricted, finance_confidential, hr_confidential, executive_confidential"
+        varchar status "active"
         date expires_at "วันหมดอายุเอกสาร (Nullable)"
         int renewal_alert_days "แจ้งเตือนล่วงหน้า (วัน)"
         boolean legal_hold "ระงับการทำลายตามกฎหมาย"
@@ -852,7 +853,7 @@ erDiagram
         varchar mime_type "image/jpeg, application/pdf"
         bigint size_bytes "ขนาดไฟล์"
         varchar checksum_sha256 "SHA256 แฮชตรวจสอบความถูกต้อง"
-        varchar scan_status "pending, clean, infected"
+        varchar scan_status "pending_scan, clean"
         text change_note "บันทึกการแก้ไขในเวอร์ชัน"
         uuid uploaded_by FK "ผู้อัปโหลด"
     }
@@ -861,10 +862,10 @@ erDiagram
         uuid id PK
         uuid org_id FK
         uuid document_id FK "เอกสาร"
-        varchar documentable_type "invoices, expenses, fixed_assets, users"
-        uuid documentable_id "ID ข้อมูลเป้าหมายที่ผูก"
-        varchar link_type "attachment, contract, reference, proof"
-        uuid created_by FK
+        varchar linkable_type "allowlisted business models"
+        uuid linkable_id "ID ข้อมูลเป้าหมายที่ผูก"
+        varchar role "supporting"
+        uuid linked_by FK
     }
 
     DOCUMENT_CATEGORIES ||--o{ DOCUMENTS : "classifies"
@@ -877,20 +878,17 @@ erDiagram
 
 ## 12. Domain 11: ความปลอดภัยและการยืนยันตัวตน 2FA (Security & Two-Factor - Phase 18)
 
-ครอบคลุมความปลอดภัยการเข้าสู่ระบบแบบยืนยันตัวตนสองขั้นตอน (TOTP RFC 6238), การเข้ารหัส Secret Key (AES-256-GCM), รหัสกู้คืนฉุกเฉินครั้งเดียว (Single-Use Recovery Codes), และทะเบียนอุปกรณ์ที่เชื่อถือได้ (Trusted Devices 30 วัน)
+ครอบคลุมการยืนยันตัวตนสองขั้นตอนแบบ TOTP RFC 6238, encrypted secret, รหัสกู้คืนฉุกเฉินแบบใช้ครั้งเดียว และ trusted device token. Policy ระดับองค์กรปิดเป็นค่าเริ่มต้น; ระยะ trusted device ตั้งได้ 1-90 วัน
 
 ```mermaid
 erDiagram
     TWO_FACTOR_TRUSTED_DEVICES {
         uuid id PK
-        uuid org_id FK
         uuid user_id FK "อ้างอิงผู้ใช้งาน"
-        varchar device_name "ชื่ออุปกรณ์ e.g. Chrome on Windows"
-        varchar device_token_hash "แฮชโทเค็นอุปกรณ์ 30 วัน (SHA256)"
-        varchar ip_address "IP Address ล่าสุด"
-        text user_agent "เบราว์เซอร์และระบบปฏิบัติการ"
+        varchar token_hash "unique hashed token"
         timestamp last_used_at "ใช้งานล่าสุด"
-        timestamp expires_at "วันหมดอายุโทเค็น (30 วัน)"
+        timestamp expires_at "วันหมดอายุตาม policy 1-90 วัน"
+        varchar user_agent_hash "Nullable"
     }
 
     USERS ||--o{ TWO_FACTOR_TRUSTED_DEVICES : "trusts"

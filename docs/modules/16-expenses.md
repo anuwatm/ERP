@@ -36,7 +36,7 @@ Salary, Software, Marketing, Travel, Office, Contractor, Hosting, Misc
 
 ```text
 User สร้าง expense (title, amount, date, category)
-→ optional project_id (ใช้จริงใน Phase 4) / supplier_id (Post-MVP)
+→ optional project_id (Phase 4) / supplier_id (Phase 7)
 → attach receipt
 → status=draft
 ```
@@ -67,7 +67,7 @@ status=paid, paid_at
   ▼
 expenses ──► project cost query: sum(amount) where status in (approved, paid)
   │
-  ───► suppliers (Post-MVP)
+  ───► suppliers (Phase 7; optional reference)
   ───► files (receipt)
   └──► Reports / Dashboard (expense, gross profit)
 ```

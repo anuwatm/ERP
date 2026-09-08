@@ -22,7 +22,7 @@
 - Stage: New → Contacted → Qualified → Proposal → Negotiation → Won / Lost
 - มูลค่าดีล, probability, expected close date, owner
 - บันทึก activity / follow-up
-- สร้าง invoice จาก deal ได้ใน Phase 3; quotation = Post-MVP
+- สร้าง invoice จาก deal ได้ใน Phase 3 และ quotation ได้ตั้งแต่ Phase 9
 - Deal won → Phase 4 สร้าง project ได้
 - Deal lost → ใส่ lost_reason
 - Sales Dashboard แสดง pipeline value; conversion report เต็ม = Post-MVP
@@ -45,7 +45,7 @@ Create Deal (title, customer, value, stage=new)
 ```text
 stage = won
 → set won_at
-→ optional: Create Invoice จาก deal (Phase 3); Create Quotation = Post-MVP
+→ optional: Create Invoice จาก deal (Phase 3); Create Quotation (Phase 9)
 → optional: Create Project จาก deal (Phase 4)
 → Dashboard pipeline ลด / revenue forecast อัปเดต
 ```
@@ -84,7 +84,7 @@ customers / contacts
         ▼
       deals ◄──► activities
         │
-        ├──► quotations.deal_id (Post-MVP)
+        ├──► quotations.deal_id (Phase 9)
         ├──► projects.deal_id
         └──► invoices.deal_id (optional)
                 │

@@ -1,8 +1,8 @@
 # Gemini Review & Architecture Reference (Clean)
 
-Last audited: 2026-09-02 (Consensus with GPT in `gpt.md` & Aligned Expansion Roadmap Phase 19 - 28)
+Last audited: 2026-09-08 (Consensus with GPT in `gpt.md` Section 8-9 & Phase 18.1 - 20 Audit & Remediation Gate)
 
-Purpose: บันทึกข้อมูลอ้างอิงสถาปัตยกรรม, Security Guardrails, ข้อกำหนดเชิงระบบที่ยังมีผลต่อการพัฒนา (Decisions That Still Matter), ผลการตรวจสอบ Phase 15 - 18, การตรวจประเมินความเข้ากันได้ของข้อมูล Phase 1 - 18 (Cross-Phase Data Compatibility Audit), ข้อสรุปเห็นชอบร่วมต่อข้อเสนอและข้อแก้ไขของ GPT ใน `gpt.md` (Consensus on GPT DMS Design & Phase 19+ Review), ข้อกำหนดการจัดเก็บเอกสารภาษีตามกฎหมายไทย, ผลการตรวจประเมินระบบความปลอดภัย 2FA ใน Phase 18, และแผนงานขยายระบบ ERP ระยะถัดไปที่สอดคล้องกัน 100% (รายละเอียดงานที่ปิดแล้วดูได้ที่ `checklist.md`, `README.md` และ Git history)
+Purpose: บันทึกข้อมูลอ้างอิงสถาปัตยกรรม, Security Guardrails, ข้อกำหนดเชิงระบบที่ยังมีผลต่อการพัฒนา (Decisions That Still Matter), ผลการตรวจสอบ Phase 15 - 20, การตรวจประเมินความเข้ากันได้ของข้อมูล Phase 1 - 20 (Cross-Phase Data Compatibility Audit), ข้อสรุปเห็นชอบร่วมต่อข้อเสนอและข้อแก้ไขของ GPT ใน `gpt.md`, ผลการตรวจสอบ Phase 18.1 (DMS Security & Compliance Remediation), ผลการตรวจสอบ Phase 19 (HR Core, Attendance & Leave Foundation), ผลการตรวจสอบและประเมินเชิงลึก Phase 20 (Dynamic Approval Workflow Engine), ข้อสังเกตและข้อเสนอแนะเพิ่มเติม, และแผนงานขยายระบบ ERP ระยะถัดไปที่สอดคล้องกัน 100% (รายละเอียดงานที่ปิดแล้วดูได้ที่ `checklist.md`, `README.md` และ Git history)
 
 ---
 
@@ -22,8 +22,10 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 | **Payslip & Payroll Privacy Guard** | พนักงานแต่ละคนสามารถเข้าถึงและดาวน์โหลด Payslip PDF ได้เฉพาะรายการที่เป็นของตนเองเท่านั้น (`user_id === auth()->id()`) เว้นแต่เป็นผู้ถือสิทธิ์ `payroll.view` ในองค์กรเดียวกัน และห้ามข้ามองค์กร 100% |
 | **DMS Private Download & Scan Guard** | ไฟล์เอกสารส่วนกลางดาวน์โหลดผ่าน Private Download Controller ที่ตรวจสอบ Session, `org_id`, สิทธิ์การเข้าถึง, ความลับ (Sensitivity), และสถานะความปลอดภัยของไฟล์ (`scan_status === 'clean'`) ทุก Request 100% |
 | **Two-Factor Authentication & Secret Guard** | `two_factor_secret` และ `two_factor_recovery_codes` ถูกเข้ารหัสด้วย Eloquent `encrypted` cast, ซ่อนจาก JSON serialization (`#[Hidden]`), Recovery Codes ถูกแฮชด้วย `Hash::make` และเป็น Single-Use (ทำลายทันทีที่ใช้สำเร็จ), Trusted Device Tokens เก็บเฉพาะ SHA-256 Hash ผูกกับ User-Agent, และการรีเซ็ต 2FA สงวนสิทธิ์เฉพาะ Owner ในองค์กรเดียวกัน |
+| **Attendance Privacy & Consent Guard** | การจัดเก็บ IP และ GPS ในการลงเวลาทำงานต้องเป็นไปตามหลักความยินยอม (Opt-in Consent) ภายใต้ `hr.attendance_privacy` โดยค่าเริ่มต้นคือ `capture_ip=false`, `capture_gps=false`, และ `require_employee_consent=true` หากเปิดการบันทึก IP ระบบจะจัดเก็บเฉพาะ SHA-256 Hash และห้ามจัดเก็บ Raw IP เด็ดขาด |
 | **No Cash Balance Guard** | ห้ามสร้าง UI Widget, JSON/Inertia Prop หรือ API เผยแพร่ยอด `Cash Balance` ดิบหรือยอดเงินสดรวมใน Dashboard / Digest จนกว่าจะมี Product Decision และ Bank Reconciliation Boundary ที่ชัดเจน |
 | **AI OCR & Automation Guard** | โมดูล AI / OCR สกัดข้อมูลสำหรับร่างเอกสาร (Assisted Draft) พร้อมแนบค่า Confidence และหลักฐานต้นทางเท่านั้น ห้าม Auto-post รายจ่ายหรือบันทึกบัญชี GL โดยปราศจาก Human Review |
+| **Workflow SoD & Immutable Snapshot Guard** | ห้ามผู้ขออนุมัติ (Requester) อนุมัติตนเองทุกกรณี (Strict SoD) โดยการตรวจสอบระบบจะบล็อกทั้งในระดับ Assignee Snapshot และ Action Evaluation พร้อมจับภาพ Approver Chain ณ วันยื่นคำขอเพื่อป้องกันผลกระทบจากการปรับผังองค์กรย้อนหลัง |
 
 ---
 
@@ -39,13 +41,16 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 - **Warehouse & Storage Scope:** ทุกการเคลื่อนไหวสต็อก (Stock Movement) และเอกสารคลัง (GRN, Transfer, Stock Count, DO) ต้องตรวจสอบว่า `warehouse_bin_id` อยู่ใน `warehouse_id` และ `inventory_lot_id` อยู่ใน `product_id` ขององค์กรเดียวกันอย่างเคร่งครัด
 - **Payroll & AP Boundary:** การจ่ายเงินเดือนพนักงาน (`PayrollRun`) บันทึกผ่านบัญชีค้างจ่าย `2140` (Payroll Payable) และตัดจ่ายเข้าบัญชีเงินสด/ธนาคารโดยตรง โดยไม่ผ่านตาราง `VendorPayment` (AP Subledger) และจำกัด Initial Scope เป็นสกุลเงิน THB เท่านั้น
 - **DMS Central Repository & Cross-Module Linking:** จัดเก็บเอกสารองค์กรแบบรวมศูนย์ (`documents`, `document_versions`) พร้อมความสามารถเชื่อมโยงแบบ Many-to-Many ผ่าน `document_links` ควบคุมการแจ้งเตือนวันหมดอายุเฉพาะหมวดที่เปิดใช้ และบังคับใช้นโยบายการเก็บรักษาเอกสารภาษี/การเงินตามกฎหมายไทย (Retention Window 5-7 ปี) แบบ Append-Only
+- **DMS Parent-Permission & Link Authorization:** การเข้าถึง ดาวน์โหลด หรือสร้าง `document_links` ผูกกับเอนทิตีภายนอก (Customer, Supplier, PO, Deal, Project, Task, Fixed Asset, Bank Account, Expense) ต้องผ่านการตรวจสอบสิทธิ์ Parent Entity Permission และ Record Scope เสมอ
 - **Two-Factor Policy & Privileged Role Enforcement:** นโยบายความปลอดภัย 2FA ควบคุมระดับองค์กรผ่าน `security.two_factor` บังคับให้บทบาทที่มีสิทธิ์เข้าถึงข้อมูลอ่อนไหว (`owner`, `admin`, `finance`) ต้อง Enroll 2FA ก่อนเข้าถึงระบบ โดยมี Middleware `EnsureTwoFactorEnrollment` ควบคุมทุก Web Request พร้อม Rate Limiting ป้องกัน Brute-force
+- **HR Attendance, Leave & Payroll Bridge Boundary:** บันทึกเวลาและคำนวณวันลาตัดวันหยุด/เสาร์-อาทิตย์ พร้อมตัด/คืนวันลาแบบ Atomic Transaction (`lockForUpdate`), Attendance Summary รองรับ Cutoff Date และมีสถานะ `draft`, `locked`, `reversed` (ด้วย `reversal_of_id`) โดย**ห้ามบันทึกอัตโนมัติ (No Auto-Posting)** ไปยัง `payroll_runs`, `payroll_items`, หรือ General Ledger ก่อนได้รับการอนุมัติและ Lock รอบบัญชีเงินเดือน
+- **Central Dynamic Approval Engine & SoD Boundary:** ระบบอนุมัติเอกสารรวมศูนย์ (`WorkflowEngineService`) จัดเก็บประวัติขั้นตอนเป็น Snapshot แบบคงที่ (Immutable Snapshot) บังคับใช้ Segregation of Duties (ห้ามผู้อนุมัติตนเอง) และตรวจสอบสิทธิ์แบบ Multi-tenant ทุกขั้นตอน โดยการอนุมัติรายจ่ายต้องเชื่อมต่อเข้ากับ Double-entry GL เสมอ
 
 ---
 
 ## 3. สถานะโครงการล่าสุด (Current Status)
 
-- **Phase 1 - 18: Complete / Closed**
+- **Phase 1 - 20: Complete / Closed**
   - **Core & Financial Foundations (Phase 1 - 7):** Core MVP, CRM, Finance, Delivery, Multi-role Dashboards, Number Sequences, Inclusive VAT, Suppliers & POs.
   - **Documents, Compliance & Treasury (Phase 8 - 10):** Official Print/PDF, Tax Reports/Aging/WHT, Commercial Docs (Quotation, CN/DN, Billing Note, DO, PR, Voucher), Bank Accounts (Encrypted), Bank Reconciliation, Petty Cash, Cheques/PDC.
   - **Accounting, E-Tax & Fixed Assets (Phase 11 - 13):** General Ledger & Double-Entry (COA, Periods, Auto-Posting, Reversal), E-Tax Integration Layer (XML, Hash, RD Prep), Fixed Assets & Monthly Straight-Line Depreciation.
@@ -54,7 +59,10 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
   - **Payroll, Social Security & Tax (Phase 16B):** Employee Payroll Profiles, Effective-Dated Tax & Social Security Policies, Progressive Tax Calculation, Social Security Ceiling Capping, Approval & Auto-GL Posting (`5500`, `5510`, `2140`, `2150`, `2160`, `2170`), Direct Payment Settlement, Payslip PDF Generation & Privacy Guard, ภ.ง.ด. 1 และ Social Security Workpaper CSV Exports.
   - **Enterprise Document Management (Phase 17):** Central Repository, Immutable Versioning (`document_versions`), Many-to-Many Linking (`document_links`), Category-Driven Expiry & Scheduled Alerts (`documents:check-expiry`), 5-Level Sensitivity RBAC, Effective-Dated Retention Policies, Private Download Controller, และ Legacy `StoredFile` Idempotent Backfill (`documents:backfill-legacy`).
   - **Security 2FA & Auth OTP (Phase 18):** RFC 6238 Offline TOTP Engine, Encrypted Secret & Hashed Single-Use Recovery Codes, Org-Level Policy Enforcement (`security.two_factor`), Privileged Role Guard Middleware (`EnsureTwoFactorEnrollment`), SHA-256 Trusted Device Tokens with User-Agent Binding, Owner-Initiated 2FA Reset Flow, Rate Limiting, และ Security Audit Trails.
-- **Validation Snapshot:** 246 Tests Passed (1,921 Assertions / 0 Failures), TypeScript/Vite Build Clean, ESLint Clean (0 warnings), Prettier Clean, Laravel Pint Clean (0 issues).
+  - **DMS Security & Compliance Remediation (Phase 18.1):** Parent-Permission Authorization บนการดาวน์โหลดและการผูก `document_links` ข้าม 9 เอนทิตี (Customer, Supplier, PO, Deal, Project, Task, Fixed Asset, Bank Account, Expense), ระบบคำนวณวันสิ้นสุดอายุจัดเก็บ (`retention_until`) อัตโนมัติตามประเภทเอกสารและหมวดหมู่, Legal Hold Protection บล็อกการลบ/ทำลายเอกสารระหว่างคดี/ตรวจสอบภาษี, Scanner Malware Quarantine สำหรับไฟล์เสี่ยง, และคำสั่งปลอดภัย `documents:enforce-retention [--purge]` สำหรับการปรับสถานะเป็น `archived` และลบไฟล์จัดเก็บจริงเฉพาะที่ไม่มีการอ้างอิงเหลืออยู่
+  - **HR Core, Attendance & Leave Foundation (Phase 19):** ตารางโครงสร้าง HR 8 ตาราง (`employee_shifts`, `employee_work_profiles`, `holidays`, `attendances`, `leave_types`, `leave_balances`, `leave_requests`, `attendance_summaries`), การบันทึกเวลาเข้า-ออกงานที่เคารพสิทธิความเป็นส่วนตัว (Opt-in Consent Guard, SHA-256 Hashed IP, Optional GPS), ระบบคำนวณวันลาตัดวันหยุดและเสาร์-อาทิตย์, กลไกหักและคืนวันลาแบบ Atomic Transaction (`lockForUpdate`), Attendance Summary Bridge ที่มี Cutoff และรองรับ Correction/Reversal แบบ Immutable โดยไม่ Auto-post ไปยัง Payroll Run หรือบันทึกบัญชี GL เด็ดขาด (คงไว้เพื่อส่งต่อให้ Phase 20 Central Workflow Engine)
+  - **Dynamic Approval Workflow Engine (Phase 20):** ระบบสายการอนุมัติกลาง (`workflow_definitions`, `workflow_steps`, `workflow_instances`, `workflow_approvals`, `workflow_delegations`), Immutable Snapshot ประจำเอกสาร, Threshold Evaluation, SoD Deadlock Guard, Execution Mode (Sequential/Parallel First-to-Approve), Delegation Resolution ใน Inbox, Multi-Level Workflow Builder UI สูงสุด 10 ขั้นตอน, การเชื่อมโยงปุ่ม Submit จากโมดูลต้นทาง (Expenses, Purchase Orders, Commercial Documents PR, Leave Requests), การคืนยอดวันลาเมื่อ Reject, และการบันทึกบัญชี Double-entry GL อัตโนมัติเมื่อ Expense ผ่านการอนุมัติขั้นสุดท้าย
+- **Validation Snapshot:** 257 Tests Passed (1,968 Assertions / 0 Failures), TypeScript/Vite Build Clean, ESLint Clean (0 warnings / 0 errors), Prettier Clean, Laravel Pint Clean (0 issues).
 
 ---
 
@@ -212,20 +220,223 @@ Gemini เห็นพ้อง 100% กับข้อเสนอของ GPT
 
 ---
 
+### 4.8 ผลการตรวจสอบและข้อเสนอแนะ Phase 18.1: DMS Security & Compliance Remediation
+
+#### จุดเด่นที่ผ่านการทดสอบและสอดคล้องตามมาตรฐานความปลอดภัย (Strengths & Verified Architecture):
+1. **Parent-Permission Authorization Engine (`DocumentParentAccessService`):**
+   - **Download Authorization (`assertParentAccess`):** เมื่อมีการดาวน์โหลดเอกสาร ระบบจะค้นหา `document_links` ทั้งหมดที่ผูกกับเอกสารนั้น และทำการตรวจสอบสิทธิ์ของผู้ใช้เทียบกับเอนทิตีแม่ (Parent Entity) ครอบคลุมทั้ง 9 โมดูล:
+     - `Customer` (ตรวจ `customers.view` และ sales rep scope)
+     - `Supplier` (ตรวจ `suppliers.view`)
+     - `PurchaseOrder` (ตรวจ `purchase_orders.view`)
+     - `Deal` (ตรวจ `deals.view` และ deal owner scope)
+     - `Project` (ตรวจ `projects.view` และ member scope)
+     - `Task` (ตรวจ `tasks.view` และ task assignee scope)
+     - `FixedAsset` (ตรวจ `fixed_assets.view`)
+     - `BankAccount` (ตรวจ `bank_accounts.view`)
+     - `Expense` (ตรวจ `expenses.view`)
+   - **Link Creation Authorization (`assertLinkCreationAccess`):** การสร้างความสัมพันธ์ Many-to-Many ใหม่ผ่าน `document_links` บังคับให้ผู้ใช้ต้องมีสิทธิ์แก้ไข/จัดการในเอนทิตีแม่ เช่น `purchase_orders.edit`, `expenses.edit` ป้องกันการลักลอบผูกเอกสารลับเข้ากับเอนทิตีที่ตนไม่มีสิทธิ์
+   - **Graceful Standalone Fallback:** กรณีเอกสารส่วนกลางที่ยังไม่ได้ผูกกับเอนทิตีแม่ใดๆ ระบบจะตรวจสอบสิทธิ์ `documents.download` และบังคับใช้ 5-Level Sensitivity RBAC อย่างเคร่งครัด
+2. **Automated Thai Legal Retention & Legal Hold Engine (`DocumentRetentionService`):**
+   - **Dynamic Retention Calculation:** เมื่อสร้างหรือจัดหมวดหมู่เอกสาร ระบบจะคำนวณ `retention_until` อัตโนมัติจากนโยบายในตาราง `retention_policies` (อิงตามประมวลรัษฎากรและ พ.ร.บ. บัญชี 5-7 ปี)
+   - **Legal Hold Protection:** ฟิลด์ `legal_hold` (boolean) มีผลยับยั้งการทำลายหรือลบไฟล์โดยสิ้นเชิง ตราบใดที่เอกสารอยู่ในระหว่างกระบวนการไต่สวนทางกฎหมาย หรือรอการตรวจสอบภาษี
+   - **Scanner Quarantine Guard:** ตรวจจับสถานะความปลอดภัยของไฟล์ หากผลสแกนมัลแวร์ล้มเหลว (`scan_status === 'infected'`) ระบบจะระงับการเข้าถึงและแยกไฟล์เข้าสู่ Quarantine ทันที
+3. **Automated Enforcement Artisan Command (`documents:enforce-retention`):**
+   - คำสั่ง `php artisan documents:enforce-retention [--purge]` ทำการกวาดเอกสารที่เกินกำหนด `retention_until` และไม่มี `legal_hold` เพื่อปรับสถานะเป็น `archived`
+   - เมื่อระบุแฟล็ก `--purge` ระบบจะลบไฟล์ต้นฉบับออกจาก Physical Storage เฉพาะเมื่อไม่มีเวอร์ชันอื่นหรือเอกสารอื่นอ้างอิงถึง `storage_key` นั้นอยู่อีกต่อไป
+4. **Test Verification:** ผ่านการทดสอบ `Phase181DocumentComplianceTest.php` ทั้ง 4 tests (12 assertions) 100%
+
+---
+
+### 4.9 ผลการตรวจสอบและข้อเสนอแนะ Phase 19: HR Core, Attendance & Leave Foundation
+
+#### จุดเด่นที่ผ่านการทดสอบและปฏิบัติตามมาตรฐานสถาปัตยกรรม (Strengths & Verified Architecture):
+1. **Domain Model & Schema Isolation:**
+   - Migration `2026_09_07_000001_create_phase19_hr_tables.php` สร้างตาราง HR 8 ตารางอย่างถูกต้อง พร้อม Scoping `org_id` ทุกตาราง:
+     - `employee_shifts`: กะการทำงาน (เวลาเริ่ม, สิ้นสุด, พัก, และ grace period นาที)
+     - `employee_work_profiles`: โปรไฟล์พนักงาน รหัสพนักงาน สายการบังคับบัญชา (`manager_user_id`)
+     - `holidays`: ปฏิทินวันหยุดนักขัตฤกษ์/วันหยุดบริษัท
+     - `attendances`: ประวัติการลงเวลาเข้า-ออกงาน
+     - `leave_types`: ประเภทการลา (ลาป่วย, ลากิจ, ลาพักร้อน, ลาไม่รับค่าจ้าง)
+     - `leave_balances`: ยอดวันลาคงเหลือแยกตามปี/พนักงาน/ประเภทการลา
+     - `leave_requests`: คำขอลาหยุดงาน
+     - `attendance_summaries`: สรุปเวลาทำงานเพื่อส่งต่อฝ่ายบัญชี/เงินเดือน
+2. **Strict Compliance with `gpt.md`: ห้ามสร้าง Bespoke Approval Engine ใน Phase 19:**
+   - สถานะของ `leave_requests` จำกัดไว้เพียง 3 สถานะที่จำเป็นต่อรากฐาน: `draft`, `submitted`, `cancelled`
+   - **ไม่มีการสร้าง bespoke approval logic, approval buttons, delegation หรือ SoD เฉพาะกิจใน Phase 19** โดยแยกโครงสร้างไว้อย่างถูกต้อง เพื่อรอเชื่อมต่อเข้ากับ **Phase 20 (Central Dynamic Approval Workflow Engine)**
+3. **Privacy & PII Protection (PDPA Compliance):**
+   - ตั้งค่านโยบายระดับองค์กรใน `settings` ภายใต้ `hr.attendance_privacy` โดยค่าเริ่มต้นคือ `capture_ip=false`, `capture_gps=false`, และ `require_employee_consent=true`
+   - หากเปิดใช้งานการบันทึก IP ระบบจะจัดเก็บเฉพาะ **SHA-256 Hash** (`hash('sha256', $ip)`) **ห้ามจัดเก็บ Raw IP ในฐานข้อมูลและ Audit Log เด็ดขาด**
+   - พิกัด GPS เป็นการกรอกแบบทางเลือก (Optional) และระบบบล็อกการลงเวลาทันทีหากองค์กรกำหนดให้ต้องยินยอม แต่ผู้ใช้ไม่ได้ให้ Consent
+4. **Leave Balance Transactional Integrity:**
+   - การคำนวณวันลา (`businessDays`) ข้ามวันหยุดเสาร์-อาทิตย์และวันหยุดนักขัตฤกษ์ในตาราง `holidays` อย่างแม่นยำ
+   - การตัดยอดวันลาตอนยื่นขอลา (`submitLeave`) และการคืนยอดวันลาตอนยกเลิกคำขอ (`cancelLeave`) ทำงานภายใต้ Database Transaction พร้อมคำสั่ง `lockForUpdate()` ป้องกันปัญหา Race Condition
+   - ป้องกันการยื่นคำขอลาซ้ำซ้อนในช่วงวันเดียวกัน (Overlap Detection)
+5. **Strict Payroll & Accounting Boundary (No Auto-Posting Guard):**
+   - `attendance_summaries` ทำหน้าที่สรุปชั่วโมงทำงานจริง, OT, วันลาจ่ายค่าจ้าง และวันลาไม่จ่ายค่าจ้าง (LWOP) พร้อม Cutoff Date
+   - วงจรสถานะของ Summary คือ `draft`, `locked`, และ `reversed` (สร้างเรคคอร์ดทดแทนพร้อมอ้างอิง `reversal_of_id`)
+   - **ไม่มีการ Auto-post หรือสร้างข้อมูลใน `payroll_runs`, `payroll_items`, หรือ General Ledger entries เด็ดขาด** รักษาขอบเขตความปลอดภัยทางบัญชีก่อนการออกแบบ Import Contract
+6. **RBAC & Ownership Security:**
+   - สิทธิ์ใหม่ 4 ระดับ: `hr.self.view`, `hr.team.view`, `hr.manage`, `hr.summary.manage`
+   - ผู้จัดการ (`manager_user_id`) ดูข้อมูลได้เฉพาะพนักงานใต้บังคับบัญชาตรงผ่าน `hr.team.view`
+   - พนักงานทั่วไปดูได้เฉพาะข้อมูลของตนเองผ่าน `hr.self.view`
+   - Controller ตรวจสอบ Multi-tenant (`assertOrg`) และความเป็นเจ้าของเรคคอร์ด (`assertOwn`) ซ้ำซ้อน 100%
+7. **Test Verification:** ผ่านการทดสอบ `Phase19HrAttendanceTest.php` ทั้ง 3 tests (22 assertions) ครอบคลุม Privacy consent, Leave balance atomic deduction/restoration, และ Summary lock/reversal non-posting to payroll.
+
+---
+
+### 4.10 ข้อสังเกตและข้อเสนอแนะเพิ่มเติมสำหรับ Phase 18.1 และ Phase 19 (Findings & Polish Recommendations)
+
+จากการตรวจสอบซอร์สโค้ดและพฤติกรรมการทำงานอย่างละเอียด พบจุดที่สามารถขัดเกลาและนำไปต่อยอดได้ดังนี้:
+
+1. **Action Confirmation Guards ในหน้าจอ `Hr/Index.tsx`:**
+   - *ข้อสังเกต:* ปุ่มเปลี่ยนสถานะที่สำคัญในฝั่งผู้ใช้ เช่น "Cancel Request" ในแถบ Leave Requests หรือปุ่ม "Lock Summary" และ "Reverse Summary" ในแถบ Attendance Summaries ปัจจุบันส่ง Inertia Request ทันทีที่คลิก
+   - *ข้อเสนอแนะ:* ควรเพิ่ม Modal หรือ Browser Confirmation Prompt (`window.confirm`) เพื่อให้ผู้ใช้ยืนยันความตั้งใจก่อนยกเลิกวันลา หรือก่อน Lock/Reverse สรุปเวลาทำงาน เพื่อป้องกันความผิดพลาดจาก Human Error
+2. **การรองรับวันลาแบบครึ่งวันและรายชั่วโมง (Half-Day / Hourly Leave Support):**
+   - *ข้อสังเกต:* ในโครงสร้างฐานข้อมูล คอลัมน์ `days` ใน `leave_balances` และ `leave_requests` กำหนดเป็น `DECIMAL(5,1)` ซึ่งรองรับทศนิยม แต่ฟังก์ชันคำนวณ `businessDays()` ใน `HrAttendanceService` ปัจจุบันคำนวณเฉพาะจำนวนวันเต็ม (1.0, 2.0 วัน)
+   - *ข้อเสนอแนะ:* ใน Phase 20 (Workflow Engine) สามารถเพิ่มตัวเลือกช่วงเวลาลาในแบบฟอร์ม: `full_day` (1.0), `half_day_morning` (0.5 วัน), `half_day_afternoon` (0.5 วัน) หรือระบุชั่วโมง เพื่อเพิ่มความยืดหยุ่นให้สอดคล้องกับระเบียบบริษัททั่วไป
+3. **Office Coordinate Geofencing & Radius Validation:**
+   - *ข้อสังเกต:* ปัจจุบันระบบเก็บค่า Latitude / Longitude เมื่อผู้ใช้ยินยอม แต่ยังไม่มีการตรวจรัศมีระยะห่างจากที่ตั้งสำนักงาน (Geofence Radius) ตามที่ระบุไว้เป็นข้อสังเกตใน `gpt.md` (ข้อ 283)
+   - *ข้อเสนอแนะ:* ในอนาคตสามารถเพิ่มฟิลด์ `office_lat`, `office_lng`, `radius_meters` ในการตั้งค่ากะงานหรือองค์กร และใช้สูตร Haversine คำนวณระยะห่างเพื่อ Flag เตือนการลงเวลานอกสถานที่
+4. **ระบบนำเข้าปฏิทินวันหยุดประจำปี (Public Holiday Import Tool):**
+   - *ข้อสังเกต:* ปัจจุบันการเพิ่มวันหยุดในตาราง `holidays` ต้องกรอกทีละรายการผ่านหน้า Master Setup
+   - *ข้อเสนอแนะ:* เพิ่มปุ่ม "Import Public Holidays" ที่สามารถโหลดไฟล์ CSV หรือดึงวันหยุดตามประกาศธนาคารแห่งประเทศไทย (BOT Holiday Calendar) เข้าสู่ระบบได้ในคลิกเดียว
+5. **การตั้งเวลา Background Scheduler สำหรับ Document Retention:**
+   - *ข้อสังเกต:* คำสั่ง `php artisan documents:enforce-retention [--purge]` ใช้งานได้สมบูรณ์แล้ว
+   - *ข้อเสนอแนะ:* ควรกำหนด Schedule ใน `routes/console.php` หรือ `app/Console/Kernel.php` ให้รันสัปดาห์ละ 1 ครั้ง (เช่น `schedule->command('documents:enforce-retention')->weekly()`) เพื่อให้การทำความสะอาดเอกสารหมดอายุเกิดขึ้นอัตโนมัติอย่างต่อเนื่อง *(ดำเนินการเพิ่มใน `routes/console.php` เรียบร้อยแล้ว)*
+
+---
+
+### 4.11 ผลการตรวจสอบและข้อเสนอแนะ Phase 20: Central Dynamic Approval Workflow Engine
+
+#### จุดเด่นที่ผ่านการทดสอบและปฏิบัติตามมาตรฐานสถาปัตยกรรม (Strengths & Verified Architecture):
+1. **Central Dynamic Workflow Architecture (ตามข้อตกลงใน `gpt.md` ข้อ 8 และ 9):**
+   - Migration `2026_09_07_000002_create_phase20_workflow_tables.php` วางโครงสร้าง 5 ตารางหลักอย่างรัดกุมพร้อม Scoping `org_id` ทุกตาราง:
+     - `workflow_definitions`: แม่แบบลำดับการอนุมัติแบบ Versioned ควบคุมช่วงวงเงิน (`amount_min`, `amount_max`), แผนก, และประเภทเอกสาร
+     - `workflow_steps`: ขั้นตอนการอนุมัติ (Step No, Assignment Type: `user` / `manager` / `role`, Execution Mode)
+     - `workflow_instances`: Instance การทำงานจริงที่ผูกกับเอกสารธุรกิจ
+     - `workflow_approvals`: รายการคิวการอนุมัติรายบุคคล พร้อมสถานะ (`queued`, `pending`, `approved`, `rejected`, `revision_requested`)
+     - `workflow_delegations`: การมอบอำนาจอนุมัติชั่วคราว
+   - **No Bespoke Approval Logic:** ไม่มีการกระจายโค้ดอนุมัติเฉพาะกิจในโมดูลย่อย แต่รวมศูนย์ผ่าน `WorkflowEngineService` ตามเป้าหมายของระบบ
+2. **Deterministic Snapshot Integrity:**
+   - เมื่อยื่นเอกสารเข้า Workflow (`submit`), ระบบจะจับภาพ `definition_snapshot` (ลำดับขั้นตอน, โหมด, และรายชื่อผู้อนุมัติที่คำนวณได้ ณ เวลานั้น) และ `subject_snapshot` (ยอดเงิน, รหัสเอกสาร, ผู้ขอ) จัดเก็บเป็น JSON
+   - การปรับเปลี่ยนโครงสร้างองค์กร, สายบังคับบัญชา หรือสิทธิ์ของผู้ใช้ในภายหลัง จึงไม่มีผลกระทบย้อนหลังต่อ Workflow ที่กำลังดำเนินอยู่
+3. **Strict Segregation of Duties (SoD) & Role Security:**
+   - ระบบบล็อกไม่ให้ผู้ขออนุมัติ (Requester) ทำการอนุมัติตนเอง (`$instance->requester_user_id === $actor->id`) ผ่านข้อยกเว้น `ValidationException`
+   - การมอบอำนาจ (Delegation) ตรวจสอบเงื่อนไขอย่างเคร่งครัด: ต้องอยู่ในช่วงเวลา (`starts_at` ถึง `ends_at`), ต้อง active, และห้ามมอบอำนาจให้ตนเอง
+4. **RBAC & Multi-Tenant Isolation:**
+   - สิทธิ์ใหม่ 3 รายการ: `workflows.view`, `workflows.manage`, `workflows.approve`
+   - ทุก Endpoint และ Service มีการตรวจสอบ Tenant (`assertOrg` / `$instance->org_id === $actor->org_id`) และ Ownership อย่างชัดเจน
+   - มีการบันทึก `AuditLog` ทุกจังหวะสำคัญ: `workflow.definition.create`, `workflow.submit`, `workflow.approved`, `workflow.rejected`, `workflow.revision_requested`, และ `workflow.delegation.create`
+5. **Test Pass Rate:**
+   - ผ่านการทดสอบ `Phase20WorkflowTest.php` ครอบคลุม Threshold Snapshot, SoD Block, Delegation Expiry และ Idempotent Approval Action
+   - ชุดทดสอบทั้งหมดของระบบผ่าน **255 tests (1,963 assertions / 0 failures)**
+
+---
+
+#### ปัญหาและข้อบกพร่องที่ต้องแก้ไขเร่งด่วน (Critical Findings & Remediation Required):
+
+1. **[CRITICAL - Accounting Integrity] การอนุมัติ Expense ข้ามขั้นตอนการลงบัญชี Double-entry GL:**
+   - *ปัญหา:* ใน `ExpenseController::approve()`, การอนุมัติ Expense มีการคำนวณยอดหนี้ (`payable_total`, `balance_due`) และเรียกคำสั่ง `$journals->postExpenseApproval($expense, $user->id)` เพื่อสร้าง Journal Voucher และบันทึกบัญชีแยกประเภท
+   - แต่ใน `WorkflowEngineService::markSubjectApproved()` เมื่อ Expense ผ่านการอนุมัติครบทุกขั้นตอน ระบบทำการอัปเดตเพียง:
+     `$subject->update(['status' => 'approved', 'approved_by' => $actor->id, 'approved_at' => now()])`
+   - *ผลกระทบ:* Expense ที่อนุมัติผ่าน Central Workflow Engine จะ **ไม่มีการบันทึกบัญชี GL และไม่มีการเซ็ตยอด Payable** ทำให้งบการเงินและยอดเจ้าหนี้คลาดเคลื่อนอย่างรุนแรง
+   - *แนวทางแก้ไข:* ใน `markSubjectApproved()` กรณี `subject_type === 'expense'` ต้องเรียกใช้ `FinancialJournalService::postExpenseApproval()` พร้อมคำนวณ `payable_total`, `base_payable_total`, `balance_due`, `base_balance_due` ให้เหมือนกับ `ExpenseController::approve()`
+
+2. **[CRITICAL - Data & Entitlement Integrity] การ Reject/Revise ไม่ปรับสถานะเอกสารต้นทาง และไม่คืนยอดวันลา:**
+   - *ปัญหา:* ใน `WorkflowEngineService::act()` เมื่อ Action เป็น `rejected` หรือ `revision_requested`:
+     ```php
+     if ($action !== 'approved') {
+         $instance->update(['status' => $action, 'completed_at' => now()]);
+         return $instance->fresh();
+     }
+     ```
+     ระบบอัปเดตสถานะเฉพาะในตาราง `workflow_instances` แต่ **ไม่ได้อัปเดตสถานะของ `$subject`** (เช่น `leave_requests`, `expenses`, `purchase_requests`, `purchase_orders`) ให้เปลี่ยนเป็น `rejected` หรือ `draft/revision`
+   - *ผลกระทบต่อวันลา (Leave Balance Leak):* ตอนที่พนักงานกด Submit คำขอลา (`submitLeave`), ยอดวันลาถูกหักออกจาก `leave_balances` ไปแล้ว หากคำขอถูก Reject ใน Workflow Engine ยอดวันลาที่หักไปแล้ว **จะไม่ได้รับคืน** ทำให้พนักงานเสียสิทธิ์วันลาไปโดยปริยาย
+   - *แนวทางแก้ไข:*
+     - เพิ่มฟังก์ชัน `markSubjectRejected(WorkflowInstance $instance, string $action)`
+     - สำหรับ `leave_request`: ให้คืนยอดวันลาเข้า `leave_balances` (ตาม logic ใน `cancelLeave`) และปรับสถานะ `LeaveRequest` เป็น `rejected` หรือ `draft` (กรณีขอแก้ไข)
+     - สำหรับ `expense`, `purchase_request`, `purchase_order`: ปรับสถานะเอกสารให้สอดคล้องกัน
+
+3. **[HIGH - Payroll Integration Gap] Attendance Summary ข้ามวันลาที่ได้รับการอนุมัติ (Approved Leave Omission):**
+   - *ปัญหา:* ใน `HrAttendanceService::createSummary()` บรรทัดที่ 131:
+     `$leaves = LeaveRequest::where('org_id', $orgId)->where('user_id', $userId)->where('status', 'submitted')->whereDate(...)...`
+     ระบุเงื่อนไขค้นหาเฉพาะ `where('status', 'submitted')`
+   - *ผลกระทบ:* เมื่อ LeaveRequest ได้รับการอนุมัติผ่าน Phase 20 สถานะจะเปลี่ยนเป็น `approved` ทำให้ฟังก์ชัน `createSummary()` มองข้ามวันลาที่อนุมัติแล้ว และคำนวณวันลา (`paid_leave_days`, `unpaid_leave_days`) เป็น 0 ส่งผลให้ข้อมูลที่ส่งต่อ Payroll ผิดพลาด
+   - *แนวทางแก้ไข:* ปรับเงื่อนไขเป็น `whereIn('status', ['submitted', 'approved'])` หรือ `where('status', 'approved')`
+
+4. **[HIGH - Workflow Deadlock] ความเสี่ยงเกิดภาวะ Deadlock ใน Role-based Approval เมื่อ Requester มี Role นั้น:**
+   - *ปัญหา:* ใน `assignees()`, เมื่อกำหนด Step เป็น `'role'` ระบบดึง User ทุกคนใน Role นั้นมาสร้างคิว `WorkflowApproval`. หาก Requester เป็นหนึ่งในคนที่มี Role นั้น (เช่น ผู้จัดการ หรือ เจ้าหน้าที่การเงิน) ระบบจะสร้างเรคคอร์ด `pending` ให้ตัว Requester ด้วย
+   - ใน `act()`, ระบบบล็อก SoD ไม่ให้ Requester อนุมัติเอกสารตนเอง
+   - แต่ในบรรทัด 87:
+     `if ($stepApprovals->contains('status', 'pending')) { return $instance->fresh(); }`
+     ระบบตรวจสอบว่าถ้ายังมีรายการใดค้าง `pending` จะไม่ยอมขยับ Step. เนื่องจาก Requester อนุมัติไม่ได้ รายการของ Requester จึงค้าง `pending` ตลอดไป ทำให้ขั้นตอนการอนุมัติไม่มีวันเสร็จสิ้น (Permanent Deadlock)
+   - *แนวทางแก้ไข:* กรอง Requester ออกจากรายชื่อ Assignee ของ Step นั้นตั้งแต่ขั้นตอน Snapshot:
+     `$assignees = $this->assignees($requester, $step, $subject)->reject(fn ($id) => $id === $requester->id);`
+     และกำหนดเงื่อนไขว่าหากเป็น Role Assignment ให้ถือว่าการอนุมัติของบุคคลใดบุคคลหนึ่งใน Role มีผลครบถ้วน (First-to-approve) หรือ Unanimous ยกเว้น Requester
+
+5. **[MEDIUM - CI/CD Quality Gates Failure] ข้อผิดพลาดจากการตรวจสอบ Code Standards:**
+   - **PHP Pint Format Failure:**
+     - `backend/routes/web.php`: พบการเรียงลำดับ Use statement สลับกัน (`ordered_imports`)
+     - `backend/tests/Feature/Phase20WorkflowTest.php`: บรรทัดที่ 63 มีการเยื้องบรรทัด (`statement_indentation`) ของ `return $users;` ผิดปกติ
+   - **ESLint Typescript Failure (39 Errors):**
+     - `backend/resources/js/Pages/Workflows/Index.tsx`: พบข้อผิดพลาด `@typescript-eslint/no-explicit-any` จำนวน 21 จุด
+     - `backend/resources/js/Pages/Hr/Index.tsx`: พบข้อผิดพลาด `@typescript-eslint/no-explicit-any` จำนวน 18 จุด
+     - จำเป็นต้องประกาศ TypeScript Interface ให้ชัดเจน (เช่น `WorkflowDefinition`, `WorkflowApproval`, `WorkflowInstance`, `WorkflowDelegation`, `User`, `PageProps`)
+   - **Prettier Formatting Failure:**
+     - `backend/resources/js/Layouts/AuthenticatedLayout.tsx`
+     - `backend/resources/js/Pages/Hr/Index.tsx`
+     - `backend/resources/js/Pages/Workflows/Index.tsx`
+     - ต้องรัน `npm run format` หรือ Prettier write เพื่อให้ผ่าน CI Gate 100%
+
+6. **[CRITICAL - Workflow Engine Flaw] `execution_mode` (Sequential vs Parallel) เป็น Dead Code และไม่มีกลไก First-to-Approve สำหรับ Role Assignment:**
+   - *ปัญหา:* ฟิลด์ `execution_mode` ('sequential' / 'parallel') ใน `workflow_steps` และ `definition_snapshot` ไม่เคยถูกนำมาคำนวณใน `WorkflowEngineService::act()`
+   - ปัจจุบันโค้ด `$stepApprovals->contains('status', 'pending')` ถือว่าทุกรายการที่สร้างใน Step นั้นต้องอนุมัติครบทุกคนเสมอ (Unanimous All-Approvers)
+   - *ผลกระทบ:* เมื่อกำหนด Step เป็น `role` (เช่น ฝ่ายการเงินหรือผู้จัดการ 3 คน) คนใดคนหนึ่งอนุมัติจะไม่สามารถผ่าน Step ได้จนกว่าทั้ง 3 คนจะกดอนุมัติครบทุกคน ซึ่งขัดกับหลัก First-to-Approve หรือ Any-one approver ในกระบวนการทางธุรกิจจริง
+   - *แนวทางแก้ไข:* กำหนดกลไกประเมินผลของ Step ให้รองรับ First-to-Approve สำหรับ Role Step หรือใช้ `execution_mode` ในการควบคุมว่าจะต้อง Unanimous หรือ Any-one จากนั้นให้ Auto-resolve รายการที่เหลือใน Step นั้นให้เป็น `superseded` หรือ `bypassed`
+
+7. **[HIGH - Delegation Visibility Gap] หน้าจอ Inbox ไม่แสดงรายการที่ได้รับมอบหมายอำนาจ (Delegated Approvals Invisible in Inbox UI):**
+   - *ปัญหา:* ใน `WorkflowController::index`, รายการ Inbox ดึงเฉพาะ `where('assigned_user_id', $user->id)`
+   - *ผลกระทบ:* ผู้รับมอบอำนาจ (Delegate) จะไม่เห็นรายการของ Delegator ในหน้า Inbox ของตนเอง ทำให้ไม่สามารถปฏิบัติหน้าที่แทนได้ผ่าน UI แม้ว่าใน Service `isDelegate()` จะอนุญาตให้กดอนุมัติได้ก็ตาม
+   - *แนวทางแก้ไข:* ขยาย Inbox Query ให้รวม `workflow_approvals` ที่ `assigned_user_id` อยู่ในรายชื่อผู้มอบอำนาจที่ยังมีผลบังคับใช้ (`delegator_user_id` ที่มอบหมายให้ `$user->id` และยังอยู่ในช่วง `starts_at` - `ends_at`)
+
+8. **[MEDIUM - Subject Lifecycle & Status Consistency across Business Modules]:**
+   - *ปัญหา:* ในการอนุมัติ/ปฏิเสธเอกสารแต่ละโมดูล (LeaveRequest, PurchaseRequest, PurchaseOrder, Expense) มีสถานะและพฤติกรรมเฉพาะ:
+     - `LeaveRequest`: รองรับ `draft`, `submitted`, `approved`, `rejected`, `cancelled` (คืนยอดวันลาเมื่อ rejected)
+     - `PurchaseRequest`: รองรับ `draft`, `approved`, `rejected`
+     - `PurchaseOrder`: รองรับ `draft`, `approved`, `cancelled` (หรือ `rejected`)
+     - `Expense`: รองรับ `draft`, `approved`, `rejected`, `paid`
+   - *แนวทางแก้ไข:* ออกแบบ Interface หรือ Handler Mapping กลางสำหรับ Subject Status Transition ใน `WorkflowEngineService` ให้ปรับสถานะเอกสารต้นทางและจัดการ Side-effects (เช่น คืนยอดวันลา, ปรับยอดหนี้ AP, บันทึก GL) อย่างถูกต้องตาม Domain Contract ของแต่ละโมดูล
+
+---
+
+#### ข้อสังเกตและข้อเสนอแนะด้าน UI / UX (Usability Polish Recommendations):
+
+1. **Workflow Builder รองรับเพียง Step เดียวในหน้า UI:**
+   - แบบฟอร์มใน `Workflows/Index.tsx` ฮาร์ดโค้ดชื่อฟิลด์เป็น `steps[0][...]` ทำให้ผู้ใช้สร้างได้เพียงขั้นตอนเดียวจากหน้าจอ UI แม้ว่า Backend และ Validation จะรองรับถึง 10 ขั้นตอน
+   - *ข้อเสนอแนะ:* เพิ่มปุ่ม "+ Add Step" ในหน้า UI เพื่อให้ผู้ดูแลระบบสามารถกำหนด Multi-Level Workflow (เช่น Step 1: Manager -> Step 2: Finance -> Step 3: Executive) ได้จริง
+2. **Action Confirmation Modal พร้อมช่องระบุ Comment:**
+   - ปุ่ม Approved, Rejected, Revision Requested ในแถบ My Approval Inbox ปัจจุบันส่ง Request ทันทีที่คลิก
+   - *ข้อเสนอแนะ:* ควรมี Modal แสดงรายละเอียดสรุปของเอกสาร พร้อมช่องกรอก `comment` (โดยเฉพาะกรณี Rejected หรือ Revision Requested ควรบังคับให้ใส่เหตุผล)
+3. **การแสดงผล Document Identifier ที่สื่อความหมาย:**
+   - ในหน้า Inbox คอลัมน์ Document ปัจจุบันแสดงผลเป็น UUID (เช่น `expense · 9e32a1...`)
+   - *ข้อเสนอแนะ:* ส่ง Display Name / Document Number (เช่น `EXP-2026-0001`, `PR-001`, หรือ `Leave: สมชาย (3 วัน)`) และทำลิงก์เปิดดูเอกสารต้นทางได้โดยตรง
+4. **ปุ่ม "Submit to Approval Workflow" ในโมดูลต้นทาง:**
+   - ปัจจุบันมี Route กลาง `/workflows/submit/{subjectType}/{subjectId}` แต่ในหน้าจอ Leave Requests, Expenses, PR, PO ยังไม่มีปุ่มให้ผู้ใช้กดส่งเข้า Workflow จากหน้าจอนั้นๆ โดยตรง
+5. **การแสดงสถานะ Delegation ในประวัติและไทม์ไลน์ (Delegation Audit & Attribution Display):**
+   - เมื่อมีการอนุมัติแทนกัน ควรแสดงใน Timeline ให้ชัดเจนว่า "อนุมัติโดย [Delegate Name] ปฏิบัติหน้าที่แทน [Original Approver]" เพื่อความโปร่งใสใน Audit Trail
+
+---
+
 ## 6. แผนงานพัฒนาต่อยอด (Future Roadmap & Architectural Guardrails)
 
 ### แผนผังลำดับการพัฒนาที่เห็นชอบร่วมกัน (Consensus Roadmap Phase 1 - 28):
 
 ```
-[Phase 1 - 18: Core, Financials, Treasury, Inventory, Payroll, DMS & 2FA] (Closed)
+[Phase 1 - 18.1 & Phase 19: Core, Financials, Treasury, Inventory, Payroll, DMS, 2FA & HR Foundation] (Closed)
        ↓
-[Phase 18 Polish & Phase 18.1: DMS Security & Compliance Remediation]
+[Phase 20: Dynamic Approval Workflow Engine] (Thresholds, Multi-level, Delegation, Leave/PR/PO/Expense Chains) (Under Review & Remediation)
        ↓
-[Phase 19: HR Core, Attendance & Leave Foundation] (No bespoke approval; Draft/Submit & Balances only)
-       ↓
-[Phase 20: Dynamic Approval Workflow Engine] (Thresholds, Delegation, Leave/PR/PO/Expense Chains)
-       ↓
-[Phase 21: Operational Notifications & Outbox] (LINE OA / Slack / Telegram, Quiet Hours, No Cash Balance)
+[Phase 21: Operational Notifications & Outbox] (LINE OA / Slack / Telegram, Quiet Hours, No Cash Balance) (Next Gate)
        ↓
 [Phase 22: Customer & Supplier Self-Service Portals] (External Identity, Scan Gate & Scoped Access)
        ↓
@@ -241,16 +452,20 @@ Gemini เห็นพ้อง 100% กับข้อเสนอของ GPT
 ```
 
 ### สรุปสถานะโครงการ:
-- **Phase 1 ถึง Phase 18:** เสร็จสมบูรณ์แล้วทุก Phase (100% Complete)
-- **Phase 18 Polish & Phase 18.1 Remediation:** วางแผนเพื่อปิดช่องว่างความปลอดภัยและความสอดคล้องทางกฎหมายก่อนเริ่ม Phase 19
-- ระบบผ่านการทดสอบ Regression ครอบคลุมทั้ง Backend (246 Feature Tests Passed, 1,921 Assertions) และ Frontend (TypeScript Compile, ESLint, Prettier, Pint Clean)
+- **Phase 1 ถึง Phase 19 (รวม Phase 18.1 Remediation):** เสร็จสมบูรณ์แล้วทุก Phase (100% Complete & Closed)
+- **Phase 20 Dynamic Approval Workflow Engine:** พัฒนาโครงสร้างตาราง, Service กลาง, Inbox UI, และ Delegation เสร็จสิ้นแล้ว อยู่ในระหว่าง **Audit & Remediation Gate** เพื่อแก้ไขจุดบกพร่องทางบัญชี (GL Posting Bypass), การคืนยอดวันลา (Leave Balance Refund on Reject), ข้อผิดพลาด Code Standards (Pint, ESLint Any, Prettier), และการป้องกัน Role-based SoD Deadlock ก่อนปิด Phase อย่างเป็นทางการ
+- **สถานะการทดสอบระบบ (Test Verification):**
+  - Backend Feature Tests: **255 Tests Passed (1,963 Assertions / 0 Failures)**
+  - Frontend Build: **Vite Build Clean (1,051 modules transformed / 0 errors)**
+  - Static Code Analysis: รอแก้ไข Pint formatting, Prettier, และ TypeScript explicit types ให้ผ่าน 100%
+- **ประตูสู่ Phase ถัดไป (Next Gate):** ปิดรายการ Remediation ของ Phase 20 ให้สมบูรณ์ ก่อนเปิดประตูสู่ **Phase 21: Operational Notifications & Outbox**
 
 ---
 
 ## 7. คำแนะนำสำหรับ AI ในการพัฒนาต่อยอด (Directives for Development)
 
-1. **ห้ามละเมิด Security Guardrails ในข้อ 1 และ 2 ของ `gemini.md` โดยเด็ดขาด** (Org Isolation, Redaction, Permission Check, Session Invalidation, Payslip Privacy Guard, DMS Private Download Guard, 2FA Encrypted Secret Guard, No Cash Balance Guard, AI OCR Human-in-the-Loop)
+1. **ห้ามละเมิด Security Guardrails ในข้อ 1 และ 2 ของ `gemini.md` โดยเด็ดขาด** (Org Isolation, Redaction, Permission Check, Session Invalidation, Payslip Privacy Guard, DMS Private Download Guard, 2FA Encrypted Secret Guard, Attendance Privacy Guard, No Cash Balance Guard, AI OCR Human-in-the-Loop, Workflow SoD Guard)
 2. **ขอบเขตการแก้ไขใน Phase ที่ Closed แล้ว (Closed Phase Governance):**
-   - ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-18 โดยไม่มี Decision/Checklist ใหม่
+   - ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-20 โดยไม่มี Decision/Checklist ใหม่
    - **อนุญาตและให้ดำเนินการได้:** การแก้ไข Security Vulnerability, Data-Integrity Bug, Regression Fix หรือ Production-Blocking Issue ใน Phase ที่ปิดแล้ว โดยต้องมี Test ครอบคลุมและบันทึกเหตุผลชัดเจน
 3. **รักษา Code Quality:** รัน `php artisan test`, `npm run build`, `npm run lint`, `npm run check-format`, และ `php vendor/bin/pint --test` ให้ผ่าน 100% ทุกครั้งที่จบ Slice/Phase

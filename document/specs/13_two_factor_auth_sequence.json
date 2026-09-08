@@ -9,8 +9,8 @@
     "animation": "trace",
     "quality_profile": "showcase",
     "views": [
-      { "id": "credential-and-policy", "label": "Login & Policy Gate", "focus": ["client", "router", "auth_ctrl", "policy_svc", "db"], "note": "Valid credentials trigger policy check against user role and organization enforcement rules." },
-      { "id": "totp-challenge-flow", "label": "TOTP Verification & Device Trust", "focus": ["client", "auth_ctrl", "totp_svc", "db"], "note": "RFC 6238 TOTP code verified offline; 30-day trusted device token issued." },
+      { "id": "credential-and-policy", "label": "Login & Policy Gate", "focus": ["client", "router", "auth_ctrl", "policy_svc", "db"], "note": "2FA is off by default. A policy can require privileged roles to enroll and challenge confirmed users." },
+      { "id": "totp-challenge-flow", "label": "TOTP Verification & Device Trust", "focus": ["client", "auth_ctrl", "totp_svc", "db"], "note": "RFC 6238 TOTP is verified offline. Trusted-device issuance follows the organization policy (1-90 days)." },
       { "id": "middleware-enforcement", "label": "Privileged Middleware Gate", "focus": ["client", "router", "policy_svc"], "note": "EnsureTwoFactorEnrollment middleware protects sensitive administration screens." }
     ]
   },
@@ -31,15 +31,15 @@
     { "id": "post-login", "from": "client", "to": "router", "y": 180, "label": "POST /login (credentials)", "variant": "emphasis" },
     { "id": "auth-req", "from": "router", "to": "auth_ctrl", "y": 215, "label": "authenticate()", "variant": "emphasis" },
     { "id": "verify-user", "from": "auth_ctrl", "to": "db", "y": 250, "label": "verify password & roles", "variant": "default" },
-    { "id": "user-ok", "from": "db", "to": "auth_ctrl", "y": 285, "label": "password ok (owner/admin/finance)", "variant": "return" },
+    { "id": "user-ok", "from": "db", "to": "auth_ctrl", "y": 285, "label": "password ok + user state", "variant": "return" },
     { "id": "check-policy", "from": "auth_ctrl", "to": "policy_svc", "y": 320, "label": "shouldChallenge(user)", "variant": "security" },
-    { "id": "challenge-needed", "from": "policy_svc", "to": "auth_ctrl", "y": 355, "label": "challenge required", "variant": "return" },
+    { "id": "challenge-needed", "from": "policy_svc", "to": "auth_ctrl", "y": 355, "label": "enabled + enrolled: challenge", "variant": "return" },
     { "id": "redirect-challenge", "from": "auth_ctrl", "to": "client", "y": 390, "label": "302 Redirect /two-factor-challenge", "variant": "return" },
     { "id": "submit-totp", "from": "client", "to": "router", "y": 450, "label": "POST /two-factor-challenge (code, trust_device)", "variant": "emphasis" },
     { "id": "verify-totp-req", "from": "router", "to": "auth_ctrl", "y": 485, "label": "verifyChallenge()", "variant": "emphasis" },
     { "id": "validate-code", "from": "auth_ctrl", "to": "totp_svc", "y": 520, "label": "verify(secret, code)", "variant": "security" },
     { "id": "code-valid", "from": "totp_svc", "to": "auth_ctrl", "y": 555, "label": "code valid", "variant": "return" },
-    { "id": "save-trusted-dev", "from": "auth_ctrl", "to": "db", "y": 590, "label": "store trusted device (30-day token)", "variant": "default" },
+    { "id": "save-trusted-dev", "from": "auth_ctrl", "to": "db", "y": 590, "label": "store token hash + UA hash (policy days)", "variant": "default" },
     { "id": "login-complete", "from": "auth_ctrl", "to": "client", "y": 625, "label": "Set-Cookie + 302 Redirect", "variant": "return" },
     { "id": "access-privileged", "from": "client", "to": "router", "y": 685, "label": "GET /settings/organization", "variant": "emphasis" },
     { "id": "middleware-check", "from": "router", "to": "policy_svc", "y": 720, "label": "EnsureTwoFactorEnrollment", "variant": "security" },
@@ -72,7 +72,7 @@
       "dot": "cyan",
       "title": "Trusted Device & Recovery",
       "items": [
-        "Users can opt to trust devices for 30 days via cryptographically secure cookie tokens",
+        "Trusted devices are optional and use the policy duration (1-90 days)",
         "8 single-use recovery codes generated during initial 2FA enrollment",
         "Used recovery codes are permanently consumed to prevent replay attacks"
       ]
@@ -81,7 +81,7 @@
       "dot": "rose",
       "title": "Organization-Wide Governance",
       "items": [
-        "Organization setting can mandate 2FA for Owner, Admin, and Finance roles",
+        "2FA is disabled by default; an organization can enable and require it for Owner, Admin, and Finance",
         "EnsureTwoFactorEnrollment middleware halts access to all business screens until enrolled",
         "Company Owners can securely reset 2FA credentials for locked-out employees"
       ]

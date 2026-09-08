@@ -463,6 +463,48 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'HR & Attendance',
+                    href: route('hr.index'),
+                    active: route().current('hr.*'),
+                    permission: 'hr.self.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0M18 8h3m-1.5-1.5v3"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Approvals',
+                    href: route('workflows.index'),
+                    active: route().current('workflows.*'),
+                    permission: 'workflows.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12l2 2 4-4m5 2a8 8 0 11-16 0 8 8 0 0116 0z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Chart of Accounts',
                     href: route('accounting.chart-of-accounts.index'),
                     active: route().current('accounting.chart-of-accounts.*'),

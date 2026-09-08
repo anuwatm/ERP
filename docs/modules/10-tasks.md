@@ -35,7 +35,7 @@
 Project Detail → Add Task
 → set assignee, due_date, priority
 → status=todo
-→ notification task_assigned = Post-MVP
+→ notification task_assigned ผ่าน Phase 8 notification flow
 ```
 
 ### 3.2 ทำงาน
@@ -53,7 +53,7 @@ assignee ย้าย status → in_progress → review → done
 Cron รายวัน:
 due_date < today AND status not in (done, blocked)
 → is_overdue=true
-→ notification task_overdue = Post-MVP
+→ notification task_overdue ตาม event/job ที่เปิดใช้
 ```
 
 ---
@@ -68,7 +68,7 @@ projects / users
       │
       ├──* task_comments
       ├──► files (entity=task, Post-MVP)
-      ───► notifications (Post-MVP)
+      ───► notifications (Phase 8)
               │
               ▼
       Dashboard (overdue count) / Reports

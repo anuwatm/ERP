@@ -21,7 +21,7 @@
 - กำหนดตำแหน่ง, contact หลัก (`is_primary`)
 - เก็บช่องทางติดต่อและ note เฉพาะคน
 - ผูก contact กับ deal / project / invoice ได้
-- MVP ใช้ฝั่ง `customer_id` เท่านั้น; `supplier_id` เป็น Post-MVP
+- Contact controller ปัจจุบันรองรับเฉพาะ contact ใต้ customer. คอลัมน์ `supplier_id` มีใน schema เพื่อขยาย Phase 7+ แต่ยังไม่มี supplier-contact route/UI
 
 ---
 
@@ -48,7 +48,7 @@
 ### 3.3 Contact ฝั่ง supplier
 
 ```text
-Supplier Detail → Add Contact
+Planned: Supplier Detail → Add Contact
 → contacts.supplier_id = supplier
 → ใช้ตอนติดตาม PO / billing
 ```
@@ -59,7 +59,7 @@ Supplier Detail → Add Contact
 
 ```text
 customers ──1:*── contacts ──*── deals.contact_id
-suppliers ──1:*── contacts (Post-MVP)
+suppliers ──1:*── contacts (schema reserved; route/UI planned)
                       │
                       └── activities / notes (optional)
 ```
@@ -76,14 +76,14 @@ suppliers ──1:*── contacts (Post-MVP)
 
 ### Constraints
 
-- MVP: ต้องมี `customer_id` เสมอ
-- Post-MVP: เมื่อเปิด suppliers ค่อยอนุญาต `supplier_id` และใช้ rule `customer_id` หรือ `supplier_id` อย่างน้อยหนึ่งค่า
+- Current route derives and requires `customer_id` from `/customers/{customer}/contacts`
+- `supplier_id` เป็น nullable reserved field; ห้ามประกาศว่า supplier-contact flow ใช้งานได้จนกว่าจะมี endpoint/policy
 - แนะนำ unique partial: หนึ่ง primary ต่อ customer
 
 ### Field สำคัญ
 
-MVP: `name`, `position`, `phone`, `email`, `line_id`, `is_primary`, `note`, `customer_id`  
-Post-MVP: เพิ่ม `supplier_id`
+Current flow: `name`, `position`, `phone`, `email`, `line_id`, `is_primary`, `note`, `customer_id`
+Reserved schema: `supplier_id`
 
 ### Business rules
 

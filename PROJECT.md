@@ -1,7 +1,8 @@
 # Project Definition: Company OS / Lightweight ERP
 
-เอกสารนี้ล็อก **ตัวตนโปรเจกต์ + ขอบเขต + stack + ลำดับความสำคัญของเอกสาร**  
-ถ้าข้อความในไฟล์อื่นขัดกับเอกสารนี้ ให้ใช้ลำดับ authority ด้านล่าง
+เอกสารนี้สรุปตัวตนโปรเจกต์, stack และลำดับ authority ของเอกสาร
+
+> **สถานะ ณ ปัจจุบัน:** Phase 0-18.1 ถูก implement แล้ว. ข้อความที่ระบุ MVP/V1/V2 ด้านล่างเป็น baseline ประวัติการตัดสินใจ ไม่ใช่ข้อจำกัดของ runtime ปัจจุบัน. สถานะงานให้ยึด [`checklist.md`](./checklist.md), schema ให้ยึด migrations และ routes ให้ยึด `backend/routes/web.php`.
 
 ---
 
@@ -12,15 +13,15 @@
 | ชื่อภายใน | Company OS / Lightweight ERP |
 | โค้ดเนมโฟลเดอร์ | `ERP` |
 | กลุ่มเป้าหมาย | SME, ทีมบริการ, ทีมซอฟต์แวร์, เอเจนซี, สตูดิโอ |
-| ภาษา UI หลัก (MVP) | ไทย (รองรับ English label ภายหลังได้) |
-| ตลาดเงิน (MVP) | ประเทศไทย, สกุลเงิน `THB` เท่านั้น |
-| Tenant model (MVP) | 1 user สังกัด 1 organization และอยู่ในโครงสร้าง `branch -> division -> department` ได้ |
-| Timezone default | `Asia/Bangkok` |
+| ภาษา UI หลัก | ไทย (`APP_LOCALE=th`) |
+| ตลาดเงิน | ประเทศไทย; รองรับ currency/rate master และ FX ตั้งแต่ Phase 14 |
+| Tenant model | 1 user สังกัด 1 organization และอยู่ในโครงสร้าง `branch -> division -> department` ได้ |
+| Application timezone | `UTC` ใน Laravel runtime; วันทำการ/เอกสารกำหนดตามข้อมูลธุรกิจและ policy |
 
 ### แกนธุรกิจ
 
 ```text
-CRM → Deal → Invoice → Payment → Project → Task → Dashboard
+CRM → Quotation/Invoice → Payment → Treasury/GL → Project/Task → Inventory/Payroll → Dashboard
 ```
 
 ### ปัญหาที่แก้
@@ -29,10 +30,8 @@ CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 
 ### สิ่งที่ไม่ใช่เป้าหมายตอนนี้
 
-- ERP ระดับ enterprise ครบ manufacturing / POS / payroll เต็ม
-- ใบกำกับภาษีตามกฎหมายไทย (tax invoice compliance)
-- บัญชีแยกประเภท (full ledger) / bank reconciliation
-- Multi-branch เชิง operation/report เต็มรูปแบบ, multi-currency accounting
+- Manufacturing/BOM, POS, HR attendance/leave และ portal ภายนอก (Phase 19+)
+- การยื่น e-Tax จริงกับกรมสรรพากรโดยตรง; ต้องผ่าน certified provider/onboarding (Phase 24)
 
 ---
 
@@ -40,17 +39,12 @@ CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 
 เมื่อเอกสารขัดกัน ใช้ลำดับนี้ (สูง → ต่ำ):
 
-1. [`MVP_SCOPE.md`](./MVP_SCOPE.md) — ขอบเขต build รอบแรก
-2. [`docs/ARCHITECTURE_DECISIONS.md`](./docs/ARCHITECTURE_DECISIONS.md) — กฎ override ทางเทคนิค
-3. [`docs/SECURITY_REQUIREMENTS.md`](./docs/SECURITY_REQUIREMENTS.md) — ข้อกำหนด security บังคับ
-4. [`docs/PHASE_1_LOGIN_IMPLEMENTATION.md`](./docs/PHASE_1_LOGIN_IMPLEMENTATION.md) — รายละเอียด implement foundation
-5. [`docs/VALIDATION_RULES.md`](./docs/VALIDATION_RULES.md) — validation/server-side guard
-6. [`docs/PHASE_ACCEPTANCE_CRITERIA.md`](./docs/PHASE_ACCEPTANCE_CRITERIA.md) — DoD ราย phase
-7. [`docs/ROUTES_AND_SCREENS.md`](./docs/ROUTES_AND_SCREENS.md) — route/screen scope ราย phase
-8. [`docs/SEED_DATA.md`](./docs/SEED_DATA.md) — default/UAT seed data
-9. [`docs/database/DATABASE.md`](./docs/database/DATABASE.md) — schema กลาง (ต้อง sync กับ AD ก่อน migrate)
-10. [`docs/modules/*.md`](./docs/modules/) — รายละเอียด per module
-11. [`ERP_FEATURE_PLAN.md`](./ERP_FEATURE_PLAN.md) — แผนยาว / backlog / แรงบันดาลใจ feature
+1. `backend/database/migrations/*.php` — schema runtime
+2. `backend/routes/web.php` และ controller/policy/service — behavior runtime
+3. [`checklist.md`](./checklist.md) — phase status และ work ที่เหลือ
+4. [`document/DATABASE_ERD.md`](./document/DATABASE_ERD.md), [`document/GROUPS_WORKFLOW.md`](./document/GROUPS_WORKFLOW.md) — diagrams ที่ sync แล้ว
+5. [`docs/SECURITY_REQUIREMENTS.md`](./docs/SECURITY_REQUIREMENTS.md), [`docs/VALIDATION_RULES.md`](./docs/VALIDATION_RULES.md) — engineering constraints
+6. เอกสาร MVP/phase/module/feature plan ที่เหลือ — planning history หรือ detailed rationale
 
 **กฎ:** `P0` ใน feature plan **ไม่เท่ากับ** “ต้องมีใน MVP” — ดู AD-01 และ `MVP_SCOPE.md`
 
@@ -64,7 +58,7 @@ CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 | Frontend | **React 18 + TypeScript + Inertia + Vite** | ไม่แยก SPA+REST เต็มรูปแบบใน MVP |
 | Database | **MariaDB 11.x / MySQL-compatible** (`utf8mb4`) | local dev: MariaDB `127.0.0.1:3306`; Laravel ใช้ `DB_CONNECTION=mysql`; money = `DECIMAL(18,2)` เท่านั้น |
 | Auth (MVP) | **Laravel Breeze local** | `auth_provider = local` |
-| Auth (เป้าผลิต privileged) | OIDC/SSO + MFA | เพิ่มหลัง MVP ตาม AD/Security |
+| Auth privileged | Offline TOTP 2FA + recovery codes + policy per organization | Phase 18; OIDC/SSO ยังเป็นอนาคต |
 | Session | Encrypted server-side DB session + secure cookie | CSRF เปิดใช้ |
 | App code language | PHP + TypeScript | ห้ามผสม backend หลายภาษาใน MVP |
 | Primary package manager | Composer + npm | |
@@ -156,12 +150,11 @@ Owner เห็นแค่ org ตัวเอง · Sales ทำ CRM · Financ
 
 | Phase | เนื้อหา | Status |
 | --- | --- | --- |
-| 0 | เอกสาร + schema lock (repo นี้) | In progress — no coding |
-| 1 | Foundation: Laravel/Breeze, org hierarchy, RBAC, invite, audit, Admin dashboard | Not started (docs only) |
-| 2 | CRM: customers, contacts, deals, activities, Sales dashboard | Not started |
-| 3 | Finance: products/services, invoices, payments, expenses, Finance dashboard | Not started |
-| 4 | Delivery: projects, tasks, Delivery dashboard | Not started |
-| 5 | Executive dashboard summary + E2E tests + UAT | Not started |
+| 0-8 | Foundation, CRM, Finance, Delivery, reporting, procurement, inventory/notification baseline | Done |
+| 9-16B | Commercial documents, Treasury, GL, e-Tax application layer, Assets, FX, Inventory operations, Payroll | Done |
+| 17-18.1 | DMS core and compliance | Done |
+| 18 | 2FA security | Done; polish track |
+| 19+ | HR, approvals, notifications, portal, payment and e-Tax gateway | Planned |
 
 รายละเอียด Phase 1: [`docs/PHASE_1_LOGIN_IMPLEMENTATION.md`](./docs/PHASE_1_LOGIN_IMPLEMENTATION.md)
 
@@ -181,7 +174,7 @@ ERP/
     PHASE_1_LOGIN_IMPLEMENTATION.md
     database/DATABASE.md
     modules/...
-  backend/                   ← Laravel app (ยังไม่สร้างใน repo)
+  backend/                   ← Laravel 13 application
 ```
 
 ---

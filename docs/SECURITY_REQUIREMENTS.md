@@ -1,12 +1,13 @@
 # Security Requirements: MVP + Enabled Features
 
-เอกสารนี้เป็นข้อกำหนดบังคับสำหรับ Phase 1-5 และอยู่คู่กับ [`ARCHITECTURE_DECISIONS.md`](./ARCHITECTURE_DECISIONS.md).
+เอกสารนี้เป็นข้อกำหนด security สำหรับ implementation ปัจจุบัน. ข้อความที่อ้าง MVP/Post-MVP เป็น baseline ประวัติ; ตรวจ behavior จริงจาก middleware, policy, service และ tests.
 
 ## 1. Authentication
 
 - MVP: Laravel Breeze local เป็น auth provider (`auth_provider=local`) — รองรับ password hashing, email verification, password reset
 - เก็บได้เฉพาะ password ที่ **hash แล้ว** ใน `users.password`; ห้าม plaintext password, ห้าม log session token / authorization header
-- เตรียมคอลัมน์ `auth_provider`, `auth_provider_user_id` สำหรับ OIDC/SSO ภายหลัง; MFA/2FA บังคับก่อน privileged production rollout
+- TOTP 2FA, encrypted secret, recovery codes และ trusted devices implement แล้ว. ค่า policy ระดับองค์กรปิดเป็นค่าเริ่มต้น; เมื่อเปิด สามารถบังคับ privileged roles และกำหนด trusted-device อายุ 1-90 วัน
+- OIDC/SSO ยังเป็นแผนอนาคต
 - session ใช้ `HttpOnly`, `Secure`, `SameSite=Lax` cookie; rotate session หลัง login, role change และ password reset
 - บังคับ re-authentication (password confirmation) ก่อน action เสี่ยง: เปลี่ยน role, invite/disable user, void invoice, reverse payment
 - ป้องกัน brute force: rate limit login, invite, password reset และ lock/step-up challenge หลังพยายามผิดซ้ำ
@@ -71,10 +72,10 @@ Production / UAT with real users:
 
 - allowlist MIME type + extension, จำกัดขนาด, เปลี่ยนชื่อไฟล์เป็น generated storage key.
 - `storage_key` ต้องสร้างฝั่ง server ด้วย random UUID/cryptographic random เท่านั้น เช่น `tenants/{org_id}/{year}/{month}/{uuid}.{ext}`; ห้ามใช้ชื่อไฟล์เดิมหรือ path จากผู้ใช้เป็น storage path โดยตรง.
-- scan malware ก่อนให้ไฟล์ดาวน์โหลด/แชร์; เก็บ private object storage.
+- DMS เก็บไฟล์ private และ block download จน `scan_status=clean`; production scanner integration ยังต้องมี external scanner จริง
 - download ใช้ signed URL อายุสั้น หรือ endpoint ที่ตรวจ permission ทุกครั้ง.
-- ป้องกัน CSV formula injection: prefix cell ที่เริ่ม `=`, `+`, `-`, `@` ก่อน export (Post-MVP; MVP ไม่มี PDF/CSV export).
-- ห้ามรับไฟล์ executable/script ใน MVP.
+- ป้องกัน CSV formula injection: prefix cell ที่เริ่ม `=`, `+`, `-`, `@` ก่อน export; PDF/CSV exports implement แล้วใน finance/payroll/tax flows
+- ห้ามรับไฟล์ executable/script; DMS allowlist ปัจจุบันคือ PDF/JPEG/PNG/WebP
 
 ## 6. Data protection and secrets
 

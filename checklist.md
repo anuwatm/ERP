@@ -38,11 +38,11 @@
 | Phase 14.1 | Done | AP FX, Inventory FX Bridge และ FCD treasury reconciliation implemented; MySQL migration verification passed |
 | Phase 15 | Done | Warehouse/bin, lot/expiry, barcode scanner for GRN/adjustment/DO/stock count, transfer, reorder notification, warehouse-aware stock movements and tests implemented |
 | Phase 16B | Done | Payroll, Social Security, ภ.ง.ด. 1/1ก workpaper CSV, payslip, policy versioning และ GL posting |
-| Phase 17 | Closed (Remediation Needed) | Enterprise Document Management (DMS), versioning, cross-module links, retention (Parent permission & policy enforcement in Phase 18.1) |
+| Phase 17 | Done | Enterprise Document Management (DMS), versioning, cross-module links, expiry alerts and sensitivity RBAC |
 | Phase 18 | Done (Polish Track) | Security 2FA / Auth OTP for privileged roles; offline TOTP, recovery, trusted devices and owner reset implemented |
-| Phase 18.1 | Planned | DMS Security & Compliance Remediation: parent permission on download/link, retention_until & legal hold enforcement |
-| Phase 19 | Planned | HR Core, Attendance & Leave Foundation: clock-in/out (opt-in GPS/IP), leave policy/balance, payroll summary bridge (No bespoke approval) |
-| Phase 20 | Planned | Dynamic Approval Workflow Engine: threshold-based chains, delegation, multi-level state transitions, audit trail |
+| Phase 18.1 | Done | Parent authorization guard, category retention calculation, legal hold, scheduled quarantine/archive and explicit purge implemented with feature tests |
+| Phase 19 | Done | HR Core, attendance, leave foundation and locked payroll summary bridge completed; approval remains explicitly deferred to Phase 20 |
+| Phase 20 | Done | Central approval workflow: versioned definitions, approver snapshot, threshold evaluation, SoD, delegation, inbox and audit trail |
 | Phase 21 | Planned | Operational Notifications & Outbox: LINE OA / Slack / Telegram, retry/backoff, quiet hours (no cash balance) |
 | Phase 22 | Planned | Customer & Supplier Self-Service Portals: external identity, quotation acceptance, vendor bills, WHT download |
 | Phase 23 | Planned | Thai PromptPay QR & Payment Gateway Integration: dynamic QR, signature verified webhooks, auto-reconciliation |
@@ -1006,17 +1006,17 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 18.1 Design Backlog
 
-- [ ] Design Parent-Permission Authorization Guard สำหรับการดาวน์โหลดเอกสาร (ตรวจสอบสิทธิ์การเข้าถึง Parent Record: Expense, PO, Deal, Customer, Supplier)
-- [ ] Design Source Entity Permission Check เมื่อสร้าง `document_link` (ป้องกันการผูกเอกสารข้าม entity ที่ผู้ใช้ไม่มีสิทธิ์)
-- [ ] Design Category-based Retention Engine: คำนวณ `retention_until` อัตโนมัติ, บังคับใช้ `legal_hold`, และ Default Renewal ตาม Policy (Tax/VAT $\ge$ 5 ปี, General, Accounting)
-- [ ] Design Automated Retention Purge/Archive Command & Scan Failure Re-evaluation Job
+- [x] Design Parent-Permission Authorization Guard สำหรับการดาวน์โหลดเอกสาร (ตรวจสอบสิทธิ์การเข้าถึง Parent Record: Expense, PO, Deal, Customer, Supplier)
+- [x] Design Source Entity Permission Check เมื่อสร้าง `document_link` (ป้องกันการผูกเอกสารข้าม entity ที่ผู้ใช้ไม่มีสิทธิ์)
+- [x] Design Category-based Retention Engine: คำนวณ `retention_until` อัตโนมัติ, บังคับใช้ `legal_hold`, และ Default Renewal ตาม Policy (Tax/VAT $\ge$ 5 ปี, General, Accounting)
+- [x] Design Automated Retention Purge/Archive Command & Scan Failure Re-evaluation Job
 
 ### Phase 18.1 Implementation Backlog
 
-- [ ] ปรับปรุง `DocumentDownloadController` ให้ตรวจสอบสิทธิ์ของ Parent Model ผ่าน `document_links` นอกเหนือจาก `documents.download` และ `sensitivity`
-- [ ] ปรับปรุง `DocumentLinkController` ตรวจสอบว่าผู้ใช้มีสิทธิ์ใน Entity ต้นทางก่อนอนุญาตให้ผูกเอกสาร
-- [ ] พัฒนา `RetentionPolicyService` คำนวณ `retention_until` ตามประเภทเอกสาร และป้องกันการลบเมื่อติด `legal_hold`
-- [ ] เพิ่ม Feature Tests: Parent permission download guard, Unauthorized link prevention, Retention expiry calculation, Legal hold delete block, และ Scan-state failure tests
+- [x] ปรับปรุง `DocumentDownloadController` ให้ตรวจสอบสิทธิ์ของ Parent Model ผ่าน `document_links` นอกเหนือจาก `documents.download` และ `sensitivity`
+- [x] ปรับปรุง `DocumentLinkController` ตรวจสอบว่าผู้ใช้มีสิทธิ์ใน Entity ต้นทางก่อนอนุญาตให้ผูกเอกสาร
+- [x] พัฒนา `DocumentRetentionService` คำนวณ `retention_until` ตามประเภทเอกสาร, บังคับ `legal_hold`, quarantine failed scan, scheduled archive และ explicit purge
+- [x] เพิ่ม Feature Tests: Parent permission download guard, Unauthorized link prevention, Retention expiry calculation, Legal hold delete block, และ Scan-state failure tests
 
 ---
 
@@ -1027,19 +1027,19 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 19 Design Backlog
 
-- [ ] Design Employee Work Profile, Shift/Schedule, Holiday Calendar และ Work Hours Definition
-- [ ] Design Attendance Schema (Check-in/out events, source: web/mobile) พร้อม Privacy Guard (GPS/IP Range เป็น Opt-in ต่อองค์กร)
-- [ ] Design Leave Policy Engine (ประเภทการลา, สิทธิ์สะสม, นโยบายยกยอดวันลา) และ Leave Request Draft/Submit Flow
-- [ ] Design Payroll Summary Bridge (Cutoff Date, Summary of Working Hours / OT / Leave Without Pay, Correction & Reversal mechanism)
-- [ ] Design RBAC & Privacy (พนักงานดูได้เฉพาะเวลาและวันลาของตนเอง; ผู้จัดการดูทีม; HR/Admin ดูทั้งองค์กร)
+- [x] Design Employee Work Profile, Shift/Schedule, Holiday Calendar และ Work Hours Definition
+- [x] Design Attendance Schema (Check-in/out events, source: web/mobile) พร้อม Privacy Guard (GPS/IP Range เป็น Opt-in ต่อองค์กร)
+- [x] Design Leave Policy Engine (ประเภทการลา, สิทธิ์สะสม, นโยบายยกยอดวันลา) และ Leave Request Draft/Submit Flow
+- [x] Design Payroll Summary Bridge (Cutoff Date, Summary of Working Hours / OT / Leave Without Pay, Correction & Reversal mechanism)
+- [x] Design RBAC & Privacy (พนักงานดูได้เฉพาะเวลาและวันลาของตนเอง; ผู้จัดการดูทีม; HR/Admin ดูทั้งองค์กร)
 
 ### Phase 19 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `employee_shifts`, `attendances`, `leave_types`, `leave_balances`, `leave_requests`, `attendance_summaries`
-- [ ] เพิ่ม UI: Employee Self-Service Clock-in/out, Leave Request Form, Leave Balance Card และ Employee/Manager Attendance Summary List
-- [ ] เพิ่ม Setting: Attendance Privacy & Location Verification Settings (Opt-in GPS/IP with Employee Consent)
-- [ ] เพิ่ม Payroll Bridge: สรุปยอดชั่วโมงทำงานและวันลาขาด/เกินสิทธิ์ พร้อมระบบ Lock งวดก่อนส่งเข้า `payroll_runs` (ห้าม auto-post โดยไม่มี period lock)
-- [ ] เพิ่ม Feature Tests: Attendance logging, Leave accrual & deduction, Org isolation, Privacy guards, และ Payroll summary cutoff tests
+- [x] เพิ่ม Schema/Models: `employee_shifts`, `employee_work_profiles`, `holidays`, `attendances`, `leave_types`, `leave_balances`, `leave_requests`, `attendance_summaries`
+- [x] เพิ่ม UI: Employee Self-Service Clock-in/out, Leave Request Form, Leave Balance Card และ Employee/Manager Attendance Summary List
+- [x] เพิ่ม Setting: Attendance Privacy & Location Verification Settings (Opt-in GPS/IP with Employee Consent)
+- [x] เพิ่ม Payroll Bridge: สรุปยอดชั่วโมงทำงานและวันลาขาด/เกินสิทธิ์ พร้อมระบบ Lock งวดก่อนส่งเข้า `payroll_runs` (ห้าม auto-post โดยไม่มี period lock)
+- [x] เพิ่ม Feature Tests: Attendance logging, Leave accrual & deduction, Org isolation, Privacy guards, และ Payroll summary cutoff tests
 
 ---
 
@@ -1049,19 +1049,19 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 20 Design Backlog
 
-- [ ] Design Workflow Definition Schema (Versioned workflow templates, Module triggers: Leave, PR, PO, Expense, Document)
-- [ ] Design Rule & Step Engine (Threshold amounts, Department/Hierarchy matching, Multi-level sequential/parallel approvals)
-- [ ] Design Execution State Machine (Pending, Approved, Rejected, Revision Requested, Delegated, Cancelled)
-- [ ] Design Delegation & Segregation of Duties (SoD Guard: ห้ามผู้อนุมัติอนุมัติเอกสารที่ตนเองเป็นผู้สร้าง, การมอบอำนาจชั่วคราว)
-- [ ] Design Deterministic Document Snapshot (Snapshot approver chain ณ เวลาที่เอกสาร Submit เพื่อป้องกันผลกระทบจากการเปลี่ยนตำแหน่งย้อนหลัง)
+- [x] Design Workflow Definition Schema (Versioned workflow templates, Module triggers: Leave, PR, PO, Expense)
+- [x] Design Rule & Step Engine (Threshold amounts, Manager/Role/User matching, Multi-level sequential/parallel approvals)
+- [x] Design Execution State Machine (Pending, Approved, Rejected, Revision Requested)
+- [x] Design Delegation & Segregation of Duties (SoD Guard: ห้ามผู้อนุมัติอนุมัติเอกสารที่ตนเองเป็นผู้สร้าง, การมอบอำนาจชั่วคราว)
+- [x] Design Deterministic Document Snapshot (Snapshot approver chain ณ เวลาที่เอกสาร Submit เพื่อป้องกันผลกระทบจากการเปลี่ยนตำแหน่งย้อนหลัง)
 
 ### Phase 20 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `workflow_definitions`, `workflow_steps`, `workflow_instances`, `workflow_approvals`, `workflow_delegations`
-- [ ] เพิ่ม Workflow Engine Service: Evaluator, Step Transition Handler, Snapshot Capture, และ Permission Authorizer
-- [ ] เพิ่ม UI: Workflow Builder & Rule Configurator (Admin), Approval Inbox & Action Modal (Approve / Reject / Revise), Document Approval History Timeline
-- [ ] เชื่อมต่อโมดูล: PR, PO, Expense, Leave Requests เข้าสู่ Approval Engine กลาง
-- [ ] เพิ่ม Feature Tests: Threshold evaluation, Segregation of duties, Delegation expiry, Immutable history audit, และ State transition idempotency tests
+- [x] เพิ่ม Schema/Models: `workflow_definitions`, `workflow_steps`, `workflow_instances`, `workflow_approvals`, `workflow_delegations`
+- [x] เพิ่ม Workflow Engine Service: Evaluator, Step Transition Handler, Snapshot Capture, และ Permission Authorizer
+- [x] เพิ่ม UI: Workflow Builder & Rule Configurator (Admin), Approval Inbox พร้อม action confirmation/comment (Approve / Reject / Revise), Document Approval History Timeline
+- [x] เชื่อมต่อโมดูล: Leave Requests และ endpoint กลางสำหรับ PR, PO, Expense เข้าสู่ Approval Engine
+- [x] เพิ่ม Feature Tests: Threshold evaluation, Segregation of duties, Delegation expiry, Immutable history audit, และ State transition idempotency tests
 
 ---
 
@@ -1230,4 +1230,3 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 - [ ] เพิ่ม UI: Touch-friendly POS Cashier Interface, Shift Open/Close Modal, Thermal Receipt Print Layout
 - [ ] พัฒนา Barcode Lookup & Instant Stock Reduction Engine
 - [ ] เพิ่ม Feature Tests: Shift cash reconciliation, Multi-tender payments, Stock movements from POS, และ Shift settlement GL posting tests
-

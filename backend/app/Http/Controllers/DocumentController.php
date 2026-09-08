@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\DocumentCategory;
 use App\Models\DocumentVersion;
 use App\Models\RetentionPolicy;
+use App\Services\DocumentParentAccessService;
 use App\Services\DocumentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,8 @@ class DocumentController extends Controller
         if (! $category?->expiry_tracking_enabled) {
             $data['expires_at'] = null;
             $data['renewal_alert_days'] = null;
+        } elseif (empty($data['renewal_alert_days'])) {
+            $data['renewal_alert_days'] = $category?->default_renewal_alert_days;
         }
         $document = $documents->create($request->user(), $data, $request->file('file'));
         $this->audit($request, 'document.create', $document->id);
@@ -96,11 +99,18 @@ class DocumentController extends Controller
         if (! $user->hasPermissionCode('documents.download')) {
             return false;
         }
-        if ($document->owner_user_id === $user->id || in_array($document->sensitivity, ['org_internal', 'department_restricted'], true)) {
-            return true;
+        $sensitivityAllowed = $document->owner_user_id === $user->id
+            || in_array($document->sensitivity, ['org_internal', 'department_restricted'], true)
+            || ($user->roles()->whereIn('code', ['owner', 'admin', 'finance'])->exists() && $document->sensitivity === 'finance_confidential')
+            || ($user->roles()->whereIn('code', ['owner', 'admin'])->exists() && in_array($document->sensitivity, ['hr_confidential', 'executive_confidential'], true));
+
+        if (! $sensitivityAllowed) {
+            return false;
         }
 
-        return $user->roles()->whereIn('code', ['owner', 'admin', 'finance'])->exists() && $document->sensitivity === 'finance_confidential' || $user->roles()->whereIn('code', ['owner', 'admin'])->exists() && in_array($document->sensitivity, ['hr_confidential', 'executive_confidential'], true);
+        $parents = app(DocumentParentAccessService::class);
+
+        return $document->links()->get()->every(fn ($link) => $parents->canAccessLink($user, $link));
     }
 
     private function audit(Request $request, string $action, string $documentId): void

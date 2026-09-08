@@ -11,7 +11,7 @@
 | **Group 1** | [Foundation & Security](#group-1-foundation--security-โมดูล-01-04) | `01-04` (Org, User/Role, Settings, Audit, 2FA) | 4 | โครงสร้างองค์กร, สิทธิ์ RBAC 7 บทบาท, Audit Trail และ 2FA TOTP |
 | **Group 2** | [CRM & Sales Pipeline](#group-2-crm--sales-pipeline-โมดูล-05-08) | `05-08` (Customers, Contacts, Deals, Quotations) | 3 | รับ Lead &rarr; จัดการผู้ติดต่อ &rarr; ดัน Deal &rarr; ออกใบเสนอราคา |
 | **Group 3** | [Project Delivery & Execution](#group-3-project-delivery--execution-โมดูล-09-11) | `09-11` (Projects, Tasks, Milestones) | 3 | แปลง Deal สู่ Project &rarr; จ่ายงาน Tasks &rarr; ตรวจรับ Milestones |
-| **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses, Assets, FX, E-Tax) | 4 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; รายจ่าย &rarr; สินทรัพย์, FX & e-Tax |
+| **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses, Assets, FX, E-Tax) | 5 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; รายจ่าย &rarr; Treasury/GL &rarr; สินทรัพย์, FX, e-Tax |
 | **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, DMS) | 4 | Event Trigger, Dashboard, ระบบไฟล์แนบ และ DMS Lifecycle & Retention |
 | **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-18) | `24-31` (PO, Multi-Warehouse/Bins/Lots, Payroll, Accounting, Portal) | 3 | จัดซื้อ, Multi-Warehouse โอนย้ายสต็อก/Lot, เงินเดือน และเชื่อมระบบภายนอก |
 
@@ -174,7 +174,7 @@ flowchart LR
 ---
 
 ### 1.4 Diagram: Two-Factor Authentication (2FA) & Trusted Device Gate (Phase 18)
-ลำดับขั้นตอนการยืนยันตัวตนสองขั้นตอน (TOTP RFC 6238 / Recovery Codes) และการตรวจสอบนโยบายระดับองค์กร
+ลำดับขั้นตอน TOTP RFC 6238 / recovery code และนโยบายระดับองค์กร โดยค่าเริ่มต้น 2FA ปิดอยู่; เมื่อเปิด policy จะบังคับ enrollment สำหรับ privileged roles ตามการตั้งค่า
 
 ```mermaid
 sequenceDiagram
@@ -189,18 +189,18 @@ sequenceDiagram
     User->>Web: POST /login (email, password)
     Web->>Auth: ตรวจสอบรหัสผ่านถูกต้อง
     Auth->>Policy: shouldChallenge(user)
-    alt ต้องยืนยัน 2FA (Role บังคับ หรือเปิดใช้งานไว้)
+    alt Policy เปิด, ผู้ใช้ยืนยัน enrollment แล้ว และไม่มี trusted device
         Policy-->>Auth: ต้องผ่าน 2FA Challenge
         Auth-->>User: 302 Redirect ไปที่ /two-factor-challenge
         User->>Web: POST /two-factor-challenge (OTP / Recovery Code)
         Web->>Auth: ตรวจสอบรหัส
         Auth->>TOTP: verify(secret, code)
         TOTP-->>Auth: รหัสถูกต้อง
-        opt ผู้ใช้เลือก "จำอุปกรณ์นี้ 30 วัน"
-            Auth->>DB: บันทึกโทเค็นอุปกรณ์ลงตาราง two_factor_trusted_devices
+        opt Policy อนุญาต และผู้ใช้เลือก trusted device (1-90 วัน)
+            Auth->>DB: เก็บ token hash และ user-agent hash
         end
         Auth-->>User: Set-Cookie (Session + Trusted Device) เข้าสู่ระบบสำเร็จ
-    else ไม่ต้องยืนยัน 2FA
+    else Policy ปิด, trusted device ยังใช้ได้ หรือผู้ใช้ยังไม่ enrolled
         Auth-->>User: Set-Cookie เข้าสู่ระบบทันที
     end
 ```
@@ -492,6 +492,35 @@ flowchart TD
 
 ---
 
+### 4.5 Diagram: Treasury, General Ledger & Reconciliation (Phase 10-11)
+Financial journal เป็น double-entry และ immutable หลัง post. การรับเงิน/จ่ายเงิน/ค่าเสื่อม/Payroll ส่ง source posting เข้า GL; รายการ statement จึงถูก match เพื่อสร้างสถานะ reconciliation โดยไม่แก้ journal เดิม
+
+```mermaid
+flowchart LR
+    subgraph Source["Business source documents"]
+        Invoice["Invoice payment"]
+        Expense["Expense / vendor payment"]
+        Asset["Depreciation"]
+        Payroll["Payroll posting"]
+    end
+
+    Source --> Posting["FinancialJournalService\nvalidate + idempotent source posting"]
+    Posting --> GL["Accounting journals\nimmutable double-entry entries"]
+
+    subgraph Treasury["Treasury operations"]
+        BankAccount["Bank account"]
+        Statement["Import bank statement lines"]
+        Match["Match / unmatch payment or transfer"]
+    end
+
+    BankAccount --> Statement --> Match
+    GL --> Match
+    Match --> Reconciled["Reconciliation status and audit trail"]
+    GL --> Reports["Trial balance / account ledger / treasury reports"]
+```
+
+---
+
 ## Group 5: Insights, Platform & Automation (โมดูล 17-23)
 **โมดูลที่เกี่ยวข้อง:** `17-dashboard`, `18-reports`, `19-files`, `20-notifications`, `21-automation`, `22-import-export`, `23-api`
 
@@ -595,24 +624,22 @@ sequenceDiagram
 
 ---
 
-### 5.4 Diagram: Enterprise Document Management (DMS) Lifecycle & Retention (Phase 17)
-วงจรชีวิตเอกสารองค์กร, การควบคุมระดับชั้นความลับ (Sensitivity RBAC: Public, Internal, Confidential, Restricted), ประวัติเวอร์ชันพร้อม SHA256 Checksum, และนโยบายจัดเก็บ/ทำลาย (Retention Policy)
+### 5.4 Diagram: Enterprise Document Management (DMS) Lifecycle & Compliance (Phase 17-18.1)
+วงจรชีวิตเอกสารองค์กร: private storage, SHA256 checksum, scan gate, versioning, sensitivity 5 ระดับ, expiry alert, parent authorization และ retention/legal-hold enforcement
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Draft : สร้างเอกสาร (Draft)
-    Draft --> Uploading : อัปโหลดไฟล์เวอร์ชันใหม่
-    Uploading --> Scanning : คำนวณ SHA256 & ตรวจสอบความปลอดภัย
-    Scanning --> Active : ผ่านการตรวจ (Clean) เปิดใช้งาน
+    [*] --> Uploading : อัปโหลดไฟล์ไป private storage
+    Uploading --> Scanning : คำนวณ SHA256 และ scan gate
+    Scanning --> Active : scan_status = clean
     Active --> Versioning : อัปโหลดเวอร์ชันใหม่ (New Version)
     Versioning --> Active : เลื่อนสถานะเป็น Current Version
     Active --> Expiring : ใกล้วันหมดอายุ (Renewal Alert)
     Expiring --> Active : ต่ออายุเอกสาร (Renewed)
-    Active --> Archived : ครบกำหนดตาม Retention Policy
-    Archived --> Purged : ทำลายถาวร (ไม่มี Legal Hold)
-    Archived --> LegalHold : ระงับการทำลายตามกฎหมาย
-    LegalHold --> Archived : ปลด Legal Hold
-    Purged --> [*]
+    Scanning --> Quarantined : scan_status = failed/infected
+    Active --> Archived : ครบ retention และไม่มี legal hold
+    Archived --> Purged : คำสั่ง explicit purge เท่านั้น
+    Active --> Active : legal hold กัน archive/purge
 ```
 
 ---

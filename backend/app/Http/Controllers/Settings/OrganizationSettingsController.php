@@ -22,6 +22,7 @@ class OrganizationSettingsController extends Controller
         $data['logo_url'] = Organization::formatLogoUrl($organization->logo_url);
         $formats = $this->numberingFormats($organization->id);
         $twoFactorPolicy = $this->twoFactorPolicy($organization->id);
+        $attendancePrivacyPolicy = $this->attendancePrivacyPolicy($organization->id);
 
         return Inertia::render('Settings/Organization', [
             'organization' => $data,
@@ -34,6 +35,7 @@ class OrganizationSettingsController extends Controller
                 }
             })->all(),
             'twoFactorPolicy' => $twoFactorPolicy,
+            'attendancePrivacyPolicy' => $attendancePrivacyPolicy,
         ]);
     }
 
@@ -140,6 +142,35 @@ class OrganizationSettingsController extends Controller
         return back()->with('success', 'Two-factor security policy updated.');
     }
 
+    public function updateAttendancePrivacy(Request $request): RedirectResponse
+    {
+        $organization = $request->user()->organization;
+        $validated = $request->validate([
+            'capture_ip' => ['required', 'boolean'],
+            'capture_gps' => ['required', 'boolean'],
+            'require_employee_consent' => ['required', 'boolean'],
+            'retention_days' => ['required', 'integer', 'min:30', 'max:3650'],
+        ]);
+        $before = $this->attendancePrivacyPolicy($organization->id);
+        Setting::updateOrCreate(
+            ['org_id' => $organization->id, 'key' => 'hr.attendance_privacy'],
+            ['value_json' => $validated, 'updated_by' => $request->user()->id]
+        );
+        AuditLog::create([
+            'org_id' => $organization->id,
+            'actor_user_id' => $request->user()->id,
+            'action' => 'organization.attendance_privacy_update',
+            'entity_type' => 'organization',
+            'entity_id' => $organization->id,
+            'before_json' => $before,
+            'after_json' => $validated,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return back()->with('success', 'Attendance privacy policy updated.');
+    }
+
     private function numberingFormats(string $orgId): array
     {
         $defaults = [
@@ -159,6 +190,14 @@ class OrganizationSettingsController extends Controller
     {
         $defaults = ['enabled' => false, 'required_for_privileged_roles' => true, 'allow_trusted_devices' => true, 'trusted_device_days' => 30];
         $stored = Setting::where('org_id', $orgId)->where('key', 'security.two_factor')->value('value_json') ?? [];
+
+        return array_replace($defaults, $stored);
+    }
+
+    private function attendancePrivacyPolicy(string $orgId): array
+    {
+        $defaults = ['capture_ip' => false, 'capture_gps' => false, 'require_employee_consent' => true, 'retention_days' => 365];
+        $stored = Setting::where('org_id', $orgId)->where('key', 'hr.attendance_privacy')->value('value_json') ?? [];
 
         return array_replace($defaults, $stored);
     }

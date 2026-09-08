@@ -2,12 +2,9 @@
 
 เอกสารรายละเอียดแยกตาม module  
 **Project lock:** [`../../PROJECT.md`](../../PROJECT.md) · **MVP:** [`../../MVP_SCOPE.md`](../../MVP_SCOPE.md)  
-**โครงสร้างฐานข้อมูลกลาง:** [`../database/DATABASE.md`](../database/DATABASE.md) (sync กับ AD ก่อน)
+**Schema runtime:** migrations ใน `backend/database/migrations`; ภาพรวมที่ sync แล้ว: [`../../document/DATABASE_ERD.md`](../../document/DATABASE_ERD.md)
 
-> ทุก module ต้องอ้างอิงตารางจาก DATABASE.md + ARCHITECTURE_DECISIONS เท่านั้น  
-> ห้ามนิยาม schema ใน module doc ให้ขัดกับ schema กลาง / AD  
-> Priority P0 ≠ ต้อง implement ใน MVP — ดู AD-01  
-> MVP implement เฉพาะรายการใน `MVP_SCOPE.md`; module อื่นเป็น backlog แม้มีเอกสารแล้ว
+> Module docs ที่ยังระบุ MVP/V2 เป็น planning history. ก่อนเปลี่ยนระบบต้องตรวจ migration, routes และ test ปัจจุบันเสมอ
 
 แผนภาพรวม: [`../../ERP_FEATURE_PLAN.md`](../../ERP_FEATURE_PLAN.md)
 
@@ -31,7 +28,7 @@
 | [05-crm.md](./05-crm.md) | CRM (Customers) | V1 | P0 |
 | [06-contacts.md](./06-contacts.md) | Contacts | V1 | P0 |
 | [07-deals.md](./07-deals.md) | Leads / Deals / Sales Pipeline | V1 | P0 |
-| [08-quotations.md](./08-quotations.md) | Quotations | V1 หลัง MVP | P1 |
+| [08-quotations.md](./08-quotations.md) | Quotations | Phase 9 implemented | Done |
 
 ### Delivery
 
@@ -46,7 +43,7 @@
 | File | Module | Version | Priority |
 | --- | --- | --- | --- |
 | [12-products.md](./12-products.md) | Product / Service Catalog | V1 | P0 |
-| [13-suppliers.md](./13-suppliers.md) | Suppliers | V1 หลัง MVP | P1 |
+| [13-suppliers.md](./13-suppliers.md) | Suppliers | Phase 7 implemented | Done |
 | [14-invoices.md](./14-invoices.md) | Invoices | V1 | P0 |
 | [15-payments.md](./15-payments.md) | Payments | V1 | P0 |
 | [16-expenses.md](./16-expenses.md) | Expenses / Costs | V1 | P0 |
@@ -56,24 +53,24 @@
 | File | Module | Version | Priority |
 | --- | --- | --- | --- |
 | [17-dashboard.md](./17-dashboard.md) | Dashboard | V1 | P0 |
-| [18-reports.md](./18-reports.md) | Reports | V1 หลัง MVP | P0 backlog |
+| [18-reports.md](./18-reports.md) | Reports | Partial: dashboard, tax, treasury and GL reports | Partial |
 
 ### Platform
 
 | File | Module | Version | Priority |
 | --- | --- | --- | --- |
-| [19-files.md](./19-files.md) | Files / Documents | V1 MVP subset / full หลัง MVP | P0 limited / P1 full |
-| [20-notifications.md](./20-notifications.md) | Notifications | V1 หลัง MVP | P1 |
-| [21-automation.md](./21-automation.md) | Automation | V1 หลัง MVP | P1 |
-| [22-import-export.md](./22-import-export.md) | Import / Export | V1 หลัง MVP | P1 |
+| [19-files.md](./19-files.md) | Files / Documents | Phase 17 DMS current | P0 |
+| [20-notifications.md](./20-notifications.md) | Notifications | Phase 8 in-app + queued mail implemented | Done |
+| [21-automation.md](./21-automation.md) | Automation | Planned | Planned |
+| [22-import-export.md](./22-import-export.md) | Import / Export | Partial: tax/payroll/e-Tax exports and statement import | Partial |
 | [23-api.md](./23-api.md) | API | V1 หลัง MVP | P1 |
 
 ### Operations (V2+)
 
 | File | Module | Version | Priority |
 | --- | --- | --- | --- |
-| [24-purchase-orders.md](./24-purchase-orders.md) | Purchase Orders | V2 | P2 |
-| [25-inventory.md](./25-inventory.md) | Inventory / Stock | V2 | P2 |
+| [24-purchase-orders.md](./24-purchase-orders.md) | Purchase Orders | Phase 7 implemented | Done |
+| [25-inventory.md](./25-inventory.md) | Inventory / Stock | Phase 15 implemented | Done |
 | [26-employees.md](./26-employees.md) | HR: Employees | V1 light / V2 | P1 |
 | [27-attendance-leave.md](./27-attendance-leave.md) | Attendance / Leave | V2 | P2 |
 | [28-payroll.md](./28-payroll.md) | Payroll | Phase 16B implemented | Done |
@@ -86,9 +83,8 @@
 ## Core Business Flow
 
 ```text
-MVP phase order: Foundation -> CRM/Sales -> Finance (deal/manual invoice + payment) -> Delivery (project/task + project links) -> Executive dashboard
-End-to-end business flow after MVP complete: Customer -> Deal -> Invoice -> Payment -> Project -> Task -> Executive Dashboard
-Post-MVP: Quotations -> Milestones -> Reports / Export / Notifications / Automation
+Historical MVP order: Foundation -> CRM/Sales -> Finance -> Delivery -> Executive dashboard.
+Current flow summary: Customer -> Deal -> Quotation/Invoice -> Payment -> Treasury/GL -> Project/Task -> Dashboard. See [`../CURRENT_IMPLEMENTATION.md`](../CURRENT_IMPLEMENTATION.md) for implemented modules and boundaries.
 ```
 
 ## Schema Change Rule

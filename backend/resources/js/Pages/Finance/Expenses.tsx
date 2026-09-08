@@ -313,6 +313,28 @@ export default function Expenses({
                                                         Edit
                                                     </SecondaryButton>
                                                 )}
+                                            {row.status === 'draft' && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        router.post(
+                                                            route(
+                                                                'workflows.submit',
+                                                                [
+                                                                    'expense',
+                                                                    row.id,
+                                                                ],
+                                                            ),
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    Submit Approval
+                                                </SecondaryButton>
+                                            )}
                                             {Number(
                                                 row.withholding_tax_amount ?? 0,
                                             ) > 0 && (

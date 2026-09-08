@@ -1,5 +1,7 @@
 # Validation Rules
 
+> **สถานะ: baseline validation rules.** กฎ runtime ปัจจุบันอยู่ใน Form Request, controller, service และ tests. เอกสารนี้มีทั้งกฎที่ยังใช้และข้อจำกัดจาก MVP เดิม จึงห้ามใช้แทน source code เมื่อขัดกัน.
+
 เอกสารนี้ล็อก validation ฝั่ง server สำหรับ MVP. Client validation ใช้ช่วย UX เท่านั้น แต่ผลตัดสินอยู่ที่ server.
 
 ## Global Rules

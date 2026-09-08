@@ -22,7 +22,7 @@
 - บันทึก activity (call, meeting, email, LINE, note)
 - ตั้ง follow-up date
 - ดู timeline ลูกค้า
-- ค้นหา/กรองลูกค้า; แนบไฟล์และ import/export CSV = Post-MVP
+- ค้นหา/กรองลูกค้า; quotation ใช้ customer เป็น billing party ตั้งแต่ Phase 9
 - เป็นจุดเริ่มของ flow: Customer → Deal → Invoice/Payment; Phase 4 ค่อยต่อ Project/Task
 
 > Contact แยก module (`contacts`) แต่ทำงานคู่กัน
@@ -48,7 +48,7 @@ Sales/Admin กรอก company_name + contact info
 → บันทึก activity + follow_up_at
 → mark follow-up done ด้วย `activities.completed_at`
 → อัปเดต status/type (lead → active)
-→ แนบไฟล์สำคัญ (Post-MVP)
+→ ผูก quotation/invoice/project ตาม workflow ที่เกี่ยวข้อง
 → ดู timeline รวม activity/deal/invoice
 ```
 
@@ -73,7 +73,7 @@ Sales/Admin กรอก company_name + contact info
         ├──► activities (entity_type=customer)
         ├──► deals.customer_id
         ├──► invoices / projects
-        ├──► quotations (Post-MVP)
+        ├──► quotations (Phase 9)
         └──► files (entity customer)
 ```
 
@@ -83,7 +83,7 @@ Sales/Admin กรอก company_name + contact info
 | --- | --- |
 | Deals | customer_id |
 | Invoices | billing party |
-| Quotations | billing party (Post-MVP) |
+| Quotations | billing party (Phase 9) |
 | Projects | client |
 | Dashboard / Reports | top customers, activity |
 | Customer Portal (V3) | portal_users.customer_id |
@@ -104,7 +104,7 @@ Sales/Admin กรอก company_name + contact info
 | --- | --- |
 | `contacts` | ผู้ติดต่อใต้ลูกค้า |
 | `activities` | timeline / follow-up |
-| `files` | เอกสารแนบ (Post-MVP; MVP ใช้จำกัดกับ payment/expense attachment) |
+| `documents` | DMS link เฉพาะ allowlisted model; ตรวจ `DocumentService` ก่อนเพิ่ม customer link |
 | `deals`, `projects`, `invoices` | child records |
 
 ### Field สำคัญ (`customers`)

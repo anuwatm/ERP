@@ -1,5 +1,7 @@
 # MVP Scope: ERP รอบแรก
 
+> **สถานะ: historical MVP baseline.** ขอบเขตนี้เป็นรอบแรกและถูก implement/ขยายถึง Phase 18 แล้ว. Scope runtime และงานคงเหลือให้ยึด [`checklist.md`](./checklist.md); schema/routes ให้ยึด `backend/database/migrations` และ `backend/routes/web.php`.
+
 เอกสารนี้ล็อกขอบเขต build รอบแรกของ `Company OS / Lightweight ERP` เพื่อให้ส่งใช้งานได้ก่อน แล้วค่อยขยายตาม [`ERP_FEATURE_PLAN.md`](./ERP_FEATURE_PLAN.md)
 
 ## เป้าหมาย

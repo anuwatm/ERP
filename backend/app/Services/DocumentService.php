@@ -2,22 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\AccountingPeriod;
-use App\Models\BankAccount;
-use App\Models\Customer;
-use App\Models\Deal;
 use App\Models\Document;
 use App\Models\DocumentLink;
 use App\Models\DocumentVersion;
-use App\Models\Expense;
-use App\Models\FixedAsset;
-use App\Models\Payment;
-use App\Models\Project;
-use App\Models\PurchaseOrder;
-use App\Models\Supplier;
-use App\Models\Task;
 use App\Models\User;
-use App\Models\Voucher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -27,10 +15,16 @@ class DocumentService
 {
     public const MIMES = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
 
+    public function __construct(
+        private readonly DocumentParentAccessService $parentAccess,
+        private readonly DocumentRetentionService $retention,
+    ) {}
+
     public function create(User $user, array $data, UploadedFile $upload): Document
     {
         return DB::transaction(function () use ($user, $data, $upload): Document {
             $document = Document::create($data + ['org_id' => $user->org_id, 'owner_user_id' => $user->id, 'status' => 'active']);
+            $this->retention->applyPolicy($document);
             $version = $this->storeVersion($user, $document, $upload, $data['change_note'] ?? null);
             $document->update(['current_version_id' => $version->id]);
 
@@ -48,9 +42,10 @@ class DocumentService
     public function link(User $user, Document $document, string $type, string $id, string $role): DocumentLink
     {
         abort_unless($document->org_id === $user->org_id, 404);
-        $models = ['customer' => Customer::class, 'deal' => Deal::class, 'supplier' => Supplier::class, 'purchase_order' => PurchaseOrder::class, 'payment' => Payment::class, 'expense' => Expense::class, 'voucher' => Voucher::class, 'project' => Project::class, 'task' => Task::class, 'fixed_asset' => FixedAsset::class, 'bank_account' => BankAccount::class, 'accounting_period' => AccountingPeriod::class, 'user' => User::class];
-        abort_unless(isset($models[$type]), 422, 'Unsupported document link type.');
-        abort_unless($models[$type]::where('id', $id)->where('org_id', $user->org_id)->exists(), 404);
+        abort_unless($this->parentAccess->isSupported($type), 422, 'Unsupported document link type.');
+        $parent = $this->parentAccess->find($type, $id, $user->org_id);
+        abort_unless($parent, 404);
+        abort_unless($this->parentAccess->canAccess($user, $type, $parent), 403);
 
         return DocumentLink::firstOrCreate(['document_id' => $document->id, 'linkable_type' => $type, 'linkable_id' => $id, 'role' => $role], ['org_id' => $user->org_id, 'linked_by' => $user->id]);
     }

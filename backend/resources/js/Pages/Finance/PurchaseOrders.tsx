@@ -176,6 +176,30 @@ export default function PurchaseOrders({
                                                     onClick={() =>
                                                         router.post(
                                                             route(
+                                                                'workflows.submit',
+                                                                [
+                                                                    'purchase_order',
+                                                                    row.id,
+                                                                ],
+                                                            ),
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    Submit Approval
+                                                </SecondaryButton>
+                                            )}
+                                            {['draft', 'sent'].includes(
+                                                row.status,
+                                            ) && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        router.post(
+                                                            route(
                                                                 'purchase-orders.approve',
                                                                 row.id,
                                                             ),

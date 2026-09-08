@@ -167,7 +167,7 @@ MVP ยังไม่มี `project_members`, `resource_assignments`, หร�
 | `users.invite` | yes | yes | no | no | no | no | no |
 | `users.disable` | yes | yes, except owner guard | no | no | no | no | no |
 | `roles.manage` | yes | yes, except owner guard | no | no | no | no | no |
-| `settings.manage` | yes | yes | no | no | finance settings only if granted | no | no |
+| `settings.organization.view/update` | yes | yes | no | no | only when explicitly granted | no | no |
 | `audit.view` | yes | yes | no | no | finance audit if granted | no | no |
 | `customers.view` | all org | all org | owned | linked project only | invoice-related | no list; linked read-only on own task detail | granted read-only |
 | `customers.create` | yes | yes | yes | no | no | no | no |

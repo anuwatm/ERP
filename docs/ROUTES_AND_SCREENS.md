@@ -1,6 +1,6 @@
 # Routes and Screens by Phase
 
-เอกสารนี้เป็นรายการหน้าและ route ระดับ MVP เพื่อกัน scope บานตอน coding.
+เอกสารนี้เป็น route/screen reference ของ implementation ปัจจุบัน. Source of truth คือ `backend/routes/web.php`; route ที่เป็น write action ต้องผ่าน permission, password confirmation และ throttle ตามที่ประกาศใน source.
 
 ## Route Style
 
@@ -15,13 +15,13 @@
 | Login | `GET /login` | public |
 | Register | `GET /register` | public |
 | Forgot/Reset Password | Breeze default | public |
-| Invite Accept | `GET /invites/{token}` | signed |
+| Invite Accept | `GET /invite/{user}/{token}` | public token validation |
 | Admin Dashboard | `GET /dashboard` | `dashboard.view` |
-| Organization Settings | `GET /settings/organization` | `settings.manage` |
+| Organization Settings | `GET /settings/organization` | `settings.organization.view` |
 | Branch/Division/Department read-only | `GET /settings/organization-structure` | `settings.structure.view` |
 | Users | `GET /users` | `users.view` |
 | Invite User | `POST /users/invite` | `users.create` |
-| User Detail/Edit | `GET /users/{user}` | `users.view` |
+| Update User | `PATCH /users/{user}` | `users.update` |
 | Roles/Permissions | `GET /roles` | `roles.manage` |
 | Audit Log | `GET /audit-logs` | `audit.view` |
 
@@ -75,11 +75,10 @@
 
 | Screen | Route | Permission |
 | --- | --- | --- |
-| Finance Dashboard | `GET /dashboard` | `dashboard.view` |
+| Finance Dashboard | `GET /finance-dashboard` | `expenses.view` |
 | Products/Services | `GET /products` | `products.manage` |
 | Invoices List | `GET /invoices` | `invoices.view` |
-| Invoice Create Manual/From Deal | `GET /invoices/create` | `invoices.create` |
-| Invoice Detail | `GET /invoices/{invoice}` | `invoices.view` |
+| Invoice create/edit | Inertia action on `/invoices` | `invoices.create/update` |
 | Record Payment | `POST /invoices/{invoice}/payments` | `payments.create` |
 | Reverse Payment | `POST /payments/{payment}/reverse` | `payments.reverse` + reauth |
 | Expenses | `GET /expenses` | `expenses.view` |
@@ -91,10 +90,9 @@
 | --- | --- | --- |
 | Delivery Dashboard | `GET /dashboard` | `dashboard.view` |
 | Projects List | `GET /projects` | `projects.view` |
-| Project Create/Edit | `GET /projects/create`, `GET /projects/{project}/edit` | `projects.create/update` |
-| Project Detail | `GET /projects/{project}` | `projects.view` |
+| Project create/edit | Inertia action on `/projects` | `projects.create/update` |
 | Tasks Board/List | `GET /tasks` | `tasks.view` |
-| Task Detail | `GET /tasks/{task}` | `tasks.view` |
+| Task create/edit | Inertia action on `/tasks` | `tasks.create/update` |
 | Link Invoice to Project | invoice edit/detail action | `invoices.update` |
 
 **Member navigation:** Member ไม่เห็น Projects List ใน MVP. หลัง login ให้เข้า Tasks Board/List เป็นหลัก; จาก Task Detail แสดงข้อมูล project/customer แบบ linked read-only เท่าที่จำเป็น และห้ามพาไปหน้า project detail ที่จะ 403.
@@ -156,6 +154,22 @@
 | Mark paid and post settlement | `POST /payroll/runs/{payrollRun}/pay` | `payroll.pay` + reauth |
 | Workpaper CSV | `GET /payroll/runs/{payrollRun}/exports/{type}` | `payroll.export` |
 | Payslip print/PDF | `GET /payroll/payslips/{payrollItem}/print` or `/pdf` | authenticated owner or `payroll.view` |
+
+## Phase 9-15, 17-18: Current operational routes
+
+| Screen / Action | Route | Permission |
+| --- | --- | --- |
+| Quotations | `GET /quotations`, create/update/convert actions | `quotations.*` |
+| Treasury accounts and statements | `GET /bank-accounts`, `GET /bank-statements`, import/match actions | `treasury.accounts.*`, `treasury.reconciliation.*` |
+| General Ledger | `GET /general-ledger` and reporting actions | `accounting.*` |
+| Commercial documents | `GET /commercial-documents`, print/PDF and create actions | document-specific permission |
+| E-Tax | `GET /e-tax`, generate/download/submit/RD prep actions | `e_tax.*` |
+| Fixed assets | `GET /fixed-assets`, category/depreciate/dispose actions | `fixed_assets.*` |
+| Currency and FX | `GET /currencies`, rate/revaluation actions | `fx.*` |
+| Inventory operations | `GET /inventory-operations`, `/inventory-scan`, warehouse/bin/lot/transfer/count actions | `inventory.*` |
+| DMS workspace | `GET /documents`, upload/version/link/category/retention-policy actions | `documents.*` |
+| 2FA setup/challenge | `GET|POST /two-factor/setup`, `GET|POST /two-factor-challenge` | authenticated + password confirm for setup; pending-login guest for challenge |
+| Organization 2FA policy | `PATCH /settings/organization/two-factor` | `settings.organization.update` + password confirm |
 
 ## Empty States
 

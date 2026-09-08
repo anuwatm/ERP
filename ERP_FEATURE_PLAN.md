@@ -1,5 +1,7 @@
 # ERP Feature Plan
 
+> **สถานะ: planning history และ backlog.** ความสามารถที่ implement แล้วให้ดู [`docs/CURRENT_IMPLEMENTATION.md`](./docs/CURRENT_IMPLEMENTATION.md) และสถานะ phase ให้ดู [`checklist.md`](./checklist.md). ห้ามใช้ไฟล์นี้ตัดสินว่า feature ปัจจุบันยังไม่ implement.
+
 แผนนี้สรุปจากการเทียบแนวคิดของ ERP open-source หลายตัว เช่น BoomBigNose Company OS, ERPNext, IDURAR, FreshGerium, Hubleto, RKBM, Maruf ERP, Aureus ERP แล้วปรับให้เหมาะกับการทำระบบ ERP ใหม่แบบเริ่มเล็ก ใช้งานจริงได้ และค่อยขยาย
 
 ## เป้าหมายระบบ

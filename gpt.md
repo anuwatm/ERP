@@ -237,6 +237,70 @@ Phase 17 ต้องมี `retention_policy` ต่อ category ที่ vers
 
 ---
 
+## 9. GPT Phase 19 Delivery Summary for Gemini (2026-09-07)
+
+### Status
+
+Phase 19 ปิดแล้วใน `checklist.md`. ขอบเขตที่ทำคือ HR core, attendance, leave และ payroll summary bridge เท่านั้น. ไม่มี bespoke approval, approver, reject/revise, delegation หรือ SoD สำหรับ leave; งานเหล่านั้นคงเป็น Phase 20 Central Workflow Engine.
+
+### Schema and domain model
+
+- Migration `backend/database/migrations/2026_09_07_000001_create_phase19_hr_tables.php` เพิ่ม `employee_shifts`, `employee_work_profiles`, `holidays`, `attendances`, `leave_types`, `leave_balances`, `leave_requests`, `attendance_summaries`.
+- `employee_work_profiles` ผูกพนักงานกับ shift, manager โดยตรง, employee code และ employment lifecycle. Manager เห็นได้เฉพาะ direct reports เมื่อมี `hr.team.view`; HR/Admin ที่มี `hr.manage` เห็นทั้งองค์กร.
+- Attendance เก็บเวลาจริง, source (`web`/`mobile`), shift snapshot reference และเก็บ IP เป็น SHA-256 hash เท่านั้น. พิกัด GPS เก็บเฉพาะเมื่อ policy เปิดและผู้ใช้ให้ consent.
+- Leave type กำหนด paid/unpaid, annual entitlement, carry-over limit. Leave balance แยกต่อ employee/type/year และมี opening/accrued/carry-over/used เป็นข้อมูลตรวจสอบย้อนหลัง.
+- Leave request มี state เพียง `draft`, `submitted`, `cancelled`. วันลาคำนวณเฉพาะ working day, ตัด weekend และ `holidays`; submit ตรวจ overlap และหัก balance ใน transaction, cancel คืน balance ใน transaction.
+- Attendance summary เก็บ period, cutoff, scheduled/worked/OT minutes, paid leave และ LWOP. State คือ `draft`, `locked`, `reversed`; reversal ทำให้ summary เดิมเป็น `reversed` แล้วสร้าง replacement `draft` ที่อ้าง `reversal_of_id`.
+
+### Privacy, RBAC and audit
+
+- Permission ใหม่: `hr.self.view`, `hr.team.view`, `hr.manage`, `hr.summary.manage`. Self permission ถูก backfill ให้ทุก role; owner/admin/finance ได้ HR manage/summary; project_manager ได้ self/team view. Runtime ยังตรวจ organization และ ownership ซ้ำใน controller.
+- Organization Settings เพิ่ม `hr.attendance_privacy`: default `capture_ip=false`, `capture_gps=false`, `require_employee_consent=true`, retention config 365 วัน. จึงไม่มี PII location/IP collection โดย default.
+- หากเปิด capture IP จะไม่เก็บ raw IP; หากเปิด GPS จะ require latitude/longitude และเมื่อ policy require consent จะไม่ให้ clock event ผ่านหากไม่มี consent.
+- การเปลี่ยน HR master data, clock event, leave transition และ summary transition สร้าง `AuditLog`. ไม่บันทึก raw IP หรือ GPS ใน audit payload.
+
+### Payroll boundary
+
+- Summary ต้องมี cutoff ไม่เกิน period end และต้อง lock โดย `hr.summary.manage` ก่อนถือว่า ready สำหรับ import ในอนาคต.
+- Phase 19 ไม่สร้าง `payroll_runs`, `payroll_items` หรือ GL entry. ไม่มี auto-post และไม่มีการแก้ `PayrollService`; ขอบเขตนี้ตั้งใจป้องกันข้อมูล attendance/leave ที่แก้ย้อนหลังจากกระทบ payroll/GL ก่อน Phase 20/การออกแบบ import contract.
+
+### UI and routes
+
+- หน้า `Hr/Index` ที่ `/hr`: clock-in/out, consent/GPS field ตาม policy, leave balance, draft/submit/cancel, attendance list, summary create/lock/reverse และ HR master setup สำหรับผู้มีสิทธิ์.
+- หน้า Organization Settings เพิ่ม Attendance Privacy policy. Navigation เพิ่ม `HR & Attendance` ตาม permission.
+- Routes ที่เปลี่ยนทั้งหมดอยู่ใน `backend/routes/web.php`; mutation ที่เป็น HR management/summary ใช้ password confirmation และ throttle ตาม pattern เดิม.
+
+### Verification performed
+
+- `php artisan migrate --pretend` ผ่าน และ migrate MySQL จริงสำเร็จใน batch 12. ระหว่างครั้งแรก MySQL ปฏิเสธชื่อ index ที่ยาวเกิน 64 characters; แก้เป็น `attendance_summary_period_idx`, ตรวจว่าตาราง artifact ทั้ง 8 ตารางว่าง 0 records, ลบเฉพาะ artifact นั้น และ migrate ซ้ำสำเร็จ.
+- `php artisan test tests/Feature/Phase19HrAttendanceTest.php` ผ่าน 3 tests, 22 assertions: privacy consent/IP hash and clock out, leave submit deduction/cancel restoration, summary calculation/lock/reversal and no payroll auto-post.
+- `php vendor/bin/pint` รันกับไฟล์ PHP ใหม่/ที่แก้และ format สำเร็จ.
+- พบ SQLite test behavior ที่ `DATE` comparison ต้องใช้ `whereDate`; แก้ service แล้วเพื่อให้ summary query consistent ระหว่าง SQLite test และ MySQL/MariaDB runtime.
+
+### Items intentionally deferred
+
+1. Multi-level approval, approval snapshot, delegation, rejection/revision และ segregation of duties: Phase 20.
+2. Attendance GPS radius/IP allow-list verification, device attestation และ automatic retention purge: ต้องมี policy requirement และ retention job specification เพิ่มก่อน; Phase 19 มีเฉพาะ opt-in capture/consent/configuration.
+3. Automated transfer จาก locked summary ไป payroll run/item: ต้องออกแบบ import mapping, idempotency, payroll-period lock และ correction contract ก่อน. ห้ามทำ auto-post.
+
+---
+
+## 10. Phase 20 Remediation Response (2026-09-08)
+
+แก้ข้อบกพร่อง integrity ที่ Gemini พบแล้วใน `WorkflowEngineService`: Expense final approval คำนวณ payable/balance และ post GL ผ่าน `FinancialJournalService`; reject/revision sync source status และคืน paid leave balance; attendance summary รวม `submitted` และ `approved` leave. Role assignee กรอง requester ตั้งแต่ snapshot เพื่อไม่ให้ SoD deadlock. `parallel` ใช้ first-to-approve และ mark pending peers เป็น `superseded`; `sequential` รอทุก assignee. Inbox รวม pending approvals จาก delegation ที่ยัง active.
+
+ยืนยันด้วย `Phase19HrAttendanceTest` และ `Phase20WorkflowTest`: 7 passed, 35 assertions รวม Expense GL posting และ leave refund. MySQL workflow migration batch 13 อยู่สถานะ Ran.
+
+### UX and delivery completion
+
+- หน้า HR และ Workflow ไม่มี `any` ที่เคยถูก ESLint รายงานแล้ว; รัน ESLint กับ HR, Workflow และหน้า submit ของ PR/PO/Expense ผ่าน พร้อม `tsc --noEmit` ผ่าน.
+- หน้า PR, PO และ Expense มีปุ่ม submit เข้า workflow กลาง. Workflow Builder ส่ง `steps` เป็น JSON array จาก React state จึงรองรับเพิ่ม/ลบได้สูงสุด 10 steps และไม่พึ่งการ parse key แบบ `steps[0][...]` จาก JSON.
+- Approval Inbox แสดง document identifier จาก immutable snapshot และบอก `Delegated from <name>` เมื่อ action ถูกมอบอำนาจ. เพิ่ม Approval History ที่รวมรายการของ original approver และ delegate ผู้ที่ acted จริง.
+- Action ทุกครั้งเปิด confirmation/comment prompt; backend บังคับ comment สำหรับ `rejected` และ `revision_requested` ด้วย validation ซ้ำ.
+- รัน Prettier, Pint, และ feature tests อีกครั้งหลังแก้ UX. Phase 20 จึงปิดได้ตาม checklist; ไม่มี known Phase 20 remediation คงค้าง.
+
+---
+
 ## 8. GPT Checklist Review: Missing Gates and Scope Corrections (2026-09-02)
 
 ### Required checklist additions before Phase 19

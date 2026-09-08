@@ -1,5 +1,7 @@
 # Seed Data
 
+> **สถานะ: MVP seed/UAT baseline.** Seeder และ factory ใน `backend/database/seeders` / `backend/database/factories` เป็น source of truth สำหรับข้อมูลทดสอบที่ใช้งานได้จริงในปัจจุบัน.
+
 เอกสารนี้กำหนดข้อมูลเริ่มต้นสำหรับ dev/UAT ใน MVP.
 
 ## Phase 1: Foundation

@@ -8,10 +8,11 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะล่าสุด: **Phase 18 Done** (Phases 0 ถึง 18 เสร็จสมบูรณ์แล้ว)
+สถานะล่าสุด: **Phase 20 Done**; Central Approval Workflow พร้อม versioned definition, approver snapshot, SoD และ delegation
 ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation), และ Payroll (effective-dated policy, payslip, PND1/SSO workpapers, GL posting)
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
+เอกสารสรุป runtime ปัจจุบันอยู่ที่ [`docs/CURRENT_IMPLEMENTATION.md`](docs/CURRENT_IMPLEMENTATION.md)
 
 ---
 
@@ -21,11 +22,11 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 * 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 13 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
 * 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 13 ชุดหลัก
-* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (21 Diagrams)
+* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (23 Diagrams)
 * 🗄️ **[Full Database ER Diagram (50+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 12 โดเมนหลัก
 * 💰 **[Payroll Phase 16B Design](docs/PHASE_16B_PAYROLL_DESIGN.md)** — ขอบเขต payroll, policy snapshot, privacy, payslip/workpaper และ GL boundary
 * 🔄 **[Payroll Policy, Approval & GL Flow](document/11_payroll_policy_gl_flow.html)** — Interactive workflow ของการคำนวณ อนุมัติ จ่ายเงิน และลงบัญชี
-* 📂 **[DMS Document Lifecycle & Retention](document/12_document_management_lifecycle.html)** — Interactive lifecycle ของระบบจัดเก็บเอกสารองค์กร (Phase 17)
+* 📂 **[DMS Document Lifecycle](document/12_document_management_lifecycle.html)** — Interactive intake, versioning และ expiry ของระบบเอกสารองค์กร (Phase 17)
 * 🔐 **[2FA TOTP & Privileged Gate Sequence](document/13_two_factor_auth_sequence.html)** — Interactive sequence ของการยืนยันตัวตนสองขั้นตอนและอุปกรณ์ที่เชื่อถือได้ (Phase 18)
 
 ---
@@ -67,7 +68,9 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | --- | --- | --- |
 | **Organization** | โครงสร้างบริษัท Multi-tenant, สาขา (Branch), ฝ่าย (Division), แผนก (Department) | Phase 1, 1.1 |
 | **User & Access** | จัดการผู้ใช้, คำเชิญ (Invite), RBAC Roles & Permissions, Disable/Enable ผู้ใช้ | Phase 1, 1.1 |
-| **Two-Factor Auth (2FA)** | ยืนยันตัวตน TOTP RFC 6238, Recovery Codes, อุปกรณ์ที่เชื่อถือได้ 30 วัน, Role-based 2FA Policy | Phase 18 |
+| **Two-Factor Auth (2FA)** | TOTP RFC 6238, Recovery Codes, trusted device 1-90 วัน และ Role-based policy (ปิดเป็นค่าเริ่มต้น) | Phase 18 |
+| **HR & Attendance** | Employee work profile, shift, holiday, clock-in/out, leave balance/request, privacy policy และ locked payroll summary bridge | Phase 19 |
+| **Approval Workflow** | Versioned workflow definition, threshold, user/manager/role approver, snapshot, delegation, SoD และ approval inbox | Phase 20 |
 | **Audit Log** | บันทึกประวัติการทำงานสำคัญทุกจุด พร้อม Before/After Snapshot และ User Tracker | Phase 1, 1.1 |
 | **CRM** | ฐานข้อมูลลูกค้า (Customers), ผู้ติดต่อ (Contacts), Primary Contact, ข้อมูลภาษี | Phase 2 |
 | **Sales Pipeline** | ดีลการขาย (Deals), Stage Flow, Won/Lost Rules, กิจกรรม (Activities & Timeline) | Phase 2 |
@@ -88,7 +91,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Fixed Assets** | Asset register, straight-line monthly depreciation/GL, disposal/write-off, attachment proof และ GL posting | Phase 13 |
 | **Multi-Currency & FX** | Currency/rate master, document snapshots, realized/unrealized FX และ AR revaluation | Phase 14 |
 | **Payroll** | Payroll profile, tax/social-security policy แบบ effective-dated, calculation snapshot, payslip PDF, PND1/SSO workpaper CSV และ GL posting | Phase 16B |
-| **Documents (DMS)** | ระบบคลังเอกสารองค์กร, จัดเก็บไฟล์เวอร์ชัน, ควบคุมสิทธิ์ Sensitivity, นโยบาย Retention & Legal Hold | Phase 17 |
+| **Documents (DMS)** | คลังเอกสาร private, versioning, scan gate, sensitivity, expiry alerts, parent authorization, retention/legal hold, quarantine/archive และ explicit purge | Phase 17, 18.1 |
 | **Projects & Tasks** | แปลงจาก Won Deal, สมาชิกโครงการ (Project Members), งานย่อย (Tasks, Checklists, Comments) | Phase 4, 7 |
 | **Notifications** | กระดิ่งแจ้งเตือน In-App, อีเมลคิวแจ้งเตือน (PO, Invoice Due, Assign, Invite), Preferences | Phase 8 |
 | **Dashboards** | Admin, Executive, Finance, Delivery, Sales Dashboards พร้อมตัวกรองช่วงเวลาและกราฟสรุป | Phase 1, 2, 3, 4, 5, 6 |
@@ -238,15 +241,15 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 - **Payroll Lifecycle & GL**: `draft -> calculated -> approved -> paid`, post salary/social-security expense และ payroll liabilities เข้า GL; payment ไม่ใช้ `VendorPayment`
 - **Payslip / Workpapers**: payslip PDF แบบ owner-or-finance guard และ CSV workpaper ภ.ง.ด.1/ประกันสังคม; ต้องตรวจรูปแบบและข้อกำหนดล่าสุดก่อนยื่นจริง
 
-### Phase 17: Enterprise Document Management (Done)
+### Phase 17-18.1: Enterprise Document Management (Done)
 - **Central Document Repository**: จัดเก็บเอกสารองค์กรแยกตาม Organization และ Category
 - **Document Versioning & Integrity**: บันทึกประวัติเวอร์ชันไฟล์พร้อม SHA256 checksum และบันทึก change notes
-- **Sensitivity Tiers & Granular RBAC**: ควบคุมสิทธิ์การเข้าถึง 4 ระดับ (Public, Internal, Confidential, Restricted)
+- **Sensitivity Tiers & Granular RBAC**: ควบคุมสิทธิ์ 5 ระดับ: `org_internal`, `department_restricted`, `finance_confidential`, `hr_confidential`, `executive_confidential`
 - **Polymorphic Document Links**: ผูกเอกสารเข้ากับ Invoice, Expense, Fixed Asset, หรือ User
-- **Retention & Expiry Engine**: กำหนดระยะเวลาจัดเก็บ (Archive/Purge), แจ้งเตือนเอกสารใกล้หมดอายุ และระบบระงับการทำลายตามกฎหมาย (Legal Hold)
+- **Compliance Enforcement**: category policy คำนวณ `retention_until`, default renewal และ legal hold; download/link ต้องผ่าน parent authorization, failed scan ถูก quarantine, scheduler archive เอกสารครบกำหนด และ purge ต้องใช้ explicit command
 
-### Phase 18: Security 2FA (Done)
-- Offline TOTP สำหรับ Owner/Admin/Finance, encrypted secret, recovery codes, trusted device 30 วัน, owner reset, rate limit และ audit log
+### Phase 18: Security 2FA (Done - polish planned)
+- Offline TOTP, encrypted secret, recovery codes, owner reset, rate limit และ audit log. Policy 2FA ปิดเป็นค่าเริ่มต้น และตั้ง trusted device ได้ 1-90 วัน
 
 ---
 
@@ -273,8 +276,9 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 14** | **Done** | Currency/rate master, immutable document/payment snapshot, realized FX, AR revaluation/reversal และ bank-to-GL mapping |
 | **Phase 15** | **Done** | Multi-warehouse & bins, stock transfer, reorder alerts, lot/expiry, Barcode/QR scanning |
 | **Phase 16B** | **Done** | Payroll profile/policy versioning, calculation, payslip PDF, workpaper CSV and GL posting |
-| **Phase 17** | **Done** | DMS core schema, versioned private documents, cross-module links, retention, expiry alerts and sensitivity RBAC |
-| **Phase 18** | **Done** | Offline TOTP, recovery codes, trusted devices, owner reset and privileged-role enforcement |
+| **Phase 17** | **Done** | DMS core, private versioned documents, links, sensitivity and expiry alerts |
+| **Phase 18** | **Done - polish planned** | Offline TOTP, recovery codes, policy-controlled trusted devices, owner reset and privileged-role enforcement |
+| **Phase 18.1** | **Done** | Parent authorization, retention calculation/legal hold, scheduled quarantine/archive and explicit purge |
 
 ---
 
@@ -315,7 +319,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/users` | User Management & Invitations | `users.view` |
 | `/roles` | Role & Permission Matrix | `roles.view` |
 | `/audit-logs` | Audit Trail & Activity Logs | `audit.view` |
-| `/two-factor-setup` | 2FA TOTP Enrollment & Recovery Codes | `auth` |
+| `/two-factor/setup` | 2FA TOTP Enrollment & Recovery Codes | `auth` |
 | `/two-factor-challenge` | 2FA Login Challenge & Trusted Device | `auth` |
 | `/settings/organization` | Organization, Sequences & 2FA Policy Settings | `settings.organization.view` |
 | `/settings/notifications` | Notification Preferences | `settings.organization.view` |

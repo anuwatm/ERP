@@ -1,5 +1,7 @@
 # Phase Acceptance Criteria
 
+> **สถานะ: acceptance baseline สำหรับ Phase 1-8.** Phase เหล่านี้ปิดแล้ว; สถานะปัจจุบันและ DoD ของ Phase 9+ ให้ยึด [`../checklist.md`](../checklist.md). เอกสารนี้เก็บเกณฑ์ที่ใช้ปิดงานในอดีต ไม่ใช่รายการงาน runtime ที่ยังค้าง.
+
 เอกสารนี้เป็น checklist ปิดงานแต่ละ Phase ก่อนขึ้น Phase ถัดไป.
 
 ## Phase 1: Foundation + Admin Dashboard

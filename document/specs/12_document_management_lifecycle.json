@@ -2,37 +2,38 @@
   "schema_version": 1,
   "diagram_type": "lifecycle",
   "meta": {
-    "title": "Enterprise Document Lifecycle & Retention Governance",
+    "title": "Enterprise Document Lifecycle & Compliance",
     "output": "c:/LocalDevine/www/ERP/document/12_document_management_lifecycle.html",
     "viewBox": [980, 660],
     "animation": "trace",
     "quality_profile": "showcase",
     "views": [
-      { "id": "upload-and-active", "label": "Upload to Active Governance", "focus": ["uploaded", "scanning", "active"], "note": "Documents undergo SHA256 checksum generation and security scanning before entering active circulation." },
-      { "id": "retention-and-review", "label": "Expiry & Retention Evaluation", "focus": ["active", "expiring", "review"], "note": "Approaching expiry triggers owner notification; retention policies then schedule archival or legal hold review." },
-      { "id": "terminal-outcomes", "label": "Terminal Lifecycle Outcomes", "focus": ["review", "archived", "purged"], "note": "Compliant documents transition to immutable archive, while unheld expired files are purged." }
+      { "id": "upload-and-active", "label": "Upload, Scan Gate & Versioning", "focus": ["uploaded", "scanning", "active"], "note": "A version receives a SHA256 checksum. Production versions stay pending_scan until an external scanner marks them clean." },
+      { "id": "expiry-alerts", "label": "Expiry Alerts", "focus": ["active", "expiring", "renewed"], "note": "Only categories with expiry tracking create renewal alerts. Renewal returns the document to active use." },
+      { "id": "retention-enforcement", "label": "Retention, Legal Hold & Scan Enforcement", "focus": ["scanning", "active", "archived", "quarantined"], "note": "Policy calculates retention. Scheduler quarantines failed scans and archives due documents; purge is explicit and hold blocks both." }
     ]
   },
   "lanes": [
     { "id": "main", "label": "Active Document Lifecycle" },
-    { "id": "terminal", "label": "Terminal & Archive Outcomes" }
+    { "id": "terminal", "label": "Compliance Outcomes" }
   ],
   "states": [
-    { "id": "uploaded", "type": "start", "label": "Uploaded", "sublabel": "v1 Private Storage", "lane": "main", "col": 0, "step": "01", "tag": "Draft" },
-    { "id": "scanning", "type": "active", "label": "Scanning", "sublabel": "SHA256 & Security", "lane": "main", "col": 1, "step": "02", "tag": "Gate" },
-    { "id": "active", "type": "active", "label": "Active", "sublabel": "RBAC & Entity Links", "lane": "main", "col": 2, "step": "03", "tag": "Published" },
-    { "id": "expiring", "type": "waiting", "label": "Expiring", "sublabel": "Renewal Alert Window", "lane": "main", "col": 3, "step": "04", "tag": "Alert" },
-    { "id": "review", "type": "decision", "label": "Retention", "sublabel": "Policy & Legal Hold", "lane": "main", "col": 4, "step": "05", "tag": "Evaluate" },
-    { "id": "archived", "type": "success", "label": "Archived", "sublabel": "Retention Preserved", "lane": "terminal", "col": 2, "tag": "Immutable" },
-    { "id": "purged", "type": "failure", "label": "Purged", "sublabel": "Purged Post-Hold", "lane": "terminal", "col": 0, "tag": "Purged" }
+    { "id": "uploaded", "type": "start", "label": "Uploaded", "sublabel": "Private tenant storage", "lane": "main", "col": 0, "step": "01", "tag": "New version" },
+    { "id": "scanning", "type": "active", "label": "Scan Gate", "sublabel": "SHA256 + scan_status", "lane": "main", "col": 1, "step": "02", "tag": "Required" },
+    { "id": "active", "type": "active", "label": "Active Version", "sublabel": "Private download gate", "lane": "main", "col": 2, "step": "03", "tag": "Current" },
+    { "id": "expiring", "type": "waiting", "label": "Expiring", "sublabel": "Category alert window", "lane": "main", "col": 3, "step": "04", "tag": "Alert" },
+    { "id": "quarantined", "type": "failure", "label": "Quarantined", "sublabel": "Failed or infected scan", "lane": "terminal", "col": 0, "tag": "Blocked" },
+    { "id": "archived", "type": "waiting", "label": "Archived", "sublabel": "Retention due; no legal hold", "lane": "terminal", "col": 1, "tag": "Purge explicit" },
+    { "id": "renewed", "type": "success", "label": "Renewed", "sublabel": "Expiry date updated", "lane": "terminal", "col": 2, "tag": "Active again" }
   ],
   "transitions": [
     { "id": "t-upload-scan", "from": "uploaded", "to": "scanning", "variant": "default" },
     { "id": "t-scan-active", "from": "scanning", "to": "active", "variant": "emphasis" },
+    { "id": "t-scan-quarantined", "from": "scanning", "to": "quarantined", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
     { "id": "t-active-expiring", "from": "active", "to": "expiring", "variant": "default" },
-    { "id": "t-expiring-review", "from": "expiring", "to": "review", "variant": "default", "route": "straight" },
-    { "id": "t-review-archived", "from": "review", "to": "archived", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
-    { "id": "t-review-purged", "from": "review", "to": "purged", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+    { "id": "t-expiring-renewed", "from": "expiring", "to": "renewed", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "t-renewed-active", "from": "renewed", "to": "active", "variant": "default", "fromSide": "top", "toSide": "bottom", "route": "drop" },
+    { "id": "t-active-archived", "from": "active", "to": "archived", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" }
   ],
   "cards": [
     {
@@ -40,26 +41,26 @@
       "title": "Versioned Private Storage",
       "items": [
         "All uploaded documents stored in private tenant-isolated storage",
-        "Every file modification generates an immutable version record with SHA256 checksum",
-        "Polymorphic links connect documents to Invoices, Expenses, Assets, and Employees"
+        "Every added file creates an append-only version record with a SHA256 checksum",
+        "Document links use an allowlisted linkable type and an organization-scoped target"
       ]
     },
     {
       "dot": "cyan",
-      "title": "Granular Sensitivity RBAC",
+      "title": "Sensitivity & Download Gate",
       "items": [
-        "Four sensitivity tiers: Public, Internal, Confidential, and Restricted",
-        "Confidential documents require elevated department permissions (e.g. Finance/Admin)",
-        "Direct disk access blocked; downloads streamed via authorized controller tokens"
+        "Five levels: org_internal, department_restricted, finance_confidential, hr_confidential, executive_confidential",
+        "Download checks organization, documents.download, sensitivity, clean scan status and every linked parent entity",
+        "Creating a document link requires visibility of its allowlisted parent entity"
       ]
     },
     {
       "dot": "rose",
-      "title": "Retention & Legal Hold",
+      "title": "Retention & Scan Enforcement",
       "items": [
-        "Configurable retention policies trigger automated archival or scheduled purge",
-        "Legal hold flag immediately overrides automated purge actions to prevent data loss",
-        "Configurable renewal alerts notify document owners prior to expiration dates"
+        "Expiry-enabled categories can notify the owner before expires_at",
+        "Category policy calculates retention_until, default renewal and mandatory legal hold",
+        "Scheduled enforcement quarantines failed scans and archives due documents; purge is explicit and legal hold blocks both"
       ]
     }
   ]

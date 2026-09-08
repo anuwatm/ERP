@@ -3,7 +3,7 @@
 | Meta | Value |
 | --- | --- |
 | Module code | `settings` |
-| Version | V1 |
+| Version | Current |
 | Priority | P0 |
 | Schema กลาง | [`../database/DATABASE.md`](../database/DATABASE.md) §3.1, §9.7, §9.9 |
 
@@ -24,8 +24,8 @@
 - Invoice / quotation numbering rules
 - Default payment terms
 - Roles overview (ลิงก์ไป RBAC)
-- Webhook secret, email sender, integration keys
-- ใช้ตาราง `settings` แบบ key-value + `number_sequences` สำหรับรันเลขเอกสาร
+- Notification preferences และ 2FA policy ระดับองค์กร
+- ใช้ตาราง `organizations`, `settings` แบบ key-value และ `number_sequences` สำหรับรันเลขเอกสาร
 
 ---
 
@@ -49,12 +49,13 @@ Admin เปิด Settings → Company
 → ตอนสร้าง invoice ระบบดึง next number แบบ atomic
 ```
 
-### 3.3 Integration settings
+### 3.3 Security settings
 
 ```text
-ใส่ email SMTP / webhook secret / accounting credentials
-→ เก็บใน settings.value_json (encrypt secrets)
-→ API / Automation / Accounting อ่านใช้
+Owner/Admin เปิด Security ใน Organization Settings
+→ ตั้ง `security.two_factor.enabled`, privileged roles, trusted device และอายุ 1-90 วัน
+→ บันทึก settings.value_json
+→ `TwoFactorPolicyService` อ่านก่อน login challenge และ middleware enrollment gate
 ```
 
 ---
@@ -71,8 +72,8 @@ number_sequences (doc counters)
     │
     ├──► Invoices / Quotations (numbering)
     ├──► Finance (currency, payment terms)
-    ├──► Automation / API (webhook secret)
-    └──► Notifications (email sender)
+    ├──► Notifications (preferences)
+    └──► Auth (2FA policy)
 ```
 
 ### Keys แนะนำ
@@ -82,9 +83,8 @@ number_sequences (doc counters)
 | `invoice.numbering` | `{ "digits":6, "reset":"never" }` |
 | `quotation.numbering` | `{ "digits":6 }` |
 | `payment.default_terms` | `{ "days": 30 }` |
-| `email.sender` | `{ "from":"billing@..." }` |
-| `webhook.secret` | encrypted string |
-| `integrations.flowaccount` | credentials map |
+| `security.two_factor` | `{ "enabled":false, "required_for_privileged_roles":true, "allow_trusted_devices":true, "trusted_device_days":30 }` |
+| `notifications.preferences` | ช่องทาง/ประเภทการแจ้งเตือนต่อผู้ใช้ |
 
 ---
 
@@ -107,7 +107,7 @@ number_sequences (doc counters)
 ### Business rules
 
 - `settings.key` unique ต่อ org
-- secret ต้อง encrypt at rest
+- 2FA policy ปิดเป็นค่าเริ่มต้น; `trusted_device_days` รับได้ 1-90 วันเมื่อเปิด trusted devices
 - เลขเอกสาร/รหัสธุรกิจต้องเป็น text 6 หลัก เช่น `000001`
 - การรันเลขเอกสารต้อง atomic (transaction / row lock)
 - ห้าม reuse รหัสที่เคยออกแล้ว

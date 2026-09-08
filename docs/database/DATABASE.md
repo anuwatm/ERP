@@ -1,14 +1,10 @@
 # Central Database Schema
 
-เอกสารนี้เป็น **แหล่งความจริงเดียว (Single Source of Truth)** ของโครงสร้างฐานข้อมูลทั้งระบบ
-
-- ทุก module ต้องอ้างอิงตาราง/คอลัมน์จากไฟล์นี้เท่านั้น
-- ห้ามนิยามตารางซ้ำใน module doc โดยขัดกับไฟล์นี้
-- เมื่อมีการเปลี่ยน schema ให้แก้ไฟล์นี้ก่อน แล้วอัปเดต module doc ที่เกี่ยวข้อง
+> **สถานะ: planning baseline (MVP historical document).** Schema runtime ปัจจุบันให้ยึด migration ใน `backend/database/migrations` เป็น source of truth และดู [`../../document/DATABASE_ERD.md`](../../document/DATABASE_ERD.md) สำหรับ ERD ที่ sync หลัง Phase 18. ไฟล์นี้ยังเก็บไว้เพื่ออธิบายเจตนาเดิมของ MVP เท่านั้น
 
 อ้างอิงแผน: [`ERP_FEATURE_PLAN.md`](../../ERP_FEATURE_PLAN.md)
 
-> ไฟล์นี้เป็น schema กลางระยะยาวของระบบทั้งหมด. **MVP migration ใช้เฉพาะ subset ใน `MVP_SCOPE.md`**: organizations, branches, divisions, departments, users/RBAC, settings/number_sequences, audit_logs, customers, contacts, deals, activities, projects, tasks, products, invoices, invoice_items, payments, expenses, และ files แบบจำกัดสำหรับ payment/expense attachment. ตารางอื่นเป็น Post-MVP/V2/V3 backlog.
+> เนื้อหาด้านล่างสะท้อน scope ก่อน Phase 8 จึงไม่ครอบคลุม Treasury, GL, E-Tax, Assets, FX, Inventory operations, Payroll, DMS และ 2FA runtime schema. ห้ามใช้ตัดสิน schema ใหม่โดยไม่ตรวจ migration.
 
 ---
 

@@ -414,7 +414,7 @@
           <span class="type-tag type-sequence">Sequence</span>
           <h2 class="card-title">13. Two-Factor Authentication & Privileged Access Flow</h2>
           <p class="card-desc">
-            การล็อกอินสองขั้นตอน (TOTP RFC 6238 / Recovery Codes), การจำแนกสิทธิ์ตามนโยบายองค์กร (Owner/Admin/Finance), การตรวจสอบ Trusted Device (30 วัน) และ Middleware Guard
+            การล็อกอินสองขั้นตอน (TOTP RFC 6238 / Recovery Codes), นโยบายองค์กรที่ปิดเป็นค่าเริ่มต้น, privileged-role enrollment, trusted device ตามระยะ 1-90 วัน และ Middleware Guard
           </p>
           <div class="card-meta">
             <span class="meta-chip">Offline TOTP</span>
@@ -520,18 +520,18 @@
         </div>
       </div>
 
-      <!-- 12 Document Lifecycle & Retention -->
+      <!-- 12 Document Intake, Versioning & Expiry -->
       <div class="diagram-card">
         <div class="card-top">
           <span class="type-tag type-lifecycle">Lifecycle</span>
-          <h2 class="card-title">12. Enterprise Document Lifecycle & Retention Governance</h2>
+          <h2 class="card-title">12. Enterprise Document Intake, Versioning & Expiry</h2>
           <p class="card-desc">
-            วงจรชีวิตเอกสารองค์กร (DMS): Upload &rarr; AV Scan &rarr; Active (RBAC Tiers & Entity Links) &rarr; Expiring Alert &rarr; Retention Review &rarr; Immutable Archive / Purge
+            DMS: Upload &rarr; Scan Gate &rarr; Versioned Active Document &rarr; Expiry/Renewal. Parent authorization, retention/legal hold, quarantine/archive และ explicit purge implement แล้วใน Phase 18.1
           </p>
           <div class="card-meta">
             <span class="meta-chip">Private Storage</span>
             <span class="meta-chip">4 Sensitivity Tiers</span>
-            <span class="meta-chip">Retention & Legal Hold</span>
+            <span class="meta-chip">Versioning & Expiry</span>
             <span class="meta-chip">SHA256 Versioning</span>
           </div>
         </div>

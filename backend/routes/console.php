@@ -94,6 +94,7 @@ Artisan::command('documents:check-expiry', function () {
 })->purpose('Notify document owners about category-enabled expiry dates.');
 
 Schedule::command('documents:check-expiry')->dailyAt('08:15');
+Schedule::command('documents:enforce-retention')->dailyAt('08:30');
 
 if (! function_exists('notifyFinanceUsers')) {
     function notifyFinanceUsers(Invoice $invoice, NotificationService $notifications, string $type, string $dedupeKey, string $title): int

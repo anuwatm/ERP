@@ -21,7 +21,7 @@
 | **09** | [Task Status Lifecycle](#09-task-status-lifecycle) | Lifecycle | [`09_task_project_lifecycle.html`](./09_task_project_lifecycle.html) | [`specs/09_task_project_lifecycle.json`](./specs/09_task_project_lifecycle.json) |
 | **10** | [Database ER & Domain Model](#10-database-er--domain-model) | Architecture | [`10_database_er_domain_model.html`](./10_database_er_domain_model.html) | [`specs/10_database_er_domain_model.json`](./specs/10_database_er_domain_model.json) |
 | **11** | [Payroll Policy, Approval & GL Flow](#11-payroll-policy-approval--gl-flow) | Workflow | [`11_payroll_policy_gl_flow.html`](./11_payroll_policy_gl_flow.html) | [`specs/11_payroll_policy_gl_flow.json`](./specs/11_payroll_policy_gl_flow.json) |
-| **12** | [Enterprise Document Lifecycle & Retention](#12-enterprise-document-lifecycle--retention-governance) | Lifecycle | [`12_document_management_lifecycle.html`](./12_document_management_lifecycle.html) | [`specs/12_document_management_lifecycle.json`](./specs/12_document_management_lifecycle.json) |
+| **12** | [Enterprise Document Lifecycle & Compliance](#12-enterprise-document-lifecycle--compliance) | Lifecycle | [`12_document_management_lifecycle.html`](./12_document_management_lifecycle.html) | [`specs/12_document_management_lifecycle.json`](./specs/12_document_management_lifecycle.json) |
 | **13** | [Two-Factor Authentication & Privileged Access Flow](#13-two-factor-authentication--privileged-access-flow) | Sequence | [`13_two_factor_auth_sequence.html`](./13_two_factor_auth_sequence.html) | [`specs/13_two_factor_auth_sequence.json`](./specs/13_two_factor_auth_sequence.json) |
 | **All** | [Full Database ER Diagram (50+ Tables)](#14-full-database-er-diagram-50-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
 
@@ -321,31 +321,29 @@ erDiagram
 
 ---
 
-### 12. Enterprise Document Lifecycle & Retention Governance
+### 12. Enterprise Document Lifecycle & Compliance
 - **ไฟล์ HTML:** [`12_document_management_lifecycle.html`](./12_document_management_lifecycle.html)
-- **วัตถุประสงค์:** แสดงวงจรชีวิตเอกสารองค์กร (Phase 17 DMS): การอัปโหลดไฟล์เก็บ private storage แยก tenant, ตรวจสอบความปลอดภัยด้วย SHA256 checksum และ AV scan, สถานะ Active พร้อมผูกความสัมพันธ์กับ Invoices/Expenses/Assets/Contracts/Employees, การแจ้งเตือนใกล้หมดอายุ (Expiring), การทบทวน Retention Policy และ Legal Hold, จนถึงการจัดเก็บถาวร (Archive) หรือทำลายตามนโยบาย (Purged)
+- **วัตถุประสงค์:** แสดง DMS ที่ implement แล้ว: private storage แยกองค์กร, SHA256 checksum, scan gate, version history, sensitivity 5 ระดับ, expiry/renewal และ compliance enforcement. ทุก document link/download ต้องผ่าน parent authorization; policy คำนวณ retention/legal hold, scheduler quarantine failed scan/archive และ purge ใช้ explicit command
 - **Mermaid Preview:**
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Uploaded
-    Uploaded --> Scanning: Upload v1 to Private Storage
-    Scanning --> Active: Checksum & AV Pass
-    Scanning --> Quarantined: Infected / Blocked
+    [*] --> Uploaded: Private storage
+    Uploaded --> Scanning: SHA256 and scan gate
+    Scanning --> Active: scan_status = clean
     Active --> Expiring: Renewal Alert Window
-    Expiring --> RetentionReview: Policy Expiry Due
-    RetentionReview --> Archived: Compliant Retention Archive
-    RetentionReview --> Purged: Purged (No Legal Hold)
-    Archived --> [*]
-    Purged --> [*]
-    Quarantined --> [*]
+    Expiring --> Active: Renewal date updated
+    Scanning --> Quarantined: failed/infected scan
+    Active --> Archived: retention due and no legal hold
+    Archived --> Purged: explicit retention command
+    Active --> Active: legal hold blocks archive/purge
 ```
 
 ---
 
 ### 13. Two-Factor Authentication & Privileged Access Flow
 - **ไฟล์ HTML:** [`13_two_factor_auth_sequence.html`](./13_two_factor_auth_sequence.html)
-- **วัตถุประสงค์:** แสดงกระบวนการยืนยันตัวตนสองขั้นตอน (Phase 18 2FA/TOTP): การตรวจสอบรหัสผ่าน, ประเมินนโยบายความปลอดภัยระดับองค์กร (บังคับใช้กับ Owner, Admin, Finance), การส่งคำขอ OTP (RFC 6238) หรือรหัสกู้คืนฉุกเฉิน (Recovery Codes), การออกโทเค็น Trusted Device 30 วัน, และการบังคับผ่าน `EnsureTwoFactorEnrollment` Middleware
+- **วัตถุประสงค์:** แสดง 2FA/TOTP ที่กำหนดได้ใน Organization Settings. Policy ปิดเป็นค่าเริ่มต้น; เมื่อเปิด สามารถบังคับ privileged roles, ใช้ recovery code และ trusted device ตามระยะ 1-90 วันที่ตั้งค่าได้
 - **Mermaid Preview:**
 
 ```mermaid
@@ -361,16 +359,18 @@ sequenceDiagram
     User->>Router: POST /login (credentials)
     Router->>Auth: authenticate()
     Auth->>DB: verify password & roles
-    DB-->>Auth: valid credentials (privileged role)
+    DB-->>Auth: valid credentials
     Auth->>Policy: shouldChallenge(user)
-    Policy-->>Auth: challenge required (2FA enabled)
+    Policy-->>Auth: challenge required only when enabled and enrolled
     Auth-->>User: 302 Redirect to /two-factor-challenge
 
     User->>Router: POST /two-factor-challenge (code, trust_device)
     Router->>Auth: verifyChallenge()
     Auth->>TOTP: verify(secret, code)
     TOTP-->>Auth: code valid
-    Auth->>DB: store trusted device token (30 days)
+    opt Policy allows trusted devices
+        Auth->>DB: store token hash and user-agent hash (1-90 days)
+    end
     Auth-->>User: Set-Cookie + 302 Redirect to App
 
     User->>Router: GET /settings/organization

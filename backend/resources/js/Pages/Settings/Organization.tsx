@@ -44,17 +44,25 @@ type TwoFactorPolicy = {
     allow_trusted_devices: boolean;
     trusted_device_days: number;
 };
+type AttendancePrivacyPolicy = {
+    capture_ip: boolean;
+    capture_gps: boolean;
+    require_employee_consent: boolean;
+    retention_days: number;
+};
 
 export default function Organization({
     organization,
     numberingFormats,
     numberingPreviews,
     twoFactorPolicy,
+    attendancePrivacyPolicy,
 }: {
     organization: Organization;
     numberingFormats: Record<string, NumberingFormat>;
     numberingPreviews: Record<string, string>;
     twoFactorPolicy: TwoFactorPolicy;
+    attendancePrivacyPolicy: AttendancePrivacyPolicy;
 }) {
     const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
     const logoPreview = selectedLogoFile
@@ -74,6 +82,9 @@ export default function Organization({
         });
     const numberingForm = useForm({ formats: numberingFormats });
     const twoFactorForm = useForm<TwoFactorPolicy>(twoFactorPolicy);
+    const attendancePrivacyForm = useForm<AttendancePrivacyPolicy>(
+        attendancePrivacyPolicy,
+    );
 
     const updateLogo: ChangeEventHandler<HTMLInputElement> = (event) => {
         const file = event.target.files?.[0] ?? null;
@@ -493,6 +504,95 @@ export default function Organization({
                         <div className="flex justify-end">
                             <PrimaryButton disabled={twoFactorForm.processing}>
                                 Save Security Policy
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </Card>
+                <Card
+                    title="Attendance Privacy"
+                    description="Optional IP and GPS collection requires an organization policy and employee consent."
+                >
+                    <form
+                        className="max-w-2xl space-y-4"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            attendancePrivacyForm.patch(
+                                route(
+                                    'settings.organization.attendance-privacy.update',
+                                ),
+                                { preserveScroll: true },
+                            );
+                        }}
+                    >
+                        <label className="flex items-center justify-between gap-4 text-sm">
+                            <span>Capture IP as one-way hash</span>
+                            <input
+                                type="checkbox"
+                                checked={attendancePrivacyForm.data.capture_ip}
+                                onChange={(event) =>
+                                    attendancePrivacyForm.setData(
+                                        'capture_ip',
+                                        event.target.checked,
+                                    )
+                                }
+                            />
+                        </label>
+                        <label className="flex items-center justify-between gap-4 text-sm">
+                            <span>Require GPS location for clock-in/out</span>
+                            <input
+                                type="checkbox"
+                                checked={attendancePrivacyForm.data.capture_gps}
+                                onChange={(event) =>
+                                    attendancePrivacyForm.setData(
+                                        'capture_gps',
+                                        event.target.checked,
+                                    )
+                                }
+                            />
+                        </label>
+                        <label className="flex items-center justify-between gap-4 text-sm">
+                            <span>Require employee consent</span>
+                            <input
+                                type="checkbox"
+                                checked={
+                                    attendancePrivacyForm.data
+                                        .require_employee_consent
+                                }
+                                onChange={(event) =>
+                                    attendancePrivacyForm.setData(
+                                        'require_employee_consent',
+                                        event.target.checked,
+                                    )
+                                }
+                            />
+                        </label>
+                        <div>
+                            <InputLabel
+                                htmlFor="attendance_retention_days"
+                                value="Retention days"
+                            />
+                            <TextInput
+                                id="attendance_retention_days"
+                                type="number"
+                                min="30"
+                                max="3650"
+                                value={
+                                    attendancePrivacyForm.data.retention_days
+                                }
+                                onChange={(event) =>
+                                    attendancePrivacyForm.setData(
+                                        'retention_days',
+                                        Number(event.target.value),
+                                    )
+                                }
+                                className="mt-1 block w-40"
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <PrimaryButton
+                                disabled={attendancePrivacyForm.processing}
+                            >
+                                Save Attendance Privacy
                             </PrimaryButton>
                         </div>
                     </form>

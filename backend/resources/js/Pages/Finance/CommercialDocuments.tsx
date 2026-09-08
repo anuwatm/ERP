@@ -6,7 +6,7 @@ import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -86,6 +86,7 @@ export default function CommercialDocuments({
                         amountKey="total"
                         statusKey="status"
                         printType="purchase-request"
+                        isPurchaseRequest
                     />
                     <SimpleTable
                         title="PV / RV Vouchers"
@@ -259,6 +260,7 @@ function SimpleTable({
     statusKey,
     printType,
     isVoucher = false,
+    isPurchaseRequest = false,
 }: {
     title: string;
     rows: Row[];
@@ -267,6 +269,7 @@ function SimpleTable({
     statusKey: string;
     printType: string;
     isVoucher?: boolean;
+    isPurchaseRequest?: boolean;
 }) {
     return (
         <Card title={title} description={`${rows.length} document(s)`}>
@@ -325,6 +328,24 @@ function SimpleTable({
                                 >
                                     PDF
                                 </SecondaryButton>
+                                {isPurchaseRequest &&
+                                    row.status === 'draft' && (
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() =>
+                                                router.post(
+                                                    route('workflows.submit', [
+                                                        'purchase_request',
+                                                        row.id,
+                                                    ]),
+                                                    {},
+                                                    { preserveScroll: true },
+                                                )
+                                            }
+                                        >
+                                            Submit Approval
+                                        </SecondaryButton>
+                                    )}
                                 {isVoucher && (
                                     <VoucherAttachmentActions row={row} />
                                 )}
