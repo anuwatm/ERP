@@ -13,7 +13,9 @@ use App\Models\Project;
 use App\Services\BahtText;
 use App\Services\FinancialJournalService;
 use App\Services\FxRateService;
+use App\Services\GatewaySettlementService;
 use App\Services\NumberSequenceService;
+use App\Services\PromptPayQrService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -164,8 +166,12 @@ class InvoiceController extends Controller
 
         $invoice->load(['branch', 'customer', 'items']);
         $organization = $request->user()->organization;
+        $qrTransaction = app(GatewaySettlementService::class)->intent($invoice);
 
         return view('documents.official-print', [
+            'paymentQr' => $qrTransaction ? app(PromptPayQrService::class)->image($qrTransaction->qr_payload) : null,
+            'paymentQrReference' => $qrTransaction?->reference,
+            'paymentQrExpires' => $qrTransaction?->expires_at,
             'organization' => [
                 'legal_name' => $organization?->legal_name ?: $organization?->name ?: 'Organization',
                 'tax_id' => $organization?->tax_id,

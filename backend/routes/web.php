@@ -30,7 +30,9 @@ use App\Http\Controllers\Finance\TaxReportController;
 use App\Http\Controllers\Finance\TreasuryOperationsController;
 use App\Http\Controllers\Finance\TreasuryReportController;
 use App\Http\Controllers\Finance\VendorPaymentController;
+use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\HrController;
+use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
 use App\Http\Controllers\Sales\ContactController;
@@ -60,7 +62,18 @@ Route::get('/delivery-dashboard', DashboardController::class)
     ->middleware(['auth', 'verified', 'permission:dashboard.view'])
     ->name('delivery.dashboard');
 
+Route::get('/portal/access/{token}', [PortalController::class, 'consume'])->middleware('throttle:10,1')->name('portal.consume');
+Route::get('/portal/sign-in', [PortalController::class, 'signIn'])->name('portal.sign-in');
+Route::get('/invoice-payment/{invoice}', [GatewayController::class, 'qr'])->middleware('throttle:30,1')->name('gateway.qr');
+Route::get('/portal', [PortalController::class, 'dashboard'])->middleware('throttle:60,1')->name('portal.dashboard');
+Route::post('/portal/logout', [PortalController::class, 'logout'])->middleware('throttle:10,1')->name('portal.logout');
+Route::post('/portal/quotations/{quotation}/accept', [PortalController::class, 'acceptQuotation'])->middleware('throttle:10,1')->name('portal.quotations.accept');
+Route::post('/portal/vendor-bills', [PortalController::class, 'submitVendorBill'])->middleware('throttle:5,1')->name('portal.vendor-bills.store');
+Route::get('/portal/document-versions/{version}/download', [PortalController::class, 'download'])->middleware('throttle:30,1')->name('portal.documents.download');
+
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/settings/payment-gateway', [GatewayController::class, 'settings'])->middleware('permission:settings.organization.view')->name('gateway.settings');
+    Route::put('/settings/payment-gateway', [GatewayController::class, 'configure'])->middleware(['permission:settings.organization.update', 'password.confirm', 'throttle:10,1'])->name('gateway.configure');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -498,6 +511,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/users/invite', [UserController::class, 'invite'])
         ->middleware(['permission:users.create', 'password.confirm', 'throttle:10,1'])
         ->name('users.invite');
+    Route::post('/portal-users', [PortalController::class, 'provision'])
+        ->middleware(['permission:users.create', 'password.confirm', 'throttle:10,1'])
+        ->name('portal-users.store');
     Route::patch('/users/{user}', [UserController::class, 'update'])
         ->middleware(['permission:users.update', 'password.confirm', 'throttle:10,1'])
         ->name('users.update');

@@ -835,6 +835,13 @@ export default function AuthenticatedLayout({
             group: 'Organization Settings',
             items: [
                 {
+                    name: 'Payment Gateway',
+                    href: route('gateway.settings'),
+                    active: route().current('gateway.settings'),
+                    permission: 'settings.organization.view',
+                    icon: <span aria-hidden="true">฿</span>,
+                },
+                {
                     name: 'Organization Profile',
                     href: route('settings.organization.edit'),
                     active: route().current('settings.organization.*'),

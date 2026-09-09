@@ -8,8 +8,8 @@ Purpose: เก็บเฉพาะสถานะปัจจุบัน, ข
 
 ## Current Status
 
-- Phase 1-21: closed.
-- Phase 22: next gate - Customer & Supplier Self-Service Portals.
+- Phase 1-22: closed.
+- Phase 23: In progress. QR/Settings, signed settlement bridge and Payment/GL reconciliation implemented. Native provider selection/adapter, MySQL migration/concurrency and sandbox/banking scan remain open; do not mark closed based on bridge tests.
 - งานที่เป็น security, data integrity, regression หรือ production blocker ใน phase ที่ปิดแล้ว แก้ได้เมื่อมี test และบันทึกเหตุผล.
 
 ## Active Guardrails
@@ -47,7 +47,12 @@ Purpose: เก็บเฉพาะสถานะปัจจุบัน, ข
 
 ### Phase 22 and later
 
+- Phase 23 implementation details and diagram: `docs/PHASE_23_PAYMENT_GATEWAY.md`. Intent amount uses integer satang; webhook hashes exact bytes with a five-minute signature window, deduplicates events and locks invoice before receipt/GL posting. Closed periods roll back the entire event transaction. Late/mismatched payments are review-only.
+- HMAC is a trusted settlement-bridge protocol, not an assumed provider API. Opn requires API verification, 2C2P uses provider JWT and inquiry contracts, GB Prime Pay requires the contracted integration version. No live settlement claim without provider evidence.
+- `mysql8` remains stopped; Windows denied service start even after escalation. No MySQL migration success is claimed for Phase 23.
+
 - Portal ใช้ external identity แยกจาก staff session, scoped access, expiry/revocation, rate limit, audit และ private DMS authorization; ไม่มี public document URL.
+- Phase 22 completed: one-time 30-minute Magic Link, hashed/revocable 8-hour portal session, org/party-scoped customer and supplier dashboards, invoice draft from accepted quotation, and vendor bill quarantine. Portal intake ห้ามสร้าง AP/GL อัตโนมัติ; ต้องผ่าน scan และ finance review ก่อน.
 - Payment gateway ต้อง verify signature, deduplicate, handle event ordering และ reconcile invoice/payment/final settlement ก่อนสร้าง receipt หรือ GL.
 - e-Tax ต้องใช้ certified provider, key vault/HSM boundary, outbox/reconciliation และ legal review; ห้ามเก็บ private key ใน database.
 - OCR สร้าง assisted draft พร้อม confidence, source retention และ human review เท่านั้น; ห้าม auto-post.

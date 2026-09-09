@@ -174,7 +174,30 @@
 | Phase 19: HR & Attendance | `GET /hr/attendance`, clock-in/out, leave requests, summary locks | `attendance.*` |
 | Phase 20: Workflow definitions & inbox | `GET /workflows`, step config, delegations, `/workflows/inbox` actions | `workflows.*` |
 
+## Phase 22: Customer & Supplier Self-Service Portal
+
+| Screen / Action | Route | Access |
+| --- | --- | --- |
+| Portal access link consumption | `GET /portal/access/{token}` | one-time Magic Link, throttled |
+| Portal sign-in page | `GET /portal/sign-in` | public guest page |
+| Portal dashboard | `GET /portal` | valid scoped portal session |
+| Portal sign out | `POST /portal/logout` | valid portal session; revokes session |
+| Customer quotation acceptance | `POST /portal/quotations/{quotation}/accept` | scoped customer session, throttled |
+| Supplier vendor bill intake | `POST /portal/vendor-bills` | scoped supplier session, throttled |
+| Private linked document download | `GET /portal/document-versions/{version}/download` | scoped portal session; clean scan only |
+
 ## Empty States
+
+Phase 23 payment screens:
+
+| Screen / Action | Route | Access |
+| --- | --- | --- |
+| Payment gateway settings / event review | `GET /settings/payment-gateway` | `settings.organization.view` |
+| Configure receiver / signing secret | `PUT /settings/payment-gateway` | `settings.organization.update`, reauth, throttle |
+| Customer invoice payment QR | `GET /invoice-payment/{invoice}` | scoped portal customer or verified staff with `invoices.view` |
+| Signed settlement bridge | `POST /api/gateway/{config}/settlement` | HMAC + timestamp + throttle; not a native provider webhook |
+
+See `PHASE_23_PAYMENT_GATEWAY.md` for the integration contract and remaining provider/MySQL release gates.
 
 - ไม่มี user invited: แสดงปุ่ม invite.
 - ไม่มี customer: แสดงปุ่ม create customer.

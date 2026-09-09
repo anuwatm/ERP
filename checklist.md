@@ -44,8 +44,8 @@
 | Phase 19 | Done | HR Core, attendance, leave foundation and locked payroll summary bridge completed; approval remains explicitly deferred to Phase 20 |
 | Phase 20 | Done | Central approval workflow: versioned definitions, approver snapshot, threshold evaluation, SoD, delegation, inbox and audit trail |
 | Phase 21 | Done | Operational notification outbox, encrypted LINE/Slack/Telegram configuration, retry/dead-letter, user preferences/quiet hours, and safe daily digest |
-| Phase 22 | Planned | Customer & Supplier Self-Service Portals: external identity, quotation acceptance, vendor bills, WHT download |
-| Phase 23 | Planned | Thai PromptPay QR & Payment Gateway Integration: dynamic QR, signature verified webhooks, auto-reconciliation |
+| Phase 22 | Done | Passwordless external portal, customer quotation acceptance/invoice draft, supplier PO/payment status/vendor bill intake, scoped private documents and audit trail |
+| Phase 23 | In progress | Thai PromptPay QR, signed settlement intake and reconciliation; native provider certification remains a separate verification gate |
 | Phase 24 | Planned | Direct E-Tax Invoice & RD API Gateway: certified provider bridge, HSM/vault key management, XML-CAdES filing |
 | Phase 25 | Planned | Cash Flow Forecasting & Financial Health: 30-90 day liquidity projection, working capital & DSO/DPO ratios |
 | Phase 26 | Planned | AI OCR Document Ingestion: assisted drafts for receipts/slips/bills with confidence score and human-in-the-loop |
@@ -1093,20 +1093,20 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 22 Design Backlog
 
-- [ ] Design External Identity & Authentication (Magic Link / Passwordless OTP แยกจาก Staff Authentication)
-- [ ] Design Scoped Access & Permission Matrix (Customer: Quotation, Invoice, Receipt, Statement; Supplier: PO, Bill Submission, Payment Status, 50 ทวิ)
-- [ ] Design Quotation Acceptance Flow (Digital Confirmation, Audit Trail IP/Timestamp, Auto-create Order/Invoice)
-- [ ] Design Vendor Billing Submission (Upload vendor invoice/slip เข้าสู่ระบบเพื่อรอตรวจสอบใน AP)
-- [ ] Design Upload Security & Intake Guard (Malware/quarantine scan state, MIME whitelist, size quota, DMS audit trail, และ Human review gate ก่อนสร้าง AP draft)
-- [ ] Design Document Download Security (ดาวน์โหลดผ่าน Private Scoped Controller; ไม่มี Public Document Links)
+- [x] Design External Identity & Authentication (Magic Link / Passwordless OTP แยกจาก Staff Authentication)
+- [x] Design Scoped Access & Permission Matrix (Customer: Quotation, Invoice, Receipt, Statement; Supplier: PO, Bill Submission, Payment Status, 50 ทวิ)
+- [x] Design Quotation Acceptance Flow (Digital Confirmation, Audit Trail IP/Timestamp, Auto-create Order/Invoice)
+- [x] Design Vendor Billing Submission (Upload vendor invoice/slip เข้าสู่ระบบเพื่อรอตรวจสอบใน AP)
+- [x] Design Upload Security & Intake Guard (Malware/quarantine scan state, MIME whitelist, size quota, DMS audit trail, และ Human review gate ก่อนสร้าง AP draft)
+- [x] Design Document Download Security (ดาวน์โหลดผ่าน Private Scoped Controller; ไม่มี Public Document Links)
 
 ### Phase 22 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `portal_users`, `portal_access_tokens`, `portal_sessions`, `quotation_acceptances`, `vendor_bill_submissions`
-- [ ] เพิ่ม Portal Guest/Auth Layout และหน้าจอ: Customer Portal Dashboard, Supplier Portal Dashboard, Document Viewer/Downloader
-- [ ] พัฒนา Quotation Online Acceptance Controller และ Vendor Invoice Intake Controller
-- [ ] เพิ่ม Portal Security Guard: Rate limiting, Org/Customer/Supplier isolation, Session revocation, File scan status gate
-- [ ] เพิ่ม Feature Tests: Magic Link authentication, Customer/Supplier data isolation, Quotation online signing, และ Document download protection tests
+- [x] เพิ่ม Schema/Models: `portal_users`, `portal_access_tokens`, `portal_sessions`, `quotation_acceptances`, `vendor_bill_submissions`
+- [x] เพิ่ม Portal Guest/Auth Layout และหน้าจอ: Customer Portal Dashboard, Supplier Portal Dashboard, Document Viewer/Downloader
+- [x] พัฒนา Quotation Online Acceptance Controller และ Vendor Invoice Intake Controller
+- [x] เพิ่ม Portal Security Guard: Rate limiting, Org/Customer/Supplier isolation, Session revocation, File scan status gate
+- [x] เพิ่ม Feature Tests: Magic Link authentication, Customer/Supplier data isolation, Quotation online signing, และ Document download protection tests
 
 ---
 
@@ -1116,18 +1116,26 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Phase 23 Design Backlog
 
-- [ ] Design EMVCo Thai PromptPay QR Generator (รองรับ Tax ID/Biller ID + Amount + Reference 1/2)
-- [ ] Design Gateway Adapter Architecture (Omise, GB Prime Pay, 2C2P)
-- [ ] Design Webhook Intake & Verification (HMAC-SHA256 Signature verification, Idempotency tracking, Replay attack protection)
-- [ ] Design Settlement & Reconciliation Gate (ตรวจสอบ Signature, Idempotency, Event ordering, Amount/Currency matching และ Final Settlement status ก่อนสร้าง Payment/GL)
+Implementation note: HMAC settlement bridge is a separate integration contract, not the native webhook protocol of Omise/GB Prime Pay/2C2P. Native adapters must verify provider-specific settlement evidence before enabling live posting. QR generation alone is never proof of payment.
+
+- [x] Design EMVCo Thai PromptPay QR Generator (รองรับ Tax ID/Biller ID + Amount + Reference 1/2)
+- [x] Design Gateway Adapter Architecture (Omise, GB Prime Pay, 2C2P); provider-specific verification boundaries documented in `docs/PHASE_23_PAYMENT_GATEWAY.md`
+- [x] Design Webhook Intake & Verification (HMAC-SHA256 Signature verification, Idempotency tracking, Replay attack protection)
+- [x] Design Settlement & Reconciliation Gate (ตรวจสอบ Signature, Idempotency, Event ordering, Amount/Currency matching และ Final Settlement status ก่อนสร้าง Payment/GL)
 
 ### Phase 23 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `payment_gateway_configs`, `gateway_transactions`, `webhook_events`
-- [ ] พัฒนา Thai QR Code Generator Utility (ฝังลงใน Invoice Print / PDF และ Customer Portal)
-- [ ] พัฒนา Webhook Receiver Controller พร้อม Signature Verification และ Idempotency Guard
-- [ ] พัฒนา Payment Reconciliation Service: ตรวจสอบสถานะ Settled, อัปเดต Invoice เป็น paid, สร้าง `payments` record, และ Trigger Double-Entry GL Posting
-- [ ] เพิ่ม Feature Tests: PromptPay payload structure, Webhook signature verification, Duplicate webhook rejection, และ Settlement-verified GL posting tests
+- [x] เพิ่ม Schema/Models: `payment_gateway_configs`, `gateway_transactions`, `webhook_events`; migrated in SQLite tests
+- [x] พัฒนา Thai QR Code Generator Utility (ฝังลงใน Invoice Print / PDF และ Customer Portal)
+- [x] พัฒนา Webhook Receiver Controller พร้อม Signature Verification และ Idempotency Guard (explicit `settlement_hmac` bridge contract)
+- [x] พัฒนา Payment Reconciliation Service: ตรวจสอบสถานะ Settled, อัปเดต Invoice เป็น paid, สร้าง `payments` record, และ Trigger Double-Entry GL Posting
+- [x] เพิ่ม Feature Tests: PromptPay payload structure, Webhook signature verification, Duplicate webhook rejection, และ Settlement-verified GL posting tests
+- [x] Settings UI: disabled-by-default config, encrypted secrets, bank selection, recent intents and review event reasons
+- [ ] เลือก provider และ implement native adapter/bridge ตาม merchant contract; verify real settlement evidence (HMAC bridge alone is not a native provider integration)
+- [ ] MySQL migration and concurrency verification; `mysql8` stopped and Windows service start denied on 2026-09-09
+- [ ] Banking-app QR scan and provider sandbox end-to-end verification before enabling production
+
+Phase 23 remains In progress until the provider integration and verification gates above are complete. Application tests do not close these gates.
 
 ---
 

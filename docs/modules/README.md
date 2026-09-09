@@ -76,7 +76,8 @@
 | [28-payroll.md](./28-payroll.md) | Payroll | Phase 16B implemented | Done |
 | [29-ai-assistant.md](./29-ai-assistant.md) | AI Assistant | V2 | P2 |
 | [30-accounting-integration.md](./30-accounting-integration.md) | Accounting Integration | V2 | P2 |
-| [31-customer-portal.md](./31-customer-portal.md) | Customer Portal | V3 | P3 |
+| [22-self-service-portals.md](./22-self-service-portals.md) | Customer & Supplier Self-Service Portals | Phase 22 implemented | Done |
+| [31-customer-portal.md](./31-customer-portal.md) | Customer Portal roadmap source | Superseded by Phase 22 baseline | Reference |
 
 ---
 

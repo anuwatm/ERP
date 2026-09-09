@@ -282,6 +282,8 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 19** | **Done** | HR core, attendance clock-in/out, leave balance/requests, shift/holiday and locked payroll summary |
 | **Phase 20** | **Done** | Dynamic approval workflow engine, multi-step routing, SoD guard, temporary delegations, and approval inbox |
 | **Phase 21** | **Done** | Operational notification outbox, encrypted external channels, retry/dead-letter, quiet hours and safe digest |
+| **Phase 22** | **Done** | Passwordless customer/supplier portals, scoped commercial data, online quotation acceptance, vendor-bill quarantine and private DMS downloads |
+| **Phase 23** | **In progress** | PromptPay QR, Settings, signed settlement bridge and atomic Payment/GL reconciliation implemented; native provider integration and MySQL/sandbox verification pending |
 
 ---
 
@@ -328,6 +330,8 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/two-factor-challenge` | 2FA Login Challenge & Trusted Device | `auth` |
 | `/settings/organization` | Organization, Sequences & 2FA Policy Settings | `settings.organization.view` |
 | `/settings/notifications` | Notification Preferences and External Channel Opt-in | authenticated user |
+| `/settings/payment-gateway` | PromptPay settings, receiving bank and settlement event review | `settings.organization.view` / `.update` |
+| `/invoice-payment/{invoice}` | Scoped PromptPay invoice QR | matching customer portal or verified staff with `invoices.view` |
 | `/settings/organization-structure` | Branches, Divisions, Departments | `settings.structure.view` |
 
 ---
@@ -347,6 +351,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
   - Payment ห้ามลบทิ้ง ต้องใช้ Idempotent Reversal
   - Official Tax Documents ห้ามใช้การ Void เมื่อออกเอกสารทางการแล้ว ให้ใช้ Credit Note / Debit Note
 - **Parent-Scoped File Access**: ไฟล์แนบสลิป/ใบเสร็จ/Voucher Proof ตรวจสอบสิทธิ์การดาวน์โหลดผ่าน Parent Entity เสมอ
+- **External Portal Isolation**: Portal session แยกจาก Staff authentication, Magic Link ใช้ครั้งเดียวและหมดอายุ, ข้อมูล/เอกสารถูกกรองด้วย `org_id` และ customer/supplier identity; รับไฟล์ผู้ขายเป็น `pending_scan` และไม่สร้าง AP draft อัตโนมัติ
 
 ---
 
@@ -439,6 +444,8 @@ Pass: 257 passed, 1968 assertions
 ---
 
 ## Development Notes
+
+- Phase 23 integration contract, provider boundaries and workflow diagram: [Payment Gateway](docs/PHASE_23_PAYMENT_GATEWAY.md). Default disabled; its signed HMAC bridge is not a native Omise/GB Prime Pay/2C2P webhook implementation.
 
 - `checklist.md` คือ source of truth ของสถานะงาน
 - `docs/database/DATABASE.md` คือ source of truth ของ schema

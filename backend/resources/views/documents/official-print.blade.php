@@ -140,6 +140,12 @@
         </section>
 
         <section class="signatures">
+            @if (!empty($paymentQr))
+                <div style="text-align:center">
+                    <img src="{{ $paymentQr }}" alt="PromptPay QR" width="180" height="180">
+                    <p>{{ $paymentQrReference }}<br>Expires: {{ $paymentQrExpires }}</p>
+                </div>
+            @endif
             <div class="signature">Authorized by</div>
             <div class="signature">Accepted by</div>
         </section>

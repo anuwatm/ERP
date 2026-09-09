@@ -42,7 +42,8 @@
 | HR to payroll | Attendance summaries are manually created with a cutoff, then locked or reversed into a replacement draft. They do not create `payroll_runs`, payroll items or GL entries automatically |
 | Workflow | Approval starts only when a creator submits a supported document to a matching active definition. Final expense approval posts GL through the existing idempotent financial-journal contract; rejection/revision returns each source to its domain-defined state |
 | Notifications | `NotificationService` records a dedupe event then writes delivery records to `notification_outbox`. The dispatcher retries failures with exponential backoff up to five attempts, retaining failed records and dispatch attempts. External channels are disabled until configured and opted into by each user |
-| Future domains | Portals, gateway payments, direct e-Tax gateway, forecasting, OCR, manufacturing and POS are planned from Phase 22 onward |
+| Gateway payments | Phase 23 in progress: PromptPay QR, encrypted settings, signed settlement bridge, dedupe and atomic Payment/GL implemented; native provider adapter and MySQL/sandbox verification pending. See `PHASE_23_PAYMENT_GATEWAY.md`. |
+| Future domains | Direct e-Tax gateway, forecasting, OCR, manufacturing and POS are planned from Phase 24 onward; customer/supplier self-service portals are complete in Phase 22 |
 
 ## Source Navigation
 
