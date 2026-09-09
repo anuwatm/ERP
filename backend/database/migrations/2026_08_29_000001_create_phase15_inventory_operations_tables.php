@@ -97,8 +97,21 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('stock_movements', fn (Blueprint $t) => $t->dropColumn(['warehouse_id', 'warehouse_bin_id', 'inventory_lot_id', 'stock_transfer_id', 'stock_count_id']));
-        Schema::table('products', fn (Blueprint $t) => $t->dropColumn(['barcode', 'reorder_point']));
+        // MySQL can replace the implicit org FK index with the composite index added in up().
+        if (! Schema::hasIndex('stock_movements', ['org_id'])) {
+            Schema::table('stock_movements', fn (Blueprint $table) => $table->index('org_id'));
+        }
+        Schema::table('stock_movements', function (Blueprint $table) {
+            foreach (['warehouse_id', 'warehouse_bin_id', 'inventory_lot_id', 'stock_transfer_id', 'stock_count_id'] as $column) {
+                $table->dropForeign([$column]);
+            }
+            $table->dropIndex('stock_move_org_warehouse_product_idx');
+            $table->dropColumn(['warehouse_id', 'warehouse_bin_id', 'inventory_lot_id', 'stock_transfer_id', 'stock_count_id']);
+        });
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropUnique(['org_id', 'barcode']);
+            $table->dropColumn(['barcode', 'reorder_point']);
+        });
         Schema::dropIfExists('stock_count_items');
         Schema::dropIfExists('stock_counts');
         Schema::dropIfExists('stock_transfers');

@@ -22,7 +22,7 @@ class GatewaySettlementService
 {
     public function intent(Invoice $invoice): ?GatewayTransaction
     {
-        return DB::transaction(function () use ($invoice) {
+        $tx = DB::transaction(function () use ($invoice) {
             $config = PaymentGatewayConfig::where('org_id', $invoice->org_id)->where('enabled', true)->lockForUpdate()->first();
             if (! $config) {
                 return null;
@@ -32,6 +32,9 @@ class GatewaySettlementService
                 return null;
             }
             $amount = PromptPayQrService::minor($invoice->balance_due);
+            if (GatewayTransaction::where('invoice_id', $invoice->id)->whereIn('status', ['creating', 'creation_unknown'])->exists()) {
+                return null;
+            }
             if ($amount > 999999999999 || ! BankAccount::whereKey($config->bank_account_id)->where('org_id', $config->org_id)->where('status', 'active')->where('currency', 'THB')->exists()) {
                 return null;
             }
@@ -46,9 +49,19 @@ class GatewaySettlementService
                 'invoice_id' => $invoice->id, 'bank_account_id' => $config->bank_account_id,
                 'reference' => $reference, 'amount_minor' => $amount, 'currency' => 'THB',
                 'qr_payload' => app(PromptPayQrService::class)->payload($config->qr_type, $config->recipient_id, $amount, $reference),
-                'status' => 'pending', 'expires_at' => now()->addMinutes(30),
+                'status' => $config->provider === 'opn' ? 'creating' : 'pending', 'expires_at' => now()->addMinutes(30),
             ]);
         });
+        if ($tx?->status === 'creating') {
+            return app(OpnEventService::class)->createCharge($tx);
+        }
+
+        return $tx;
+    }
+
+    public function image(GatewayTransaction $transaction): string
+    {
+        return $transaction->provider_qr_image ?: app(PromptPayQrService::class)->image($transaction->qr_payload);
     }
 
     public function receive(Request $request, string $configId): array
@@ -57,7 +70,7 @@ class GatewaySettlementService
 
         return DB::transaction(function () use ($request, $configId) {
             $config = PaymentGatewayConfig::whereKey($configId)->where('enabled', true)->lockForUpdate()->firstOrFail();
-            abort_unless($config->provider === 'settlement_hmac', 422);
+            abort_unless(in_array($config->provider, ['settlement_hmac', 'opn']), 422);
             $timestamp = (string) $request->header('X-Settlement-Timestamp');
             $signature = (string) $request->header('X-Settlement-Signature');
             abort_unless(ctype_digit($timestamp) && abs(now()->timestamp - (int) $timestamp) <= 300, 401);
@@ -70,6 +83,7 @@ class GatewaySettlementService
                 'amount_minor' => ['required', 'integer', 'min:1', 'max:999999999999'],
                 'currency' => ['required', 'in:THB'],
                 'settled_at' => ['required_if:status,settled', 'nullable', 'date', 'before_or_equal:now'],
+                'provider_charge_id' => ['nullable', 'string', 'max:100'],
             ])->validate();
             $hash = hash('sha256', $request->getContent());
             $event = WebhookEvent::where('payment_gateway_config_id', $config->id)->where('event_id', $data['event_id'])->first();
@@ -91,18 +105,40 @@ class GatewaySettlementService
                 return ['status' => 'ignored'];
             }
             $invoice = Invoice::whereKey($tx->invoice_id)->where('org_id', $config->org_id)->lockForUpdate()->firstOrFail();
+            if ($config->provider === 'opn' && ! $config->livemode) {
+                $event->update(['status' => 'review', 'reason' => 'Test-mode provider payments cannot post accounting']);
+
+                return ['status' => 'review'];
+            }
+            if ($config->provider === 'opn' && (! $tx->provider_charge_id || ! $tx->provider_confirmed_at || ! $tx->provider_paid_at || ($data['provider_charge_id'] ?? null) !== $tx->provider_charge_id)) {
+                $event->update(['status' => 'review', 'reason' => 'Provider confirmation or charge identity missing']);
+
+                return ['status' => 'review'];
+            }
             $bank = BankAccount::whereKey($tx->bank_account_id)->where('org_id', $config->org_id)->where('status', 'active')->where('currency', 'THB')->first();
-            $settledAt = Carbon::parse($data['settled_at']);
-            if (! $bank || ! in_array($invoice->status, ['sent', 'partially_paid', 'overdue']) || $invoice->currency !== $tx->currency || PromptPayQrService::minor($invoice->balance_due) < $tx->amount_minor || $settledAt->lt($tx->created_at) || $settledAt->gt($tx->expires_at) || ! JournalEntry::where('org_id', $config->org_id)->where('source_type', 'invoice')->where('source_id', $invoice->id)->where('status', 'posted')->exists()) {
+            $settledAt = Carbon::parse($data['settled_at'])->setTimezone(config('app.timezone'));
+            // Provider payout can arrive days after a customer paid a still-valid QR.
+            $paidAt = $config->provider === 'opn' ? Carbon::parse($tx->provider_paid_at) : $settledAt;
+            if (! $bank || ! in_array($invoice->status, ['sent', 'partially_paid', 'overdue']) || $invoice->currency !== $tx->currency || PromptPayQrService::minor($invoice->balance_due) < $tx->amount_minor || $paidAt->lt($tx->created_at) || $paidAt->gt($tx->expires_at) || $settledAt->lt($paidAt) || ! JournalEntry::where('org_id', $config->org_id)->where('source_type', 'invoice')->where('source_id', $invoice->id)->where('status', 'posted')->exists()) {
                 $event->update(['status' => 'review', 'reason' => 'Invoice, bank, issue journal or settlement window invalid']);
 
                 return ['status' => 'review'];
             }
             $amount = $tx->amount_minor / 100;
+            if ((float) $invoice->base_balance_due <= 0 || ! $invoice->base_currency) {
+                $event->update(['status' => 'review', 'reason' => 'Invoice FX snapshot is missing']);
+
+                return ['status' => 'review'];
+            }
             if (AccountingPeriod::where('org_id', $invoice->org_id)->where('status', 'closed')->whereDate('start_date', '<=', $settledAt->toDateString())->whereDate('end_date', '>=', $settledAt->toDateString())->exists()) {
                 throw ValidationException::withMessages(['settled_at' => 'Settlement accounting period is closed.']);
             }
             $fx = app(FxRateService::class)->snapshot($invoice->org_id, $invoice->currency, $settledAt->toDateString(), ['amount' => $amount]);
+            if ($fx['base_currency'] !== $invoice->base_currency) {
+                $event->update(['status' => 'review', 'reason' => 'Invoice and organization base currencies differ']);
+
+                return ['status' => 'review'];
+            }
             $invoiceBase = round($amount * (float) $invoice->base_balance_due / (float) $invoice->balance_due, 2);
             $payment = Payment::create([
                 'org_id' => $invoice->org_id, 'invoice_id' => $invoice->id, 'bank_account_id' => $bank->id,

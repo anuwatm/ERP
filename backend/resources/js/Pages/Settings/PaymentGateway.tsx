@@ -6,6 +6,8 @@ type Config = {
     enabled: boolean;
     qr_type: string;
     bank_account_id: string;
+    provider: string;
+    livemode: boolean;
 };
 export default function PaymentGateway({
     config,
@@ -35,6 +37,9 @@ export default function PaymentGateway({
         bank_account_id: config?.bank_account_id ?? '',
         recipient_id: '',
         webhook_secret: '',
+        provider: config?.provider ?? 'settlement_hmac',
+        provider_secret: '',
+        livemode: config?.livemode ?? false,
     });
     return (
         <AuthenticatedLayout header={<h2>Payment gateway</h2>}>
@@ -45,11 +50,65 @@ export default function PaymentGateway({
                         e.preventDefault();
                         form.put(route('gateway.configure'), {
                             onSuccess: () =>
-                                form.reset('recipient_id', 'webhook_secret'),
+                                form.reset(
+                                    'recipient_id',
+                                    'webhook_secret',
+                                    'provider_secret',
+                                ),
                         });
                     }}
                     className="grid gap-4"
                 >
+                    <label>
+                        Verification provider
+                        <select
+                            className="block w-full"
+                            value={form.data.provider}
+                            onChange={(e) =>
+                                form.setData('provider', e.target.value)
+                            }
+                        >
+                            <option value="settlement_hmac">
+                                Settlement bridge
+                            </option>
+                            <option value="opn">
+                                Opn verification + settlement bridge
+                            </option>
+                        </select>
+                    </label>
+                    {form.data.provider === 'opn' && (
+                        <>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={form.data.livemode}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'livemode',
+                                            e.target.checked,
+                                        )
+                                    }
+                                />{' '}
+                                Live mode
+                            </label>
+                            <label>
+                                Opn secret key
+                                <input
+                                    className="block w-full"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    value={form.data.provider_secret}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'provider_secret',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder={config ? 'Unchanged' : ''}
+                                />
+                            </label>
+                        </>
+                    )}
                     <label>
                         <input
                             type="checkbox"

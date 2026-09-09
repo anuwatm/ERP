@@ -13,6 +13,6 @@ class GatewayTransaction extends Model
 
     protected function casts(): array
     {
-        return ['amount_minor' => 'integer', 'expires_at' => 'datetime', 'settled_at' => 'datetime'];
+        return ['amount_minor' => 'integer', 'expires_at' => 'datetime', 'settled_at' => 'datetime', 'provider_confirmed_at' => 'datetime', 'provider_paid_at' => 'datetime'];
     }
 }

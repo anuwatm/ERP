@@ -11,10 +11,10 @@ class PaymentGatewayConfig extends Model
 
     protected $guarded = ['id'];
 
-    protected $hidden = ['recipient_id', 'webhook_secret'];
+    protected $hidden = ['recipient_id', 'webhook_secret', 'provider_secret'];
 
     protected function casts(): array
     {
-        return ['enabled' => 'boolean', 'recipient_id' => 'encrypted', 'webhook_secret' => 'encrypted'];
+        return ['enabled' => 'boolean', 'livemode' => 'boolean', 'recipient_id' => 'encrypted', 'webhook_secret' => 'encrypted', 'provider_secret' => 'encrypted'];
     }
 }

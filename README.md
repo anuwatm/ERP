@@ -283,7 +283,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 20** | **Done** | Dynamic approval workflow engine, multi-step routing, SoD guard, temporary delegations, and approval inbox |
 | **Phase 21** | **Done** | Operational notification outbox, encrypted external channels, retry/dead-letter, quiet hours and safe digest |
 | **Phase 22** | **Done** | Passwordless customer/supplier portals, scoped commercial data, online quotation acceptance, vendor-bill quarantine and private DMS downloads |
-| **Phase 23** | **In progress** | PromptPay QR, Settings, signed settlement bridge and atomic Payment/GL reconciliation implemented; native provider integration and MySQL/sandbox verification pending |
+| **Phase 23** | **Done** | Closed on 2026-09-10 per user-approved scope: QR, Settings, Opn adapter, reconciliation and local tests complete; live settlement bridge and sandbox/scan certification deferred until connection is requested |
 
 ---
 
@@ -445,7 +445,7 @@ Pass: 257 passed, 1968 assertions
 
 ## Development Notes
 
-- Phase 23 integration contract, provider boundaries and workflow diagram: [Payment Gateway](docs/PHASE_23_PAYMENT_GATEWAY.md). Default disabled; its signed HMAC bridge is not a native Omise/GB Prime Pay/2C2P webhook implementation.
+- Phase 23 integration contract, verification results and workflow diagram: [Payment Gateway](docs/PHASE_23_PAYMENT_GATEWAY.md). Default disabled. Opn checkout and event verification have fixture coverage; the separate HMAC bridge requires independent final-settlement evidence before Payment/GL. GB Prime Pay and 2C2P are design boundaries, not implemented adapters.
 
 - `checklist.md` คือ source of truth ของสถานะงาน
 - `docs/database/DATABASE.md` คือ source of truth ของ schema

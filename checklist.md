@@ -45,7 +45,7 @@
 | Phase 20 | Done | Central approval workflow: versioned definitions, approver snapshot, threshold evaluation, SoD, delegation, inbox and audit trail |
 | Phase 21 | Done | Operational notification outbox, encrypted LINE/Slack/Telegram configuration, retry/dead-letter, user preferences/quiet hours, and safe daily digest |
 | Phase 22 | Done | Passwordless external portal, customer quotation acceptance/invoice draft, supplier PO/payment status/vendor bill intake, scoped private documents and audit trail |
-| Phase 23 | In progress | Thai PromptPay QR, signed settlement intake and reconciliation; native provider certification remains a separate verification gate |
+| Phase 23 | Done | Closed by user scope decision on 2026-09-10: QR, Opn adapter, reconciliation and local verification complete; live settlement integration deferred |
 | Phase 24 | Planned | Direct E-Tax Invoice & RD API Gateway: certified provider bridge, HSM/vault key management, XML-CAdES filing |
 | Phase 25 | Planned | Cash Flow Forecasting & Financial Health: 30-90 day liquidity projection, working capital & DSO/DPO ratios |
 | Phase 26 | Planned | AI OCR Document Ingestion: assisted drafts for receipts/slips/bills with confidence score and human-in-the-loop |
@@ -1125,17 +1125,24 @@ Implementation note: HMAC settlement bridge is a separate integration contract, 
 
 ### Phase 23 Implementation Backlog
 
-- [x] เพิ่ม Schema/Models: `payment_gateway_configs`, `gateway_transactions`, `webhook_events`; migrated in SQLite tests
+- [x] เพิ่ม Schema/Models: `payment_gateway_configs`, `gateway_transactions`, `webhook_events`; migrated in SQLite tests and configured local MySQL
 - [x] พัฒนา Thai QR Code Generator Utility (ฝังลงใน Invoice Print / PDF และ Customer Portal)
 - [x] พัฒนา Webhook Receiver Controller พร้อม Signature Verification และ Idempotency Guard (explicit `settlement_hmac` bridge contract)
 - [x] พัฒนา Payment Reconciliation Service: ตรวจสอบสถานะ Settled, อัปเดต Invoice เป็น paid, สร้าง `payments` record, และ Trigger Double-Entry GL Posting
 - [x] เพิ่ม Feature Tests: PromptPay payload structure, Webhook signature verification, Duplicate webhook rejection, และ Settlement-verified GL posting tests
 - [x] Settings UI: disabled-by-default config, encrypted secrets, bank selection, recent intents and review event reasons
-- [ ] เลือก provider และ implement native adapter/bridge ตาม merchant contract; verify real settlement evidence (HMAC bridge alone is not a native provider integration)
-- [ ] MySQL migration and concurrency verification; `mysql8` stopped and Windows service start denied on 2026-09-09
-- [ ] Banking-app QR scan and provider sandbox end-to-end verification before enabling production
+- [x] Opn native PromptPay checkout, provider QR retrieval, event/charge API verification, encrypted merchant key/test-live settings and ambiguous-create retry guard; verified with HTTP fixtures
+- [x] MySQL migration and concurrency verification: 15 tests / 101 assertions on isolated MySQL; migration/rollback and two-process duplicate settlement passed. Configured local `erp` database migrated through Phase 23, batch 14, on 2026-09-10
+- [x] Cross-module regression: 57 tests / 325 assertions; Opn delayed payout/timezone handling and test-mode posting rejection included; TypeScript, scoped ESLint, Pint and production build passed
 
-Phase 23 remains In progress until the provider integration and verification gates above are complete. Application tests do not close these gates.
+Phase 23 closed on 2026-09-10 at the user's request. Scope covers implemented code, migrations and local/fixture verification. Live settlement integration is excluded from closure because a connection has not yet been requested. This closure does not certify or enable live payments.
+
+### Deferred Live Integration (Outside Phase 23 Closure)
+
+- [ ] Provision merchant account and independent final-settlement bridge after the connection is requested; verify real settlement evidence against the provider contract
+- [ ] Verify banking-app QR scan and provider sandbox end-to-end flow before enabling live payments
+
+These items are deferred, not completed or cancelled. Existing signature, reconciliation and test-mode posting guards remain mandatory.
 
 ---
 

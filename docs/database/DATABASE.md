@@ -1057,7 +1057,7 @@ organizations
 | Accounting Integration | accounting_sync_logs | invoices, payments, customers, expenses |
 | Import / Export | import_jobs | files + target entities |
 | Customer & Supplier Portal | portal_users, portal_access_tokens, portal_sessions, quotation_acceptances, vendor_bill_submissions | customers, suppliers, quotations, invoices, purchase_orders, expenses, documents |
-| Phase 23 payment gateway | payment_gateway_configs, gateway_transactions, webhook_events | organizations, invoices, bank_accounts, payments; unique per-config webhook event id, unique transaction reference and payment id; encrypted recipient/signing secret. See `../PHASE_23_PAYMENT_GATEWAY.md`. |
+| Phase 23 payment gateway | payment_gateway_configs, gateway_transactions, webhook_events | organizations, invoices, bank_accounts, payments; unique per-config webhook event id, unique transaction reference, payment id and provider charge id; encrypted recipient/signing/merchant secrets, test/live mode, provider confirmation and payment timestamps, sanitized provider QR image. See `../PHASE_23_PAYMENT_GATEWAY.md`. |
 | Dashboard / Reports | *(ไม่มีตารางเฉพาะ — aggregate view)* | invoices, payments, expenses, deals, projects, tasks |
 
 ---

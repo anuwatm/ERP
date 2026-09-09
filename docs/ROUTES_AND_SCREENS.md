@@ -196,6 +196,7 @@ Phase 23 payment screens:
 | Configure receiver / signing secret | `PUT /settings/payment-gateway` | `settings.organization.update`, reauth, throttle |
 | Customer invoice payment QR | `GET /invoice-payment/{invoice}` | scoped portal customer or verified staff with `invoices.view` |
 | Signed settlement bridge | `POST /api/gateway/{config}/settlement` | HMAC + timestamp + throttle; not a native provider webhook |
+| Opn event verification | `POST /api/gateway/{config}/opn` | Server-side merchant API lookup; throttle; provider confirmation only, no receipt/GL |
 
 See `PHASE_23_PAYMENT_GATEWAY.md` for the integration contract and remaining provider/MySQL release gates.
 

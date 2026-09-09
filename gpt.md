@@ -1,6 +1,6 @@
 # GPT Decision Log
 
-Last updated: 2026-09-09
+Last updated: 2026-09-10
 
 Purpose: เก็บเฉพาะสถานะปัจจุบัน, ข้อตกลงที่ยังมีผล และ guardrail ของงานที่ยังไม่เริ่ม. รายละเอียด Phase ที่ปิดแล้วดู `checklist.md`, `README.md`, `gemini.md` และ Git history.
 
@@ -9,7 +9,8 @@ Purpose: เก็บเฉพาะสถานะปัจจุบัน, ข
 ## Current Status
 
 - Phase 1-22: closed.
-- Phase 23: In progress. QR/Settings, signed settlement bridge and Payment/GL reconciliation implemented. Native provider selection/adapter, MySQL migration/concurrency and sandbox/banking scan remain open; do not mark closed based on bridge tests.
+- Latest verification (2026-09-10): SQLite regression 57 tests / 325 assertions; isolated MySQL Phase 23 plus concurrency 15 tests / 101 assertions, including migration/rollback. The configured local database migrations are complete. Live provider certification is still not complete.
+- Phase 23: closed on 2026-09-10 by explicit user scope decision. QR/Settings, Opn checkout/event verification, signed settlement intake, Payment/GL reconciliation and local MySQL verification are complete. The user has not requested the actual settlement bridge connection, so merchant provisioning, live bridge integration and sandbox/banking scan are deferred outside Phase 23 closure. They are not claimed as tested or completed. No live-payment configuration or accounting guard was changed by this closure. Details: `docs/PHASE_23_PAYMENT_GATEWAY.md`.
 - งานที่เป็น security, data integrity, regression หรือ production blocker ใน phase ที่ปิดแล้ว แก้ได้เมื่อมี test และบันทึกเหตุผล.
 
 ## Active Guardrails
@@ -49,7 +50,11 @@ Purpose: เก็บเฉพาะสถานะปัจจุบัน, ข
 
 - Phase 23 implementation details and diagram: `docs/PHASE_23_PAYMENT_GATEWAY.md`. Intent amount uses integer satang; webhook hashes exact bytes with a five-minute signature window, deduplicates events and locks invoice before receipt/GL posting. Closed periods roll back the entire event transaction. Late/mismatched payments are review-only.
 - HMAC is a trusted settlement-bridge protocol, not an assumed provider API. Opn requires API verification, 2C2P uses provider JWT and inquiry contracts, GB Prime Pay requires the contracted integration version. No live settlement claim without provider evidence.
-- `mysql8` remains stopped; Windows denied service start even after escalation. No MySQL migration success is claimed for Phase 23.
+- `mysql8` Windows service start was initially denied. The configured MySQL server at `127.0.0.1:3306`, database `erp`, subsequently became reachable; all four pending Phase 21-23 migrations completed as batch 14 on 2026-09-10. Destructive tests use only a separate MySQL 8.0.17 instance at `127.0.0.1:33073`, database `erp_phase23_test`, data under `temp/phase23-mysql-20260909`; never the operational database. See Phase 23 verification record for results.
+- Opn reserves `creating` before an external API call; ambiguous results become `creation_unknown` and block retries. Pending/unresolved charges block provider, mode and merchant-key changes; uncertain creation also blocks receiver changes after local expiry. Provider callback confirmation alone never posts accounting.
+- Opn `provider_paid_at` comes from authenticated charge retrieval and is distinct from final `settled_at`. QR expiry checks customer payment time; receipt/GL uses settlement date. A two-day payout delay is covered by the native-provider fixture test. Do not collapse these timestamps when implementing the real settlement bridge.
+- Opn test mode never posts Payment/GL, even after a signed settlement with provider confirmation. Accounting tests use mocked live-mode provider responses, not real API calls. Payment/settlement timestamps normalize to the existing application timezone (UTC).
+- MySQL exposed a Phase 23 fixture with a 7-character customer code against `CHAR(6)`; corrected to `GATE01`. Phase 15 rollback also needed foreign keys removed before columns and an organization index restored before dropping its composite replacement. These are compatibility fixes, not inventory business-rule changes.
 
 - Portal ใช้ external identity แยกจาก staff session, scoped access, expiry/revocation, rate limit, audit และ private DMS authorization; ไม่มี public document URL.
 - Phase 22 completed: one-time 30-minute Magic Link, hashed/revocable 8-hour portal session, org/party-scoped customer and supplier dashboards, invoice draft from accepted quotation, and vendor bill quarantine. Portal intake ห้ามสร้าง AP/GL อัตโนมัติ; ต้องผ่าน scan และ finance review ก่อน.
