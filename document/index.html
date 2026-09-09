@@ -429,6 +429,27 @@
         </div>
       </div>
 
+      <!-- 15 Payment Gateway Settlement Sequence -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-sequence">Sequence</span>
+          <h2 class="card-title">15. PromptPay Thai QR &amp; Payment Gateway Settlement Flow</h2>
+          <p class="card-desc">
+            Gateway Phase 23: การสร้าง QR พร้อมเพย์ (Tag 29/30) ระบุยอดสตางค์ &rarr; ยืนยันสถานะ Opn ด้วย Merchant Key ฝั่งเซิร์ฟเวอร์ &rarr; ตรวจสอบ HMAC Signature และ Timestamp Window จาก Settlement Bridge &rarr; บันทึก Payment และกระทบยอด Double-Entry GL ใน Transaction เดียวกัน
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">PromptPay Tag 29/30</span>
+            <span class="meta-chip">Opn API Verification</span>
+            <span class="meta-chip">HMAC-SHA256 Bridge</span>
+            <span class="meta-chip">Atomic GL Posting</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="15_payment_gateway_settlement.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/15_payment_gateway_settlement.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
     </div>
 
     <div class="section-title">การไหลของข้อมูล & สรุปผล (Dataflow)</div>

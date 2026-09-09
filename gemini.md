@@ -8,7 +8,7 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 
 ## 1. สถานะโครงการปัจจุบัน (Current Status)
 
-- **Phase 1 - 21 (รวม Phase 18.1): เสร็จสมบูรณ์และผ่านการตรวจรับรอง 100% (Complete & Closed)**
+- **Phase 1 - 23 (รวม Phase 18.1): เสร็จสมบูรณ์และผ่านการตรวจรับรอง 100% (Complete & Closed)**
   - Core MVP, CRM/Sales, Finance, Delivery, Multi-role Dashboards, VAT/Number Sequences, Suppliers & POs (Phase 1 - 7)
   - Commercial Documents, Tax Reports/Aging/WHT, Treasury, Encrypted Bank Accounts, Bank Reconciliation, Petty Cash, Cheques/PDC (Phase 8 - 10)
   - General Ledger & Double-Entry Accounting, E-Tax XML/RD Prep, Fixed Assets & Straight-Line Depreciation (Phase 11 - 13)
@@ -22,13 +22,14 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
   - Central Dynamic Approval Workflow Engine, Immutable Snapshots, SoD Deadlock Guard, Execution Modes, Delegations, Multi-Step Builder, Source Module Triggers, Leave Refund & Expense Double-Entry GL Posting (Phase 20)
   - Operational Notifications & Outbox Engine, Encrypted Channel Vault (LINE OA / Slack / Telegram), Transactional Outbox, Exponential Backoff & Dead-Letter Log, User Quiet Hours & Urgency Filtering, Safe Daily Operations Digest (Phase 21)
   - Customer & Supplier Self-Service Portals, External Identity Isolation, Passwordless Magic Link, Scoped Portal Sessions, Quotation Acceptance Audit, Vendor Bill Submission Intake & Scanner Quarantine Gate (Phase 22)
+  - PromptPay Thai QR & Payment Gateway Settlement, Exact Satang (Tag 29/30), Opn API Checkout & Event Verification, HMAC-SHA256 Signed Settlement Bridge, Replay/Duplicate Guard, Atomic Payment & Double-Entry GL (Phase 23 - Live Bridge Deferred)
 - **สถานะการทดสอบระบบ (Validation Snapshot):**
-  - Feature Tests: **264 Tests Passed (2,009 Assertions / 0 Failures)**
-  - Frontend Build: **Vite Build Clean (1,053 modules transformed / 0 errors)**
+  - Feature Tests: **278 Tests Passed (2,102 Assertions / 0 Failures)**
+  - Frontend Build: **Vite Build Clean (1,054 modules transformed / 0 errors)**
   - TypeScript Compilation: **`tsc` Clean (0 errors)**
   - Static Code Analysis: **ESLint Clean (0 warnings / 0 errors)**, **Prettier Clean**, **Laravel Pint Passed**
-- **ประตูสู่ Phase ถัดไป (Next Gate):** **Phase 23: Thai PromptPay QR & Payment Gateway Integration**
-- **Closed Phase Governance:** งานที่เป็น Security Vulnerability, Data Integrity Bug, Regression Fix หรือ Production Blocker ใน Phase ที่ปิดแล้ว สามารถแก้ไขได้โดยต้องมี Feature Test ครอบคลุมและบันทึกเหตุผลชัดเจน ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-22 โดยไม่มี Decision/Checklist ใหม่
+- **ประตูสู่ Phase ถัดไป (Next Gate):** **Phase 24: Direct E-Tax Invoice & RD API Gateway**
+- **Closed Phase Governance:** งานที่เป็น Security Vulnerability, Data Integrity Bug, Regression Fix หรือ Production Blocker ใน Phase ที่ปิดแล้ว สามารถแก้ไขได้โดยต้องมี Feature Test ครอบคลุมและบันทึกเหตุผลชัดเจน ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-23 โดยไม่มี Decision/Checklist ใหม่
 
 ---
 
@@ -54,6 +55,7 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 | **Workflow SoD & Immutable Snapshot Guard** | ห้ามผู้ขออนุมัติ (Requester) อนุมัติตนเองทุกกรณี (Strict SoD) โดยระบบกรอง Requester ออกตั้งแต่ระดับ Assignee Snapshot และตรวจบล็อกซ้ำใน Action Evaluation พร้อมจับภาพ Snapshot ลำดับขั้นตอน ณ วันยื่นคำขอเพื่อป้องกันผลกระทบจากการปรับผังองค์กรย้อนหลัง |
 | **Notification Outbox & Secret Protection Guard** | Credentials ของช่องทางภายนอก (`notification_channels.config` เช่น Webhook URL, Access Token, Bot Token) ต้องจัดเก็บแบบ `encrypted:array` เสมอ ห้ามรั่วไหลไปยัง Audit Logs หรือส่งไปยัง Inertia Client Props เด็ดขาด และสงวนสิทธิ์การจัดการเฉพาะผู้ถือสิทธิ์ `settings.organization.update` |
 | **Portal Identity & Quarantine Guard** | External Portal แยก Identity และ Session (`portal_users`, `portal_sessions`) ออกจากระบบสตาฟฟ์ 100%, Magic Link แบบ Single-use (30 นาที) เก็บเฉพาะ SHA-256 Hash, ไฟล์ใบวางบิลจากคู่ค้าถูกกักกันด้วยสถานะ `pending_scan` ห้ามแปลงเป็น AP Invoice หรือลง GL อัตโนมัติเด็ดขาดจนกว่าจะผ่านการ Scan และ Finance Staff ตรวจสอบยืนยัน |
+| **Payment Gateway & Settlement Bridge Guard** | `recipient_id`, `webhook_secret`, และ `provider_secret` ต้องเข้ารหัสแบบ `encrypted` และซ่อนใน `$hidden` เสมอ, การบันทึก Payment และ Double-Entry GL เกิดขึ้นได้เฉพาะเมื่อมี Settlement Webhook ที่ลงลายมือชื่อ HMAC-SHA256 ถูกต้องพร้อม Timestamp Window ไม่เกิน 300s, การรับ Webhook ของ Opn บันทึกเพียงสถานะ `provider_confirmed` (ห้ามลงบัญชี GL), Opn Test Mode และกรณี Timeout ก้ำกึ่ง (`creation_unknown`) ห้ามลงบัญชีเด็ดขาด, และการเชื่อมต่อ Settlement Bridge จริงถือเป็น Deferred Live Integration จนกว่าจะมีการขอเชื่อมต่อจริง |
 
 ---
 

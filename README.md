@@ -8,8 +8,8 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะล่าสุด: **Phase 21 Done**; Operational Notification Outbox พร้อม retry/dead-letter, encrypted LINE/Slack/Telegram channels และ quiet hours
-ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation), และ Payroll (effective-dated policy, payslip, PND1/SSO workpapers, GL posting)
+สถานะล่าสุด: **Phase 23 Done**; Thai PromptPay QR (Tag 29/30), Opn provider verification, HMAC-SHA256 settlement bridge intake, payload deduplication, และ atomic Payment/Double-entry GL reconciliation (เชื่อมต่อ bridge จริง deferred จนกว่าจะมีการขอใช้งาน)
+ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation), Payroll (effective-dated policy, payslip, PND1/SSO workpapers, GL posting), DMS & Compliance, 2FA TOTP, Dynamic Approval Workflow Engine, Notification Outbox, Passwordless Customer/Supplier Portal, และ PromptPay / Payment Gateway Settlement
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 เอกสารสรุป runtime ปัจจุบันอยู่ที่ [`docs/CURRENT_IMPLEMENTATION.md`](docs/CURRENT_IMPLEMENTATION.md)
@@ -20,14 +20,16 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 ระบบมีชุด Diagram สถาปัตยกรรม เวิร์กโฟลว์ และผังฐานข้อมูลฉบับสมบูรณ์ (Archify Interactive HTML + Mermaid Diagrams):
 
-* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 13 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
-* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 13 ชุดหลัก
-* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (23 Diagrams)
-* 🗄️ **[Full Database ER Diagram (50+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 12 โดเมนหลัก
+* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 15 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
+* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 15 ชุดหลัก
+* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (25 Diagrams)
+* 🗄️ **[Full Database ER Diagram (60+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 16 โดเมนหลัก
 * 💰 **[Payroll Phase 16B Design](docs/PHASE_16B_PAYROLL_DESIGN.md)** — ขอบเขต payroll, policy snapshot, privacy, payslip/workpaper และ GL boundary
 * 🔄 **[Payroll Policy, Approval & GL Flow](document/11_payroll_policy_gl_flow.html)** — Interactive workflow ของการคำนวณ อนุมัติ จ่ายเงิน และลงบัญชี
 * 📂 **[DMS Document Lifecycle](document/12_document_management_lifecycle.html)** — Interactive intake, versioning และ expiry ของระบบเอกสารองค์กร (Phase 17)
 * 🔐 **[2FA TOTP & Privileged Gate Sequence](document/13_two_factor_auth_sequence.html)** — Interactive sequence ของการยืนยันตัวตนสองขั้นตอนและอุปกรณ์ที่เชื่อถือได้ (Phase 18)
+* ⚡ **[Approval Workflow Instance Lifecycle](document/14_approval_workflow_engine.html)** — Interactive lifecycle ของการประเมินสายอนุมัติพลวัต (Phase 20)
+* 💳 **[PromptPay Thai QR & Payment Gateway Settlement Flow](document/15_payment_gateway_settlement.html)** — Interactive sequence ของการสร้าง QR พร้อมเพย์, ยืนยัน Opn charge และ signed settlement bridge (Phase 23)
 
 ---
 
@@ -332,6 +334,9 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/settings/notifications` | Notification Preferences and External Channel Opt-in | authenticated user |
 | `/settings/payment-gateway` | PromptPay settings, receiving bank and settlement event review | `settings.organization.view` / `.update` |
 | `/invoice-payment/{invoice}` | Scoped PromptPay invoice QR | matching customer portal or verified staff with `invoices.view` |
+| `/portal` | Customer & Supplier Passwordless Portal | Magic Link & revocable portal session |
+| `/api/gateway/{config}/settlement` | Verified HMAC Settlement Bridge | HMAC + timestamp window + throttle |
+| `/api/gateway/{config}/opn` | Opn Event Verification Intake | Authenticated merchant API lookup + throttle |
 | `/settings/organization-structure` | Branches, Divisions, Departments | `settings.structure.view` |
 
 ---

@@ -12,8 +12,8 @@
 | **Group 2** | [CRM & Sales Pipeline](#group-2-crm--sales-pipeline-โมดูล-05-08) | `05-08` (Customers, Contacts, Deals, Quotations) | 3 | รับ Lead &rarr; จัดการผู้ติดต่อ &rarr; ดัน Deal &rarr; ออกใบเสนอราคา |
 | **Group 3** | [Project Delivery & Execution](#group-3-project-delivery--execution-โมดูล-09-11) | `09-11` (Projects, Tasks, Milestones) | 3 | แปลง Deal สู่ Project &rarr; จ่ายงาน Tasks &rarr; ตรวจรับ Milestones |
 | **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses, Assets, FX, E-Tax) | 5 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; รายจ่าย &rarr; Treasury/GL &rarr; สินทรัพย์, FX, e-Tax |
-| **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, DMS) | 4 | Event Trigger, Dashboard, ระบบไฟล์แนบ และ DMS Lifecycle & Retention |
-| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-20) | `24-31` (PO, Multi-Warehouse/Bins/Lots, Payroll, Accounting, Portal, Workflows) | 4 | จัดซื้อ, Multi-Warehouse โอนย้ายสต็อก/Lot, เงินเดือน, เชื่อมระบบภายนอก และ Central Approval Workflow Engine |
+| **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, DMS, Outbox) | 5 | Event Trigger, Dashboard, ระบบไฟล์แนบ, DMS Lifecycle และ Notification Outbox |
+| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-23) | `24-31` (PO, Inventory/Lots, Payroll, Accounting, Workflows, Portal, Gateway) | 6 | จัดซื้อ, สต็อก/Lot, เงินเดือน, Central Workflow, Customer/Supplier Portal, และ Gateway Settlement |
 
 ---
 
@@ -644,8 +644,56 @@ stateDiagram-v2
 
 ---
 
-## Group 6: Operations & Advanced Extensions (Phase 7-18)
-**โมดูลที่เกี่ยวข้อง:** `24-purchase-orders`, `25-inventory`, `26-employees`, `27-attendance-leave`, `28-payroll`, `29-ai-assistant`, `30-accounting-integration`, `31-customer-portal`
+### 5.5 Diagram: Operational Notification Outbox & Multi-Channel Delivery (Phase 21)
+ผังกระบวนการของ Notification Outbox: การแยกช่องทาง (Email, LINE Notify, Slack, Telegram) พร้อม Encrypted Credentials, Idempotent Queueing, Retry with Exponential Backoff, Dead-Letter Queue (DLQ), และการเคารพ Quiet Hours / User Preferences
+
+```mermaid
+flowchart TD
+    subgraph Trigger ["1. ผู้สร้างเหตุการณ์ (Event Origin)"]
+        Evt["ERP Event<br>(Invoice Due, Approval Queued, Task Due)"]
+    end
+
+    subgraph PrefEngine ["2. Preference & Routing Filter"]
+        CheckPref{"User Preferences<br>• Channel enabled?<br>• Quiet hours?"}
+        HoldQueue["พักรอส่งหลังพ้น Quiet Hours<br>(Delayed Scheduled Time)"]
+        Enqueue["ส่งเข้า Outbox Queue<br>(Idempotency Key Hash)"]
+    end
+
+    subgraph OutboxWorker ["3. Outbox Dispatcher & Delivery"]
+        Worker["Outbox Worker Process"]
+        ChannelRouter{"ตรวจช่องทางส่ง"}
+        SendEmail["Email (SMTP / Mailgun)"]
+        SendLine["LINE Notify (Encrypted Token)"]
+        SendSlack["Slack Webhook (Encrypted URL)"]
+        SendTelegram["Telegram Bot (Encrypted Token)"]
+    end
+
+    subgraph Reliability ["4. Error Handling & Dead Letter"]
+        SendResult{"ส่งสำเร็จหรือไม่?"}
+        Success["สถานะ sent<br>(บันทึก timestamp)"]
+        Retry{"จำนวนครั้ง retry &lt; max?"}
+        Backoff["คำนวณ Exponential Backoff<br>(next_retry_at = now + 2^attempts)"]
+        DLQ["ย้ายเข้า Dead-Letter Queue (failed)<br>พร้อม Error Reason ให้ผู้ดูแลตรวจสอบ"]
+    end
+
+    Evt --> CheckPref
+    CheckPref -- อยู่ในช่วง Quiet Hours --> HoldQueue
+    HoldQueue --> Enqueue
+    CheckPref -- ส่งได้ทันที --> Enqueue
+    Enqueue --> Worker
+    Worker --> ChannelRouter
+    ChannelRouter --> SendEmail & SendLine & SendSlack & SendTelegram
+    SendEmail & SendLine & SendSlack & SendTelegram --> SendResult
+    SendResult -- สำเร็จ --> Success
+    SendResult -- ล้มเหลว --> Retry
+    Retry -- ยังไม่เกิน --> Backoff --> Worker
+    Retry -- ครบโควตา --> DLQ
+```
+
+---
+
+## Group 6: Operations & Advanced Extensions (Phase 7-23)
+**โมดูลที่เกี่ยวข้อง:** `24-purchase-orders`, `25-inventory`, `26-employees`, `27-attendance-leave`, `28-payroll`, `29-ai-assistant`, `30-accounting-integration`, `31-customer-portal`, `32-payment-gateway`
 
 ### 6.1 Diagram: Multi-Warehouse, Bin Locations & Lot Tracking Flow (Phase 15)
 กระบวนการจัดซื้อ, รับสินค้าแยกตามคลังและ Bin, ควบคุม Lot และวันหมดอายุ, และการโอนย้ายสต็อกระหว่างคลัง
@@ -766,6 +814,103 @@ flowchart TD
     ApprovedOutcome --> ExpenseGL
     InboxAct -- ส่งกลับแก้ไข/ปฏิเสธ --> RejectOutcome
     RejectOutcome --> LeaveRefund
+```
+
+---
+
+### 6.5 Diagram: Customer & Supplier Passwordless Self-Service Portal (Phase 22)
+ผังกระบวนการของ External Self-Service Portal สำหรับลูกค้าและคู่ค้า: การเข้าถึงแบบไร้รหัสผ่าน (Passwordless Magic Link 30 นาที), เซสชันที่มีการ Hash และยกเลิกได้ (Hashed Session 8 ชม.), การตอบรับใบเสนอราคาออนไลน์และร่างบิล, การยื่นวางบิลคู่ค้าเข้าพื้นที่กักกัน (Vendor Bill Quarantine), และการห้ามสร้างรายการบัญชี AP/GL อัตโนมัติจนกว่าจะผ่านการตรวจรับโดยเจ้าหน้าที่การเงิน
+
+```mermaid
+flowchart TD
+    subgraph ExternalUser ["1. ผู้ใช้งานภายนอก (Customer / Supplier)"]
+        ReqLink["ขอลิงก์เข้าพอร์ทัล<br>(ระบุอีเมล)"]
+        ClickLink["คลิก Magic Link จากอีเมล<br>(อายุ 30 นาที, ใช้ได้ครั้งเดียว)"]
+        PortalApp["เข้าใช้งาน Portal Dashboard<br>(Cookie Session อายุ 8 ชม.)"]
+    end
+
+    subgraph PortalCore ["2. Portal Auth & Scoping Engine"]
+        GenToken["สร้าง Single-Use Token<br>บันทึก SHA256 Hash ลงตาราง"]
+        VerifyToken{"ตรวจสอบ Token<br>• ถูกต้อง & ยังไม่หมดอายุ?<br>• ยังไม่เคยถูกใช้งาน?"}
+        IssueSession["ออก Portal Session<br>(สุ่ม Session Token 80 ตัวอักษร)"]
+        ScopeCheck["Tenant & Party Isolation<br>(บังคับ WHERE org_id AND customer/supplier_id)"]
+    end
+
+    subgraph CustomerActions ["3. ฟังก์ชันลูกค้า (Customer Portal)"]
+        ViewQuote["ดูใบเสนอราคาที่ส่งมอบแล้ว"]
+        AcceptQuote["กดยอมรับใบเสนอราคาออนไลน์<br>(บันทึก quotation_acceptances)"]
+        DraftInv["สร้าง Invoice ฉบับร่างอัตโนมัติ<br>(อ้างอิงเลขเสนอราคา & ผู้ยอมรับ)"]
+        ViewPayQR["ดูและสแกน PromptPay QR เพื่อชำระเงิน"]
+    end
+
+    subgraph SupplierActions ["4. ฟังก์ชันคู่ค้า (Supplier Portal)"]
+        ViewPO["ตรวจสอบใบสั่งซื้อ (Purchase Orders)"]
+        CheckPay["ตรวจสอบสถานะการจ่ายเงิน & ภาษีหัก ณ ที่จ่าย"]
+        UploadBill["ยื่นวางบิล (Submit Vendor Bill)"]
+        Quarantine["Quarantine Gate:<br>ไฟล์ถูกกักกันรอตรวจไวรัส & ห้ามลง AP/GL ทันที"]
+        FinanceReview["Finance Staff ตรวจรับและอนุมัติ<br>จึงจะสร้าง Expense / AP Journal"]
+    end
+
+    ReqLink --> GenToken
+    GenToken --> ClickLink
+    ClickLink --> VerifyToken
+    VerifyToken -- ถูกต้อง --> IssueSession
+    IssueSession --> PortalApp
+    PortalApp --> ScopeCheck
+    ScopeCheck --> CustomerActions & SupplierActions
+    ViewQuote --> AcceptQuote --> DraftInv
+    DraftInv --> ViewPayQR
+    ViewPO --> UploadBill --> Quarantine --> FinanceReview
+```
+
+---
+
+### 6.6 Diagram: PromptPay Thai QR & Payment Gateway Settlement Reconciliation (Phase 23)
+ผังกระบวนการของระบบรับชำระเงินผ่านเกตเวย์และพร้อมเพย์: การคำนวณยอดสตางค์เป๊ะ, การสร้าง Thai QR Tag 29 (Tax ID) / Tag 30 (Biller ID), การสร้าง Charge และรับ Sanitized SVG QR จาก Opn, การยืนยัน Event ด้วย Secret Key ฝั่งเซิร์ฟเวอร์, และการรับ Webhook ที่ลงลายมือชื่อ HMAC-SHA256 จาก Settlement Bridge เพื่อลงบัญชี Payment และ Double-Entry GL ใน Transaction เดียวกัน
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as ลูกค้า (Customer)
+    participant ERP as ระบบ ERP (Gateway Service)
+    participant Opn as Opn / Omise API
+    participant Bank as ธนาคาร / App ธนาคาร
+    participant Bridge as Trusted Settlement Bridge
+    participant GL as Ledger & Database
+
+    Customer->>ERP: ขอเปิดหน้าชำระเงิน (GET /invoice-payment/{id})
+    ERP->>GL: ล็อกใบแจ้งหนี้ (Pessimistic Lock) & คำนวณยอดสตางค์
+    opt ใช้งาน Opn Provider
+        ERP->>Opn: สร้าง PromptPay Charge (POST /charges)
+        Opn-->>ERP: ส่งกลับ Charge ID & URL ดาวน์โหลด QR
+        ERP->>ERP: โหลดและ Sanitize SVG ตรวจสอบความปลอดภัย
+    end
+    ERP-->>Customer: แสดง QR พร้อมเพย์ยอดตรงบิล (หมดอายุใน 30 นาที)
+
+    Customer->>Bank: สแกน QR และโอนเงินผ่านระบบพร้อมเพย์
+    Bank->>Opn: Interbank PromptPay Clearing
+
+    opt Opn Webhook Notification
+        Opn->>ERP: แจ้งเตือนเหตุการณ์ (POST /api/gateway/{id}/opn)
+        ERP->>Opn: ยืนยันข้อมูล Charge ผ่าน Authenticated API
+        ERP->>GL: บันทึก provider_confirmed (ยังไม่บันทึกบัญชี GL)
+    end
+
+    Bank->>Bridge: ยืนยันยอดเงินเข้าบัญชีธนาคารของบริษัทจริง
+    Bridge->>ERP: ส่งข้อมูลการ Settlement (POST /api/gateway/{id}/settlement)
+    Note over Bridge,ERP: Headers: X-Settlement-Signature (HMAC-SHA256) & Timestamp (&le; 300s)
+
+    ERP->>ERP: ตรวจสอบ HMAC Signature, Timestamp Window และ Deduplication
+    alt ข้อมูลถูกต้องและงวดบัญชีเปิดอยู่
+        ERP->>GL: บันทึก Payments record, ปรับ Invoice = paid, และบันทึก Double-Entry GL Journal
+        GL-->>ERP: บันทึกสำเร็จใน Single Database Transaction
+        ERP-->>Bridge: 200 OK (status: processed)
+    else ยอดเงินไม่ตรง หรือชำระนอกหน้าต่าง QR
+        ERP->>GL: บันทึก webhook_events เป็น review (ไม่มีการลงบัญชี)
+        ERP-->>Bridge: 200 OK (status: review)
+    else งวดบัญชีปิดอยู่
+        ERP-->>Bridge: 422 Unprocessable (Rollback ทั้งหมดเพื่อให้ Retry ภายหลัง)
+    end
 ```
 
 ---

@@ -24,7 +24,8 @@
 | **12** | [Enterprise Document Lifecycle & Compliance](#12-enterprise-document-lifecycle--compliance) | Lifecycle | [`12_document_management_lifecycle.html`](./12_document_management_lifecycle.html) | [`specs/12_document_management_lifecycle.json`](./specs/12_document_management_lifecycle.json) |
 | **13** | [Two-Factor Authentication & Privileged Access Flow](#13-two-factor-authentication--privileged-access-flow) | Sequence | [`13_two_factor_auth_sequence.html`](./13_two_factor_auth_sequence.html) | [`specs/13_two_factor_auth_sequence.json`](./specs/13_two_factor_auth_sequence.json) |
 | **14** | [Approval Workflow Instance Lifecycle](#14-approval-workflow-instance-lifecycle) | Lifecycle | [`14_approval_workflow_engine.html`](./14_approval_workflow_engine.html) | [`specs/14_approval_workflow_engine.json`](./specs/14_approval_workflow_engine.json) |
-| **All** | [Full Database ER Diagram (55+ Tables)](#15-full-database-er-diagram-55-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
+| **15** | [PromptPay Thai QR & Payment Gateway Settlement Flow](#15-promptpay-thai-qr--payment-gateway-settlement-flow) | Sequence | [`15_payment_gateway_settlement.html`](./15_payment_gateway_settlement.html) | [`specs/15_payment_gateway_settlement.json`](./specs/15_payment_gateway_settlement.json) |
+| **All** | [Full Database ER Diagram (60+ Tables)](#16-full-database-er-diagram-60-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
 
 ---
 
@@ -407,9 +408,47 @@ stateDiagram-v2
 
 ---
 
-### 15. Full Database ER Diagram (55+ Tables)
+### 15. PromptPay Thai QR & Payment Gateway Settlement Flow
+- **ไฟล์ HTML:** [`15_payment_gateway_settlement.html`](./15_payment_gateway_settlement.html)
+- **ไฟล์ JSON Spec:** [`specs/15_payment_gateway_settlement.json`](./specs/15_payment_gateway_settlement.json)
+- **วัตถุประสงค์:** แสดงกระบวนการรับชำระเงินผ่านเกตเวย์และพร้อมเพย์ (Phase 23) ตั้งแต่การขอสร้าง QR พร้อมเพย์ (Tag 29/30) ระบุยอดสตางค์, การสร้าง Charge และดาวน์โหลด Sanitized SVG จาก Opn, การยืนยัน Event ด้วย Secret Key ฝั่งเซิร์ฟเวอร์, ไปจนถึงการรับ Webhook ที่ลงลายมือชื่อ HMAC-SHA256 จาก Settlement Bridge เพื่อลงบัญชี Payment และสมุดรายวันทั่วไป (Double-Entry GL) ใน Transaction เดียวกัน
+- **Mermaid Preview:**
+
+```mermaid
+sequenceDiagram
+    participant Customer
+    participant ERP
+    participant Opn as Opn / Omise
+    participant Bank as Banking App
+    participant Bridge as Settlement Bridge
+    participant GL as Ledger & DB
+
+    Customer->>ERP: GET /invoice-payment/{id}
+    ERP->>GL: Lock invoice & reserve intent (satang)
+    opt Opn Provider Selected
+        ERP->>Opn: POST /charges (PromptPay source)
+        Opn-->>ERP: charge_id + scannable QR URI
+    end
+    ERP-->>Customer: Render sanitized SVG QR (30m expiry)
+    Customer->>Bank: Scan QR & transfer via PromptPay
+    Bank->>Opn: Interbank PromptPay clearing
+    opt Opn Event Webhook
+        Opn->>ERP: POST /api/gateway/{id}/opn (event_id)
+        ERP->>Opn: GET /events & /charges (merchant credentials)
+        ERP->>GL: Record provider_confirmed (No GL entry)
+    end
+    Bank->>Bridge: Bank statement credit confirmation
+    Bridge->>ERP: POST /api/gateway/{id}/settlement (HMAC-SHA256)
+    ERP->>ERP: Verify HMAC, timestamp window & dedupe
+    ERP->>GL: Atomic Payment creation & Double-Entry GL
+    ERP-->>Bridge: 200 OK (status: processed)
+```
+
+---
+
+### 16. Full Database ER Diagram (60+ Tables)
 - **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
-- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 55+ ตาราง ครอบคลุม 13 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
+- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 60+ ตาราง ครอบคลุม 16 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
 - **Mermaid Preview (Master Cross-Domain):**
 
 ```mermaid
@@ -439,13 +478,20 @@ erDiagram
     WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_INSTANCES : "1:N"
     WORKFLOW_INSTANCES ||--o{ WORKFLOW_APPROVALS : "1:N"
     ORGANIZATIONS ||--o{ WORKFLOW_DELEGATIONS : "1:N"
+    ORGANIZATIONS ||--o{ NOTIFICATION_CHANNELS : "1:N"
+    NOTIFICATION_CHANNELS ||--o{ NOTIFICATION_OUTBOX : "1:N"
+    CUSTOMERS ||--o{ PORTAL_USERS : "1:N"
+    PORTAL_USERS ||--o{ PORTAL_SESSIONS : "1:N"
+    ORGANIZATIONS ||--o| PAYMENT_GATEWAY_CONFIGS : "1:1"
+    PAYMENT_GATEWAY_CONFIGS ||--o{ GATEWAY_TRANSACTIONS : "1:N"
+    PAYMENT_GATEWAY_CONFIGS ||--o{ WEBHOOK_EVENTS : "1:N"
 ```
 
 ---
 
-### 16. 6 Domain Group Workflows (31 Modules)
+### 17. 6 Domain Group Workflows (31 Modules)
 - **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
-- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 20 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
+- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 23 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
 - **Mermaid Preview (Inter-Group Interaction):**
 
 ```mermaid

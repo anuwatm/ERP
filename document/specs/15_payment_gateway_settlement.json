@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "PromptPay Thai QR & Payment Gateway Settlement Flow",
+    "output": "document/15_payment_gateway_settlement.html",
+    "viewBox": [960, 920],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "intent-and-qr",
+        "label": "Intent & QR Generation",
+        "focus": ["client", "erp", "opn"],
+        "note": "ERP reserves transaction intent, creates PromptPay charge, and renders sanitized SVG QR for invoice payment."
+      },
+      {
+        "id": "provider-confirmation",
+        "label": "Provider Event Verification",
+        "focus": ["client", "bank", "opn", "erp"],
+        "note": "Customer pays via banking app; Opn notifies ERP, which verifies charge authenticity with merchant credentials without posting GL."
+      },
+      {
+        "id": "settlement-and-gl",
+        "label": "Signed Settlement & Accounting Posting",
+        "focus": ["bridge", "erp", "gl"],
+        "note": "Independent settlement bridge sends signed HMAC payload upon verified bank credit; ERP atomically creates Payment and balanced GL journal."
+      }
+    ]
+  },
+  "participants": [
+    { "id": "client", "type": "external", "label": "Customer", "sublabel": "Portal & Invoice View" },
+    { "id": "erp", "type": "backend", "label": "ERP Core", "sublabel": "Laravel & Gateway" },
+    { "id": "opn", "type": "cloud", "label": "Opn / Omise", "sublabel": "Charge & Provider QR" },
+    { "id": "bank", "type": "external", "label": "Bank App", "sublabel": "PromptPay Transfer" },
+    { "id": "bridge", "type": "security", "label": "Settlement Bridge", "sublabel": "HMAC Verified Intake" },
+    { "id": "gl", "type": "database", "label": "Ledger & DB", "sublabel": "Double-Entry GL" }
+  ],
+  "segments": [
+    { "from": 150, "to": 395, "label": "1. Intent Reservation & Amount-Specific QR Generation" },
+    { "from": 410, "to": 640, "label": "2. Banking Transfer & Provider Event Verification" },
+    { "from": 655, "to": 845, "label": "3. Verified Settlement Intake & Double-Entry GL Posting" }
+  ],
+  "messages": [
+    { "id": "req-qr", "from": "client", "to": "erp", "y": 180, "label": "GET /invoice-payment/{id}", "variant": "emphasis" },
+    { "id": "lock-intent", "from": "erp", "to": "gl", "y": 215, "label": "lock invoice & reserve intent", "variant": "emphasis" },
+    { "id": "intent-ok", "from": "gl", "to": "erp", "y": 250, "label": "intent locked (satang minor)", "variant": "return" },
+    { "id": "post-opn-charge", "from": "erp", "to": "opn", "y": 285, "label": "POST /charges (PromptPay source)", "variant": "default" },
+    { "id": "opn-charge-res", "from": "opn", "to": "erp", "y": 320, "label": "charge_id + scannable QR URI", "variant": "return" },
+    { "id": "render-qr", "from": "erp", "to": "client", "y": 360, "label": "render sanitized SVG QR (30m expiry)", "variant": "return" },
+    { "id": "pay-bank", "from": "client", "to": "bank", "y": 440, "label": "Scan QR & transfer via PromptPay", "variant": "emphasis" },
+    { "id": "bank-clear", "from": "bank", "to": "opn", "y": 475, "label": "PromptPay interbank clearing", "variant": "default" },
+    { "id": "opn-webhook", "from": "opn", "to": "erp", "y": 510, "label": "POST /api/gateway/{id}/opn (event_id)", "variant": "emphasis" },
+    { "id": "fetch-verify", "from": "erp", "to": "opn", "y": 545, "label": "GET /events & /charges (merchant key)", "variant": "security" },
+    { "id": "mark-confirmed", "from": "erp", "to": "gl", "y": 585, "label": "record provider_confirmed (No GL)", "variant": "emphasis" },
+    { "id": "bank-settle", "from": "bank", "to": "bridge", "y": 680, "label": "Bank statement credit confirmation", "variant": "default" },
+    { "id": "signed-settle", "from": "bridge", "to": "erp", "y": 715, "label": "POST /api/gateway/{id}/settlement (HMAC)", "variant": "security" },
+    { "id": "verify-and-post", "from": "erp", "to": "gl", "y": 755, "label": "atomic Payment, paid status & GL journal", "variant": "emphasis" },
+    { "id": "gl-confirmed", "from": "gl", "to": "erp", "y": 790, "label": "committed in single transaction", "variant": "return" },
+    { "id": "settle-ack", "from": "erp", "to": "bridge", "y": 825, "label": "200 OK: status processed", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "client", "from": 175, "to": 185, "type": "external" },
+    { "participant": "erp", "from": 180, "to": 365, "type": "backend" },
+    { "participant": "gl", "from": 210, "to": 255, "type": "database" },
+    { "participant": "opn", "from": 280, "to": 325, "type": "cloud" },
+    { "participant": "client", "from": 435, "to": 445, "type": "external" },
+    { "participant": "bank", "from": 440, "to": 480, "type": "external" },
+    { "participant": "opn", "from": 470, "to": 550, "type": "cloud" },
+    { "participant": "erp", "from": 505, "to": 590, "type": "backend" },
+    { "participant": "gl", "from": 580, "to": 595, "type": "database" },
+    { "participant": "bridge", "from": 675, "to": 830, "type": "security" },
+    { "participant": "erp", "from": 710, "to": 830, "type": "backend" },
+    { "participant": "gl", "from": 750, "to": 795, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Exact Satang & Intent Locking",
+      "items": [
+        "Invoices generate PromptPay QR Tag 29 (Tax ID) or Tag 30 (Biller ID) with exact satang amount",
+        "Active intents are reused across Invoice Print, PDF exports, and Customer Portal sessions",
+        "Pessimistic locking prevents duplicate intents and blocks changes to bank accounts while active"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Dual-Stage Provider Verification",
+      "items": [
+        "Opn webhook notifications deliver event IDs only; the server retrieves and verifies details using merchant credentials",
+        "Provider confirmation records paid status timestamp without triggering premature accounting entries",
+        "Test-mode transactions and creation timeouts are strictly guarded to prevent unauthorized financial postings"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Atomic Settlement & Double-Entry GL",
+      "items": [
+        "Settlement bridge requires valid HMAC-SHA256 signature and fresh timestamp window (<= 300s)",
+        "Payload deduplication rejects conflicting replay events with HTTP 409 Conflict",
+        "Successful settlement creates AR Payment receipt and posts balanced double-entry GL journal in one transaction"
+      ]
+    }
+  ]
+}

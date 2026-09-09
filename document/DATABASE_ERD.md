@@ -1,6 +1,6 @@
-# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 55+ Tables)
+# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 60+ Tables)
 
-เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 55+ ตาราง** อ้างอิงตามโครงสร้างฐานข้อมูลกลาง [`docs/database/DATABASE.md`](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md) (Single Source of Truth) ครอบคลุมฟังก์ชันตั้งแต่ Phase 0 ถึง Phase 20 พร้อมคำอธิบายความสัมพันธ์, Primary Keys, Foreign Keys, Constraints, และกฎทางธุรกิจภาษาไทยอย่างละเอียด
+เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 60+ ตาราง** อ้างอิงตามโครงสร้างฐานข้อมูลกลาง [`docs/database/DATABASE.md`](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md) (Single Source of Truth) ครอบคลุมฟังก์ชันตั้งแต่ Phase 0 ถึง Phase 23 พร้อมคำอธิบายความสัมพันธ์, Primary Keys, Foreign Keys, Constraints, และกฎทางธุรกิจภาษาไทยอย่างละเอียด
 
 ---
 
@@ -20,13 +20,16 @@
 12. [Domain 11: ความปลอดภัยและการยืนยันตัวตน 2FA (Security & Two-Factor - Phase 18)](#12-domain-11-ความปลอดภัยและการยืนยันตัวตน-2fa-security--two-factor---phase-18)
 13. [Domain 12: แพลตฟอร์ม บันทึกประวัติ และการเชื่อมต่อระบบ (Platform & Integrations)](#13-domain-12-แพลตฟอร์ม-บันทึกประวัติ-และการเชื่อมต่อระบบ-platform--integrations)
 14. [Domain 13: เครื่องมือกำหนดและควบคุมสายอนุมัติพลวัต (Dynamic Approval Workflow Engine - Phase 20)](#14-domain-13-เครื่องมือกำหนดและควบคุมสายอนุมัติพลวัต-dynamic-approval-workflow-engine---phase-20)
-15. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#15-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
+15. [Domain 14: ระบบส่งการแจ้งเตือนหลายช่องทางและกล่องขาออก (Operational Notification Outbox & Multi-Channel - Phase 21)](#15-domain-14-ระบบส่งการแจ้งเตือนหลายช่องทางและกล่องขาออก-operational-notification-outbox--multi-channel---phase-21)
+16. [Domain 15: พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า (Customer & Supplier Self-Service Portal - Phase 22)](#16-domain-15-พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า-customer--supplier-self-service-portal---phase-22)
+17. [Domain 16: การรับชำระเงินเกตเวย์และพร้อมเพย์ (PromptPay & Payment Gateway Settlement - Phase 23)](#17-domain-16-การรับชำระเงินเกตเวย์และพร้อมเพย์-promptpay--payment-gateway-settlement---phase-23)
+18. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#18-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
 
 ---
 
 ## 1. ภาพรวมความสัมพันธ์ระหว่างโดเมนทั้งระบบ (Master System-Wide ERD)
 
-ผังแสดงความสัมพันธ์ระดับแกนกลาง (Core Entities) ระหว่าง 12 โดเมนหลักในระบบ
+ผังแสดงความสัมพันธ์ระดับแกนกลาง (Core Entities) ระหว่าง 16 โดเมนหลักในระบบ
 
 ```mermaid
 erDiagram
@@ -84,6 +87,16 @@ erDiagram
     WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_INSTANCES : "1:N execution instances"
     WORKFLOW_INSTANCES ||--o{ WORKFLOW_APPROVALS : "1:N step approvals"
     ORGANIZATIONS ||--o{ WORKFLOW_DELEGATIONS : "1:N delegations"
+    ORGANIZATIONS ||--o{ NOTIFICATION_CHANNELS : "1:N ช่องทางแจ้งเตือน"
+    NOTIFICATION_CHANNELS ||--o{ NOTIFICATION_OUTBOX : "1:N คิวส่งการแจ้งเตือน"
+    PORTAL_USERS ||--o{ PORTAL_SESSIONS : "1:N เซสชันเข้าใช้"
+    PORTAL_USERS ||--o{ QUOTATION_ACCEPTANCES : "1:N ตอบรับใบเสนอราคา"
+    SUPPLIERS ||--o{ VENDOR_BILL_SUBMISSIONS : "1:N ยื่นวางบิล"
+    ORGANIZATIONS ||--o| PAYMENT_GATEWAY_CONFIGS : "1:1 ตั้งค่าเกตเวย์"
+    PAYMENT_GATEWAY_CONFIGS ||--o{ GATEWAY_TRANSACTIONS : "1:N เจตนาชำระเงิน"
+    INVOICES ||--o{ GATEWAY_TRANSACTIONS : "1:N intents"
+    GATEWAY_TRANSACTIONS o|--o| PAYMENTS : "0..1:1 ชำระสำเร็จ"
+    PAYMENT_GATEWAY_CONFIGS ||--o{ WEBHOOK_EVENTS : "1:N intake events"
 ```
 
 ---
@@ -1108,7 +1121,231 @@ erDiagram
 
 ---
 
-## 15. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
+## 15. Domain 14: ระบบส่งการแจ้งเตือนหลายช่องทางและกล่องขาออก (Operational Notification Outbox & Multi-Channel - Phase 21)
+
+ระบบส่งข้อความแจ้งเตือนทางธุรกิจหลายช่องทาง (Email, LINE Notify, Slack, Telegram) พร้อมการเข้ารหัส Token/Secret, กล่องจดหมายขาออก (Transactional Outbox) ที่ปลอดภัยต่อการเกิดข้อผิดพลาด, กลไก Idempotency, Retry แบบ Exponential Backoff, Dead-Letter Queue และการเคารพช่วงเวลาห้ามรบกวน (Quiet Hours)
+
+```mermaid
+erDiagram
+    NOTIFICATION_CHANNELS {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        varchar channel "รหัสช่องทาง (email, line, slack, telegram)"
+        varchar name "ชื่อเรียกช่องทาง"
+        text config "ข้อมูลการเชื่อมต่อ (Encrypted Token/Secret/Webhook URL)"
+        boolean is_enabled "สถานะเปิดใช้งาน"
+        uuid created_by FK "ผู้ตั้งค่า"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_CHANNEL_PREFERENCES {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        uuid user_id FK "อ้างอิงผู้ใช้งาน"
+        varchar channel "ช่องทางที่ตั้งค่า"
+        boolean enabled "รับการแจ้งเตือนหรือไม่"
+        time quiet_hours_start "เวลาเริ่มงดเตือน (Nullable)"
+        time quiet_hours_end "เวลาสิ้นสุดงดเตือน (Nullable)"
+        boolean urgent_only "รับเฉพาะเรื่องด่วนใน quiet hours"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    NOTIFICATION_OUTBOX {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        uuid user_id FK "ผู้รับ (Nullable)"
+        varchar event_type "ประเภทเหตุการณ์"
+        varchar channel "ช่องทางที่ส่ง"
+        varchar priority "ลำดับความสำคัญ (low, normal, high, urgent)"
+        json payload "ข้อมูลเนื้อหาข้อความ"
+        varchar idempotency_key "คีย์ป้องกันส่งซ้ำ"
+        varchar status "สถานะ (pending, sent, failed)"
+        tinyint attempt_count "จำนวนครั้งที่พยายามส่ง"
+        timestamp available_at "เวลาพร้อมส่ง (รองรับ delay/quiet hours)"
+        timestamp sent_at "เวลาที่ส่งสำเร็จ"
+        timestamp failed_at "เวลาที่ล้มเหลวถาวร (DLQ)"
+        varchar last_error "ข้อความระบุสาเหตุข้อผิดพลาด"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    NOTIFICATION_DISPATCHES {
+        uuid id PK
+        uuid notification_outbox_id FK "อ้างอิงคิวข้อความ"
+        varchar channel "ช่องทางที่นำส่ง"
+        tinyint attempt_no "รอบการส่งครั้งที่"
+        varchar status "สถานะผลการส่ง (success, failed)"
+        smallint response_code "HTTP status code หรือ provider code"
+        varchar error_message "ข้อผิดพลาดที่ตอบกลับ"
+        timestamp dispatched_at "เวลาที่ยิงข้อความ"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ORGANIZATIONS ||--o{ NOTIFICATION_CHANNELS : "configures"
+    ORGANIZATIONS ||--o{ USER_CHANNEL_PREFERENCES : "scopes"
+    USERS ||--o{ USER_CHANNEL_PREFERENCES : "sets preferences"
+    ORGANIZATIONS ||--o{ NOTIFICATION_OUTBOX : "queues"
+    USERS ||--o{ NOTIFICATION_OUTBOX : "receives"
+    NOTIFICATION_OUTBOX ||--o{ NOTIFICATION_DISPATCHES : "dispatch logs"
+```
+
+---
+
+## 16. Domain 15: พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า (Customer & Supplier Self-Service Portal - Phase 22)
+
+พื้นที่บริการตนเองภายนอกองค์กรแบบไร้รหัสผ่าน (Passwordless Portal) สำหรับลูกค้า (Customer) และผู้จำหน่าย (Supplier) ผ่าน Single-Use Magic Link (อายุ 30 นาที) และ Revocable Session (8 ชม.) พร้อมฟังก์ชันตอบรับใบเสนอราคาออนไลน์และร่างบิลอัตโนมัติ, การยื่นวางบิลคู่ค้าเข้าพื้นที่กักกัน (Vendor Bill Quarantine) และการจำกัดสิทธิ์ดาวน์โหลดไฟล์ส่วนตัว (Scoped Private DMS)
+
+```mermaid
+erDiagram
+    PORTAL_USERS {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        varchar party_type "ประเภทคู่สัญญา (customer, supplier)"
+        uuid party_id "ID ลูกค้าหรือผู้จำหน่าย"
+        varchar email "อีเมลผู้ใช้งานภายนอก"
+        varchar name "ชื่อผู้ติดต่อ"
+        boolean is_active "สถานะใช้งาน"
+        timestamp last_login_at "เวลาเข้าสู่ระบบล่าสุด"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PORTAL_ACCESS_TOKENS {
+        uuid id PK
+        uuid portal_user_id FK "อ้างอิงผู้ใช้พอร์ทัล"
+        varchar token_hash "SHA256 Token ลิงก์ Magic Link"
+        timestamp expires_at "วันเวลาหมดอายุ (30 นาที)"
+        timestamp used_at "เวลาที่ถูกใช้งาน (Single-Use)"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PORTAL_SESSIONS {
+        uuid id PK
+        uuid portal_user_id FK "อ้างอิงผู้ใช้พอร์ทัล"
+        varchar token_hash "SHA256 Session Cookie Token"
+        varchar user_agent_hash "Hash ของเบราว์เซอร์"
+        varchar ip_hash "Hash ของ IP Address"
+        timestamp expires_at "วันเวลาหมดอายุเซสชัน (8 ชม.)"
+        timestamp revoked_at "เวลาที่ถูกสั่งยกเลิก (Revoked)"
+        timestamp last_seen_at "เวลาใช้งานล่าสุด"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    QUOTATION_ACCEPTANCES {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        uuid quotation_id FK "ใบเสนอราคาที่ตอบรับ"
+        uuid portal_user_id FK "ผู้กดยอมรับ"
+        varchar accepted_by_name "ชื่อผู้ลงนามตอบรับ"
+        varchar accepted_by_email "อีเมลผู้ลงนาม"
+        varchar ip_hash "Hash บันทึกหลักฐาน IP"
+        varchar user_agent_hash "Hash บันทึกหลักฐาน Device"
+        timestamp accepted_at "เวลาตอบรับ"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    VENDOR_BILL_SUBMISSIONS {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        uuid supplier_id FK "อ้างอิงผู้จำหน่าย"
+        uuid portal_user_id FK "ผู้ยื่นเอกสาร"
+        uuid document_id FK "อ้างอิงไฟล์เอกสารใน DMS (Quarantined)"
+        varchar vendor_invoice_no "เลขที่ใบแจ้งหนี้ของผู้ขาย"
+        date invoice_date "วันที่ในใบแจ้งหนี้"
+        decimal amount "ยอดเงิน DECIMAL(18,2)"
+        varchar currency "สกุลเงิน (THB)"
+        varchar status "สถานะ (pending_scan, under_review, approved, rejected)"
+        text note "หมายเหตุเพิ่มเติมจากคู่ค้า"
+        timestamp reviewed_at "เวลาที่ฝ่ายการเงินตรวจรับ"
+        uuid reviewed_by FK "เจ้าหน้าที่การเงินผู้ตรวจรับ"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ORGANIZATIONS ||--o{ PORTAL_USERS : "scopes"
+    PORTAL_USERS ||--o{ PORTAL_ACCESS_TOKENS : "issues magic links"
+    PORTAL_USERS ||--o{ PORTAL_SESSIONS : "maintains sessions"
+    QUOTATIONS ||--o| QUOTATION_ACCEPTANCES : "accepted once"
+    PORTAL_USERS ||--o{ QUOTATION_ACCEPTANCES : "signs"
+    SUPPLIERS ||--o{ VENDOR_BILL_SUBMISSIONS : "submits"
+    PORTAL_USERS ||--o{ VENDOR_BILL_SUBMISSIONS : "uploader"
+    DOCUMENTS ||--o| VENDOR_BILL_SUBMISSIONS : "attached bill file"
+```
+
+---
+
+## 17. Domain 16: การรับชำระเงินเกตเวย์และพร้อมเพย์ (PromptPay & Payment Gateway Settlement - Phase 23)
+
+ระบบรับชำระเงินอัตโนมัติผ่าน Thai QR PromptPay (EMVCo Tag 29 PromptPay Tax ID / Tag 30 Biller ID) รองรับการสร้าง Charge และยืนยันผลผ่าน Opn (Omise) API รวมถึงรับ Webhook Settlement Event ที่มีลายเซ็น HMAC-SHA256 พร้อม Timestamp Window (&le; 300s) และ Idempotency Gate เพื่อสร้างประวัติรับชำระเงิน (`payments`) และลงบัญชีแยกประเภททั่วไป (Double-Entry GL) อัตโนมัติในฐานข้อมูลแบบ Single Atomic Transaction
+
+```mermaid
+erDiagram
+    PAYMENT_GATEWAY_CONFIGS {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร (1 Org = 1 Config)"
+        varchar provider "ผู้ให้บริการ (settlement_hmac, opn)"
+        boolean enabled "สถานะเปิดใช้งานระบบเกตเวย์"
+        boolean livemode "โหมดการทำงาน (Test vs Live Mode)"
+        varchar qr_type "ประเภท QR (biller, tax_id)"
+        text recipient_id "Biller ID 15 หลัก หรือ Tax ID 13 หลัก (Encrypted)"
+        text webhook_secret "HMAC Signing Secret สำหรับ Bridge (Encrypted)"
+        text provider_secret "Opn Secret Key (skey_...) (Encrypted)"
+        uuid bank_account_id FK "บัญชีธนาคาร THB สำหรับรับเงินเข้า"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    GATEWAY_TRANSACTIONS {
+        uuid id PK
+        uuid org_id FK "อ้างอิงองค์กร"
+        uuid payment_gateway_config_id FK "อ้างอิงการตั้งค่าเกตเวย์"
+        uuid invoice_id FK "ใบแจ้งหนี้ที่ต้องการชำระ"
+        uuid bank_account_id FK "สแนปช็อตบัญชีธนาคารปลายทาง"
+        uuid payment_id FK "อ้างอิงรายการ Payment เมื่อสำเร็จ (Unique/Nullable)"
+        varchar reference "รหัสอ้างอิงชำระเงิน 20 หลัก (Unique)"
+        bigint amount_minor "จำนวนเงินหน่วยสตางค์ (Satang Minor)"
+        varchar currency "สกุลเงิน (THB)"
+        text qr_payload "ข้อมูลดิบข้อความ QR มาตรฐาน EMVCo"
+        varchar status "สถานะ (pending, creating, creation_unknown, settled, expired)"
+        varchar provider_charge_id "Charge ID จาก Opn (chrg_...) (Unique/Nullable)"
+        timestamp provider_confirmed_at "เวลาที่ Opn ยืนยันว่าจ่ายแล้ว"
+        timestamp provider_paid_at "เวลาจริงที่ลูกค้าชำระเงิน"
+        longtext provider_qr_image "รูปภาพ QR Code ชนิด SVG Data URI (Sanitized)"
+        timestamp expires_at "เวลาหมดอายุ QR (30 นาที)"
+        timestamp settled_at "เวลาที่เงินเข้าบัญชีธนาคารจริง"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WEBHOOK_EVENTS {
+        uuid id PK
+        uuid payment_gateway_config_id FK "อ้างอิงการตั้งค่าเกตเวย์"
+        varchar event_id "รหัสเหตุการณ์เฉพาะจาก Bridge หรือ Opn"
+        varchar payload_hash "SHA256 Hash ของ Payload ป้องกัน Replay ข้อมูลขัดแย้ง"
+        varchar status "สถานะผลการประมวลผล (processed, review, ignored, provider_confirmed)"
+        varchar reason "เหตุผลประกอบกรณีถูกส่งเข้าสถานะ review"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ORGANIZATIONS ||--o| PAYMENT_GATEWAY_CONFIGS : "owns"
+    BANK_ACCOUNTS ||--o{ PAYMENT_GATEWAY_CONFIGS : "receiving bank"
+    PAYMENT_GATEWAY_CONFIGS ||--o{ GATEWAY_TRANSACTIONS : "tracks"
+    INVOICES ||--o{ GATEWAY_TRANSACTIONS : "payment intents"
+    BANK_ACCOUNTS ||--o{ GATEWAY_TRANSACTIONS : "snapshots"
+    GATEWAY_TRANSACTIONS o|--o| PAYMENTS : "resulting receipt"
+    PAYMENT_GATEWAY_CONFIGS ||--o{ WEBHOOK_EVENTS : "logs"
+```
+
+---
+
+## 18. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
 
 1. **ระบบคีย์หลัก (Primary Keys):**  
    - ทุกตารางใช้ Primary Key ชื่อ `id` เป็นชนิด **Time-Ordered UUID (UUIDv7)** เพื่อประสิทธิภาพในการทำ Indexing และป้องกันการคาดเดา ID ข้อมูล
