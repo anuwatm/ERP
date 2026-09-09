@@ -11,3 +11,4 @@ backend/storage/framework/testing/
 backend/storage/framework/views/
 backend/storage/logs/
 temp/
+*.zip
