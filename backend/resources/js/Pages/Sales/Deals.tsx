@@ -1,17 +1,22 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
-import { FormEvent, useMemo, useState } from 'react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { FormEvent, useState } from 'react';
+import type { PageProps } from '@/Types/auth';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import DealDialog from './DealDialog';
+import ActivityDialog from './ActivityDialog';
+import ContactDialog from './ContactDialog';
+import type { ContactForm } from './Customers';
 
-type Owner = { id: string; name: string; email: string };
+export type Owner = { id: string; name: string; email: string };
 type Contact = {
     id: string;
     customer_id: string;
@@ -19,24 +24,26 @@ type Contact = {
     email?: string | null;
     phone?: string | null;
 };
-type Customer = {
+export type Customer = {
     id: string;
     customer_code: string;
     company_name: string;
     owner_id?: string | null;
     contacts: Contact[];
 };
-type Activity = {
+export type Activity = {
     id: string;
     entity_type: string;
     entity_id: string;
     activity_type: string;
     subject?: string | null;
+    body?: string | null;
+    owner_id?: string | null;
     activity_at: string;
     follow_up_at?: string | null;
     completed_at?: string | null;
 };
-type Deal = {
+export type Deal = {
     id: string;
     title: string;
     customer_id: string;
@@ -63,7 +70,7 @@ type Deal = {
     needs_sales_review?: boolean;
 };
 
-type DealForm = {
+export type DealForm = {
     title: string;
     customer_id: string;
     contact_id: string;
@@ -78,7 +85,7 @@ type DealForm = {
     note: string;
 };
 
-type ActivityForm = {
+export type ActivityForm = {
     entity_type: 'deal';
     entity_id: string;
     activity_type: string;
@@ -105,17 +112,17 @@ const emptyDeal: DealForm = {
     note: '',
 };
 
-const emptyActivity: ActivityForm = {
+const emptyActivity = (): ActivityForm => ({
     entity_type: 'deal',
     entity_id: '',
     activity_type: 'call',
     subject: '',
     body: '',
-    activity_at: new Date().toISOString().slice(0, 16),
+    activity_at: new Date().toISOString().slice(0, 19),
     follow_up_at: '',
     completed_at: '',
     owner_id: '',
-};
+});
 
 export default function Deals({
     deals,
@@ -136,70 +143,349 @@ export default function Deals({
     canCreateProject: boolean;
 }) {
     const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
-    const dealForm = useForm<DealForm>(emptyDeal);
-    const activityForm = useForm<ActivityForm>(emptyActivity);
-    const selectedCustomerContacts = useMemo(
-        () =>
-            customers.find(
-                (customer) => customer.id === dealForm.data.customer_id,
-            )?.contacts ?? [],
-        [customers, dealForm.data.customer_id],
+    const [editingActivity, setEditingActivity] = useState<Activity | null>(
+        null,
     );
+    const [editor, setEditor] = useState<'deal' | 'activity' | null>(null);
+    const [minimized, setMinimized] = useState(false);
+    const dealForm = useForm<DealForm>(emptyDeal);
+    const activityForm = useForm<ActivityForm>(emptyActivity());
+    const [creatingContact, setCreatingContact] = useState(false);
+    const dealSubmission = useSubmissionKey();
+    const activitySubmission = useSubmissionKey();
+    const contactSubmission = useSubmissionKey();
+    const contactForm = useForm<ContactForm>({
+        customer_id: '',
+        name: '',
+        position: '',
+        phone: '',
+        email: '',
+        line_id: '',
+        is_primary: false,
+        note: '',
+    });
+    const { auth } = usePage<PageProps>().props;
+    const canCreateDeal = auth.permissions.includes('deals.create');
+    const canUpdateDeal = auth.permissions.includes('deals.update');
+    const canCreateActivity = auth.permissions.includes('activities.create');
+    const canUpdateActivity = auth.permissions.includes('activities.update');
+    const busy =
+        dealForm.processing ||
+        activityForm.processing ||
+        contactForm.processing;
+    const guard = useDiscardGuard(
+        (editor === 'deal' && dealForm.isDirty) ||
+            (editor === 'activity' && activityForm.isDirty) ||
+            (creatingContact && contactForm.isDirty),
+        busy,
+    );
+
+    const closeEditor = () => {
+        dealSubmission.reset();
+        activitySubmission.reset();
+        setEditor(null);
+        setCreatingContact(false);
+        contactForm.reset();
+        contactForm.clearErrors();
+        setMinimized(false);
+        setEditingDeal(null);
+        setEditingActivity(null);
+        dealForm.setDefaults(emptyDeal);
+        dealForm.setData(emptyDeal);
+        dealForm.clearErrors();
+        const activity = emptyActivity();
+        activityForm.setDefaults(activity);
+        activityForm.setData(activity);
+        activityForm.clearErrors();
+    };
+
+    const createContact = () => {
+        if (
+            busy ||
+            !auth.permissions.includes('contacts.create') ||
+            !dealForm.data.customer_id
+        )
+            return;
+        const data = {
+            customer_id: dealForm.data.customer_id,
+            name: '',
+            position: '',
+            phone: '',
+            email: '',
+            line_id: '',
+            is_primary: false,
+            note: '',
+        };
+        contactSubmission.reset();
+        contactForm.setDefaults(data);
+        contactForm.setData(data);
+        contactForm.clearErrors();
+        setCreatingContact(true);
+        setMinimized(false);
+    };
+    const submitQuickContact = (event: FormEvent) => {
+        event.preventDefault();
+        if (busy || !auth.permissions.includes('contacts.create')) return;
+        contactForm.post(
+            route('contacts.store', contactForm.data.customer_id),
+            {
+                headers: contactSubmission.headers(),
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: (page) => {
+                    const flash = page.props.flash as {
+                        created_reference?: {
+                            type: string;
+                            id: string;
+                            customer_id: string;
+                        };
+                    };
+                    const reference = flash?.created_reference;
+                    if (
+                        reference?.type === 'contact' &&
+                        reference.customer_id === dealForm.data.customer_id
+                    ) {
+                        dealForm.setData('contact_id', reference.id);
+                        dealForm.clearErrors('contact_id');
+                        setCreatingContact(false);
+                        contactForm.reset();
+                    } else {
+                        contactForm.setError(
+                            'name',
+                            'Contact saved. Return to the deal and select it from the refreshed list.',
+                        );
+                    }
+                },
+            },
+        );
+    };
 
     const submitDeal = (event: FormEvent) => {
         event.preventDefault();
+        if (busy || (editingDeal ? !canUpdateDeal : !canCreateDeal)) return;
+        if (!dealForm.data.customer_id) {
+            dealForm.setError('customer_id', 'Please select a customer.');
+            return;
+        }
+        const customer = customers.find(
+            (customer) => customer.id === dealForm.data.customer_id,
+        );
+        if (
+            dealForm.data.contact_id &&
+            customer &&
+            !customer.contacts.some(
+                (contact) => contact.id === dealForm.data.contact_id,
+            )
+        ) {
+            dealForm.setError(
+                'contact_id',
+                'Select a contact belonging to this customer, or clear the contact.',
+            );
+            return;
+        }
         const options = {
             preserveScroll: true,
-            onSuccess: () => {
-                dealForm.setData(emptyDeal);
-                setEditingDeal(null);
-            },
+            onSuccess: closeEditor,
         };
 
         if (editingDeal) {
             dealForm.patch(route('deals.update', editingDeal.id), options);
         } else {
-            dealForm.post(route('deals.store'), options);
+            dealForm.post(route('deals.store'), {
+                ...options,
+                headers: dealSubmission.headers(),
+            });
         }
     };
 
     const submitActivity = (event: FormEvent) => {
         event.preventDefault();
-        activityForm.post(route('activities.store'), {
-            preserveScroll: true,
-            onSuccess: () => activityForm.setData(emptyActivity),
+        if (busy || (editingActivity ? !canUpdateActivity : !canCreateActivity))
+            return;
+        if (!activityForm.data.entity_id) {
+            activityForm.setError('entity_id', 'Please select a deal.');
+            return;
+        }
+        const options = { preserveScroll: true, onSuccess: closeEditor };
+        if (editingActivity)
+            activityForm.patch(
+                route('activities.update', editingActivity.id),
+                options,
+            );
+        else
+            activityForm.post(route('activities.store'), {
+                ...options,
+                headers: activitySubmission.headers(),
+            });
+    };
+
+    const editDeal = (deal: Deal | null) => {
+        if (busy || (deal ? !canUpdateDeal : !canCreateDeal)) return;
+        if (editor === 'deal' && editingDeal?.id === deal?.id) {
+            setMinimized(false);
+            return;
+        }
+        guard.request(() => {
+            closeEditor();
+            setEditingDeal(deal);
+            const data: DealForm = deal
+                ? {
+                      title: deal.title ?? '',
+                      customer_id: deal.customer_id ?? '',
+                      contact_id: deal.contact_id ?? '',
+                      stage: deal.stage ?? 'new',
+                      value_amount: deal.value_amount ?? '0',
+                      currency: deal.currency ?? 'THB',
+                      probability: deal.probability ?? 0,
+                      expected_close_date:
+                          deal.expected_close_date?.slice(0, 10) ?? '',
+                      owner_id: deal.owner_id ?? '',
+                      source: deal.source ?? '',
+                      lost_reason: deal.lost_reason ?? '',
+                      note: deal.note ?? '',
+                  }
+                : { ...emptyDeal };
+            dealForm.setDefaults(data);
+            dealForm.setData(data);
+            setEditor('deal');
         });
     };
 
-    const editDeal = (deal: Deal) => {
-        setEditingDeal(deal);
-        dealForm.setData({
-            title: deal.title ?? '',
-            customer_id: deal.customer_id ?? '',
-            contact_id: deal.contact_id ?? '',
-            stage: deal.stage ?? 'new',
-            value_amount: deal.value_amount ?? '0',
-            currency: deal.currency ?? 'THB',
-            probability: deal.probability ?? 0,
-            expected_close_date: deal.expected_close_date?.slice(0, 10) ?? '',
-            owner_id: deal.owner_id ?? '',
-            source: deal.source ?? '',
-            lost_reason: deal.lost_reason ?? '',
-            note: deal.note ?? '',
+    const editActivity = (deal?: Deal, activity?: Activity) => {
+        if (busy || (activity ? !canUpdateActivity : !canCreateActivity))
+            return;
+        if (
+            editor === 'activity' &&
+            editingActivity?.id === activity?.id &&
+            activityForm.data.entity_id === (deal?.id ?? '')
+        ) {
+            setMinimized(false);
+            return;
+        }
+        guard.request(() => {
+            closeEditor();
+            setEditingActivity(activity ?? null);
+            const data: ActivityForm = activity
+                ? {
+                      entity_type: 'deal',
+                      entity_id: activity.entity_id,
+                      activity_type: activity.activity_type,
+                      subject: activity.subject ?? '',
+                      body: activity.body ?? '',
+                      activity_at: activity.activity_at,
+                      follow_up_at: activity.follow_up_at ?? '',
+                      completed_at: activity.completed_at ?? '',
+                      owner_id: activity.owner_id ?? '',
+                  }
+                : { ...emptyActivity(), entity_id: deal?.id ?? '' };
+            activityForm.setDefaults(data);
+            activityForm.setData(data);
+            setEditor('activity');
         });
     };
+
+    const runAction = (action: () => void) =>
+        guard.request(() => {
+            closeEditor();
+            action();
+        });
 
     return (
         <AuthenticatedLayout>
             <Head title="Deals" />
+            <DiscardChangesDialog
+                open={guard.confirming}
+                onKeep={guard.keep}
+                onDiscard={guard.discard}
+            />
+            <DealDialog
+                open={editor === 'deal'}
+                minimized={minimized}
+                suspended={creatingContact}
+                onCreateContact={
+                    auth.permissions.includes('contacts.create') &&
+                    customers.some(
+                        (customer) => customer.id === dealForm.data.customer_id,
+                    )
+                        ? createContact
+                        : undefined
+                }
+                onMinimize={setMinimized}
+                onClose={() => guard.request(closeEditor)}
+                form={dealForm}
+                editing={editingDeal}
+                customers={customers}
+                owners={owners}
+                stages={stages}
+                canSeeAllSales={canSeeAllSales}
+                onSubmit={submitDeal}
+            />
+            <ActivityDialog
+                open={editor === 'activity'}
+                minimized={minimized}
+                onMinimize={setMinimized}
+                onClose={() => guard.request(closeEditor)}
+                form={activityForm}
+                editing={editingActivity}
+                deals={deals}
+                owners={owners}
+                onSubmit={submitActivity}
+            />
+            <ContactDialog
+                open={creatingContact}
+                minimized={minimized}
+                onMinimize={setMinimized}
+                onClose={() =>
+                    guard.request(
+                        () => {
+                            setCreatingContact(false);
+                            setMinimized(false);
+                            contactForm.reset();
+                            contactForm.clearErrors();
+                        },
+                        { dirty: contactForm.isDirty },
+                    )
+                }
+                editing={false}
+                customer={
+                    customers.find(
+                        (customer) =>
+                            customer.id === contactForm.data.customer_id,
+                    )?.company_name ?? 'Selected customer'
+                }
+                form={contactForm}
+                onSubmit={submitQuickContact}
+            />
 
             <div className="space-y-6">
                 <PageHeader
                     title="Deals Pipeline"
                     description="Track sales opportunities, stage movement, and follow-up activity."
+                    actions={
+                        <div className="flex flex-wrap gap-2">
+                            {canCreateDeal && (
+                                <PrimaryButton
+                                    type="button"
+                                    onClick={() => editDeal(null)}
+                                    disabled={busy}
+                                >
+                                    + Create Deal
+                                </PrimaryButton>
+                            )}
+                            {canCreateActivity && (
+                                <SecondaryButton
+                                    type="button"
+                                    onClick={() => editActivity()}
+                                    disabled={busy || !deals.length}
+                                >
+                                    + Create Activity
+                                </SecondaryButton>
+                            )}
+                        </div>
+                    }
                 />
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+                <div>
                     <Card
                         title="Pipeline Deals"
                         description="Open and closed opportunities"
@@ -267,23 +553,28 @@ export default function Deals({
                                     header: 'Actions',
                                     accessor: (row) => (
                                         <div className="flex flex-wrap gap-2">
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() => editDeal(row)}
-                                            >
-                                                Edit
-                                            </SecondaryButton>
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() =>
-                                                    activityForm.setData({
-                                                        ...emptyActivity,
-                                                        entity_id: row.id,
-                                                    })
-                                                }
-                                            >
-                                                Activity
-                                            </SecondaryButton>
+                                            {canUpdateDeal && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    disabled={busy}
+                                                    onClick={() =>
+                                                        editDeal(row)
+                                                    }
+                                                >
+                                                    Edit
+                                                </SecondaryButton>
+                                            )}
+                                            {canCreateActivity && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    disabled={busy}
+                                                    onClick={() =>
+                                                        editActivity(row)
+                                                    }
+                                                >
+                                                    Activity
+                                                </SecondaryButton>
+                                            )}
                                             {canCreateInvoice &&
                                                 [
                                                     'proposal',
@@ -292,6 +583,7 @@ export default function Deals({
                                                 ].includes(row.stage) && (
                                                     <SecondaryButton
                                                         type="button"
+                                                        disabled={busy}
                                                         onClick={() =>
                                                             router.get(
                                                                 route(
@@ -312,16 +604,19 @@ export default function Deals({
                                                 !row.project && (
                                                     <SecondaryButton
                                                         type="button"
+                                                        disabled={busy}
                                                         onClick={() =>
-                                                            router.post(
-                                                                route(
-                                                                    'deals.projects.store',
-                                                                    row.id,
+                                                            runAction(() =>
+                                                                router.post(
+                                                                    route(
+                                                                        'deals.projects.store',
+                                                                        row.id,
+                                                                    ),
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                    },
                                                                 ),
-                                                                {},
-                                                                {
-                                                                    preserveScroll: true,
-                                                                },
                                                             )
                                                         }
                                                     >
@@ -366,26 +661,47 @@ export default function Deals({
                                                             </span>
                                                         )}
                                                 </div>
-                                                {!activity.completed_at &&
-                                                    activity.follow_up_at && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {canUpdateActivity && (
                                                         <SecondaryButton
                                                             type="button"
+                                                            disabled={busy}
                                                             onClick={() =>
-                                                                router.patch(
-                                                                    route(
-                                                                        'activities.complete',
-                                                                        activity.id,
-                                                                    ),
-                                                                    {},
-                                                                    {
-                                                                        preserveScroll: true,
-                                                                    },
+                                                                editActivity(
+                                                                    deal,
+                                                                    activity,
                                                                 )
                                                             }
                                                         >
-                                                            Done
+                                                            Edit Activity
                                                         </SecondaryButton>
                                                     )}
+                                                    {canUpdateActivity &&
+                                                        !activity.completed_at &&
+                                                        activity.follow_up_at && (
+                                                            <SecondaryButton
+                                                                type="button"
+                                                                disabled={busy}
+                                                                onClick={() =>
+                                                                    runAction(
+                                                                        () =>
+                                                                            router.patch(
+                                                                                route(
+                                                                                    'activities.complete',
+                                                                                    activity.id,
+                                                                                ),
+                                                                                {},
+                                                                                {
+                                                                                    preserveScroll: true,
+                                                                                },
+                                                                            ),
+                                                                    )
+                                                                }
+                                                            >
+                                                                Done
+                                                            </SecondaryButton>
+                                                        )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -393,316 +709,8 @@ export default function Deals({
                             ))}
                         </div>
                     </Card>
-
-                    <div className="space-y-6">
-                        <Card
-                            title={editingDeal ? 'Edit Deal' : 'Create Deal'}
-                            description="Won/lost rules are enforced by server"
-                        >
-                            <form onSubmit={submitDeal} className="space-y-3">
-                                <Field
-                                    label="Title"
-                                    value={dealForm.data.title}
-                                    error={dealForm.errors.title}
-                                    onChange={(value) =>
-                                        dealForm.setData('title', value)
-                                    }
-                                    required
-                                />
-                                <SelectField
-                                    label="Customer"
-                                    value={dealForm.data.customer_id}
-                                    onChange={(value) =>
-                                        dealForm.setData('customer_id', value)
-                                    }
-                                    options={customers.map(
-                                        (customer) => customer.id,
-                                    )}
-                                    labels={Object.fromEntries(
-                                        customers.map((customer) => [
-                                            customer.id,
-                                            customer.company_name,
-                                        ]),
-                                    )}
-                                />
-                                <SelectField
-                                    label="Contact"
-                                    value={dealForm.data.contact_id}
-                                    onChange={(value) =>
-                                        dealForm.setData('contact_id', value)
-                                    }
-                                    options={selectedCustomerContacts.map(
-                                        (contact) => contact.id,
-                                    )}
-                                    labels={Object.fromEntries(
-                                        selectedCustomerContacts.map(
-                                            (contact) => [
-                                                contact.id,
-                                                contact.name,
-                                            ],
-                                        ),
-                                    )}
-                                />
-                                <SelectField
-                                    label="Stage"
-                                    value={dealForm.data.stage}
-                                    onChange={(value) =>
-                                        dealForm.setData('stage', value)
-                                    }
-                                    options={stages}
-                                />
-                                <Field
-                                    label="Value Amount"
-                                    value={dealForm.data.value_amount}
-                                    error={dealForm.errors.value_amount}
-                                    onChange={(value) =>
-                                        dealForm.setData('value_amount', value)
-                                    }
-                                />
-                                <Field
-                                    label="Probability"
-                                    value={String(dealForm.data.probability)}
-                                    error={dealForm.errors.probability}
-                                    onChange={(value) =>
-                                        dealForm.setData(
-                                            'probability',
-                                            Number(value),
-                                        )
-                                    }
-                                />
-                                <Field
-                                    label="Expected Close Date"
-                                    value={dealForm.data.expected_close_date}
-                                    error={dealForm.errors.expected_close_date}
-                                    onChange={(value) =>
-                                        dealForm.setData(
-                                            'expected_close_date',
-                                            value,
-                                        )
-                                    }
-                                    type="date"
-                                />
-                                {canSeeAllSales && (
-                                    <SelectField
-                                        label="Owner"
-                                        value={dealForm.data.owner_id}
-                                        onChange={(value) =>
-                                            dealForm.setData('owner_id', value)
-                                        }
-                                        options={owners.map(
-                                            (owner) => owner.id,
-                                        )}
-                                        labels={Object.fromEntries(
-                                            owners.map((owner) => [
-                                                owner.id,
-                                                owner.name,
-                                            ]),
-                                        )}
-                                    />
-                                )}
-                                {dealForm.data.stage === 'lost' && (
-                                    <Field
-                                        label="Lost Reason"
-                                        value={dealForm.data.lost_reason}
-                                        error={dealForm.errors.lost_reason}
-                                        onChange={(value) =>
-                                            dealForm.setData(
-                                                'lost_reason',
-                                                value,
-                                            )
-                                        }
-                                        required
-                                    />
-                                )}
-                                <div className="flex justify-end gap-2">
-                                    {editingDeal && (
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() => {
-                                                setEditingDeal(null);
-                                                dealForm.setData(emptyDeal);
-                                            }}
-                                        >
-                                            Cancel
-                                        </SecondaryButton>
-                                    )}
-                                    <PrimaryButton
-                                        disabled={dealForm.processing}
-                                    >
-                                        Save Deal
-                                    </PrimaryButton>
-                                </div>
-                            </form>
-                        </Card>
-
-                        <Card
-                            title="Create Activity"
-                            description="Activity entity allowlist: deal"
-                        >
-                            <form
-                                onSubmit={submitActivity}
-                                className="space-y-3"
-                            >
-                                <SelectField
-                                    label="Deal"
-                                    value={activityForm.data.entity_id}
-                                    onChange={(value) =>
-                                        activityForm.setData('entity_id', value)
-                                    }
-                                    options={deals.map((deal) => deal.id)}
-                                    labels={Object.fromEntries(
-                                        deals.map((deal) => [
-                                            deal.id,
-                                            deal.title,
-                                        ]),
-                                    )}
-                                />
-                                <SelectField
-                                    label="Activity Type"
-                                    value={activityForm.data.activity_type}
-                                    onChange={(value) =>
-                                        activityForm.setData(
-                                            'activity_type',
-                                            value,
-                                        )
-                                    }
-                                    options={[
-                                        'call',
-                                        'meeting',
-                                        'email',
-                                        'line',
-                                        'note',
-                                    ]}
-                                />
-                                <Field
-                                    label="Subject"
-                                    value={activityForm.data.subject}
-                                    error={activityForm.errors.subject}
-                                    onChange={(value) =>
-                                        activityForm.setData('subject', value)
-                                    }
-                                />
-                                <Field
-                                    label="Activity At"
-                                    value={activityForm.data.activity_at}
-                                    error={activityForm.errors.activity_at}
-                                    onChange={(value) =>
-                                        activityForm.setData(
-                                            'activity_at',
-                                            value,
-                                        )
-                                    }
-                                    type="datetime-local"
-                                />
-                                <Field
-                                    label="Follow Up At"
-                                    value={activityForm.data.follow_up_at}
-                                    error={activityForm.errors.follow_up_at}
-                                    onChange={(value) =>
-                                        activityForm.setData(
-                                            'follow_up_at',
-                                            value,
-                                        )
-                                    }
-                                    type="datetime-local"
-                                />
-                                <PrimaryButton
-                                    disabled={activityForm.processing}
-                                    icon={
-                                        <svg
-                                            className="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                            />
-                                        </svg>
-                                    }
-                                >
-                                    Save Activity
-                                </PrimaryButton>
-                            </form>
-                        </Card>
-                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-function Field({
-    label,
-    value,
-    error,
-    onChange,
-    type = 'text',
-    required = false,
-}: {
-    label: string;
-    value: string;
-    error?: string;
-    onChange: (value: string) => void;
-    type?: string;
-    required?: boolean;
-}) {
-    const id = label.toLowerCase().replaceAll(' ', '-');
-
-    return (
-        <div>
-            <InputLabel
-                htmlFor={id}
-                value={label}
-                className="mb-1 text-xs font-semibold uppercase text-slate-700"
-            />
-            <TextInput
-                id={id}
-                type={type}
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                required={required}
-                className="block w-full text-sm"
-            />
-            <InputError message={error} className="mt-1" />
-        </div>
-    );
-}
-
-function SelectField({
-    label,
-    value,
-    options,
-    labels = {},
-    onChange,
-}: {
-    label: string;
-    value: string;
-    options: string[];
-    labels?: Record<string, string>;
-    onChange: (value: string) => void;
-}) {
-    return (
-        <div>
-            <InputLabel
-                value={label}
-                className="mb-1 text-xs font-semibold uppercase text-slate-700"
-            />
-            <select
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                className="block w-full rounded-xl border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-medium shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-150"
-            >
-                <option value="">Select</option>
-                {options.map((option) => (
-                    <option key={option} value={option}>
-                        {labels[option] ?? option}
-                    </option>
-                ))}
-            </select>
-        </div>
     );
 }

@@ -4,7 +4,15 @@ import PageHeader from '@/Components/UI/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
+import {
+    HolidayDialog,
+    HrSummaryDialog,
+    LeaveRequestDialog,
+    LeaveTypeDialog,
+    ShiftDialog,
+    WorkProfileDialog,
+} from './HrDialogs';
 
 type User = { id: string; name: string; email?: string };
 type LeaveType = {
@@ -92,6 +100,13 @@ export default function HrIndex({
     attendancePolicy,
     can,
 }: Props) {
+    const [leaveRequestOpen, setLeaveRequestOpen] = useState(false);
+    const [summaryOpen, setSummaryOpen] = useState(false);
+    const [shiftOpen, setShiftOpen] = useState(false);
+    const [leaveTypeOpen, setLeaveTypeOpen] = useState(false);
+    const [workProfileOpen, setWorkProfileOpen] = useState(false);
+    const [holidayOpen, setHolidayOpen] = useState(false);
+
     const post = (event: FormEvent<HTMLFormElement>, name: string) => {
         event.preventDefault();
         router.post(
@@ -114,6 +129,24 @@ export default function HrIndex({
                 <PageHeader
                     title="HR & Attendance"
                     description="Attendance, leave balances and locked payroll-ready time summaries."
+                    actions={
+                        <div className="flex flex-wrap gap-2">
+                            <PrimaryButton
+                                onClick={() => setLeaveRequestOpen(true)}
+                            >
+                                Request Leave
+                            </PrimaryButton>
+                            {can.summaryManage && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSummaryOpen(true)}
+                                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    New Attendance Summary
+                                </button>
+                            )}
+                        </div>
+                    }
                 />
                 <div className="grid gap-6 lg:grid-cols-3">
                     <Card
@@ -169,7 +202,7 @@ export default function HrIndex({
                                             type="number"
                                             step="0.0000001"
                                             placeholder="Latitude"
-                                            className="rounded-md border-slate-300"
+                                            className="rounded-md border-slate-300 text-sm dark:border-slate-600 dark:bg-slate-800"
                                         />
                                         <input
                                             required
@@ -177,7 +210,7 @@ export default function HrIndex({
                                             type="number"
                                             step="0.0000001"
                                             placeholder="Longitude"
-                                            className="rounded-md border-slate-300"
+                                            className="rounded-md border-slate-300 text-sm dark:border-slate-600 dark:bg-slate-800"
                                         />
                                     </div>
                                 )}
@@ -215,47 +248,22 @@ export default function HrIndex({
                         </div>
                     </Card>
                     <Card
-                        title="New Leave Request"
-                        description="Submit records the balance. Approval workflow starts in Phase 20."
+                        title="Leave Management"
+                        description="Request annual leave, sick leave, or unpaid time off."
                     >
-                        <form
-                            className="grid gap-2"
-                            onSubmit={(e) => post(e, 'hr.leave-requests.store')}
-                        >
-                            <select
-                                required
-                                name="leave_type_id"
-                                className="rounded-md border-slate-300"
+                        <div className="flex h-full flex-col justify-between space-y-4">
+                            <p className="text-sm text-slate-600 dark:text-slate-300">
+                                Submit a request to record upcoming absences.
+                                Manager approval and workflow execution apply
+                                upon submission.
+                            </p>
+                            <PrimaryButton
+                                onClick={() => setLeaveRequestOpen(true)}
+                                className="w-fit"
                             >
-                                <option value="">Leave type</option>
-                                {leaveTypes.map((type: LeaveType) => (
-                                    <option key={type.id} value={type.id}>
-                                        {type.name}
-                                        {type.is_paid ? '' : ' (unpaid)'}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="grid grid-cols-2 gap-2">
-                                <input
-                                    required
-                                    name="starts_on"
-                                    type="date"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <input
-                                    required
-                                    name="ends_on"
-                                    type="date"
-                                    className="rounded-md border-slate-300"
-                                />
-                            </div>
-                            <textarea
-                                name="reason"
-                                placeholder="Reason"
-                                className="rounded-md border-slate-300"
-                            />
-                            <PrimaryButton>Save Draft</PrimaryButton>
-                        </form>
+                                New Leave Request
+                            </PrimaryButton>
+                        </div>
                     </Card>
                 </div>
                 <Card title="Leave Requests">
@@ -380,46 +388,15 @@ export default function HrIndex({
                     description="Locked summaries do not create payroll items or GL entries automatically."
                 >
                     {can.summaryManage && (
-                        <form
-                            className="mb-5 grid gap-2 md:grid-cols-4"
-                            onSubmit={(e) => post(e, 'hr.summaries.store')}
-                        >
-                            <select
-                                required
-                                name="user_id"
-                                className="rounded-md border-slate-300"
+                        <div className="mb-4">
+                            <button
+                                type="button"
+                                onClick={() => setSummaryOpen(true)}
+                                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
                             >
-                                <option value="">Employee</option>
-                                {users.map((user: User) => (
-                                    <option key={user.id} value={user.id}>
-                                        {user.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                required
-                                name="period_start"
-                                type="date"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="period_end"
-                                type="date"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="cutoff_date"
-                                type="date"
-                                className="rounded-md border-slate-300"
-                            />
-                            <div className="md:col-span-4">
-                                <PrimaryButton>
-                                    Create Draft Summary
-                                </PrimaryButton>
-                            </div>
-                        </form>
+                                Create Draft Summary
+                            </button>
+                        </div>
                     )}
                     <DataTable
                         data={summaries}
@@ -494,234 +471,150 @@ export default function HrIndex({
                 </Card>
                 {can.manage && (
                     <div className="grid gap-6 xl:grid-cols-2">
-                        <Card title="HR Setup">
-                            <div className="grid gap-5">
-                                <form
-                                    className="grid gap-2 md:grid-cols-2"
-                                    onSubmit={(e) => post(e, 'hr.shifts.store')}
-                                >
-                                    <input
-                                        required
-                                        name="code"
-                                        placeholder="Shift code"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="name"
-                                        placeholder="Shift name"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="starts_at"
-                                        type="time"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="ends_at"
-                                        type="time"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="break_minutes"
-                                        type="number"
-                                        defaultValue="60"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="work_minutes_per_day"
-                                        type="number"
-                                        defaultValue="480"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        type="hidden"
-                                        name="is_active"
-                                        value="1"
-                                    />
-                                    <div className="md:col-span-2">
-                                        <PrimaryButton>
-                                            Save Shift
-                                        </PrimaryButton>
+                        <Card
+                            title="HR Setup & Configuration"
+                            description="Configure work shift schedules and paid/unpaid leave types."
+                        >
+                            <div className="space-y-6">
+                                <div className="flex flex-wrap gap-3">
+                                    <PrimaryButton
+                                        onClick={() => setShiftOpen(true)}
+                                    >
+                                        New Work Shift
+                                    </PrimaryButton>
+                                    <button
+                                        type="button"
+                                        onClick={() => setLeaveTypeOpen(true)}
+                                        className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                    >
+                                        New Leave Type
+                                    </button>
+                                </div>
+                                <div>
+                                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                        Configured Shifts ({shifts.length})
+                                    </h4>
+                                    <div className="space-y-2">
+                                        {shifts.map((shift) => (
+                                            <div
+                                                key={shift.id}
+                                                className="flex items-center justify-between rounded-md border border-slate-100 p-2.5 text-sm dark:border-slate-800"
+                                            >
+                                                <span className="font-medium text-slate-800 dark:text-slate-100">
+                                                    {shift.name}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
-                                </form>
-                                <form
-                                    className="grid gap-2 md:grid-cols-2"
-                                    onSubmit={(e) =>
-                                        post(e, 'hr.leave-types.store')
-                                    }
-                                >
-                                    <input
-                                        required
-                                        name="code"
-                                        placeholder="Leave code"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="name"
-                                        placeholder="Leave name"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="annual_entitlement_days"
-                                        type="number"
-                                        step="0.5"
-                                        defaultValue="0"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="carry_over_limit_days"
-                                        type="number"
-                                        step="0.5"
-                                        defaultValue="0"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <label className="text-sm">
-                                        <input
-                                            type="checkbox"
-                                            name="is_paid"
-                                            value="1"
-                                            defaultChecked
-                                        />{' '}
-                                        Paid leave
-                                    </label>
-                                    <input
-                                        type="hidden"
-                                        name="is_active"
-                                        value="1"
-                                    />
-                                    <div className="md:col-span-2">
-                                        <PrimaryButton>
-                                            Save Leave Type
-                                        </PrimaryButton>
+                                </div>
+                                <div>
+                                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                        Leave Types ({leaveTypes.length})
+                                    </h4>
+                                    <div className="space-y-2">
+                                        {leaveTypes.map((type) => (
+                                            <div
+                                                key={type.id}
+                                                className="flex items-center justify-between rounded-md border border-slate-100 p-2.5 text-sm dark:border-slate-800"
+                                            >
+                                                <div>
+                                                    <span className="font-medium text-slate-800 dark:text-slate-100">
+                                                        {type.name}
+                                                    </span>
+                                                    <span className="ml-2 text-xs text-slate-500">
+                                                        ({type.code})
+                                                    </span>
+                                                </div>
+                                                <span className="text-xs text-slate-500">
+                                                    {
+                                                        type.annual_entitlement_days
+                                                    }{' '}
+                                                    days / yr
+                                                    {type.is_paid
+                                                        ? ' (paid)'
+                                                        : ' (unpaid)'}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
-                                </form>
+                                </div>
                             </div>
                         </Card>
-                        <Card title="Employee Profile & Calendar">
-                            <div className="grid gap-5">
-                                <form
-                                    className="grid gap-2 md:grid-cols-2"
-                                    onSubmit={(e) =>
-                                        post(e, 'hr.work-profiles.store')
-                                    }
-                                >
-                                    <select
-                                        required
-                                        name="user_id"
-                                        className="rounded-md border-slate-300"
+                        <Card
+                            title="Employee Profile & Calendar"
+                            description="Staff shift assignments, direct manager relationships, and statutory holidays."
+                        >
+                            <div className="space-y-6">
+                                <div className="flex flex-wrap gap-3">
+                                    <PrimaryButton
+                                        onClick={() => setWorkProfileOpen(true)}
                                     >
-                                        <option value="">Employee</option>
-                                        {users.map((user: User) => (
-                                            <option
-                                                key={user.id}
-                                                value={user.id}
+                                        Assign Work Profile
+                                    </PrimaryButton>
+                                    <button
+                                        type="button"
+                                        onClick={() => setHolidayOpen(true)}
+                                        className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                    >
+                                        Add Holiday
+                                    </button>
+                                </div>
+                                <div>
+                                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                        Company Holidays ({holidays.length})
+                                    </h4>
+                                    <div className="space-y-2">
+                                        {holidays.length === 0 && (
+                                            <p className="text-sm text-slate-500">
+                                                No holidays scheduled.
+                                            </p>
+                                        )}
+                                        {holidays.map((holiday) => (
+                                            <div
+                                                key={holiday.id}
+                                                className="flex items-center justify-between rounded-md border border-slate-100 p-2.5 text-sm dark:border-slate-800"
                                             >
-                                                {user.name}
-                                            </option>
+                                                <span className="text-slate-800 dark:text-slate-100">
+                                                    {holiday.name}
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    {holiday.holiday_date}
+                                                </span>
+                                            </div>
                                         ))}
-                                    </select>
-                                    <input
-                                        name="employee_code"
-                                        placeholder="Employee code"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <select
-                                        name="employee_shift_id"
-                                        className="rounded-md border-slate-300"
-                                    >
-                                        <option value="">No shift</option>
-                                        {shifts.map((shift) => (
-                                            <option
-                                                key={shift.id}
-                                                value={shift.id}
-                                            >
-                                                {shift.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        name="manager_user_id"
-                                        className="rounded-md border-slate-300"
-                                    >
-                                        <option value="">No manager</option>
-                                        {users.map((user: User) => (
-                                            <option
-                                                key={user.id}
-                                                value={user.id}
-                                            >
-                                                {user.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        name="employment_type"
-                                        defaultValue="employee"
-                                        className="rounded-md border-slate-300"
-                                    >
-                                        <option value="employee">
-                                            Employee
-                                        </option>
-                                        <option value="contractor">
-                                            Contractor
-                                        </option>
-                                        <option value="intern">Intern</option>
-                                    </select>
-                                    <input
-                                        name="started_on"
-                                        type="date"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <div className="md:col-span-2">
-                                        <PrimaryButton>
-                                            Save Work Profile
-                                        </PrimaryButton>
                                     </div>
-                                </form>
-                                <form
-                                    className="grid gap-2 md:grid-cols-2"
-                                    onSubmit={(e) =>
-                                        post(e, 'hr.holidays.store')
-                                    }
-                                >
-                                    <input
-                                        required
-                                        name="holiday_date"
-                                        type="date"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <input
-                                        required
-                                        name="name"
-                                        placeholder="Holiday name"
-                                        className="rounded-md border-slate-300"
-                                    />
-                                    <div className="md:col-span-2">
-                                        <PrimaryButton>
-                                            Save Holiday
-                                        </PrimaryButton>
-                                    </div>
-                                </form>
-                                <div className="text-sm text-slate-600 dark:text-slate-200">
-                                    {holidays.map((holiday) => (
-                                        <div key={holiday.id}>
-                                            {holiday.holiday_date}:{' '}
-                                            {holiday.name}
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
                         </Card>
                     </div>
                 )}
             </div>
+
+            <LeaveRequestDialog
+                open={leaveRequestOpen}
+                onClose={() => setLeaveRequestOpen(false)}
+                leaveTypes={leaveTypes}
+            />
+            <HrSummaryDialog
+                open={summaryOpen}
+                onClose={() => setSummaryOpen(false)}
+                users={users}
+            />
+            <ShiftDialog open={shiftOpen} onClose={() => setShiftOpen(false)} />
+            <LeaveTypeDialog
+                open={leaveTypeOpen}
+                onClose={() => setLeaveTypeOpen(false)}
+            />
+            <WorkProfileDialog
+                open={workProfileOpen}
+                onClose={() => setWorkProfileOpen(false)}
+                users={users}
+                shifts={shifts}
+            />
+            <HolidayDialog
+                open={holidayOpen}
+                onClose={() => setHolidayOpen(false)}
+            />
         </AuthenticatedLayout>
     );
 }

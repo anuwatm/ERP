@@ -15,8 +15,10 @@ use App\Services\ETax\ImmutableETaxDocumentException;
 use App\Services\ETax\RDPrepExportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,6 +29,8 @@ class ETaxController extends Controller
         $orgId = $request->user()->org_id;
 
         return Inertia::render('Finance/ETax', [
+            'canManage' => $request->user()->hasPermissionCode('e_tax.manage'),
+            'canSubmit' => $request->user()->hasPermissionCode('e_tax.submit'),
             'config' => ETaxConfig::firstOrNew(
                 ['org_id' => $orgId],
                 ['mode' => 'disabled', 'signature_mode' => 'external'],
@@ -41,8 +45,12 @@ class ETaxController extends Controller
     public function updateConfig(Request $request): RedirectResponse
     {
         $data = $request->validate(['mode' => ['required', Rule::in(ETaxConfig::MODES)], 'provider_code' => ['nullable', 'string', 'max:50'], 'certificate_reference' => ['nullable', 'string', 'max:255'], 'certificate_expires_at' => ['nullable', 'date'], 'signature_mode' => ['required', Rule::in(['external', 'none'])]]);
-        if ($data['mode'] === 'provider' && blank($data['provider_code'])) {
-            abort(422, 'Provider code is required for provider mode.');
+        if ($data['mode'] === 'provider') {
+            throw ValidationException::withMessages(['mode' => 'Live provider delivery is not implemented. Use disabled, manual export or mock mode.']);
+        }
+        if ($data['mode'] === 'mock') {
+            $data['provider_code'] = 'mock';
+            $data['signature_mode'] = 'none';
         }
         $config = ETaxConfig::updateOrCreate(['org_id' => $request->user()->org_id], [...$data, 'updated_by' => $request->user()->id, 'created_by' => $request->user()->id]);
         AuditLog::create(['org_id' => $config->org_id, 'actor_user_id' => $request->user()->id, 'action' => 'e_tax.config_update', 'entity_type' => 'e_tax_config', 'entity_id' => $config->id, 'after_json' => $config->only(['mode', 'provider_code', 'certificate_reference', 'certificate_expires_at', 'signature_mode'])]);
@@ -77,11 +85,19 @@ class ETaxController extends Controller
     public function submit(Request $request, ETaxDocument $document): RedirectResponse
     {
         abort_unless($document->org_id === $request->user()->org_id, 403);
-        abort_if(in_array($document->status, ['submitted', 'accepted'], true), 422, 'Document is already submitted.');
-        SubmitETaxDocument::dispatch($document->id);
-        AuditLog::create(['org_id' => $document->org_id, 'actor_user_id' => $request->user()->id, 'action' => 'e_tax.submit_queued', 'entity_type' => 'e_tax_document', 'entity_id' => $document->id]);
+        DB::transaction(function () use ($request, $document) {
+            $document = ETaxDocument::whereKey($document->id)->lockForUpdate()->firstOrFail();
+            abort_unless(ETaxConfig::where('org_id', $document->org_id)->where('mode', 'mock')->exists(), 422, 'Enable mock mode first. Live submission is unavailable.');
+            if ($document->status === 'queued') {
+                return;
+            }
+            abort_unless(in_array($document->status, ['generated', 'signed', 'error', 'rejected'], true) && $document->attempts()->count() < 3, 422, 'Document is complete or the three-attempt limit was reached.');
+            $document->update(['status' => 'queued', 'last_error' => null]);
+            SubmitETaxDocument::dispatch($document->id)->afterCommit();
+            AuditLog::create(['org_id' => $document->org_id, 'actor_user_id' => $request->user()->id, 'action' => 'e_tax.submit_queued', 'entity_type' => 'e_tax_document', 'entity_id' => $document->id]);
+        });
 
-        return back()->with('success', 'e-Tax submission queued.');
+        return back()->with('success', 'e-Tax mock simulation queued.');
     }
 
     public function rdPrep(Request $request, RDPrepExportService $service)

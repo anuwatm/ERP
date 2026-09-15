@@ -1,10 +1,15 @@
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import { EditorField, EditorChoice } from '@/Components/UI/EditorFields';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import { PageProps } from '@/Types';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
 type Currency = {
@@ -52,18 +57,92 @@ export default function Currencies({
         rate: '',
         source: 'manual',
     });
+    const [editor, setEditor] = useState<'currency' | 'rate' | null>(null);
+    const [minimized, setMinimized] = useState(false);
+    const { auth } = usePage<PageProps>().props;
+    const canManage = auth.permissions.includes('fx.manage');
+    const busy = currency.processing || rate.processing;
+    const guard = useDiscardGuard(
+        editor === 'currency'
+            ? currency.isDirty
+            : editor === 'rate' && rate.isDirty,
+        busy,
+    );
+    const close = () => {
+        setEditor(null);
+        setMinimized(false);
+        currency.reset();
+        rate.reset();
+        currency.clearErrors();
+        rate.clearErrors();
+    };
+    const openEditor = (next: 'currency' | 'rate') => {
+        if (!canManage || busy) return;
+        guard.request(() => {
+            close();
+            const blankCurrency = {
+                code: '',
+                name: '',
+                decimal_places: 2,
+                status: 'active',
+            };
+            const blankRate = {
+                quote_currency: '',
+                rate_date: new Date().toISOString().slice(0, 10),
+                rate: '',
+                source: 'manual',
+            };
+            currency.setDefaults(blankCurrency);
+            currency.setData(blankCurrency);
+            rate.setDefaults(blankRate);
+            rate.setData(blankRate);
+            setEditor(next);
+        });
+    };
+    const editCurrency = (row: Currency) => {
+        if (!canManage || busy) return;
+        guard.request(() => {
+            close();
+            const data = {
+                code: row.code,
+                name: row.name,
+                decimal_places: row.decimal_places,
+                status: row.status,
+            };
+            currency.setDefaults(data);
+            currency.setData(data);
+            setEditor('currency');
+        });
+    };
+    const editRate = (row: Rate) => {
+        if (!canManage || busy) return;
+        guard.request(() => {
+            close();
+            const data = {
+                quote_currency: row.quote_currency,
+                rate_date: row.rate_date.slice(0, 10),
+                rate: row.rate,
+                source: row.source ?? '',
+            };
+            rate.setDefaults(data);
+            rate.setData(data);
+            setEditor('rate');
+        });
+    };
     const submitCurrency = (event: FormEvent) => {
         event.preventDefault();
+        if (!canManage || busy) return;
         currency.post(route('currencies.store'), {
             preserveScroll: true,
-            onSuccess: () => currency.reset(),
+            onSuccess: close,
         });
     };
     const submitRate = (event: FormEvent) => {
         event.preventDefault();
+        if (!canManage || busy) return;
         rate.post(route('exchange-rates.store'), {
             preserveScroll: true,
-            onSuccess: () => rate.reset('quote_currency', 'rate'),
+            onSuccess: close,
         });
     };
 
@@ -72,91 +151,197 @@ export default function Currencies({
             <Head title="Currencies & FX" />
             <div className="space-y-6">
                 <PageHeader
+                    actions={
+                        canManage && (
+                            <>
+                                <PrimaryButton
+                                    onClick={() => openEditor('currency')}
+                                >
+                                    Set Currency
+                                </PrimaryButton>
+                                <PrimaryButton
+                                    onClick={() => openEditor('rate')}
+                                >
+                                    Set Exchange Rate
+                                </PrimaryButton>
+                            </>
+                        )
+                    }
                     title="Currencies & FX"
                     description={`Base currency: ${baseCurrency}. Rates are snapshotted on documents and payments.`}
                 />
-                <div className="grid gap-6 xl:grid-cols-2">
-                    <Card>
-                        <form
-                            onSubmit={submitCurrency}
-                            className="space-y-3 p-5"
+                <DiscardChangesDialog
+                    open={guard.confirming}
+                    onKeep={guard.keep}
+                    onDiscard={guard.discard}
+                />
+                <CreateEditDialog
+                    open={editor !== null}
+                    minimized={minimized}
+                    onMinimize={setMinimized}
+                    onClose={() => guard.request(close)}
+                    title={
+                        editor === 'currency'
+                            ? 'Set Currency'
+                            : 'Set Exchange Rate'
+                    }
+                    breadcrumb="Currencies & FX / Settings"
+                    entityLabel="FX settings"
+                    draftLabel={
+                        editor === 'currency'
+                            ? currency.data.code || 'Currency'
+                            : rate.data.quote_currency || 'Exchange rate'
+                    }
+                    storageKey="fx-editor-size"
+                    formId="fx-editor"
+                    processing={busy}
+                    saveDisabled={!canManage}
+                    saveLabel="Save"
+                    status="Existing document and payment snapshots remain unchanged"
+                    errors={
+                        editor === 'currency' ? currency.errors : rate.errors
+                    }
+                    onSubmit={
+                        editor === 'currency' ? submitCurrency : submitRate
+                    }
+                >
+                    {(expanded) => (
+                        <section
+                            aria-label={
+                                editor === 'currency'
+                                    ? 'Currency settings'
+                                    : 'Rate settings'
+                            }
+                            className="space-y-4 p-4 sm:p-6"
                         >
-                            <h2 className="text-base font-semibold">
-                                Currency
-                            </h2>
-                            <div className="grid grid-cols-2 gap-3">
-                                <TextInput
-                                    value={currency.data.code}
-                                    onChange={(e) =>
-                                        currency.setData(
-                                            'code',
-                                            e.target.value.toUpperCase(),
-                                        )
-                                    }
-                                    placeholder="USD"
-                                    maxLength={3}
-                                    required
-                                />
-                                <TextInput
-                                    value={currency.data.name}
-                                    onChange={(e) =>
-                                        currency.setData('name', e.target.value)
-                                    }
-                                    placeholder="US Dollar"
-                                    required
-                                />
+                            <p className="text-sm">
+                                {editor === 'currency'
+                                    ? 'Saving an existing code updates its currency settings.'
+                                    : 'Saving an existing pair and date updates the reference rate. Base currency: ' +
+                                      baseCurrency}
+                            </p>
+                            <div
+                                className={
+                                    expanded
+                                        ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                                        : 'grid gap-4 sm:grid-cols-2'
+                                }
+                            >
+                                {editor === 'currency' ? (
+                                    <>
+                                        <EditorField
+                                            id="currency-code"
+                                            label="Code"
+                                            value={String(currency.data.code)}
+                                            error={currency.errors.code}
+                                            onChange={(value) =>
+                                                currency.setData(
+                                                    'code',
+                                                    value.toUpperCase(),
+                                                )
+                                            }
+                                            required
+                                            maxLength={3}
+                                        />
+                                        <EditorField
+                                            id="currency-name"
+                                            label="Name"
+                                            value={String(currency.data.name)}
+                                            error={currency.errors.name}
+                                            onChange={(value) =>
+                                                currency.setData('name', value)
+                                            }
+                                            required
+                                        />
+                                        <EditorField
+                                            id="currency-decimal_places"
+                                            label="Decimal Places"
+                                            value={String(
+                                                currency.data.decimal_places,
+                                            )}
+                                            error={
+                                                currency.errors.decimal_places
+                                            }
+                                            onChange={(value) =>
+                                                currency.setData(
+                                                    'decimal_places',
+                                                    Number(value),
+                                                )
+                                            }
+                                            type="number"
+                                            min={0}
+                                            max={6}
+                                            step="1"
+                                            required
+                                        />
+                                        <EditorChoice
+                                            id="currency-status"
+                                            label="Status"
+                                            value={currency.data.status}
+                                            error={currency.errors.status}
+                                            onChange={(v) =>
+                                                currency.setData('status', v)
+                                            }
+                                            options={['active', 'inactive']}
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <EditorField
+                                            id="rate-quote_currency"
+                                            label="Quote Currency"
+                                            value={String(
+                                                rate.data.quote_currency,
+                                            )}
+                                            error={rate.errors.quote_currency}
+                                            onChange={(value) =>
+                                                rate.setData(
+                                                    'quote_currency',
+                                                    value.toUpperCase(),
+                                                )
+                                            }
+                                            required
+                                            maxLength={3}
+                                        />
+                                        <EditorField
+                                            id="rate-rate_date"
+                                            label="Rate Date"
+                                            value={String(rate.data.rate_date)}
+                                            error={rate.errors.rate_date}
+                                            onChange={(value) =>
+                                                rate.setData('rate_date', value)
+                                            }
+                                            type="date"
+                                            required
+                                        />
+                                        <EditorField
+                                            id="rate-rate"
+                                            label="Rate"
+                                            value={String(rate.data.rate)}
+                                            error={rate.errors.rate}
+                                            onChange={(value) =>
+                                                rate.setData('rate', value)
+                                            }
+                                            type="number"
+                                            min={0.000001}
+                                            step="0.000001"
+                                            required
+                                        />
+                                        <EditorField
+                                            id="rate-source"
+                                            label="Source"
+                                            value={String(rate.data.source)}
+                                            error={rate.errors.source}
+                                            onChange={(value) =>
+                                                rate.setData('source', value)
+                                            }
+                                        />
+                                    </>
+                                )}
                             </div>
-                            <PrimaryButton disabled={currency.processing}>
-                                Save currency
-                            </PrimaryButton>
-                        </form>
-                    </Card>
-                    <Card>
-                        <form onSubmit={submitRate} className="space-y-3 p-5">
-                            <h2 className="text-base font-semibold">
-                                Exchange rate
-                            </h2>
-                            <div className="grid grid-cols-3 gap-3">
-                                <TextInput
-                                    value={rate.data.quote_currency}
-                                    onChange={(e) =>
-                                        rate.setData(
-                                            'quote_currency',
-                                            e.target.value.toUpperCase(),
-                                        )
-                                    }
-                                    placeholder="USD"
-                                    maxLength={3}
-                                    required
-                                />
-                                <TextInput
-                                    type="date"
-                                    value={rate.data.rate_date}
-                                    onChange={(e) =>
-                                        rate.setData(
-                                            'rate_date',
-                                            e.target.value,
-                                        )
-                                    }
-                                    required
-                                />
-                                <TextInput
-                                    type="number"
-                                    step="0.000001"
-                                    value={rate.data.rate}
-                                    onChange={(e) =>
-                                        rate.setData('rate', e.target.value)
-                                    }
-                                    placeholder="36.500000"
-                                    required
-                                />
-                            </div>
-                            <PrimaryButton disabled={rate.processing}>
-                                Save rate
-                            </PrimaryButton>
-                        </form>
-                    </Card>
-                </div>
+                        </section>
+                    )}
+                </CreateEditDialog>
                 <Card>
                     <div className="flex flex-wrap items-end justify-between gap-3 p-5">
                         <div>
@@ -175,6 +360,11 @@ export default function Currencies({
                                 onChange={(e) => setMonth(e.target.value)}
                             />
                             <PrimaryButton
+                                disabled={
+                                    editor !== null ||
+                                    busy ||
+                                    !auth.permissions.includes('fx.revalue')
+                                }
                                 onClick={() =>
                                     router.post(
                                         route('fx-revaluations.store'),
@@ -186,6 +376,11 @@ export default function Currencies({
                             </PrimaryButton>
                             <button
                                 type="button"
+                                disabled={
+                                    editor !== null ||
+                                    busy ||
+                                    !auth.permissions.includes('fx.revalue')
+                                }
                                 onClick={() =>
                                     router.post(
                                         route('fx-revaluations.reverse'),
@@ -234,6 +429,21 @@ export default function Currencies({
                                     header: 'Status',
                                     accessor: (row: Currency) => row.status,
                                 },
+                                {
+                                    header: 'Actions',
+                                    accessor: (row: Currency) =>
+                                        canManage && (
+                                            <button
+                                                type="button"
+                                                disabled={busy}
+                                                onClick={() =>
+                                                    editCurrency(row)
+                                                }
+                                            >
+                                                Edit currency
+                                            </button>
+                                        ),
+                                },
                             ]}
                             data={currencies}
                         />
@@ -259,6 +469,19 @@ export default function Currencies({
                                 {
                                     header: 'Source',
                                     accessor: (row: Rate) => row.source ?? '-',
+                                },
+                                {
+                                    header: 'Actions',
+                                    accessor: (row: Rate) =>
+                                        canManage && (
+                                            <button
+                                                type="button"
+                                                disabled={busy}
+                                                onClick={() => editRate(row)}
+                                            >
+                                                Edit reference rate
+                                            </button>
+                                        ),
                                 },
                             ]}
                             data={rates}

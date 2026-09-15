@@ -1,6 +1,8 @@
 # Current Implementation Reference
 
-เอกสารนี้เป็นภาพรวม implementation ณ Phase 21. ใช้สำหรับอ่านระบบปัจจุบันร่วมกับ source code; ไม่แทน migration, route หรือ test ซึ่งเป็น source of truth ของ runtime.
+สถานะ 2026-09-16: **Phase 23.1 Master Dialog Standard เสร็จสมบูรณ์ (Complete & Closed)** — มาตรฐาน Modal Create/Edit ครอบคลุม 60 หน้า 92 ไฟล์ พร้อม `useEditorCoordinator`, dirty detection ทุกฟิลด์, discard guard, และ idempotent submission; backend 311 tests / 2,575 assertions, frontend 23 tests ผ่าน 100%. ขอบเขต browser matrix B01-B08 เป็น deferred ตามที่ได้รับอนุมัติ (docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md). Phase 23.1.6 Exit Criteria ปิดเรียบร้อย.
+
+เอกสารนี้เป็นภาพรวม implementation ณ Phase 23.1. ใช้สำหรับอ่านระบบปัจจุบันร่วมกับ source code; ไม่แทน migration, route หรือ test ซึ่งเป็น source of truth ของ runtime.
 
 ## Runtime
 
@@ -30,6 +32,9 @@
 | 19 | HR core, attendance & leave | Work profile/manager/shift/holiday, self-service clock-in/out, opt-in IP hash/GPS with consent, leave balances and draft/submit/cancel flow, locked time summary with reversal |
 | 20 | Dynamic approval workflow | Versioned definition, threshold matching, user/manager/role approver snapshot, sequential/parallel steps, SoD, temporary delegation, inbox and immutable action history |
 | 21 | Operational notifications | Durable outbox, in-app/email compatibility, encrypted LINE/Slack/Telegram channels, per-user opt-in/quiet hours, retry/dead-letter dispatch log and safe daily digest |
+| 22 | External portals | Passwordless magic-link authentication, scoped customer quotation acceptance/invoice views, supplier PO/vendor bill intake, and private DMS access |
+| 23 | Payment gateway foundation | Thai PromptPay QR (Tag 29/30), Opn API verification, HMAC-SHA256 settlement bridge intake, idempotency replay guard, atomic payment and GL posting |
+| 23.1 | Master dialog standard | System-wide Create/Edit Modal Dialog standard (`CreateEditDialog`), single active editor coordinator (`useEditorCoordinator`), comprehensive dirty detection, discard guard, and submission idempotency across 60 pages / 92 files |
 
 ## Current Boundaries
 
@@ -43,6 +48,7 @@
 | Workflow | Approval starts only when a creator submits a supported document to a matching active definition. Final expense approval posts GL through the existing idempotent financial-journal contract; rejection/revision returns each source to its domain-defined state |
 | Notifications | `NotificationService` records a dedupe event then writes delivery records to `notification_outbox`. The dispatcher retries failures with exponential backoff up to five attempts, retaining failed records and dispatch attempts. External channels are disabled until configured and opted into by each user |
 | Gateway payments | Phase 23 closed on 2026-09-10 per user-approved scope: QR, encrypted settings, Opn adapter, signed settlement intake, dedupe and atomic Payment/GL implemented and locally verified. Actual merchant bridge and sandbox certification are deferred until connection is requested; closure does not enable live payments. See `PHASE_23_PAYMENT_GATEWAY.md`. |
+| Master dialog standard | Phase 23.1 closed on 2026-09-16 on verified scope: 60 pages / 92 files converted to `CreateEditDialog` with single active editor coordinator (`useEditorCoordinator`), dirty detection, discard guard, and submission idempotency. Comprehensive physical browser/network matrix (B01-B08) deferred per user approval. See `docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md`. |
 | Future domains | Direct e-Tax gateway, forecasting, OCR, manufacturing and POS are planned from Phase 24 onward; customer/supplier self-service portals are complete in Phase 22 |
 
 ## Source Navigation

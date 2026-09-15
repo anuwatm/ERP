@@ -1,3 +1,14 @@
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import {
+    EditorField,
+    EditorChoice,
+    EditorReference,
+} from '@/Components/UI/EditorFields';
+import EditorLineItems from '@/Components/UI/EditorLineItems';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { PageProps } from '@/Types';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -8,7 +19,7 @@ import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { money } from '@/Utils/format';
 
@@ -196,10 +207,20 @@ export default function Invoices({
     bankAccounts: { id: string; bank_name: string; account_name: string }[];
     sourceDeal?: SourceDeal | null;
 }) {
+    const { auth } = usePage<PageProps>().props;
+    const canCreate = auth.permissions.includes('invoices.create');
+    const canEditInvoice = (invoice: Invoice) =>
+        auth.permissions.includes('invoices.update') &&
+        invoice.status === 'draft';
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const [rowKeys, setRowKeys] = useState([crypto.randomUUID()]);
     const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
     const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
     const form = useForm<InvoiceForm>(emptyInvoice);
     const paymentForm = useForm<PaymentForm>(emptyPayment());
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
     const availableDeals = useMemo(
         () =>
             deals.filter((deal) => deal.customer_id === form.data.customer_id),
@@ -226,23 +247,50 @@ export default function Invoices({
             status: 'sent',
             notes: current.notes || `From deal: ${sourceDeal.title}`,
         }));
+        const timer = setTimeout(() => {
+            setOpen(true);
+        }, 0);
+        return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sourceDeal?.id]);
 
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        setEditingInvoice(null);
+        form.setData(emptyInvoice);
+        form.clearErrors();
+        setRowKeys([crypto.randomUUID()]);
+        submission.reset();
+    };
+
+    const openCreate = () => {
+        setEditingInvoice(null);
+        form.setData(emptyInvoice);
+        form.clearErrors();
+        setRowKeys([crypto.randomUUID()]);
+        submission.reset();
+        setOpen(true);
+        setMinimized(false);
+    };
+
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        const options = {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.setData(emptyInvoice);
-                setEditingInvoice(null);
-            },
-        };
+        if (form.processing) return;
 
         if (editingInvoice) {
-            form.patch(route('invoices.update', editingInvoice.id), options);
+            if (!canEditInvoice(editingInvoice)) return;
+            form.patch(route('invoices.update', editingInvoice.id), {
+                preserveScroll: true,
+                onSuccess: close,
+            });
         } else {
-            form.post(route('invoices.store'), options);
+            if (!canCreate) return;
+            form.post(route('invoices.store'), {
+                preserveScroll: true,
+                headers: submission.headers(),
+                onSuccess: close,
+            });
         }
     };
 
@@ -272,7 +320,10 @@ export default function Invoices({
     };
 
     const editInvoice = (invoice: Invoice) => {
+        if (!canEditInvoice(invoice)) return;
         setEditingInvoice(invoice);
+        setOpen(true);
+        setMinimized(false);
         form.setData({
             customer_id: invoice.customer_id,
             deal_id: invoice.deal_id ?? '',
@@ -296,6 +347,24 @@ export default function Invoices({
                 tax_rate: String(item.tax_rate ?? '0.00'),
             })),
         });
+        setRowKeys(
+            invoice.items && invoice.items.length > 0
+                ? invoice.items.map(() => crypto.randomUUID())
+                : [crypto.randomUUID()],
+        );
+    };
+
+    const selectProduct = (index: number, productId: string) => {
+        const product = products.find((item) => item.id === productId);
+        const items = [...form.data.items];
+        items[index] = {
+            ...items[index],
+            product_id: productId,
+            description: product ? product.name : items[index].description,
+            unit: product?.unit ?? items[index].unit ?? '',
+            unit_price: product ? product.price : items[index].unit_price,
+        };
+        form.setData('items', items);
     };
 
     const openPayment = (invoice: Invoice) => {
@@ -329,622 +398,582 @@ export default function Invoices({
                 <PageHeader
                     title="Invoices"
                     description="Manual invoices with server-calculated totals."
+                    actions={
+                        canCreate && (
+                            <PrimaryButton disabled={open} onClick={openCreate}>
+                                Create Invoice
+                            </PrimaryButton>
+                        )
+                    }
                 />
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
-                    <Card
-                        title="Invoice List"
-                        description="Manual billing documents"
-                    >
-                        <DataTable
-                            data={invoices}
-                            keyExtractor={(row) => row.id}
-                            columns={[
-                                {
-                                    header: 'Invoice',
-                                    accessor: (row) => (
-                                        <div>
-                                            <div className="font-mono font-semibold text-slate-900 dark:text-white">
-                                                {row.invoice_no}
-                                            </div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-300">
-                                                {row.customer?.company_name}
-                                            </div>
-                                            {row.project && (
-                                                <div className="text-xs text-slate-500 dark:text-slate-300">
-                                                    {row.project.project_code} -{' '}
-                                                    {row.project.name}
-                                                </div>
-                                            )}
-                                            {row.needs_sales_review && (
-                                                <div className="mt-1">
-                                                    <Badge
-                                                        variant="warning"
-                                                        size="sm"
-                                                    >
-                                                        needs sales review
-                                                    </Badge>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ),
-                                },
-                                {
-                                    header: 'Status',
-                                    accessor: (row) => (
-                                        <Badge
-                                            variant={
-                                                row.status === 'void'
-                                                    ? 'danger'
-                                                    : row.status === 'sent'
-                                                      ? 'info'
-                                                      : 'neutral'
-                                            }
-                                            size="sm"
-                                        >
-                                            {row.status}
-                                        </Badge>
-                                    ),
-                                },
-                                {
-                                    header: 'Issue',
-                                    accessor: (row) =>
-                                        row.issue_date?.slice(0, 10) ?? '-',
-                                },
-                                {
-                                    header: 'Total',
-                                    accessor: (row) => (
-                                        <div>
-                                            <div>
-                                                {money(row.total)}{' '}
-                                                {row.currency}
-                                            </div>
-                                            {row.tax_mode === 'inclusive' && (
-                                                <div className="text-xs text-slate-500 dark:text-slate-300">
-                                                    VAT included:{' '}
-                                                    {money(
-                                                        row.tax_summary
-                                                            ?.tax_amount ??
-                                                            row.tax_amount,
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ),
-                                },
-                                {
-                                    header: 'Paid',
-                                    accessor: (row) => money(row.paid_amount),
-                                },
-                                {
-                                    header: 'Balance',
-                                    accessor: (row) => money(row.balance_due),
-                                },
-                                {
-                                    header: 'Actions',
-                                    accessor: (row) => (
-                                        <div className="flex flex-wrap gap-2">
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() =>
-                                                    window.open(
-                                                        route(
-                                                            'invoices.print',
-                                                            row.id,
-                                                        ),
-                                                        '_blank',
-                                                        'noopener,noreferrer',
-                                                    )
-                                                }
-                                            >
-                                                Print
-                                            </SecondaryButton>
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() =>
-                                                    window.open(
-                                                        route(
-                                                            'invoices.pdf',
-                                                            row.id,
-                                                        ),
-                                                        '_blank',
-                                                        'noopener,noreferrer',
-                                                    )
-                                                }
-                                            >
-                                                PDF
-                                            </SecondaryButton>
-                                            {canRecordPayments &&
-                                                row.status !== 'void' &&
-                                                Number(row.balance_due) > 0 && (
-                                                    <SecondaryButton
-                                                        type="button"
-                                                        onClick={() =>
-                                                            openPayment(row)
-                                                        }
-                                                    >
-                                                        Record Payment
-                                                    </SecondaryButton>
-                                                )}
-                                            {row.status !== 'void' &&
-                                                Number(row.paid_amount) <=
-                                                    0 && (
-                                                    <SecondaryButton
-                                                        type="button"
-                                                        onClick={() =>
-                                                            editInvoice(row)
-                                                        }
-                                                    >
-                                                        Edit
-                                                    </SecondaryButton>
-                                                )}
-                                            {row.status !== 'void' &&
-                                                Number(row.paid_amount) <=
-                                                    0 && (
-                                                    <SecondaryButton
-                                                        type="button"
-                                                        onClick={() =>
-                                                            router.patch(
-                                                                route(
-                                                                    'invoices.void',
-                                                                    row.id,
-                                                                ),
-                                                                {},
-                                                                {
-                                                                    preserveScroll: true,
-                                                                },
-                                                            )
-                                                        }
-                                                    >
-                                                        Void
-                                                    </SecondaryButton>
-                                                )}
-                                        </div>
-                                    ),
-                                },
-                            ]}
-                        />
-                    </Card>
-
-                    <div className="space-y-6">
-                        {payingInvoice && (
-                            <Card
-                                title="Record Payment"
-                                description={
-                                    'Invoice ' + payingInvoice.invoice_no
-                                }
+                <DiscardChangesDialog
+                    open={guard.confirming}
+                    onKeep={guard.keep}
+                    onDiscard={guard.discard}
+                />
+                <CreateEditDialog
+                    open={open}
+                    minimized={minimized}
+                    onMinimize={setMinimized}
+                    onClose={() => guard.request(close)}
+                    title={
+                        editingInvoice
+                            ? `Edit Invoice: ${editingInvoice.invoice_no}`
+                            : 'Create Invoice'
+                    }
+                    breadcrumb="Finance / Invoices"
+                    entityLabel="Invoice"
+                    draftLabel={
+                        editingInvoice
+                            ? editingInvoice.invoice_no
+                            : form.data.notes || 'New invoice'
+                    }
+                    storageKey="invoice-editor-size"
+                    formId="invoice-editor"
+                    processing={form.processing}
+                    saveDisabled={
+                        editingInvoice
+                            ? !canEditInvoice(editingInvoice)
+                            : !canCreate
+                    }
+                    saveLabel={
+                        editingInvoice ? 'Update Invoice' : 'Save Invoice'
+                    }
+                    status={
+                        editingInvoice
+                            ? `Editing draft ${editingInvoice.invoice_no}`
+                            : 'Totals and tax allocations recalculate on save'
+                    }
+                    errors={form.errors}
+                    onSubmit={submit}
+                >
+                    {(expanded) => (
+                        <div className="space-y-6 p-4 sm:p-6">
+                            <section
+                                aria-label="Invoice header"
+                                className={`grid gap-4 sm:grid-cols-2 ${expanded ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}
                             >
-                                <form
-                                    onSubmit={submitPayment}
-                                    className="space-y-3"
-                                >
-                                    <div className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-white">
-                                        <div>
-                                            Total: {money(payingInvoice.total)}{' '}
-                                            {payingInvoice.currency}
-                                        </div>
-                                        <div>
-                                            Paid:{' '}
-                                            {money(payingInvoice.paid_amount)}
-                                        </div>
-                                        <div>
-                                            Balance:{' '}
-                                            {money(payingInvoice.balance_due)}
-                                        </div>
-                                    </div>
-                                    <Field
-                                        label="Amount"
-                                        type="number"
-                                        value={paymentForm.data.amount}
-                                        error={paymentForm.errors.amount}
-                                        onChange={(value) =>
-                                            paymentForm.setData('amount', value)
-                                        }
-                                    />
-                                    <Field
-                                        label="Payment Date"
-                                        type="date"
-                                        value={paymentForm.data.payment_date}
-                                        error={paymentForm.errors.payment_date}
-                                        onChange={(value) =>
-                                            paymentForm.setData(
-                                                'payment_date',
-                                                value,
-                                            )
-                                        }
-                                    />
-                                    <SelectField
-                                        label="Payment Method"
-                                        value={paymentForm.data.payment_method}
-                                        onChange={(value) =>
-                                            paymentForm.setData(
-                                                'payment_method',
-                                                value,
-                                            )
-                                        }
-                                        options={[
-                                            'bank_transfer',
-                                            'cash',
-                                            'credit_card',
-                                            'promptpay',
-                                            'other',
-                                        ]}
-                                    />
-                                    <div>
-                                        <InputLabel value="Bank / Cash Account" />
-                                        <select
-                                            className="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm"
-                                            value={
-                                                paymentForm.data.bank_account_id
-                                            }
-                                            onChange={(event) =>
-                                                paymentForm.setData(
-                                                    'bank_account_id',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        >
-                                            <option value="">Not linked</option>
-                                            {bankAccounts.map((account) => (
-                                                <option
-                                                    key={account.id}
-                                                    value={account.id}
-                                                >
-                                                    {account.bank_name} -{' '}
-                                                    {account.account_name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <InputError
-                                            message={
-                                                paymentForm.errors
-                                                    .bank_account_id
-                                            }
-                                            className="mt-1"
-                                        />
-                                    </div>
-                                    <Field
-                                        label="Reference No"
-                                        value={paymentForm.data.reference_no}
-                                        error={paymentForm.errors.reference_no}
-                                        onChange={(value) =>
-                                            paymentForm.setData(
-                                                'reference_no',
-                                                value,
-                                            )
-                                        }
-                                    />
-                                    <Field
-                                        label="Note"
-                                        value={paymentForm.data.note}
-                                        error={paymentForm.errors.note}
-                                        onChange={(value) =>
-                                            paymentForm.setData('note', value)
-                                        }
-                                    />
-                                    <div>
-                                        <InputLabel value="Attachment" />
-                                        <input
-                                            type="file"
-                                            accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                            onChange={(event) =>
-                                                paymentForm.setData(
-                                                    'attachment',
-                                                    event.target.files?.[0] ??
-                                                        null,
-                                                )
-                                            }
-                                            className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                                        />
-                                        <InputError
-                                            message={
-                                                paymentForm.errors.attachment
-                                            }
-                                            className="mt-1"
-                                        />
-                                    </div>
-                                    {payingInvoice.payments &&
-                                        payingInvoice.payments.length > 0 && (
-                                            <PaymentHistory
-                                                payments={
-                                                    payingInvoice.payments
-                                                }
-                                                canReversePayments={
-                                                    canReversePayments
-                                                }
-                                                onReverse={reversePayment}
-                                            />
-                                        )}
-                                    <div className="flex justify-end gap-2">
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() =>
-                                                setPayingInvoice(null)
-                                            }
-                                        >
-                                            Cancel
-                                        </SecondaryButton>
-                                        <PrimaryButton
-                                            disabled={paymentForm.processing}
-                                        >
-                                            Save Payment
-                                        </PrimaryButton>
-                                    </div>
-                                </form>
-                            </Card>
-                        )}
-
-                        <Card
-                            title={
-                                editingInvoice
-                                    ? 'Edit Invoice'
-                                    : 'Create Invoice'
-                            }
-                            description="Totals are recalculated on save"
-                        >
-                            <form onSubmit={submit} className="space-y-3">
-                                <SelectField
+                                <EditorReference
+                                    id="invoice-customer"
                                     label="Customer"
                                     value={form.data.customer_id}
-                                    onChange={(value) => {
+                                    error={form.errors.customer_id}
+                                    onChange={(v) => {
                                         form.setData({
                                             ...form.data,
-                                            customer_id: value,
+                                            customer_id: v,
                                             deal_id: '',
                                             project_id: '',
                                         });
                                     }}
-                                    options={customers.map(
-                                        (customer) => customer.id,
-                                    )}
-                                    labels={Object.fromEntries(
-                                        customers.map((customer) => [
-                                            customer.id,
-                                            customer.company_name,
-                                        ]),
-                                    )}
+                                    options={customers.map((c) => ({
+                                        id: c.id,
+                                        label: `${c.customer_code} - ${c.company_name}`,
+                                    }))}
+                                    required
                                 />
-                                <SelectField
+                                <EditorReference
+                                    id="invoice-deal"
                                     label="Deal"
                                     value={form.data.deal_id}
-                                    onChange={(value) =>
-                                        form.setData('deal_id', value)
-                                    }
-                                    options={availableDeals.map(
-                                        (deal) => deal.id,
-                                    )}
-                                    labels={Object.fromEntries(
-                                        availableDeals.map((deal) => [
-                                            deal.id,
-                                            deal.title,
-                                        ]),
-                                    )}
+                                    error={form.errors.deal_id}
+                                    onChange={(v) => form.setData('deal_id', v)}
+                                    options={availableDeals.map((d) => ({
+                                        id: d.id,
+                                        label: d.title,
+                                    }))}
                                 />
-                                <SelectField
+                                <EditorReference
+                                    id="invoice-project"
                                     label="Project"
                                     value={form.data.project_id}
-                                    onChange={(value) =>
-                                        form.setData('project_id', value)
+                                    error={form.errors.project_id}
+                                    onChange={(v) =>
+                                        form.setData('project_id', v)
                                     }
-                                    options={availableProjects.map(
-                                        (project) => project.id,
-                                    )}
-                                    labels={Object.fromEntries(
-                                        availableProjects.map((project) => [
-                                            project.id,
-                                            `${project.project_code} - ${project.name}`,
-                                        ]),
-                                    )}
+                                    options={availableProjects.map((p) => ({
+                                        id: p.id,
+                                        label: `${p.project_code} - ${p.name}`,
+                                    }))}
                                 />
-                                <SelectField
+                                <EditorChoice
+                                    id="invoice-status"
                                     label="Status"
                                     value={form.data.status}
-                                    onChange={(value) =>
-                                        form.setData('status', value)
-                                    }
+                                    error={form.errors.status}
+                                    onChange={(v) => form.setData('status', v)}
                                     options={['draft', 'sent']}
+                                    required
                                 />
-                                <SelectField
+                                <EditorChoice
+                                    id="invoice-tax-mode"
                                     label="Tax Mode"
                                     value={form.data.tax_mode}
-                                    onChange={(value) =>
-                                        form.setData('tax_mode', value)
+                                    error={form.errors.tax_mode}
+                                    onChange={(v) =>
+                                        form.setData('tax_mode', v)
                                     }
                                     options={taxModes}
+                                    required
                                 />
-                                <Field
+                                <EditorField
+                                    id="invoice-issue-date"
                                     label="Issue Date"
                                     type="date"
                                     value={form.data.issue_date}
                                     error={form.errors.issue_date}
-                                    onChange={(value) =>
-                                        form.setData('issue_date', value)
+                                    onChange={(v) =>
+                                        form.setData('issue_date', v)
                                     }
+                                    required
                                 />
-                                <Field
+                                <EditorField
+                                    id="invoice-due-date"
                                     label="Due Date"
                                     type="date"
                                     value={form.data.due_date}
                                     error={form.errors.due_date}
-                                    onChange={(value) =>
-                                        form.setData('due_date', value)
+                                    onChange={(v) =>
+                                        form.setData('due_date', v)
                                     }
                                 />
-                                <Field
+                                <EditorField
+                                    id="invoice-discount"
                                     label="Invoice Discount"
                                     type="number"
+                                    min={0}
+                                    step="0.01"
                                     value={form.data.discount_amount}
                                     error={form.errors.discount_amount}
-                                    onChange={(value) =>
-                                        form.setData('discount_amount', value)
+                                    onChange={(v) =>
+                                        form.setData('discount_amount', v)
                                     }
                                 />
+                                <EditorField
+                                    id="invoice-currency"
+                                    label="Currency"
+                                    value={form.data.currency}
+                                    error={form.errors.currency}
+                                    onChange={(v) =>
+                                        form.setData('currency', v)
+                                    }
+                                    maxLength={3}
+                                    required
+                                />
+                                <EditorField
+                                    id="invoice-notes"
+                                    label="Notes"
+                                    value={form.data.notes}
+                                    error={form.errors.notes}
+                                    onChange={(v) => form.setData('notes', v)}
+                                    multiline
+                                />
+                            </section>
+                            <EditorLineItems
+                                rows={form.data.items.map((item, index) => ({
+                                    ...item,
+                                    key: rowKeys[index] || `item-${index}`,
+                                }))}
+                                rowKey={(item) => item.key}
+                                columns={[
+                                    { key: 'product_id', label: 'Product' },
+                                    {
+                                        key: 'description',
+                                        label: 'Description',
+                                    },
+                                    { key: 'quantity', label: 'Quantity' },
+                                    { key: 'unit', label: 'Unit' },
+                                    { key: 'unit_price', label: 'Unit Price' },
+                                    {
+                                        key: 'discount_amount',
+                                        label: 'Discount',
+                                    },
+                                    { key: 'tax_rate', label: 'Tax %' },
+                                ]}
+                                errors={form.errors}
+                                disabled={form.processing}
+                                onAdd={() => {
+                                    setRowKeys([
+                                        ...rowKeys,
+                                        crypto.randomUUID(),
+                                    ]);
+                                    form.setData('items', [
+                                        ...form.data.items,
+                                        { ...emptyItem },
+                                    ]);
+                                }}
+                                onRemove={(index) => {
+                                    setRowKeys(
+                                        rowKeys.filter((_, i) => i !== index),
+                                    );
+                                    form.setData(
+                                        'items',
+                                        form.data.items.filter(
+                                            (_, i) => i !== index,
+                                        ),
+                                    );
+                                    form.clearErrors();
+                                }}
+                                renderCell={(item, index, field, errorId) =>
+                                    field === 'product_id' ? (
+                                        <EditorReference
+                                            id={`invoice-product-${item.key}`}
+                                            label={`Line ${index + 1} Product`}
+                                            value={item.product_id}
+                                            onChange={(v) =>
+                                                selectProduct(index, v)
+                                            }
+                                            options={products.map((p) => ({
+                                                id: p.id,
+                                                label: `${p.sku ? p.sku + ' - ' : ''}${p.name}`,
+                                            }))}
+                                        />
+                                    ) : (
+                                        <input
+                                            aria-label={`Line ${index + 1} ${field.replaceAll('_', ' ')}`}
+                                            aria-invalid={!!errorId}
+                                            aria-describedby={errorId}
+                                            className="w-full min-w-24 rounded-md border-gray-300 bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
+                                            type={
+                                                [
+                                                    'quantity',
+                                                    'unit_price',
+                                                    'discount_amount',
+                                                    'tax_rate',
+                                                ].includes(field)
+                                                    ? 'number'
+                                                    : 'text'
+                                            }
+                                            min={
+                                                field === 'quantity' ? 0.01 : 0
+                                            }
+                                            step="0.01"
+                                            value={String(
+                                                item[
+                                                    field as keyof typeof emptyItem
+                                                ] ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                setItem(
+                                                    index,
+                                                    field as keyof InvoiceItem,
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    )
+                                }
+                            />
+                            <TaxSummaryCard summary={totals} />
+                        </div>
+                    )}
+                </CreateEditDialog>
 
-                                <div className="space-y-3 rounded-md border border-slate-200 p-3 dark:border-slate-800">
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-sm font-semibold text-slate-800 dark:text-white">
-                                            Items
+                <Card
+                    title="Invoice List"
+                    description="Manual billing documents"
+                >
+                    <DataTable
+                        data={invoices}
+                        keyExtractor={(row) => row.id}
+                        columns={[
+                            {
+                                header: 'Invoice',
+                                accessor: (row) => (
+                                    <div>
+                                        <div className="font-mono font-semibold text-slate-900 dark:text-white">
+                                            {row.invoice_no}
                                         </div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-300">
+                                            {row.customer?.company_name}
+                                        </div>
+                                        {row.project && (
+                                            <div className="text-xs text-slate-500 dark:text-slate-300">
+                                                {row.project.project_code} -{' '}
+                                                {row.project.name}
+                                            </div>
+                                        )}
+                                        {row.needs_sales_review && (
+                                            <div className="mt-1">
+                                                <Badge
+                                                    variant="warning"
+                                                    size="sm"
+                                                >
+                                                    needs sales review
+                                                </Badge>
+                                            </div>
+                                        )}
+                                    </div>
+                                ),
+                            },
+                            {
+                                header: 'Status',
+                                accessor: (row) => (
+                                    <Badge
+                                        variant={
+                                            row.status === 'void'
+                                                ? 'danger'
+                                                : row.status === 'sent'
+                                                  ? 'info'
+                                                  : 'neutral'
+                                        }
+                                        size="sm"
+                                    >
+                                        {row.status}
+                                    </Badge>
+                                ),
+                            },
+                            {
+                                header: 'Issue',
+                                accessor: (row) =>
+                                    row.issue_date?.slice(0, 10) ?? '-',
+                            },
+                            {
+                                header: 'Total',
+                                accessor: (row) => (
+                                    <div>
+                                        <div>
+                                            {money(row.total)} {row.currency}
+                                        </div>
+                                        {row.tax_mode === 'inclusive' && (
+                                            <div className="text-xs text-slate-500 dark:text-slate-300">
+                                                VAT included:{' '}
+                                                {money(
+                                                    row.tax_summary
+                                                        ?.tax_amount ??
+                                                        row.tax_amount,
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ),
+                            },
+                            {
+                                header: 'Paid',
+                                accessor: (row) => money(row.paid_amount),
+                            },
+                            {
+                                header: 'Balance',
+                                accessor: (row) => money(row.balance_due),
+                            },
+                            {
+                                header: 'Actions',
+                                accessor: (row) => (
+                                    <div className="flex flex-wrap gap-2">
                                         <SecondaryButton
                                             type="button"
                                             onClick={() =>
-                                                form.setData('items', [
-                                                    ...form.data.items,
-                                                    { ...emptyItem },
-                                                ])
+                                                window.open(
+                                                    route(
+                                                        'invoices.print',
+                                                        row.id,
+                                                    ),
+                                                    '_blank',
+                                                    'noopener,noreferrer',
+                                                )
                                             }
                                         >
-                                            Add
+                                            Print
                                         </SecondaryButton>
-                                    </div>
-                                    {form.data.items.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-slate-900"
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() =>
+                                                window.open(
+                                                    route(
+                                                        'invoices.pdf',
+                                                        row.id,
+                                                    ),
+                                                    '_blank',
+                                                    'noopener,noreferrer',
+                                                )
+                                            }
                                         >
-                                            <SelectField
-                                                label="Product"
-                                                value={item.product_id}
-                                                onChange={(value) =>
-                                                    setItem(
-                                                        index,
-                                                        'product_id',
-                                                        value,
-                                                    )
-                                                }
-                                                options={products.map(
-                                                    (product) => product.id,
-                                                )}
-                                                labels={Object.fromEntries(
-                                                    products.map((product) => [
-                                                        product.id,
-                                                        product.name,
-                                                    ]),
-                                                )}
-                                            />
-                                            <Field
-                                                label="Description"
-                                                value={item.description}
-                                                error={
-                                                    form.errors[
-                                                        `items.${index}.description` as keyof typeof form.errors
-                                                    ] as string
-                                                }
-                                                onChange={(value) =>
-                                                    setItem(
-                                                        index,
-                                                        'description',
-                                                        value,
-                                                    )
-                                                }
-                                            />
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <Field
-                                                    label="Qty"
-                                                    type="number"
-                                                    value={item.quantity}
-                                                    onChange={(value) =>
-                                                        setItem(
-                                                            index,
-                                                            'quantity',
-                                                            value,
-                                                        )
-                                                    }
-                                                />
-                                                <Field
-                                                    label="Unit Price"
-                                                    type="number"
-                                                    value={item.unit_price}
-                                                    onChange={(value) =>
-                                                        setItem(
-                                                            index,
-                                                            'unit_price',
-                                                            value,
-                                                        )
-                                                    }
-                                                />
-                                                <Field
-                                                    label="Unit"
-                                                    value={item.unit}
-                                                    onChange={(value) =>
-                                                        setItem(
-                                                            index,
-                                                            'unit',
-                                                            value,
-                                                        )
-                                                    }
-                                                />
-                                                <Field
-                                                    label="Line Discount"
-                                                    type="number"
-                                                    value={item.discount_amount}
-                                                    onChange={(value) =>
-                                                        setItem(
-                                                            index,
-                                                            'discount_amount',
-                                                            value,
-                                                        )
-                                                    }
-                                                />
-                                                <Field
-                                                    label="Tax Rate"
-                                                    type="number"
-                                                    value={item.tax_rate}
-                                                    onChange={(value) =>
-                                                        setItem(
-                                                            index,
-                                                            'tax_rate',
-                                                            value,
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                            {form.data.items.length > 1 && (
+                                            PDF
+                                        </SecondaryButton>
+                                        {canRecordPayments &&
+                                            row.status !== 'void' &&
+                                            Number(row.balance_due) > 0 && (
                                                 <SecondaryButton
                                                     type="button"
                                                     onClick={() =>
-                                                        form.setData(
-                                                            'items',
-                                                            form.data.items.filter(
-                                                                (
-                                                                    _,
-                                                                    itemIndex,
-                                                                ) =>
-                                                                    itemIndex !==
-                                                                    index,
+                                                        openPayment(row)
+                                                    }
+                                                >
+                                                    Record Payment
+                                                </SecondaryButton>
+                                            )}
+                                        {canEditInvoice(row) && (
+                                            <SecondaryButton
+                                                type="button"
+                                                onClick={() => editInvoice(row)}
+                                            >
+                                                Edit
+                                            </SecondaryButton>
+                                        )}
+                                        {row.status !== 'void' &&
+                                            Number(row.paid_amount) <= 0 && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        router.patch(
+                                                            route(
+                                                                'invoices.void',
+                                                                row.id,
                                                             ),
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
                                                         )
                                                     }
                                                 >
-                                                    Remove
+                                                    Void
                                                 </SecondaryButton>
                                             )}
-                                        </div>
-                                    ))}
+                                    </div>
+                                ),
+                            },
+                        ]}
+                    />
+                </Card>
+
+                {payingInvoice && (
+                    <Card
+                        title="Record Payment"
+                        description={'Invoice ' + payingInvoice.invoice_no}
+                    >
+                        <form onSubmit={submitPayment} className="space-y-3">
+                            <div className="rounded-md bg-slate-100 p-3 text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-white">
+                                <div>
+                                    Total: {money(payingInvoice.total)}{' '}
+                                    {payingInvoice.currency}
                                 </div>
-
-                                <TaxSummaryCard summary={totals} />
-
-                                <div className="flex justify-end gap-2">
-                                    {editingInvoice && (
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() => {
-                                                setEditingInvoice(null);
-                                                form.setData(emptyInvoice);
-                                            }}
+                                <div>
+                                    Paid: {money(payingInvoice.paid_amount)}
+                                </div>
+                                <div>
+                                    Balance: {money(payingInvoice.balance_due)}
+                                </div>
+                            </div>
+                            <Field
+                                label="Amount"
+                                type="number"
+                                value={paymentForm.data.amount}
+                                error={paymentForm.errors.amount}
+                                onChange={(value) =>
+                                    paymentForm.setData('amount', value)
+                                }
+                            />
+                            <Field
+                                label="Payment Date"
+                                type="date"
+                                value={paymentForm.data.payment_date}
+                                error={paymentForm.errors.payment_date}
+                                onChange={(value) =>
+                                    paymentForm.setData('payment_date', value)
+                                }
+                            />
+                            <SelectField
+                                label="Payment Method"
+                                value={paymentForm.data.payment_method}
+                                onChange={(value) =>
+                                    paymentForm.setData('payment_method', value)
+                                }
+                                options={[
+                                    'bank_transfer',
+                                    'cash',
+                                    'credit_card',
+                                    'promptpay',
+                                    'other',
+                                ]}
+                            />
+                            <div>
+                                <InputLabel value="Bank / Cash Account" />
+                                <select
+                                    className="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm"
+                                    value={paymentForm.data.bank_account_id}
+                                    onChange={(event) =>
+                                        paymentForm.setData(
+                                            'bank_account_id',
+                                            event.target.value,
+                                        )
+                                    }
+                                >
+                                    <option value="">Not linked</option>
+                                    {bankAccounts.map((account) => (
+                                        <option
+                                            key={account.id}
+                                            value={account.id}
                                         >
-                                            Cancel
-                                        </SecondaryButton>
-                                    )}
-                                    <PrimaryButton disabled={form.processing}>
-                                        Save Invoice
-                                    </PrimaryButton>
-                                </div>
-                            </form>
-                        </Card>
-                    </div>
-                </div>
+                                            {account.bank_name} -{' '}
+                                            {account.account_name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError
+                                    message={paymentForm.errors.bank_account_id}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <Field
+                                label="Reference No"
+                                value={paymentForm.data.reference_no}
+                                error={paymentForm.errors.reference_no}
+                                onChange={(value) =>
+                                    paymentForm.setData('reference_no', value)
+                                }
+                            />
+                            <Field
+                                label="Note"
+                                value={paymentForm.data.note}
+                                error={paymentForm.errors.note}
+                                onChange={(value) =>
+                                    paymentForm.setData('note', value)
+                                }
+                            />
+                            <div>
+                                <InputLabel value="Attachment" />
+                                <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                    onChange={(event) =>
+                                        paymentForm.setData(
+                                            'attachment',
+                                            event.target.files?.[0] ?? null,
+                                        )
+                                    }
+                                    className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                                />
+                                <InputError
+                                    message={paymentForm.errors.attachment}
+                                    className="mt-1"
+                                />
+                            </div>
+                            {payingInvoice.payments &&
+                                payingInvoice.payments.length > 0 && (
+                                    <PaymentHistory
+                                        payments={payingInvoice.payments}
+                                        canReversePayments={canReversePayments}
+                                        onReverse={reversePayment}
+                                    />
+                                )}
+                            <div className="flex justify-end gap-2">
+                                <SecondaryButton
+                                    type="button"
+                                    onClick={() => setPayingInvoice(null)}
+                                >
+                                    Cancel
+                                </SecondaryButton>
+                                <PrimaryButton
+                                    disabled={paymentForm.processing}
+                                >
+                                    Save Payment
+                                </PrimaryButton>
+                            </div>
+                        </form>
+                    </Card>
+                )}
             </div>
         </AuthenticatedLayout>
     );

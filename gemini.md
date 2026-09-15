@@ -1,14 +1,16 @@
 # Gemini Review & Architecture Reference
 
-Last updated: 2026-09-09 (Post Phase 21 Inspection & Architecture Update)
+Last updated: 2026-09-16 (Post Phase 23.1 Complete & Closed)
 
-Purpose: บันทึกข้อมูลอ้างอิงสถาปัตยกรรม (Architecture Reference), Security Guardrails, ข้อกำหนดเชิงระบบที่ยังมีผลต่อการพัฒนา (Decisions That Still Matter), ผลการตรวจสอบ Phase ล่าสุด, และแนวทางการพัฒนาต่อยอดสำหรับ Phase ที่ยังไม่เริ่ม. รายละเอียดงานย้อนหลัง Phase 1 - 20 ดูได้ที่ `checklist.md`, `README.md` และ Git history.
+Purpose: บันทึกข้อมูลอ้างอิงสถาปัตยกรรม (Architecture Reference), Security Guardrails, ข้อกำหนดเชิงระบบที่ยังมีผลต่อการพัฒนา (Decisions That Still Matter), และแนวทางการพัฒนาต่อยอดสำหรับ Phase ที่ยังไม่เริ่ม. รายละเอียดงานย้อนหลัง Phase 1 - 23.1 ดูได้ที่ `checklist.md`, `README.md`, `gpt.md`, `docs/PHASE_23_1_MASTER_ROLLOUT.md` และ Git history.
 
 ---
 
 ## 1. สถานะโครงการปัจจุบัน (Current Status)
 
-- **Phase 1 - 23 (รวม Phase 18.1): เสร็จสมบูรณ์และผ่านการตรวจรับรอง 100% (Complete & Closed)**
+**สถานะล่าสุด (2026-09-16): Phase 23.1 Complete & Closed.** ตรวจรับ Exit Criteria 23.1.6 ผ่านครบถ้วนบน Verified Scope: Rollout Modal Dialog และระบบ Single Active Editor Coordinator พร้อม Discard Guard ครบ 60 หน้า 92 ไฟล์, Idempotent submission key, ขอบเขต Browser/Network matrix ภาพรวมได้รับการบันทึกและ deferred ตาม `docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md` (B01–B08). ดูรายละเอียดใน `gpt.md` และ `checklist.md`.
+
+- **Phase 1 - 23.1 (รวม Phase 18.1): เสร็จสมบูรณ์และผ่านการตรวจรับรอง 100% (Complete & Closed)**
   - Core MVP, CRM/Sales, Finance, Delivery, Multi-role Dashboards, VAT/Number Sequences, Suppliers & POs (Phase 1 - 7)
   - Commercial Documents, Tax Reports/Aging/WHT, Treasury, Encrypted Bank Accounts, Bank Reconciliation, Petty Cash, Cheques/PDC (Phase 8 - 10)
   - General Ledger & Double-Entry Accounting, E-Tax XML/RD Prep, Fixed Assets & Straight-Line Depreciation (Phase 11 - 13)
@@ -23,13 +25,16 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
   - Operational Notifications & Outbox Engine, Encrypted Channel Vault (LINE OA / Slack / Telegram), Transactional Outbox, Exponential Backoff & Dead-Letter Log, User Quiet Hours & Urgency Filtering, Safe Daily Operations Digest (Phase 21)
   - Customer & Supplier Self-Service Portals, External Identity Isolation, Passwordless Magic Link, Scoped Portal Sessions, Quotation Acceptance Audit, Vendor Bill Submission Intake & Scanner Quarantine Gate (Phase 22)
   - PromptPay Thai QR & Payment Gateway Settlement, Exact Satang (Tag 29/30), Opn API Checkout & Event Verification, HMAC-SHA256 Signed Settlement Bridge, Replay/Duplicate Guard, Atomic Payment & Double-Entry GL (Phase 23 - Live Bridge Deferred)
+  - System-wide Master Dialog & Single Active Editor Standard (Phase 23.1 - Complete & Closed): มาตรฐาน Modal Dialog 60 หน้า 92 ไฟล์, `useEditorCoordinator`, dirty detection ครบทุก field, idempotent submission keys, discard guard, และ full regression 311 tests / 23 frontend tests ผ่าน 100%
 - **สถานะการทดสอบระบบ (Validation Snapshot):**
-  - Feature Tests: **278 Tests Passed (2,102 Assertions / 0 Failures)**
-  - Frontend Build: **Vite Build Clean (1,054 modules transformed / 0 errors)**
-  - TypeScript Compilation: **`tsc` Clean (0 errors)**
-  - Static Code Analysis: **ESLint Clean (0 warnings / 0 errors)**, **Prettier Clean**, **Laravel Pint Passed**
-- **ประตูสู่ Phase ถัดไป (Next Gate):** **Phase 24: Direct E-Tax Invoice & RD API Gateway**
-- **Closed Phase Governance:** งานที่เป็น Security Vulnerability, Data Integrity Bug, Regression Fix หรือ Production Blocker ใน Phase ที่ปิดแล้ว สามารถแก้ไขได้โดยต้องมี Feature Test ครอบคลุมและบันทึกเหตุผลชัดเจน ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-23 โดยไม่มี Decision/Checklist ใหม่
+  - Full Backend Regression Tests: **311 Tests Passed / 2 Skipped (2,575 Assertions / 0 Failures)** (รวมชุดทดสอบ `Phase2315CompatibilityTest` 6 tests / 51 assertions)
+  - Frontend Unit & Switch Guard Tests: **23 Tests Passed (0 Failures)** (`tests/Frontend/*.test.mjs`)
+  - Live Browser Acceptance Suite (Partial Verification): ผ่านการทดสอบ 3 กรณีหลักเชิงประจักษ์ บันทึกหลักฐานใน `browser_evidence/`
+  - Code Style & Formatting: **Prettier Clean (`npm run check-format` exit 0)**, **Laravel Pint Clean (0 issues)**
+  - Static Code Analysis: **ESLint Clean (0 warnings / 0 errors)**, **TypeScript `tsc` Clean (0 errors)**
+  - Frontend Build: **Vite Production Build Clean (1,095 modules transformed / 0 errors)**
+- **ประตูสู่ Phase ถัดไป (Next Gate):** **Phase 23.2: System-wide Dashboard Redesign** / **Phase 24: Direct E-Tax Invoice & RD API Gateway**
+- **Closed Phase Governance:** งานที่เป็น Security Vulnerability, Data Integrity Bug, Regression Fix หรือ Production Blocker ใน Phase ที่ปิดแล้ว สามารถแก้ไขได้โดยต้องมี Feature Test ครอบคลุมและบันทึกเหตุผลชัดเจน ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-23.1 โดยไม่มี Decision/Checklist ใหม่
 
 ---
 
@@ -56,6 +61,7 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 | **Notification Outbox & Secret Protection Guard** | Credentials ของช่องทางภายนอก (`notification_channels.config` เช่น Webhook URL, Access Token, Bot Token) ต้องจัดเก็บแบบ `encrypted:array` เสมอ ห้ามรั่วไหลไปยัง Audit Logs หรือส่งไปยัง Inertia Client Props เด็ดขาด และสงวนสิทธิ์การจัดการเฉพาะผู้ถือสิทธิ์ `settings.organization.update` |
 | **Portal Identity & Quarantine Guard** | External Portal แยก Identity และ Session (`portal_users`, `portal_sessions`) ออกจากระบบสตาฟฟ์ 100%, Magic Link แบบ Single-use (30 นาที) เก็บเฉพาะ SHA-256 Hash, ไฟล์ใบวางบิลจากคู่ค้าถูกกักกันด้วยสถานะ `pending_scan` ห้ามแปลงเป็น AP Invoice หรือลง GL อัตโนมัติเด็ดขาดจนกว่าจะผ่านการ Scan และ Finance Staff ตรวจสอบยืนยัน |
 | **Payment Gateway & Settlement Bridge Guard** | `recipient_id`, `webhook_secret`, และ `provider_secret` ต้องเข้ารหัสแบบ `encrypted` และซ่อนใน `$hidden` เสมอ, การบันทึก Payment และ Double-Entry GL เกิดขึ้นได้เฉพาะเมื่อมี Settlement Webhook ที่ลงลายมือชื่อ HMAC-SHA256 ถูกต้องพร้อม Timestamp Window ไม่เกิน 300s, การรับ Webhook ของ Opn บันทึกเพียงสถานะ `provider_confirmed` (ห้ามลงบัญชี GL), Opn Test Mode และกรณี Timeout ก้ำกึ่ง (`creation_unknown`) ห้ามลงบัญชีเด็ดขาด, และการเชื่อมต่อ Settlement Bridge จริงถือเป็น Deferred Live Integration จนกว่าจะมีการขอเชื่อมต่อจริง |
+| **Single Active Editor & Discard Guard** | ป้องกันข้อมูลสูญหาย (Data Loss) จากการปิด dialog หรือสลับ editor โดยไม่ตั้งใจ: หน้าจอ Master ที่มีหลาย modal editor (Inventory, Payroll) ต้องควบคุมผ่าน Guarded Switch Coordinator (`switchEditor` + `onRequestCloseRef`) เสมอ หาก draft dirty ต้องถามยืนยัน Discard Changes ก่อนสลับ และบล็อกการสลับขณะ processing 100% |
 
 ---
 
@@ -76,6 +82,7 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 - **HR Attendance, Leave & Payroll Bridge Boundary:** บันทึกเวลาและคำนวณวันลาตัดวันหยุด/เสาร์-อาทิตย์ พร้อมตัด/คืนวันลาแบบ Atomic Transaction (`lockForUpdate`), Attendance Summary รองรับ Cutoff Date และมีสถานะ `draft`, `locked`, `reversed` (ด้วย `reversal_of_id`) โดย**ห้ามบันทึกอัตโนมัติ (No Auto-Posting)** ไปยัง `payroll_runs`, `payroll_items`, หรือ General Ledger ก่อนได้รับการอนุมัติและ Lock รอบบัญชีเงินเดือน
 - **Central Dynamic Approval Engine:** ระบบอนุมัติเอกสารรวมศูนย์ (`WorkflowEngineService`) จัดเก็บประวัติขั้นตอนเป็น Snapshot แบบคงที่ บังคับใช้ Segregation of Duties (ห้ามผู้อนุมัติตนเอง) รองรับ Sequential และ Parallel (First-to-Approve), ระบบ Delegation แสดงผลใน Inbox และเมื่อ Expense ผ่านการอนุมัติขั้นสุดท้ายจะเชื่อมต่อเข้ากับ Double-entry GL อัตโนมัติ ส่วน Leave Request ที่ถูก Rejected จะคืนยอดวันลาเข้า `leave_balances` เสมอ
 - **Operational Notification Outbox Architecture:** ส่งข้อความแจ้งเตือนผ่าน Transactional Outbox Pattern (`notification_outbox`) แยกช่องทาง (In-App, Email, LINE, Slack, Telegram) มี Idempotency Key ป้องกันการส่งซ้ำระดับ DB, ระบบ Exponential Backoff ($2^{\text{attempt}} \times 60$ วินาที) สูงสุด 5 ครั้งก่อนเข้าสถานะ Dead-Letter (`failed`), เคารพ User Quiet Hours ข้ามคืน และคำสั่ง Daily Executive Digest ห้ามรวมยอดเงินสดเด็ดขาด
+- **Master Modal/Dialog Standard:** การจัดการฟอร์มสร้าง/แก้ไขข้อมูลหลัก (Phase 23.1) ใช้มาตรฐาน Single Active Modal Editor แยกชัดเจนระหว่าง Create และ Edit โหมด, จัดการ double-submit ด้วย idempotent submission key, ตรวจสอบ dirty state ละเอียดทุก field, และกักกันการปิด/เปลี่ยนหน้าด้วย `useDiscardGuard`
 
 ---
 
@@ -103,51 +110,18 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 
 ---
 
-## 5. ผลการตรวจสอบและข้อเสนอแนะ Phase 21: Operational Notifications & Outbox Engine
-
-### 5.1 จุดเด่นที่ผ่านการตรวจรับรอง (Strengths & Verified Architecture):
-1. **Transactional Outbox & Idempotency Key:**
-   - ใช้ตาราง `notification_outbox` พร้อม Unique Constraint `['org_id', 'idempotency_key']` ทำให้การเรียกซ้ำปลอดภัย ป้องกัน Duplicate Outbox Entries ได้ 100%
-   - เชื่อมต่อไร้รอยต่อกับ `NotificationService::notify` เดิม ทำให้ทุก Module ในระบบ (Invoice, PO, Task, Project, Document, Workflow) สามารถส่งต่อเข้า Outbox ทันที
-2. **Exponential Backoff & Audit Dead-Letter Trail:**
-   - ใช้สูตรคำนวณเวลา Retry: `now()->addSeconds(2 ** $outbox->attempt_count * 60)` (2m, 4m, 8m, 16m) สูงสุด 5 ครั้ง (`MAX_ATTEMPTS = 5`)
-   - ทุกรอบที่มีการพยายามส่งจะบันทึกประวัติลง `notification_dispatches` (มี `attempt_no`, `status`, `error_message`, `dispatched_at`) และเมื่อครบกำหนดจะเปลี่ยนสถานะเป็น `failed` พร้อมประทับเวลา `failed_at` ครบถ้วน
-3. **Credential Encryption & Leakage Guard:**
-   - โมเดล `NotificationChannel` ทำการ Encrypt ข้อมูลการตั้งค่า (`'config' => 'encrypted:array'`) ยืนยันแล้วว่าใน Database เก็บแบบ Ciphertext ไม่เห็น Token ดิบ
-   - Controller ไม่ส่งก้อน `config` ออกไปยัง Inertia Props โดยส่งเพียง `'configured' => ! empty($channel->config)` ป้องกัน Secret หลุดไปฝั่ง Browser
-   - Audit Log บันทึกเฉพาะ Action และ ID โดยไม่นำ Webhook URLs หรือ Tokens มาบันทึกใน `after_json`
-4. **User Quiet Hours Compliance:**
-   - ตาราง `user_channel_preferences` รองรับ `quiet_hours_start` และ `quiet_hours_end` พร้อมรองรับช่วงเวลาข้ามคืน (Overnight: เช่น 22:00 - 07:00) และคำนวณตาม Timezone ขององค์กรอย่างถูกต้อง
-   - ป้องกันการส่งแบบปกติในช่วงเวลาพักผ่อน โดยอนุญาตเฉพาะข้อความที่มีระดับความสำคัญเป็น `urgent`
-5. **No Cash Balance Guard Enforcement:**
-   - คำสั่ง `notifications:daily-digest` ดึงเฉพาะสถิติการดำเนินงาน (จำนวน Invoices due soon และ Overdue invoices) โดยปราศจากการรวมยอดหรือส่งยอดเงินสดคงเหลือ (`Cash Balance`) ใดๆ
-
----
-
-### 5.2 ข้อบกพร่องและข้อเสนอแนะเพิ่มเติมเพื่อความสมบูรณ์แบบ (Findings & Recommendations):
-
-| ลำดับ | ประเด็น / ข้อสังเกต | ระดับความสำคัญ | รายละเอียดและข้อเสนอแนะ |
-| :--- | :--- | :---: | :--- |
-| 1 | **Unhandled Exception ใน Test Ping Controller** | **Medium** | ใน `NotificationPreferenceController::testChannel()` เรียก `$outbox->sendTest($channel, $request->user())` โดยตรง หาก Token ผิด, Webhook URL เสีย หรือเครือข่ายภายนอกล่ม Http Client จะโยน `RequestException` หรือ `ConnectionException` ส่งผลให้หน้าจอ Inertia หลุดไปที่ 500 Error Page<br>**แนวทางแก้ไข:** ครอบด้วย `try / catch (\Throwable $e)` ใน `testChannel()` แล้วส่ง `back()->withErrors(['channel' => 'Test ping failed: ' . $e->getMessage()])` เพื่อแจ้งเตือนให้ Admin ทราบสาเหตุอย่างเป็นมิตรบน UI |
-| 2 | **ขาด Application Logging รายละเอียดข้อผิดพลาด Outbox** | **Low** | ใน `NotificationOutboxService::dispatch()` บล็อก `catch (\Throwable)` ทำการอัปเดตสถานะเป็น `retrying/failed` ด้วยข้อความมาตรฐานว่า `"Delivery failed. See channel configuration and application logs."` แต่ยังไม่ได้เรียก `\Log::warning()` เพื่อบันทึก `$e->getMessage()` หรือ HTTP Response Code ดิบลงใน `storage/logs/laravel.log`<br>**แนวทางแก้ไข:** เพิ่ม `\Log::warning("Notification outbox [{$outbox->id}] channel [{$outbox->channel}] delivery failed: " . $e->getMessage());` |
-| 3 | **Dead-Letter Queue (DLQ) Operational Tools** | **Low** (Future Polish) | เมื่อข้อความล้มเหลวครบ 5 ครั้งและเข้าสู่สถานะ `failed` ปัจจุบันยังไม่มี Artisan Command หรือ UI สำหรับค้นหาและสั่ง Retry ข้อความที่ค้างอยู่<br>**แนวทางแก้ไข:** พิจารณาเพิ่มคำสั่ง `php artisan notifications:retry-failed {--channel=} {--limit=50}` สำหรับให้ System Admin สั่งนำข้อความกลับเข้าคิวเมื่อแก้ไขปัญหา Token หรือเครือข่ายเสร็จสิ้น |
-| 4 | **ตัวเลือก Defer สำหรับ Quiet Hours** | **Discussion** | ปัจจุบันเมื่อติด Quiet Hours ระบบจะระงับ (Suppress/Skip) การสร้างข้อความ Outbox ของช่องทางภายนอกนั้น สำหรับการแจ้งเตือนงานบางประเภท (เช่น Digest หรือ Pending Approval) องค์กรอาจต้องการให้ "เลื่อนเวลาส่ง" (Defer) ไปเป็นเวลาที่พ้น Quiet Hours แทนการตัดทิ้ง<br>**แนวทางแก้ไข:** สามารถเพิ่มคอลัมน์ `quiet_hours_action` (`suppress` vs `defer`) ในอนาคต |
-| 5 | **ความสัมพันธ์บน User Model** | **Minor Polish** | บน `App\Models\User` มี `notificationPreferences()` แต่ยังไม่มี `public function channelPreferences(): HasMany` ทำให้นักพัฒนาต้องเรียกผ่าน `UserChannelPreference::where('user_id', ...)` แทน<br>**แนวทางแก้ไข:** เพิ่ม Method `channelPreferences()` ลงใน `User.php` |
-
----
-
-## 6. แผนงานพัฒนาต่อยอดและ Guardrails (Future Roadmap & Architectural Guardrails)
+## 5. แผนงานพัฒนาต่อยอดและ Guardrails (Future Roadmap & Architectural Guardrails)
 
 ### แผนผังลำดับการพัฒนาที่เห็นชอบร่วมกัน (Consensus Roadmap Phase 1 - 28):
 
 ```
 [Phase 1 - 21: Core, Financials, Treasury, Inventory, Payroll, DMS, 2FA, HR, Workflows, Notifications] (Closed)
        ↓
-[Phase 22: Customer & Supplier Self-Service Portals] (External Identity, Scan Gate & Scoped Access) (Closed)
+[Phase 22: Customer & Supplier Self-Service Portals] (Closed)
        ↓
-[Phase 23: Thai PromptPay QR & Payment Gateway] (Verified Webhooks & Settlement-Verified GL) (Next Gate)
+[Phase 23: Closed; Phase 23.1.5: Closed verified scope with deferred acceptance; Phase 23.1.6: Pending]
        ↓
-[Phase 24: Direct E-Tax Invoice & RD API Gateway] (Certified Provider & Vault Signing)
+[Phase 24: Direct E-Tax Invoice & RD API Gateway] (Next Gate)
        ↓
 [Phase 25: Cash Flow Forecasting & Financial Health] (30-90 Day Projection without raw Cash Balance)
        ↓
@@ -158,35 +132,30 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 
 ### ข้อกำหนดและ Guardrails สำหรับ Phase ถัดไป:
 
-1. **Phase 22: Customer & Supplier Portals (Next Gate):**
-   - ใช้ External Identity (`portal_users`, `portal_access_tokens`) แยกจาก Staff Session เด็ดขาด, Scoped Access, Expiry/Revocation, Rate Limit และ Audit Trail
-   - ดาวน์โหลดเอกสารผ่าน Private Scoped Controller เท่านั้น ห้ามสร้าง Public Document URLs
-   - การอัปโหลดใบวางบิล/เอกสารจากคู่ค้า (`vendor_bill_submissions`) ต้องผ่าน Scanner Quarantine Gate, MIME/Size Validation, และ Human Review Gate ก่อนสร้างร่าง AP Invoice
-2. **Phase 23: PromptPay QR & Payment Gateway:**
-   - Webhook ต้องมี Signature Verification, Replay Attack Protection, Deduplication, และ Event Ordering
-   - ต้องกระทบยอดและยืนยัน Settlement Status สำเร็จก่อนออกใบเสร็จรับเงินหรือบันทึกบัญชี Double-entry GL
-3. **Phase 24: Direct E-Tax Invoice & RD API Gateway:**
+1. **Phase 24: Direct E-Tax Invoice & RD API Gateway (Next Gate):**
    - เชื่อมต่อผ่าน Certified Provider หรือ RD API พร้อมระบบจัดการ Private Key ผ่าน HSM / Cloud Key Vault (ห้ามเก็บ Private Key ใน Database)
-   - มี Outbox & Reconciliation State Machine และจัดเก็บ CAdES-BES Signature
-4. **Phase 25: Cash Flow Forecasting & Financial Health:**
+   - มี Outbox & Reconciliation State Machine, XML/PDF Sign Engine และจัดเก็บ CAdES-BES / XAdES Signature
+   - Dedicated `etax` queue worker พร้อม retry, backoff และ failover monitoring
+2. **Phase 25: Cash Flow Forecasting & Financial Health:**
    - แสดงการประมาณการกระแสเงินสดล่วงหน้า 30-90 วัน โดยต้องมี Scenario/Assumption Snapshot และไม่เผยแพร่ยอด Raw Cash Balance
-5. **Phase 26: AI OCR Document Ingestion:**
+3. **Phase 26: AI OCR Document Ingestion:**
    - ทำหน้าที่เป็น Assisted Draft พร้อมคะแนนความเชื่อมั่น (Confidence Score) และแนบไฟล์ต้นฉบับใน DMS
    - บังคับให้ต้องผ่านการตรวจสอบจากมนุษย์ (Human Review) ก่อนแปลงเป็น Expense หรือ Purchase Order จริง ห้าม Auto-post เด็ดขาด
-6. **Phase 27 - 28 (Optional Verticals): Manufacturing BOM & Point of Sale (POS):**
+4. **Phase 27 - 28 (Optional Verticals): Manufacturing BOM & Point of Sale (POS):**
    - พัฒนาเมื่อมีความต้องการทางธุรกิจจริง
    - POS Shift Reconciliation จำกัดอยู่เฉพาะในขอบเขต POS ประจำวัน และห้ามรั่วไหลเป็น Organization-wide Cash Balance
 
 ---
 
-## 7. แนวทางและมาตรฐานคุณภาพโค้ด (Directives for Development)
+## 6. แนวทางและมาตรฐานคุณภาพโค้ด (Directives for Development)
 
-1. **ห้ามละเมิด Security Guardrails ในข้อ 2 และ 3 ของ `gemini.md` โดยเด็ดขาด** (Multi-Tenant Isolation, Redaction, Permission Enforcement, Session Invalidation, Payslip Privacy Guard, DMS Private Download Guard, 2FA Encrypted Secret Guard, Attendance Privacy Guard, No Cash Balance Guard, AI OCR Human-in-the-Loop, Workflow SoD Guard, Notification Outbox & Secret Protection Guard)
+1. **ห้ามละเมิด Security Guardrails ในข้อ 2 และ 3 ของ `gemini.md` โดยเด็ดขาด** (Multi-Tenant Isolation, Redaction, Permission Enforcement, Session Invalidation, Payslip Privacy Guard, DMS Private Download Guard, 2FA Encrypted Secret Guard, Attendance Privacy Guard, No Cash Balance Guard, AI OCR Human-in-the-Loop, Workflow SoD Guard, Notification Outbox & Secret Protection Guard, Single Active Editor & Discard Guard)
 2. **ขอบเขตการแก้ไขใน Phase ที่ Closed แล้ว (Closed Phase Governance):**
-   - ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-21 โดยไม่มี Decision/Checklist ใหม่
+   - ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-23.1 โดยไม่มี Decision/Checklist ใหม่
    - การแก้ไข Security Vulnerability, Data-Integrity Bug, Regression Fix หรือ Production Blocker ใน Phase ที่ปิดแล้ว ต้องมี Test ครอบคลุมและบันทึกเหตุผลชัดเจน
 3. **รักษา Code Quality ในทุกขั้นตอนการพัฒนา:**
    - PHP Unit & Feature Tests: `php artisan test` (ต้องผ่าน 100%)
+   - Frontend Unit Tests: `node --test tests/Frontend/*.test.mjs` (ต้องผ่าน 100%)
    - Frontend Build: `npm run build` (Clean 100%)
    - TypeScript Compilation: `npm run tsc` (Clean 0 errors)
    - Static Code Analysis: `npm run lint` (ESLint 0 warnings / 0 errors), `npm run check-format` (Prettier Clean), `php vendor/bin/pint --test` (Pint Clean 0 issues)

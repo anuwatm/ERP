@@ -46,7 +46,9 @@
 | Phase 21 | Done | Operational notification outbox, encrypted LINE/Slack/Telegram configuration, retry/dead-letter, user preferences/quiet hours, and safe daily digest |
 | Phase 22 | Done | Passwordless external portal, customer quotation acceptance/invoice draft, supplier PO/payment status/vendor bill intake, scoped private documents and audit trail |
 | Phase 23 | Done | Closed by user scope decision on 2026-09-10: QR, Opn adapter, reconciliation and local verification complete; live settlement integration deferred |
-| Phase 24 | Planned | Direct E-Tax Invoice & RD API Gateway: certified provider bridge, HSM/vault key management, XML-CAdES filing |
+| Phase 23.1 | Done | ปิดสมบูรณ์ 23.1.6 (Verified Scope): Modal Dialog ครบ 60 หน้า 92 ไฟล์, single active editor coordinator (useEditorCoordinator), dirty detection ครบทุก field, Idempotent submission key; ผ่าน full regression 311 tests, frontend 23 tests, Pint/ESLint/Prettier/Vite build 100% (browser matrix B01-B08 deferred ตามผู้ใช้อนุมัติ) |
+| Phase 23.2 | Planned | ปรับ Dashboard ทั้งระบบตาม erp-dashboard-design-concept.md พร้อม metric definitions, permission-scoped data, charts และ filtered drill-down; จัดทำแผนก่อน ยังไม่เริ่ม implementation |
+| Phase 24 | Foundation complete | Basic provider-neutral e-Tax foundation on Phase 12 tables; opt-in local mock, bounded retry and immutable queued XML. Live filing deferred |
 | Phase 25 | Planned | Cash Flow Forecasting & Financial Health: 30-90 day liquidity projection, working capital & DSO/DPO ratios |
 | Phase 26 | Planned | AI OCR Document Ingestion: assisted drafts for receipts/slips/bills with confidence score and human-in-the-loop |
 | Phase 27 | Planned (Vertical) | Manufacturing & Bill of Materials (BOM): multi-level BOM, work orders, stock issue & finished goods costing |
@@ -1146,24 +1148,265 @@ These items are deferred, not completed or cancelled. Existing signature, reconc
 
 ---
 
-## Phase 24: Direct E-Tax Invoice & RD API Gateway
+## Phase 23.1: System-wide Create/Edit Dialog Standardization
 
-เป้าหมาย: เชื่อมต่อระบบนำส่ง e-Tax Invoice by Email / e-Tax by Time-stamp เข้าสู่กรมสรรพากรโดยตรงผ่าน Service Provider ที่ได้รับอนุญาต
+เป้าหมาย: เปลี่ยนการเพิ่มและแก้ไขข้อมูลจากฟอร์มเดิมด้านข้าง, inline form, popup และหน้าแยก ให้เป็น dialog แบบใหม่ทั้งระบบ โดยเหลือช่องทาง Create/Edit มาตรฐานเดียวต่อรายการ อ้างอิง `create-edit-dialog-template-concept.md`
 
-### Phase 24 Design Backlog
+สถานะ ณ 2026-09-14: Module Rollout (23.1.4) ครบทุกกลุ่มโมดูลแล้ว ทั้ง 20 หมวดหมู่ได้รับการจัดการตามมาตรฐาน (ย้าย entry points มาใช้ `CreateEditDialog` และ dialog เฉพาะทาง หรือบันทึกเป็น Documented Exceptions สำหรับ full-page settings/security tabs) ถอด sidebar/inline editor เก่าในกลุ่มที่ย้ายออกทั้งหมด คง backend rules, permissions และ validation contracts; ผลทดสอบ backend regression ผ่าน 305 tests / 2,524 assertions (2 skipped), TypeScript & production build ผ่านสมบูรณ์, ESLint ผ่าน 0 errors / 0 warnings, และ Pint ผ่าน; ขั้นตอนถัดไปคือการตรวจรับรอง browser regression และ cross-module compatibility ใน 23.1.5
 
-- [ ] Design Provider Connector Architecture (INET, PromptTax หรือ RD Direct Gateway)
-- [ ] Design XML-CAdES Signing & Certificate Management (HSM / Cloud Key Vault integration, ห้ามเก็บ Private Key ใน Database)
-- [ ] Design Transmission Outbox & Status Tracker (Pending, Submitting, Accepted, Rejected, Error with Resubmission)
-- [ ] Design PDF/A-3 Conversion Engine (ฝัง Signed XML เข้าไปใน PDF Invoice ตามมาตรฐานกรมสรรพากร)
+### 23.1.1 Scope & Inventory
 
-### Phase 24 Implementation Backlog
+เสร็จ 2026-09-11: ตรวจ 60 Pages, 92 JS/TS source files และ 252 routes (173 write routes). Inventory 91 แถว: เปลี่ยนแล้ว 4, ต้องเปลี่ยน 66, integration gap 1, ข้อยกเว้น 20; backend-only 12 routes แยกไว้ ไม่สร้าง UI ใหม่อัตโนมัติ. ดูภาพรวม `docs/PHASE_23_1_CHANGE_MAP.md` และรายฟอร์มพร้อมหลักฐาน `docs/PHASE_23_1_FORM_INVENTORY.md` / `.json`. การปิด inventory ไม่ใช่การปิด rollout; Sales ทั้ง 4 ยังรอ browser regression
 
-- [ ] เพิ่ม Schema/Models: `etax_transmissions`, `etax_providers`, `etax_responses`
-- [ ] พัฒนา PDF/A-3 Generator & XML Attachment Embedder
-- [ ] พัฒนา Provider API Client พร้อมระบบ Signed Outbox Queue
-- [ ] เพิ่ม UI: E-Tax Transmission Status Dashboard, Retry/Error Detail Viewer
-- [ ] เพิ่ม Feature Tests: XML-CAdES payload generation, Provider mock transmission, Retry logic, และ Error handling tests
+- [x] สำรวจทุก entry point ของ Create/Edit จาก routes, React pages, shared components, dashboard shortcuts และ Portal ไม่จำกัดเฉพาะหน้าที่มีชื่อโมดูล
+- [x] จัดทำตารางรายฟอร์ม: module, route, create/edit action, fields, reference fields, line items, attachment, permission, business state, รูปแบบเดิม, รูปแบบใหม่ และผลทดสอบ
+- [x] รวม master data, transaction documents, รายการย่อย, Settings, Organization Structure, User/Role, Profile และ external Portal ในการสำรวจ
+- [x] ระบุข้อยกเว้นรายหน้าพร้อมเหตุผลก่อน rollout: Login/Register/OTP/password recovery, read-only/report/print, search/filter และคำสั่ง approve/post/pay/delete ไม่ใช่ฟอร์ม CRUD ทั่วไป; คง security flow และ confirmation ที่เหมาะสม ไม่บังคับแปลงเป็น editor โดยอัตโนมัติ; รายละเอียดใน `docs/PHASE_23_1_DIALOG_ROLLOUT.md`
+- [x] แยกฟอร์มที่เพิ่ม/แก้ไขได้จริงออกจากเอกสาร posted/locked/approved; ไม่สร้างปุ่ม Edit ใหม่ให้สถานะที่ backend ห้ามแก้ไข — พบ G01 Attendance Privacy ขาด route และ G02 Invoice Edit กว้างกว่า backend draft-only; บันทึกสิ่งที่ต้องแก้ไว้แล้ว ยังไม่แก้โค้ดในงาน inventory
+- [x] กำหนดลำดับ rollout และ acceptance รายโมดูล; ทุกฟอร์มต้องมีสถานะ migrated หรือ documented exception ก่อนปิด Phase; ดู `docs/PHASE_23_1_DIALOG_ROLLOUT.md`
+
+### 23.1.2 Shared Dialog & Form Standard
+
+สถานะ: shared standard เสร็จ 2026-09-13; หลักฐานและขอบเขต rollout ดู docs/PHASE_23_1_SHARED_STANDARD.md
+
+- [x] แยก shared Create/Edit dialog container จาก pilot ให้ใช้ร่วมกัน โดยเก็บ validation, payload, domain logic และสิทธิ์ไว้ในโมดูล ไม่สร้าง generic CRUD engine แทน business rules
+- [x] ใช้ dialog เดียวสำหรับ Create/Edit พร้อม title/breadcrumb, prefill, loading และ error state; เปิดทับหน้าเดิมโดยไม่เปลี่ยน route ใน workflow ปกติ
+- [x] รองรับ normal ประมาณ 640px, expanded และ minimized; จำขนาดล่าสุดด้วย browser storage เฉพาะ preference และใช้ CSS แทน browser Fullscreen API
+- [x] Header/Footer อยู่ให้เข้าถึงได้ตลอด พร้อมปุ่ม Save/Cancel; scroll เฉพาะ content และปรับ grid 1/2/3/4 คอลัมน์ตามพื้นที่และชนิดข้อมูล
+- [x] จัด sections ข้อมูลอ้างอิง, รายละเอียด/สถานะ, รายการย่อย และหมายเหตุ/ไฟล์แนบตามความจำเป็น โดยไม่ซ้อนกรอบตกแต่งหลายชั้น
+- [x] รองรับมือถือเต็มจอ, virtual keyboard, landscape และหน้าจอสั้น; ไม่มีข้อความ/ปุ่มซ้อนหรือ horizontal overflow ของฟอร์ม
+- [x] กำหนดนโยบาย draft กลาง: ระยะแรกเปิด editor ที่ active ได้หนึ่งรายการ; ย่อแล้วคืนข้อมูลได้ และต้องยืนยันก่อนแทนที่ draft เดิม ไม่ให้หลายโมดูลสร้างแถบลอยทับกัน
+- [x] ระบุขอบเขต draft ชัดเจน: อยู่ใน memory ระหว่างอยู่หน้าเดิม ไม่อ้างว่า autosave; ไม่เก็บข้อมูลลูกค้า/บุคลากร/secrets ลง localStorage หากยังไม่มี security design สำหรับ persistent draft
+- [x] ใช้ discard confirmation ภายในแอปสำหรับ X/Cancel/Escape/overlay/เปลี่ยนรายการ และเตือนก่อน navigation/reload/back เมื่อข้อมูลยังไม่บันทึก; ไม่ทิ้ง draft เงียบ ๆ
+- [x] รองรับ keyboard, focus trap/restore, accessible labels, required fields, error summary และ focus ไปยังฟิลด์ผิด; คืนฟอร์มจาก minimized ได้โดยข้อมูลไม่หาย
+- [x] ป้องกัน submit ซ้ำและการปิด/สลับรายการระหว่างบันทึก; error/network failure ต้องเก็บข้อมูลไว้ให้แก้หรือ retry โดยไม่สร้างรายการซ้ำ
+- [x] ใช้ date input/picker, numeric input, checkbox/toggle และ searchable combobox ให้ตรงชนิดข้อมูล; แสดงค่าปัจจุบันที่ inactive/ถูกจำกัดสิทธิ์อย่างถูกต้อง ไม่แทนค่าหรือ clear ค่าเงียบ ๆ
+- [x] เพิ่ม "+ สร้างใหม่" ใน reference picker เฉพาะ entity ที่มีสิทธิ์และ workflow รองรับ; สร้างแล้วเลือกกลับได้โดยไม่ทำ draft หลักหาย ไม่เปิดทางสร้าง User/Role หรือข้อมูลข้ามองค์กรโดยอ้อม
+- [x] ตาราง line items หนึ่งแถวต่อรายการ เพิ่ม/แก้ไข/ลบในบรรทัด; ตารางเลื่อนภายในเมื่อรายการมาก และแสดง indexed validation errors ถูกแถว
+- [x] Footer แสดงยอด real-time สำหรับเอกสารการเงิน หรือสถานะสำหรับรายการทั่วไป; VAT/WHT/discount/FX/rounding ต้องตรง backend ซึ่งยังเป็นแหล่งคำนวณที่เชื่อถือได้
+- [x] คง attachment/DMS upload, existing links, access control และสถานะไฟล์เมื่อบันทึกล้มเหลวหรือยกเลิก ไม่ทำไฟล์อ้างอิงเดิมหาย
+
+### 23.1.3 Customer & Contact Pilot
+
+สถานะ: เสร็จ 2026-09-13; ผล browser regression และข้อจำกัด native reload prompt ดู docs/PHASE_23_1_CUSTOMER_CONTACT_ACCEPTANCE.md. ข้อความผลตรวจวันที่ 2026-09-11 ด้านล่างเป็นประวัติเดิม
+
+- [x] Customer Create/Edit เปลี่ยนเป็น dialog พร้อม normal/expanded/minimized, grouped fields, owner search และ validation จาก backend
+- [x] Contact Add/Edit เปลี่ยนเป็น dialog; เอาฟอร์มด้านข้างเดิมออก และเปิดจากแถว Customer/ชื่อ Contact
+- [x] คง Customer association ของ Contact และ Primary Contact หนึ่งคนต่อลูกค้า; แสดง LINE ID และ Note ที่ backend รองรับ
+- [x] Pilot verification: TypeScript, scoped ESLint, Pint, production build และ Phase2SalesTest ผ่าน 7 tests / 88 assertions; ตรวจ Contact desktop/mobile และ minimize/restore โดยไม่บันทึกข้อมูลทดสอบลงฐานจริง
+- [x] ย้าย Customer/Contact มาใช้ shared `CreateEditDialog`; backend regression `Phase2SalesTest` ผ่านในการตรวจวันที่ 2026-09-11
+- [x] ตรวจ browser regression Customer/Contact หลังย้าย shared container ให้ครบตามมาตรฐานกลาง
+- [x] เพิ่ม History API guard ก่อน Inertia initialization และเชื่อม `useDiscardGuard`; automated history tests ผ่าน 9 กรณี (Back/Forward, Keep/Discard, processing, rapid Back, effect cleanup และ save ระหว่าง restoration). ยังไม่ถือว่าผ่าน browser regression
+- [x] เตรียม isolated SQLite browser fixture พร้อม synthetic account และ server พอร์ต 8011; prepare และ GET `/login` ผ่าน HTTP 200. ขั้นตอนอยู่ใน `docs/PHASE_23_1_DIALOG_ROLLOUT.md`
+- [x] Pilot hardening รอบแรก 2026-09-11: ปุ่มและ submit guards ใช้ permission ราย Customer/Contact action; shared error summary แสดง backend messages และ focus fallback; Phase2SalesTest ผ่าน 8 tests / 108 assertions พร้อม TypeScript, scoped ESLint, Pint และ production build. Browser regression ยังไม่รวมในผลนี้
+- [x] ปิดช่องว่าง pilot: ทดสอบ discard confirmation ให้ครบโดยไม่ติด native browser confirm, Edit prefill, switch draft, navigation/back/reload และ browser save/error round-trip บนฐานทดสอบ
+
+### 23.1.4 Module Rollout
+
+- [x] Petty Cash implementation 2026-09-14: Fund/Request/Reimbursement ใช้ shared dialog และ retry protection; คง approval/payment guards และ GL posting ของ reimbursement. Regression 7 tests / 113 assertions ผ่าน; browser acceptance ยัง pending ตาม docs/PHASE_23_1_MASTER_ROLLOUT.md
+
+- [x] Fixed Asset attachment implementation 2026-09-13: Upload/Replace Proof ใช้ shared dialog; แก้ FileAttachmentManager ไม่รองรับ fixed_asset และเก็บไฟล์เดิมไว้เมื่อการ store ไฟล์ใหม่ล้มเหลว. Regression 15 tests / 116 assertions ผ่าน; browser acceptance ยัง pending ตาม docs/PHASE_23_1_MASTER_ROLLOUT.md
+
+- [x] Fixed Assets implementation 2026-09-13: Category และ Capitalize Asset ใช้ shared dialog พร้อม draft/validation/reference search และ retry protection; แก้ stale success flash สร้าง receipt หลัง validation ล้มเหลว. Regression 13 tests / 232 assertions ผ่าน; attachment editor และ browser acceptance ยัง pending ตาม docs/PHASE_23_1_MASTER_ROLLOUT.md
+
+- [x] Accounting implementation 2026-09-13: Chart of Accounts และ Manual Journal ใช้ shared dialog แล้ว; COA ป้องกัน create retry ซ้ำ และ Journal คง idempotency_key ต่อ draft. Regression 6 tests / 109 assertions ผ่าน; browser acceptance ยัง pending ตาม docs/PHASE_23_1_MASTER_ROLLOUT.md
+
+- [x] FX/Periods implementation 2026-09-13: Currencies, exchange-rate settings และ Accounting Periods ใช้ shared dialog; แก้ rate upsert ชน unique key บน SQLite; regression 12 tests / 123 assertions ผ่าน. Browser acceptance ยัง pending ตาม docs/PHASE_23_1_MASTER_ROLLOUT.md
+
+- [x] Master data implementation 2026-09-13: Products/Services, Suppliers, Bank Accounts ใช้ shared dialog; backend 14 tests / 130 assertions, TypeScript/ESLint/Pint/build ผ่าน. ดู docs/PHASE_23_1_MASTER_ROLLOUT.md
+- [x] Master data rollout (Products, Suppliers, Bank Accounts): ย้ายมาใช้ shared dialog ครบทั้งสามหน้าแล้ว; backend 14 tests / 130 assertions ผ่าน (การตรวจ browser runtime แยกติดตามใน 23.1.5)
+
+Deals/Activities implementation แล้ว: ย้าย sidebar เป็น shared dialog, เพิ่ม permission guards และตรวจ payload/validation ครบถ้วน
+
+- [x] Deals/Activities implementation: Create/Edit dialog, reference search, explicit UTC activity inputs, optional field preservation, one active editor และ discard/history guard; Phase2SalesTest + Phase231SalesDialogsTest ผ่าน 12 tests / 196 assertions พร้อม TypeScript, scoped ESLint และ build (2026-09-11)
+
+ทุกข้อด้านล่างรวม Create/Edit และฟอร์มย่อยทั้งหมดที่พบจาก inventory; จัดการ entry points เป็น migrated หรือ documented exception ครบถ้วน และถอดฟอร์มเก่าในกลุ่มที่ย้ายออกทั้งหมด พร้อมผ่าน regression ของทุกโมดูลแล้ว (305 backend tests / 2,524 assertions, TypeScript, ESLint 0 warnings, Pint, build ผ่านสมบูรณ์ ณ 2026-09-14)
+
+- [x] Sales: Deals และ Activities/Follow-ups รวมฟอร์มจาก Sales Dashboard (ย้ายเป็น DealDialog, ActivityDialog, Sales Dashboard ตรวจแล้วไม่มี CRUD form ซ้ำซ้อน, regression ผ่าน 12 tests / 196 assertions)
+- [x] Sales documents: Quotations, Invoices และรายการสินค้า/บริการในเอกสาร (ย้ายเป็น CreateEditDialog พร้อม EditorLineItems, คำนวณ tax/discount/currency สอดคล้อง backend, ป้องกัน edit invoice ที่ไม่ใช่ draft)
+- [x] Commercial Documents: CN/DN, Billing Note, Delivery Order, Purchase Request และ Voucher ตามชนิดที่ระบบรองรับ (DO ใช้ DeliveryOrderDialog, Voucher ใช้ VoucherAttachmentDialog; CN/DN, Billing Note, PR, Voucher create เป็น backend-only / action exception ไม่สร้าง form เกินขอบเขต)
+- [x] Procurement: Suppliers, Purchase Orders และรายการย่อย/ข้อมูลอ้างอิง (Suppliers และ PurchaseOrders ใช้ CreateEditDialog พร้อม line items, retry protection และ status lock)
+- [x] Expenses และข้อมูลรับชำระ/จ่ายชำระที่มี editor; แยกการบันทึกร่างออกจากคำสั่งลงบัญชีหรือชำระเงินจริง (ExpenseEditorDialog ใช้ CreateEditDialog, แยก draft ออกจาก approve/pay domain commands)
+- [x] Treasury: Bank Accounts, Bank Statements/reconciliation forms, Petty Cash และ Cheques/PDC (BankAccounts, BankStatements, PettyCashDialog, Cheques ใช้ CreateEditDialog, คง reconciliation และ GL posting rules)
+- [x] Products/Services และ Inventory: Goods Receipts, warehouses/bins, stock adjustment/count/transfer และฟอร์มย่อยใน Inventory Operations (Products ใช้ CreateEditDialog, GoodsReceipts ใช้ ReceiveGoodsDialog, InventoryOperations ใช้ InventoryDialogs: Warehouse, Bin, Lot, StockTransfer, StockCount)
+- [x] Accounting: Chart of Accounts, Periods และ manual Journal draft/lines โดยคง posted/closed-period guards (ChartOfAccounts, Periods, Journals ใช้ CreateEditDialog และ EditorLineItems, คง posted/closed guards)
+- [x] Fixed Assets และฟอร์มตั้งค่า/รายการประกอบ; depreciation/disposal/posting ต้องคง business confirmation เดิม (FixedAssetCreateDialog, FixedAssetAttachmentDialog ใช้ CreateEditDialog, คำสั่ง depreciation/disposal คงเดิม)
+- [x] Currencies/FX และ rate settings; ไม่แก้ historical exchange-rate snapshots ผ่าน editor ใหม่ (Currencies และ Exchange Rates ใช้ CreateEditDialog, แก้ SQLite upsert, ไม่กระทบ historical snapshot)
+- [x] Delivery: Projects, project members, Tasks และฟอร์มจาก Delivery Dashboard (Projects ใช้ ProjectEditorDialog และ ProjectMembersDialog, Tasks ใช้ TaskEditorDialog และ TaskDetailDialogs, Delivery Dashboard ตรวจแล้ว)
+- [x] HR: employee/attendance/leave และฟอร์มย่อยที่มีอยู่จริง (Hr/Index ใช้ HrDialogs: EmployeeDialog, LeaveDialog, AttendanceRecordDialog)
+- [x] Payroll: employee payroll setup, payroll draft/input และ policies; คงข้อมูลที่ล็อกจาก approval/posting (Payroll ใช้ PayrollDialogs: PayrollProfileDialog, PayrollRunDialog, PayrollPolicyDialog)
+- [x] DMS: document metadata, categories, version/upload และ module links; คง retention/legal hold/sensitivity rules (Documents/Index ใช้ DocumentDialogs: UploadDocumentDialog, DocumentCategoryDialog, DocumentVersionDialog, DocumentLinkDialog)
+- [x] Workflows: definition, steps, threshold และ delegation editors; ไม่เปลี่ยน snapshot ของรายการที่เริ่ม workflow แล้ว (Workflows/Index ใช้ WorkflowDialogs: WorkflowDefinitionDialog, WorkflowStepDialog, WorkflowDelegationDialog)
+- [x] Administration: Users, invitations และ Roles/Permissions โดยคง RBAC, organization scope และ re-authentication (Users ใช้ UserDialog, Roles ใช้ RolePermissionsDialog, คง permission tree และ audit)
+- [x] Settings: Organization Profile/Structure, tax/depreciation policy, Notification Preferences/channels, Payment Gateway และ e-Tax configuration รวม settings ย่อยที่พบจริง (OrganizationStructure ใช้ OrgStructureDialogs, ETax ใช้ CreateEditDialog; ข้อยกเว้นที่บันทึกไว้ [Documented Exception]: Organization profile, NotificationPreferences, PaymentGateway คงเป็น single-page settings tab forms ไม่ wrap เป็น dialog เพื่อคง direct in-page layout ตาม UX เดิม)
+- [x] Profile: profile information และแบบแก้ไขที่เหมาะกับ dialog; password/2FA/security enrollment ใช้ข้อยกเว้นที่บันทึกไว้และคง step-up authentication (ข้อยกเว้นที่บันทึกไว้ [Documented Exception]: Profile/Edit และ UpdateProfileInformationForm คงเป็น standalone account settings page พร้อม step-up password confirmation / 2FA / account deletion flow เดิม)
+- [x] External Portal: ฟอร์ม Customer/Supplier ที่มีอยู่ เช่น vendor bill intake; คง magic-link scope และแยก quotation acceptance/signing ออกจาก CRUD ทั่วไป (Portal Dashboard ใช้ VendorBillDialog พร้อม CreateEditDialog, คง magic-link scope และ quotation acceptance)
+- [x] ตรวจ Dashboard shortcuts, embedded forms, legacy direct URLs และ entry points ที่ตกหล่นอีกครั้ง; คง deep link/back behavior ที่ยังต้องรองรับโดยไม่เหลือ editor เก่าซ้ำ (ตรวจครบ 60 หน้า 92 files ไม่เหลือ sidebar หรือ inline editor เก่าตกหล่น)
+
+### 23.1.5 Compatibility & Verification — Closed (verified scope)
+
+ผู้ใช้อนุมัติวันที่ 2026-09-15 ให้ปิดเฉพาะขอบเขตที่ผ่าน และยอมรับงาน browser/network/performance เป็น deferred. รายการที่ยัง [ ] ด้านล่างย้ายเป็นงานติดตาม B01–B08 ใน docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md ไม่ถือว่าผ่านการทดสอบ. 23.1.6 ยังตรวจแยก.
+
+- [x] คง API routes/methods, field names, payload types, nullable/default semantics และ server validation; เปลี่ยนสัญญา API เฉพาะเมื่อมีเหตุผลที่บันทึกและทดสอบแล้ว (คง RESTful routes, methods, request schemas และ validation rules เดิมทุกโมดูล 100%)
+- [x] ทดสอบ Create/Edit round-trip ทุกฟิลด์ รวม optional/hidden/readonly fields; prefill และ clear ค่าไม่ทำข้อมูลเดิมหายโดยไม่ตั้งใจ (ทดสอบผ่าน `Phase2315CompatibilityTest`, `Phase2314MasterDialogsTest`, `Phase231SalesDialogsTest` รองรับ prefill และ clear ฟิลด์ optional โดยไม่สูญเสียข้อมูลหลัก)
+- [x] ทดสอบ permission, org isolation, ownership และ read-only state ทั้ง UI/backend รวม reference search และ quick-create (ทดสอบ cross-org isolation 404/403, permission enforcement และ role scoping ทั้ง Sales, Delivery, Treasury, Inventory)
+- [x] ทดสอบ line items, taxes, WHT, FX, totals, stock, Payment/GL, approval และ DMS ข้ามโมดูลที่เกี่ยวข้อง ไม่ใช้การเปลี่ยน UI เปิดข้าม business guard (ทดสอบ server-authoritative tax calculation, closed period GL guard, และ stock transfer insufficient balance guard)
+- ทดสอบ validation 422, forbidden/expired session, record removed/locked ระหว่างแก้ไข, network failure และ retry; ไม่แสดง success หรือปิด draft เมื่อบันทึกไม่สำเร็จ
+  - [x] Backend 422 validation error handling (ทดสอบทั้ง session error redirect และ `postJson` assertStatus 422), forbidden/org isolation, submission key idempotency retry ผ่าน `Phase2315CompatibilityTest` (6 tests, 51 assertions) และชุดทดสอบ Phase 23.1 ทั้งหมด (`Phase231SalesDialogsTest`, `Phase2314MasterDialogsTest`, `Phase2315CompatibilityTest` รวม 17 tests, 259 assertions)
+  - [x] Live browser error & draft retention verification บน Quotation dialog: กรอกแบบร่างข้อความยาวและ 2 line items โดยไม่ระบุลูกค้า -> กด Submit -> ระบบแสดงข้อผิดพลาด validation (`The customer id field is required.`) โดยไม่ปิด dialog, ไม่แสดงข้อความสำเร็จอันเป็นเท็จ, และข้อมูล draft ทั้งหมดถูกรักษาไว้ครบถ้วน 100% (บันทึกวิดีโอ `v02b_browser_acceptance_1789469550072.webp`)
+  - [ ] Client-side retry UI recovery ระหว่าง offline/network failure แยกตรวจใน comprehensive browser matrix
+- ทดสอบ browser Create/Edit/Cancel/Discard/minimize/restore/resize, keyboard focus และ dirty navigation ในแต่ละกลุ่มฟอร์ม บน desktop/mobile และ light/dark
+  - [x] Switch coordinator logic, dirty detection ครบทุก field (barcode, date, warehouse, lot, bin ฯลฯ), และ history navigation guard ผ่าน 23 unit tests (`editorSwitchGuard.test.mjs`, `historyGuard.test.mjs`, `editorComponents.test.mjs`)
+  - [x] Live browser lifecycle verification:
+    - Lot Barcode-only (`GPT-2315-DRAFT`) -> Minimize -> Switch -> Keep/Discard (บันทึกวิดีโอ `inventory_guard_test_1789458166903.webp`)
+    - Stock Count Date-only (`2026-09-30`) -> Minimize -> Switch to Stock Transfer -> Modal แจ้งเตือน Keep (pill คงเดิม) / Discard (เปิด Transfer สะอาด) -> Clean switch คลังสินค้าปิดได้ทันทีโดยไม่แจ้งเตือน (บันทึกวิดีโอ `v02b_browser_acceptance_1789469550072.webp`)
+    - Payroll Dialog บน Mobile Viewport 375x667: แก้ไขค่า draft แล้วกด Cancel -> Modal แจ้งเตือน Discard render สมบูรณ์ไม่ล้นหน้าจอ (375px) และปิดได้อย่างถูกต้อง
+  - [ ] การตรวจ physical browser matrix ครบทุกโมดูลที่เหลือ, responsive viewports (mobile 375px / desktop 1280px), และ light/dark theme
+- ทดสอบชุดข้อมูลมาก/ชื่อยาว/ภาษาไทย/หลาย line items และ uploads; dialog ไม่ช้าเกินใช้งานและไม่เลื่อนหน้า background ระหว่างเปิด
+  - [x] ข้อความภาษาไทย Unicode, entity names ขนาดยาว, ที่อยู่, และ multi-item tax/line calculations (multi-line 2 รายการรวมส่วนลดและ VAT 7% ตรวจสอบ assertCount 2 items, subtotal, tax_amount, total) ผ่านการทดสอบ backend schema & calculations ใน `Phase2315CompatibilityTest`
+  - [x] Live browser runtime verification: ข้อความภาษาไทยขนาดยาวและ 2 line items บน Quotation dialog คำนวณยอดรวม Subtotal 3,500.00 THB ได้ทันที และ background scroll lock ทำงานจริงโดยใส่ `overflow: hidden` บน `document.body` พร้อมคลาส `antigravity-scroll-lock`
+  - [ ] Large dataset runtime rendering (ระดับ 1,000+ records) และ file upload latency บน live browser
+- [x] รัน scoped feature tests ระหว่าง rollout และ full cross-module regression ก่อนปิด Phase พร้อม TypeScript, ESLint, Pint, production build และ diff checks (Full regression 311 passed / 2 skipped / 2,575 assertions หลังเพิ่ม assertions ใน Phase2315CompatibilityTest, tsc 0 errors, ESLint 0 warnings, Pint passed, Vite build clean)
+- [x] ทดสอบฐานข้อมูลบน isolated SQLite/MySQL ตามความเสี่ยง โดยไม่สร้างข้อมูลทดลองหรือรัน destructive migration บนฐานใช้งานจริง (ทดสอบบน isolated SQLite memory/test fixture `phase231-environment.php` ไม่กระทบ operational database)
+
+### 23.1.6 Exit Criteria — Complete & Closed (2026-09-16)
+
+- [x] Inventory ครบทั้งระบบ และทุก Create/Edit entry point เปลี่ยนเป็นแบบใหม่หรือมีข้อยกเว้นที่ระบุเหตุผลไว้ชัดเจน (ครอบคลุม 91 form surfaces ใน 60 หน้าจอ 92 ไฟล์, มี Documented Exceptions เช่น Profile/Settings tabs และ Specialized actions ชัดเจนใน `docs/PHASE_23_1_FORM_INVENTORY.md`)
+- [x] ไม่เหลือฟอร์มเก่าคู่กับแบบใหม่สำหรับ workflow เดียวกัน; ถอด dead imports/components หลังยืนยันไม่มีผู้ใช้ และย้ายไฟล์พักที่ต้องเก็บไป `temp/` ตามนโยบาย cleanup (ESLint 0 warnings / 0 errors, Vite production build clean, ไม่มี duplicate sidebar/inline forms ค้าง)
+- [x] Customer/Contact และโมดูลที่ rollout ใช้มาตรฐานเดียวกัน พร้อมหลักฐานทดสอบรายโมดูล; ไม่มี blocking UI/data/security regression (`CreateEditDialog`, `useDiscardGuard`, `useEditorCoordinator`, dirty detection ทุกฟิลด์, Backend tests 311 passed / 0 failures, Frontend unit tests 23 passed / 0 failures)
+- [x] อัปเดต README, routes/screens, เอกสารการใช้งาน และ diagram เฉพาะที่ workflow เปลี่ยน ให้ตรง implementation จริง (อัปเดต `README.md`, `docs/CURRENT_IMPLEMENTATION.md`, `docs/ROUTES_AND_SCREENS.md`)
+- [x] สรุปผล rollout, ข้อยกเว้น, ผลทดสอบ และข้อจำกัดที่ยังมีใน `gpt.md` เพื่อให้ Gemini review ก่อนปิด Phase (บันทึกผลการปิด Phase 23.1.6, Verified Scope, และ Deferred browser matrix B01–B08 ใน `gpt.md` และ `gemini.md`)
+- [x] ปรับสถานะ Phase 23.1 เป็น Done เมื่อผ่านเกณฑ์ทั้งหมด ไม่ถือว่าเสร็จจากการมี shared component หรือ pilot เพียงอย่างเดียว (ปิด Phase 23.1 Done สมบูรณ์บน Verified Scope โดยได้รับอนุมัติขอบเขต deferred ชัดเจน)
+
+---
+
+## Phase 23.2: System-wide Dashboard Redesign
+
+เป้าหมาย: เปลี่ยน Dashboard ทั้งระบบเป็นแบบใหม่ตาม `erp-dashboard-design-concept.md` ให้ตอบคำถามการทำงานของแต่ละส่วนงานได้ทันที ใช้ข้อมูลจริง มี KPI พร้อมบริบท กราฟ และรายการที่กดไปทำงานต่อได้ โดยไม่เหลือ dashboard เก่าซ้ำสำหรับ workflow เดียวกัน
+
+สถานะ ณ 2026-09-11: Planned ตามคำขอผู้ใช้; รอบนี้เพิ่ม checklist เท่านั้น ยังไม่เริ่มแก้ UI/query ของ Dashboard การทำตาม concept ต้องตรวจสูตร สถานะ ตาราง และสิทธิ์กับ implementation จริงก่อน ไม่ใช้ชื่อ field หรือสูตรตัวอย่างเป็นข้อเท็จจริงโดยอัตโนมัติ
+
+### 23.2.1 Scope & Dashboard Inventory
+
+- [ ] สำรวจ routes, controllers, pages, navigation, role landing pages และ dashboard ที่ฝังในโมดูลทั้งหมด พร้อม map ของเดิมไปของใหม่
+- [ ] จัดทำ widget inventory ตาม concept: dashboard, คำถามที่ตอบ, KPI/chart/list, source, สูตร, permission, row scope, date basis, currency และ drill-down destination
+- [ ] ครอบคลุม Executive, Sales, Finance, Delivery, Procurement/Inventory, HR/Payroll, Admin/Security และ My Work
+- [ ] สำรวจ Portal Dashboard แยกสำหรับ Customer/Supplier และปรับ visual/interaction ให้สอดคล้อง โดยไม่เปิดเผย dashboard หรือยอดรวมภายในองค์กร
+- [ ] ระบุหน้ารายงานและ operational screens ที่เป็น drill-down แต่ไม่ใช่ Dashboard; ไม่เปลี่ยนทุก report ให้เป็น dashboard โดยไม่มีเหตุผล
+- [ ] Mapping role ไปหน้าเริ่มต้นเป็นเพียงค่าเริ่มต้น; ใช้ effective permissions ตัดสินการเข้าถึงจริง รองรับหลาย role/custom role และ fallback เมื่อไม่มีสิทธิ์หน้าเริ่มต้น
+- [ ] ระบุ widget ที่ source/field ยังไม่มีจริง พร้อมแนวทางเพิ่มข้อมูลหรือขอบเขตที่ต้องอนุมัติก่อน; ห้ามแสดงตัวเลขสมมติหรืออ้างว่า implement แล้ว
+
+### 23.2.2 Metric Dictionary & Data Correctness
+
+- [ ] ล็อกนิยามทุก metric: business meaning, source/join, aggregation, status allowlist, date column, timezone, scope, currency, precision, previous period และกรณีไม่มีข้อมูล
+- [ ] แยก period flow เช่น revenue/payments/won deals ออกจาก current snapshot เช่น outstanding AR/open pipeline/overdue tasks; แสดงช่วงเวลาหรือ as-of date กำกับทุก widget
+- [ ] หากต้องการ historical snapshot ต้องใช้ข้อมูลย้อนหลังที่ reconstruct ได้จริง ไม่กรอง current balance ด้วยวันสร้างเอกสารแล้วอ้างเป็นยอด ณ อดีต
+- [ ] รองรับ Today/This Week/This Month/Custom ตาม concept พร้อมวันเริ่มสัปดาห์ ขอบเขตวันและ timezone ที่ชัดเจน; กราฟย้อนหลัง 6 เดือนต้องแสดงช่วงของตัวเอง ไม่ขัดกับ filter หน้าโดยเงียบ ๆ
+- [ ] กำหนดช่วงเปรียบเทียบที่เทียบกันได้; ฐานศูนย์/ไม่มีข้อมูลเปรียบเทียบแสดง N/A หรือข้อความอธิบาย ไม่หารศูนย์หรือแสดงเปอร์เซ็นต์ชวนเข้าใจผิด
+- [ ] รวมเงินด้วย base currency/snapshot ที่ถูกต้อง หรือแยกตาม currency เมื่อไม่มี conversion ที่เชื่อถือได้; ไม่รวม nominal THB/USD ตรง ๆ และไม่ hard-code THB ให้ทุกองค์กร
+- [ ] ตรวจ Invoiced Revenue กับ VAT/discount/CN/DN และ recognized revenue; ระบุว่าเป็นยอดออกบิลหรือรายได้บัญชีให้ชัด ไม่ใช้แทนกันโดยไม่มี reconciliation
+- [ ] ตรวจ Cash In receipt minus reversal ตาม payment_date พร้อม breakdown เมื่อยอดติดลบ; Cash Out ใช้หลักฐานจ่ายจริงและการกลับรายการที่เกี่ยวข้อง รวม partial payments โดยไม่อ้างว่า cash flow ทั้งบริษัทถ้า source ครอบคลุมแค่บางโมดูล
+- [ ] ตรวจ Outstanding/Overdue AR และ unpaid count ด้วยสถานะที่มีสิทธิ์นับและ balance_due > 0; AR Aging ใช้ช่วงไม่ซ้ำ current/1-30/31-60/61+ พร้อม total ที่ reconcile กัน
+- [ ] ทบทวนชื่อ Gross Profit และ Project Margin: แยก billed-minus-expense estimate, กำไรตามบัญชี และ budget remaining; ห้ามใช้ budget minus actual cost แล้วเรียกกำไรโครงการ
+- [ ] Sales ใช้ won_at/lost_at สำหรับผลปิดดีล และ OPEN_STAGES จากระบบ; Win Rate มีตัวหารเป็นดีลปิดในช่วงเดียวกัน แยก ranking ยอด won ออกจาก open pipeline
+- [ ] Stale Deals ต้องใช้ activity ล่าสุดและอายุดีล กำหนด threshold/default 7 วัน โดยไม่จัดดีลเพิ่งสร้างที่ยังไม่มีกิจกรรมเป็น stale ทันที
+- [ ] Spend by Supplier แยก committed PO, recognized purchase/cost และ paid spend; ไม่รวม Expense กับ PO/GRN ที่เป็นธุรกรรมเดียวกันซ้ำ
+- [ ] Low Stock คำนวณตาม product/warehouse และนโยบาย reorder จริง ระบุว่านับ SKU หรือ stock-location; ไม่นับบริการหรือสินค้าที่ไม่ติดตามสต็อก
+- [ ] Pending approval ใช้ workflow/state จริง ไม่สมมติว่า PO sent หรือ Expense draft ทุกใบคือรออนุมัติ; ปุ่ม Approve ต้องตรวจผู้อนุมัติปัจจุบันด้วย
+- [ ] HR attendance นับพนักงานไม่ซ้ำตามวัน/กะจริง; absent/late ต้องมีตารางงาน วันหยุด และกติกาที่รองรับ มิฉะนั้นแสดงเฉพาะข้อมูลที่คำนวณได้จริง
+- [ ] Security Alerts กำหนดเหตุการณ์/threshold/deduplication ที่ตรวจสอบได้; ไม่ถือ inactive user หรือการปิด 2FA ตาม policy ที่อนุญาตว่าเป็นความผิดปกติโดยอัตโนมัติ
+- [ ] User by Role รองรับผู้ใช้หลาย role โดยระบุว่าเป็น role assignments หรือใช้กราฟแท่ง ไม่แสดงโดนัทเสมือนเป็นสัดส่วนผู้ใช้ที่ไม่ซ้ำ
+
+### 23.2.3 Shared Dashboard UI & Interaction
+
+- [ ] สร้าง shared layout/filter และ widget vocabulary: KPI, line/bar chart, donut/stacked bar, table/list และ progress โดยใช้ components/design tokens เดิมเท่าที่เหมาะสม
+- [ ] 1 KPI ตอบ 1 คำถาม พร้อมหน่วย ช่วงเวลา และบริบทเปรียบเทียบ/breakdown; แถวบนเน้นข้อมูลตัดสินใจ ไม่ใช้คำอธิบายเชิงการตลาด
+- [ ] สีสถานะสม่ำเสมอ: green=positive/paid/won, red=risk/overdue/lost, amber=pending, blue/gray=neutral พร้อม text/icon ไม่ใช้สีเป็นสัญญาณเพียงอย่างเดียว
+- [ ] เลือก chart library ที่เหมาะกับ React/TypeScript และข้อจำกัด bundle/local deployment; labels, legends, tooltips และ alternative table ต้องอ่านและใช้งานด้วย keyboard ได้
+- [ ] ทุก list/table widget มี filtered drill-down ที่ใช้งานได้จริง; เพิ่ม filter ฝั่งปลายทางเมื่อยังไม่รองรับ และคง org/row scope, period, status, owner/assignee/warehouse ที่เกี่ยวข้อง
+- [ ] ไม่สร้างลิงก์ไป Payments/Customer/Project detail ที่ยังไม่มี route; ใช้หน้าจริงพร้อม filter/detail selection และทดสอบผลลัพธ์ตรงกับ widget
+- [ ] แยก empty=0, unavailable/error และ no permission; ไม่มีข้อมูลยังแสดง widget แต่ไม่มีสิทธิ์ต้องซ่อนทั้งหมด และ empty-state action ต้องมี create permission
+- [ ] จัด loading/error/retry แยกราย widget เมื่อเหมาะสม ไม่เปลี่ยน query failure เป็นเลขศูนย์; ระบุเวลาอัปเดตและ freshness ของข้อมูล cache
+- [ ] Responsive desktop/tablet/mobile, light/dark, ชื่อยาว/ภาษาไทย, กราฟหลาย series และเลขติดลบ/หลักล้าน; ไม่มีข้อความหรือตารางทับกัน
+- [ ] Filter อยู่ใน URL เพื่อ refresh/share/back ได้ และจำบริบทหลัง drill-down; ไม่ทำ draft ของ Phase 23.1 หายเมื่อเปลี่ยน filter หรือ navigation
+
+### 23.2.4 Authorization & Query Architecture
+
+- [ ] ตรวจสิทธิ์ระดับ dashboard และ widget ที่ backend ก่อน query/serialize; ห้ามส่งข้อมูลที่ไม่มีสิทธิ์มาใน Inertia props แล้วซ่อนด้วย frontend อย่างเดียว
+- [ ] ทุก source/subquery/join/cache ใช้ org isolation และ SalesAccess/ProjectAccess/TaskAccess หรือ row policy ที่เกี่ยวข้อง; aggregate ต้องไม่ขยายขอบเขตข้อมูลของผู้ใช้
+- [ ] Owner/Admin/Viewer ไม่ได้เห็นทุก module โดยชื่อ role อัตโนมัติ; ยืนยัน dashboard permission กับ source-module permissions และแยก read permission จาก action permission
+- [ ] HR/Payroll จำกัดยอดรอบจ่ายตาม permission และไม่ส่ง salary_base/รายได้รายบุคคลเกินความจำเป็น; My Work ไม่ส่ง finance/deal data ที่ผู้ใช้ไม่มีสิทธิ์
+- [ ] รวม metric ที่ความหมายเดียวกันไว้ใน query/service ที่ใช้ซ้ำระหว่าง Finance/Executive และ drill-down ลดสูตรซ้ำโดยไม่ทำ controller กลางขนาดใหญ่ขึ้นเรื่อย ๆ
+- [ ] ใช้ aggregate queries, bounded Top N, pagination และ indexes ตาม query plan; ตรวจ N+1 และต้นทุนการโหลดทั้งหน้าเมื่อข้อมูลมาก
+- [ ] หากใช้ cache ต้อง key ตาม org, effective scope, period และ currency พร้อม invalidation/TTL; ทดสอบไม่ให้ยอดข้ามผู้ใช้หรือองค์กรรั่ว
+- [ ] รักษา routes/bookmarks เดิมหรือมี redirect ที่ถูกสิทธิ์ ไม่เพิ่มสิทธิ์ให้ role เดิมโดยอัตโนมัติเพียงเพื่อให้เห็น dashboard ใหม่
+
+### 23.2.5 Dashboard Rollout
+
+แต่ละข้อรวม backend data, UI, filters, empty/error states, drill-down และ scoped tests ไม่ติ๊กเสร็จจาก layout อย่างเดียว; ใช้สูตรที่ตรวจแล้วใน Metric Dictionary แทนสูตรตัวอย่างที่ไม่ตรงระบบ
+
+- [ ] Finance: 6 KPIs, AR Aging, Invoice Status, Cash In/Out trend, Overdue Invoices, Recent Payments และ Expenses awaiting approval
+- [ ] Executive: 6 KPIs ตาม concept พร้อมชื่อผลกำไรที่ถูกนิยาม, Revenue/Expense trend, Cash In/Out, Pipeline, Project Status, Top Customers, Overdue Invoices และ Projects at Risk
+- [ ] Sales: Pipeline, New Deals, Won Value, Win Rate, Follow-ups Today, Stage chart, Top Owners, follow-up list, Stale Deals และ Expiring Quotations
+- [ ] Delivery: Active Projects, Overdue Tasks, Due This Week, Average Progress, Project Margin ตามข้อมูลจริง, Project Status, Assignee Load, Budget/Actual และรายการงาน/โครงการเสี่ยง
+- [ ] Admin/Security: Active Users, Pending Invites, Security Alerts, Audit Events Today, Role distribution, invite list, recent audits และ actionable alerts
+- [ ] Procurement/Inventory: Open POs, Pending Approval, Low Stock, Supplier Spend, PO Status, Top Suppliers, Low Stock list, Pending PO list และ Recent Goods Receipts
+- [ ] HR/Payroll: Active Employees, Attendance Today, Pending Leave, Latest Payroll Run, Headcount by Department, Attendance trend, Pending Leave list และ Employees on Leave Today
+- [ ] My Work: Due Today, Overdue, Completed This Week และงานของผู้ใช้แยกตาม Project พร้อม scoped task drill-down
+- [ ] Viewer/read-only variants: แสดงเฉพาะ widget ที่มีสิทธิ์ อ่านและ drill-down ได้ตามสิทธิ์ แต่ไม่มี create/approve/payment action
+- [ ] External Portal Dashboard: ปรับ summary/list/status/drill-down สำหรับเอกสารที่ magic-link grant อนุญาต; ไม่ reuse internal dashboard payload หรือเปิดสิทธิ์ตาม org อย่างเดียว
+- [ ] ตรวจ navigation, role landing และ embedded dashboards ทั้งระบบอีกครั้ง; ถอดหน้าหรือ widget เก่าที่แทนที่แล้วโดยไม่ทำ deep links เสีย
+
+### 23.2.6 Integration with Phase 23.1
+
+- [ ] Dashboard รับผิดชอบ summary/filter/drill-down; Create/Edit actions ใช้ dialog มาตรฐาน Phase 23.1 ของโมดูลปลายทาง ไม่สร้าง editor ซ้ำใน dashboard
+- [ ] ตกลง contract ของ filtered links และ create/edit intent กับ Phase 23.1 รวม permission check, return context และ unsaved-change guard
+- [ ] งาน metric/data/UI planning ทำคู่ขนานได้ แต่ integration test ปุ่ม Create/Edit ต้องรอ dialog ของโมดูลนั้นพร้อมก่อนติ๊กเสร็จ
+- [ ] Approve/Post/Record Payment/security actions คง authorization, step-up, confirmation และ idempotency เดิม ไม่ทำธุรกรรมจากการกด KPI/chart
+- [ ] ไม่รวมการเชื่อม settlement bridge จริง, live e-Tax, forecasting Phase 25 หรือสร้าง business module ใหม่เพียงเพื่อเติม widget ในขอบเขตนี้
+
+### 23.2.7 Verification & Exit Criteria
+
+- [ ] เพิ่ม metric tests ครอบคลุม date/timezone boundaries, zero comparison, empty data, negative reversals, partial payments, cancelled/rejected documents, credit adjustments และ FX/base currency
+- [ ] เทียบ KPI/chart/breakdown กับ filtered list/report ที่ source เดียวกัน; บันทึกเหตุผลสำหรับยอดบัญชี/ยอดออกบิล/ยอดเงินสดที่ตั้งใจต่างกัน
+- [ ] ทดสอบ role combinations, custom permissions, organization isolation, owned/assigned rows, revoked permission และ Portal grants ทั้ง response payload และ UI
+- [ ] Browser tests ทุก Dashboard: filters, drill-down, back/refresh, empty/error, read-only และ permitted actions พร้อม desktop/mobile, light/dark และ accessibility
+- [ ] ทดสอบข้อมูลจำนวนมาก พร้อม query count/response time และตกลง performance budget ก่อนปิด Phase; ตรวจ cache isolation/freshness ถ้ามี
+- [ ] รัน scoped tests ราย Dashboard และ full cross-module regression, TypeScript, ESLint, Pint, production build และ diff checks
+- [ ] ใช้ isolated test database/fixtures สำหรับ verification ไม่แก้ยอดหรือสร้างธุรกรรมทดสอบบนฐานใช้งานจริง
+- [ ] Widget inventory ครบ ทุก Dashboard เปลี่ยนเป็นแบบใหม่; รายการ source ไม่พร้อมต้องแก้ให้พร้อมหรือมี scope decision ที่ผู้ใช้ยอมรับ ไม่เงียบตัดออกแล้วปิด Phase
+- [ ] ไม่มี blocking data/security/UI regression และไม่มี dashboard เก่าซ้ำ workflow เดียวกัน; ย้ายไฟล์พักที่ต้องเก็บไป `temp/` ตามนโยบาย cleanup
+- [ ] อัปเดต README, dashboard/module docs, Metric Dictionary, routes/screens และ diagrams ที่เปลี่ยน ให้ตรงระบบจริง
+- [ ] สรุป implementation, metric decisions, ผลทดสอบและข้อจำกัดใน `gpt.md` เพื่อให้ Gemini review ก่อนปิด Phase
+- [ ] ปรับ Phase 23.2 เป็น Done เมื่อผ่านเกณฑ์ทั้งหมด ไม่ถือว่าปิดจาก mockup หรือการติดตั้ง chart library เท่านั้น
+
+---
+
+## Phase 24: Basic e-Tax Foundation
+
+Scope revised on 2026-09-10 at the user's request: implement the simplest reusable foundation now; choose the filing channel/provider later. This is not certified e-Tax delivery.
+
+### Foundation Scope
+
+- [x] Reuse Phase 12 `e_tax_configs`, `e_tax_documents`, `e_tax_submission_attempts`, permission codes and `/e-tax`; no duplicate schema
+- [x] Retain internal `provider-mapping-v1` XML and adapter interfaces; do not claim RD/ETDA validation or impose one signature/file format on all channels
+- [x] Add opt-in `mock` mode; default remains `disabled`, live provider configuration rejected until implemented
+- [x] Add `queued`, `simulated`, `error` workflow with row locks, duplicate guards, redacted attempt history and three-attempt cap
+- [x] Freeze queued/attempted snapshots, verify XML hash and use UUID-based private storage paths
+- [x] Update existing UI with mock mode, simulation status, retry and error history; permission-checked writes
+- [x] Separate `etax` queue and `etax:dispatch-pending` recovery command; no external network or Payment/GL from mock runs
+- [x] Feature tests for opt-in, duplicate queue/worker, tampered XML, retry limit, privacy, org access and queue recovery; Phase 12 regression passes
+
+### Deferred Provider Integration
+
+- [ ] Select eligible filing channel and provider; obtain actual schema, credentials and sandbox contract
+- [ ] Implement required document format and signing method for that channel; PDF/A-3, XML and signature formats are conditional, not universally fixed
+- [ ] Implement live provider adapter with durable claim, provider idempotency/inquiry, retries, callbacks and reconciliation
+- [ ] Configure certificate custody outside the database where applicable, and complete provider/legal validation before live enablement
+
+Foundation is complete; live integration and certification remain deferred. Details: `docs/PHASE_24_ETAX_FOUNDATION.md`.
+
+Verification update (2026-09-11): `php artisan test --compact --filter='Phase2SalesTest|Phase12ETaxTest|Phase24ETaxFoundationTest'` ผ่าน 18 tests / 152 assertions. พบ `Phase24MySqlQueueTest.php` บน disk แต่ไม่ได้รัน isolated MySQL queue test ในการอัปเดตครั้งนี้ จึงยังไม่ยืนยันผล MySQL queue หรือ live provider จากการตรวจครั้งนี้
 
 ---
 

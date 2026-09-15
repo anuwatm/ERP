@@ -1,10 +1,13 @@
+import FixedAssetAttachmentDialog from './FixedAssetAttachmentDialog';
+import FixedAssetCreateDialog from './FixedAssetCreateDialog';
+import { PageProps } from '@/Types';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
-import { FormEvent, useMemo, useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 type Account = { id: string; code: string; name: string; account_type: string };
 type Category = {
@@ -76,41 +79,16 @@ export default function FixedAssets({
     };
 }) {
     const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
-    const [sourceType, setSourceType] = useState<'expense' | 'goods_receipt'>(
-        'expense',
-    );
-    const [sourceId, setSourceId] = useState('');
+    const [editor, setEditor] = useState<'category' | 'asset' | null>(null);
+    const [proofAsset, setProofAsset] = useState<Asset | null>(null);
+    const editorOpen = editor !== null || proofAsset !== null;
+    const { auth } = usePage<PageProps>().props;
+    const canManage = auth.permissions.includes('fixed_assets.manage');
     const [disposalDate, setDisposalDate] = useState(
         new Date().toISOString().slice(0, 10),
     );
     const [disposalProceeds, setDisposalProceeds] = useState('0');
     const [disposalBankAccountId, setDisposalBankAccountId] = useState('');
-    const assetAccounts = useMemo(
-        () => accounts.filter((account) => account.account_type === 'asset'),
-        [accounts],
-    );
-    const expenseAccounts = useMemo(
-        () => accounts.filter((account) => account.account_type === 'expense'),
-        [accounts],
-    );
-    const sources = sourceType === 'expense' ? expenses : goodsReceipts;
-
-    function createCategory(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        router.post(
-            route('fixed-assets.categories.store'),
-            Object.fromEntries(new FormData(event.currentTarget)),
-        );
-    }
-
-    function capitalize(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        router.post(route('fixed-assets.store'), {
-            ...Object.fromEntries(new FormData(event.currentTarget)),
-            source_type: sourceType,
-            source_id: sourceId,
-        });
-    }
 
     return (
         <AuthenticatedLayout>
@@ -118,6 +96,24 @@ export default function FixedAssets({
             <div className="space-y-6">
                 <PageHeader
                     title="Fixed Assets"
+                    actions={
+                        canManage && (
+                            <div className="flex gap-2">
+                                <PrimaryButton
+                                    disabled={editorOpen}
+                                    onClick={() => setEditor('category')}
+                                >
+                                    + Asset Category
+                                </PrimaryButton>
+                                <PrimaryButton
+                                    disabled={editorOpen}
+                                    onClick={() => setEditor('asset')}
+                                >
+                                    + Capitalize Asset
+                                </PrimaryButton>
+                            </div>
+                        )
+                    }
                     description="Capitalization, straight-line depreciation, and disposal posting."
                 />
 
@@ -139,184 +135,23 @@ export default function FixedAssets({
                     </Card>
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-2">
-                    <Card title="Asset Category">
-                        <form
-                            className="grid gap-3 md:grid-cols-2"
-                            onSubmit={createCategory}
-                        >
-                            <input
-                                required
-                                name="code"
-                                placeholder="Category code"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="name"
-                                placeholder="Category name"
-                                className="rounded-md border-slate-300"
-                            />
-                            <select
-                                required
-                                name="asset_account_id"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="">Asset account</option>
-                                {assetAccounts.map((account) => (
-                                    <option key={account.id} value={account.id}>
-                                        {account.code} - {account.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                required
-                                name="accumulated_depreciation_account_id"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="">
-                                    Accumulated depreciation account
-                                </option>
-                                {assetAccounts.map((account) => (
-                                    <option key={account.id} value={account.id}>
-                                        {account.code} - {account.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                required
-                                name="depreciation_expense_account_id"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="">
-                                    Depreciation expense account
-                                </option>
-                                {expenseAccounts.map((account) => (
-                                    <option key={account.id} value={account.id}>
-                                        {account.code} - {account.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                required
-                                name="default_useful_life_months"
-                                type="number"
-                                min="1"
-                                placeholder="Useful life (months)"
-                                className="rounded-md border-slate-300"
-                            />
-                            <div className="md:col-span-2">
-                                <PrimaryButton>Create Category</PrimaryButton>
-                            </div>
-                        </form>
-                    </Card>
+                {proofAsset && (
+                    <FixedAssetAttachmentDialog
+                        key={proofAsset.id}
+                        asset={proofAsset}
+                        onClose={() => setProofAsset(null)}
+                    />
+                )}
 
-                    <Card title="Capitalize Asset">
-                        <form
-                            className="grid gap-3 md:grid-cols-2"
-                            onSubmit={capitalize}
-                        >
-                            <select
-                                required
-                                name="asset_category_id"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="">Category</option>
-                                {categories.map((category) => (
-                                    <option
-                                        key={category.id}
-                                        value={category.id}
-                                    >
-                                        {category.code} - {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={sourceType}
-                                onChange={(event) => {
-                                    setSourceType(
-                                        event.target.value as
-                                            'expense' | 'goods_receipt',
-                                    );
-                                    setSourceId('');
-                                }}
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="expense">
-                                    Approved/Paid Expense
-                                </option>
-                                <option value="goods_receipt">
-                                    Goods Receipt
-                                </option>
-                            </select>
-                            <select
-                                required
-                                value={sourceId}
-                                onChange={(event) =>
-                                    setSourceId(event.target.value)
-                                }
-                                className="rounded-md border-slate-300 md:col-span-2"
-                            >
-                                <option value="">Capitalization source</option>
-                                {sources.map((source) => (
-                                    <option key={source.id} value={source.id}>
-                                        {sourceType === 'expense'
-                                            ? `${source.expense_no} - ${source.title} (${money(source.amount ?? 0)})`
-                                            : `${source.grn_no} - ${source.received_date}`}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                required
-                                name="name"
-                                placeholder="Asset name"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="available_for_use_date"
-                                type="date"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                name="salvage_value"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="Salvage value"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                name="useful_life_months"
-                                type="number"
-                                min="1"
-                                placeholder="Override useful life"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                name="location"
-                                placeholder="Location"
-                                className="rounded-md border-slate-300"
-                            />
-                            <select
-                                name="custodian_user_id"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="">Custodian</option>
-                                {users.map((user) => (
-                                    <option key={user.id} value={user.id}>
-                                        {user.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="md:col-span-2">
-                                <PrimaryButton>
-                                    Capitalize and Post
-                                </PrimaryButton>
-                            </div>
-                        </form>
-                    </Card>
-                </div>
+                <FixedAssetCreateDialog
+                    mode={editor}
+                    onClose={() => setEditor(null)}
+                    accounts={accounts}
+                    categories={categories}
+                    users={users}
+                    expenses={expenses}
+                    goodsReceipts={goodsReceipts}
+                />
 
                 <Card title="Monthly Depreciation">
                     <div className="flex flex-wrap items-end gap-3">
@@ -333,6 +168,12 @@ export default function FixedAssets({
                         </label>
                         <PrimaryButton
                             type="button"
+                            disabled={
+                                editorOpen ||
+                                !auth.permissions.includes(
+                                    'fixed_assets.depreciate',
+                                )
+                            }
                             onClick={() =>
                                 router.post(route('fixed-assets.depreciate'), {
                                     month,
@@ -447,25 +288,10 @@ export default function FixedAssets({
                             {
                                 header: 'Proof',
                                 accessor: (asset) => (
-                                    <form
-                                        onSubmit={(event) => {
-                                            event.preventDefault();
-                                            router.post(
-                                                route(
-                                                    'fixed-assets.attachment.store',
-                                                    asset.id,
-                                                ),
-                                                new FormData(
-                                                    event.currentTarget,
-                                                ),
-                                                { forceFormData: true },
-                                            );
-                                        }}
-                                        className="flex gap-2"
-                                    >
+                                    <div className="flex flex-wrap items-center gap-2">
                                         {asset.attachment && (
                                             <a
-                                                className="text-sm text-indigo-700"
+                                                className="text-sm text-indigo-700 dark:text-indigo-300"
                                                 href={route(
                                                     'files.download',
                                                     asset.attachment.id,
@@ -474,26 +300,34 @@ export default function FixedAssets({
                                                 {asset.attachment.file_name}
                                             </a>
                                         )}
-                                        <input
-                                            required
-                                            name="attachment"
-                                            type="file"
-                                            accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                            className="max-w-36 text-xs"
-                                        />
-                                        <button className="text-sm text-indigo-700">
-                                            Upload
-                                        </button>
-                                    </form>
+                                        {canManage && (
+                                            <button
+                                                type="button"
+                                                disabled={editorOpen}
+                                                onClick={() =>
+                                                    setProofAsset(asset)
+                                                }
+                                                className="min-h-10 text-sm text-indigo-700 disabled:opacity-50 dark:text-indigo-300"
+                                            >
+                                                {asset.attachment
+                                                    ? 'Replace Proof'
+                                                    : 'Upload Proof'}
+                                            </button>
+                                        )}
+                                    </div>
                                 ),
                             },
                             {
                                 header: 'Action',
                                 accessor: (asset) =>
+                                    auth.permissions.includes(
+                                        'fixed_assets.dispose',
+                                    ) &&
                                     asset.status === 'active' && (
                                         <div className="flex gap-2">
                                             <button
                                                 type="button"
+                                                disabled={editorOpen}
                                                 className="text-sm text-amber-700"
                                                 onClick={() =>
                                                     router.post(
@@ -520,6 +354,7 @@ export default function FixedAssets({
                                             </button>
                                             <button
                                                 type="button"
+                                                disabled={editorOpen}
                                                 className="text-sm text-rose-700"
                                                 onClick={() =>
                                                     router.post(

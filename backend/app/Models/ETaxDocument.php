@@ -12,7 +12,9 @@ class ETaxDocument extends Model
 
     public const TYPES = ['tax_invoice', 'receipt', 'credit_note', 'debit_note'];
 
-    public const STATUSES = ['generated', 'signed', 'submitted', 'accepted', 'rejected'];
+    public const STATUSES = ['generated', 'signed', 'queued', 'simulated', 'error', 'submitted', 'accepted', 'rejected'];
+
+    protected $hidden = ['payload_json', 'xml_storage_path'];
 
     protected $fillable = ['org_id', 'source_type', 'source_id', 'document_type', 'document_no', 'status', 'xml_storage_path', 'xml_sha256', 'payload_json', 'signed_at', 'submitted_at', 'accepted_at', 'rejected_at', 'last_error', 'created_by'];
 

@@ -200,6 +200,19 @@ Phase 23 payment screens:
 
 See `PHASE_23_PAYMENT_GATEWAY.md` for the integration contract and remaining provider/MySQL release gates.
 
+## Phase 23.1 Master Dialog Standardization
+
+Create/Edit entry points ทั้งหมด 60 หน้า 92 ไฟล์ได้รับการปรับปรุงสู่มาตรฐาน `CreateEditDialog` และ `useEditorCoordinator` กลาง:
+
+- **Single Active Editor Rule:** หน้าจอ Master (Inventory, Payroll, Treasury ฯลฯ) อนุญาตให้เปิด editor ได้ครั้งละ 1 รายการ พร้อมระบบ Discard Guard เมื่อมี draft ค้าง
+- **Idempotent Submission:** แบบฟอร์มทุกตัวรองรับ `submission_key` ป้องกัน double-submission และรองรับ safe retry
+- **Documented Exceptions:**
+  - `Profile/Edit` (UpdateProfileInformation, UpdatePassword, DeleteUser) คงสถานะ Standalone account settings page พร้อม re-auth / 2FA flow เดิม
+  - `Settings/Organization` และ `Settings/NotificationPreferences` คงสถานะ in-page tab forms
+  - `BankStatements.import` และ `ETax.generate` คง specialized action dialog flow
+- **Form Inventory & Map:** ดูรายละเอียดรายฟอร์ม 91 รายการได้ใน `docs/PHASE_23_1_FORM_INVENTORY.md`
+
+
 - ไม่มี user invited: แสดงปุ่ม invite.
 - ไม่มี customer: แสดงปุ่ม create customer.
 - ไม่มี deal: แสดง pipeline ว่าง + create deal.

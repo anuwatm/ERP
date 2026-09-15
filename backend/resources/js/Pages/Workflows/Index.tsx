@@ -4,7 +4,12 @@ import PageHeader from '@/Components/UI/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
+import {
+    WorkflowDefinitionDialog,
+    WorkflowDelegationDialog,
+} from './WorkflowDialogs';
+
 type User = { id: string; name: string; email: string };
 type Instance = {
     id: string;
@@ -53,19 +58,6 @@ type Props = {
     delegations: Delegation[];
     can: { manage: boolean; approve: boolean };
 };
-type BuilderStep = {
-    assignment_type: 'user' | 'manager' | 'role';
-    approver_user_id: string;
-    approver_role_code: string;
-    execution_mode: 'sequential' | 'parallel';
-};
-
-const newBuilderStep = (): BuilderStep => ({
-    assignment_type: 'user',
-    approver_user_id: '',
-    approver_role_code: '',
-    execution_mode: 'sequential',
-});
 
 const documentLabel = (instance: Instance) => {
     const snapshot = instance.subject_snapshot;
@@ -89,26 +81,9 @@ export default function WorkflowIndex({
     delegations,
     can,
 }: Props) {
-    const [builderSteps, setBuilderSteps] = useState<BuilderStep[]>([
-        newBuilderStep(),
-    ]);
-    const submit = (event: FormEvent<HTMLFormElement>, name: string) => {
-        event.preventDefault();
-        router.post(
-            route(name),
-            Object.fromEntries(new FormData(event.currentTarget)),
-            { preserveScroll: true },
-        );
-    };
-    const submitDefinition = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const fields = Object.fromEntries(new FormData(event.currentTarget));
+    const [definitionOpen, setDefinitionOpen] = useState(false);
+    const [delegationOpen, setDelegationOpen] = useState(false);
 
-        router.post(route('workflows.definitions.store'), {
-            ...fields,
-            steps: builderSteps,
-        });
-    };
     return (
         <AuthenticatedLayout>
             <Head title="Approval Workflows" />
@@ -116,6 +91,26 @@ export default function WorkflowIndex({
                 <PageHeader
                     title="Approval Workflows"
                     description="Versioned, snapshot-based approvals with delegation and separation of duties."
+                    actions={
+                        <div className="flex flex-wrap gap-2">
+                            {can.manage && (
+                                <PrimaryButton
+                                    onClick={() => setDefinitionOpen(true)}
+                                >
+                                    New Workflow
+                                </PrimaryButton>
+                            )}
+                            {can.approve && (
+                                <button
+                                    type="button"
+                                    onClick={() => setDelegationOpen(true)}
+                                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    New Delegation
+                                </button>
+                            )}
+                        </div>
+                    }
                 />
                 <Card title="My Approval Inbox">
                     <DataTable
@@ -156,10 +151,10 @@ export default function WorkflowIndex({
                                                 key={action}
                                                 className={
                                                     action === 'approved'
-                                                        ? 'text-emerald-700'
+                                                        ? 'text-emerald-700 font-medium'
                                                         : action === 'rejected'
-                                                          ? 'text-rose-700'
-                                                          : 'text-amber-700'
+                                                          ? 'text-rose-700 font-medium'
+                                                          : 'text-amber-700 font-medium'
                                                 }
                                                 onClick={() => {
                                                     const comment =
@@ -221,362 +216,105 @@ export default function WorkflowIndex({
                     />
                 </Card>
                 {can.approve && (
-                    <Card title="Temporary Delegation">
-                        <form
-                            className="grid gap-3 md:grid-cols-4"
-                            onSubmit={(e) =>
-                                submit(e, 'workflows.delegations.store')
-                            }
-                        >
-                            <select
-                                required
-                                name="delegate_user_id"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="">Delegate to</option>
-                                {users.map((u) => (
-                                    <option key={u.id} value={u.id}>
-                                        {u.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                name="subject_type"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="">
-                                    All supported documents
-                                </option>
-                                <option value="leave_request">Leave</option>
-                                <option value="purchase_request">
-                                    Purchase request
-                                </option>
-                                <option value="purchase_order">
-                                    Purchase order
-                                </option>
-                                <option value="expense">Expense</option>
-                            </select>
-                            <input
-                                required
-                                name="starts_at"
-                                type="datetime-local"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="ends_at"
-                                type="datetime-local"
-                                className="rounded-md border-slate-300"
-                            />
-                            <div className="md:col-span-4">
-                                <PrimaryButton>Save Delegation</PrimaryButton>
+                    <Card
+                        title="Temporary Delegations"
+                        description="Active and scheduled approval delegation rules."
+                    >
+                        <div className="space-y-4">
+                            <div>
+                                <PrimaryButton
+                                    onClick={() => setDelegationOpen(true)}
+                                >
+                                    New Delegation
+                                </PrimaryButton>
                             </div>
-                        </form>
-                        <div className="mt-4 text-sm text-slate-600">
-                            {delegations.map((d) => (
-                                <div key={d.id}>
-                                    {d.delegate_user.name}: {d.starts_at} to{' '}
-                                    {d.ends_at}
-                                </div>
-                            ))}
+                            <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                {delegations.length === 0 && (
+                                    <p className="text-slate-500">
+                                        No active delegations configured.
+                                    </p>
+                                )}
+                                {delegations.map((d) => (
+                                    <div
+                                        key={d.id}
+                                        className="flex items-center justify-between rounded-lg border border-slate-100 p-3 dark:border-slate-800"
+                                    >
+                                        <span className="font-medium text-slate-800 dark:text-slate-100">
+                                            {d.delegate_user.name}
+                                        </span>
+                                        <span className="text-xs text-slate-500">
+                                            {d.starts_at} to {d.ends_at}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </Card>
                 )}
-                {can.manage && (
-                    <Card
-                        title="Workflow Builder"
-                        description="Creating the same code produces a new immutable version for future submissions."
-                    >
-                        <form
-                            className="grid gap-3 md:grid-cols-2"
-                            onSubmit={submitDefinition}
-                        >
-                            <input
-                                required
-                                name="code"
-                                placeholder="Workflow code"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="name"
-                                placeholder="Workflow name"
-                                className="rounded-md border-slate-300"
-                            />
-                            <select
-                                required
-                                name="subject_type"
-                                className="rounded-md border-slate-300"
-                            >
-                                <option value="expense">Expense</option>
-                                <option value="purchase_request">
-                                    Purchase request
-                                </option>
-                                <option value="purchase_order">
-                                    Purchase order
-                                </option>
-                                <option value="leave_request">
-                                    Leave request
-                                </option>
-                            </select>
-                            <div className="grid grid-cols-2 gap-2">
-                                <input
-                                    name="amount_min"
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="Minimum amount"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <input
-                                    name="amount_max"
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="Maximum amount"
-                                    className="rounded-md border-slate-300"
-                                />
-                            </div>
-                            <div className="space-y-3 md:col-span-2">
-                                {builderSteps.map((step, index) => (
-                                    <div
-                                        key={index}
-                                        className="grid gap-2 border-l-2 border-slate-200 pl-3 md:grid-cols-5"
-                                    >
-                                        <span className="self-center text-sm font-medium text-slate-700">
-                                            Step {index + 1}
-                                        </span>
-                                        <select
-                                            required
-                                            name={`steps[${index}][assignment_type]`}
-                                            value={step.assignment_type}
-                                            onChange={(event) =>
-                                                setBuilderSteps((current) =>
-                                                    current.map(
-                                                        (value, position) =>
-                                                            position === index
-                                                                ? {
-                                                                      ...value,
-                                                                      assignment_type:
-                                                                          event
-                                                                              .target
-                                                                              .value as BuilderStep['assignment_type'],
-                                                                  }
-                                                                : value,
-                                                    ),
-                                                )
-                                            }
-                                            className="rounded-md border-slate-300"
-                                        >
-                                            <option value="user">
-                                                Specific user
-                                            </option>
-                                            <option value="manager">
-                                                Requester manager
-                                            </option>
-                                            <option value="role">Role</option>
-                                        </select>
-                                        <select
-                                            name={`steps[${index}][approver_user_id]`}
-                                            value={step.approver_user_id}
-                                            disabled={
-                                                step.assignment_type !== 'user'
-                                            }
-                                            onChange={(event) =>
-                                                setBuilderSteps((current) =>
-                                                    current.map(
-                                                        (value, position) =>
-                                                            position === index
-                                                                ? {
-                                                                      ...value,
-                                                                      approver_user_id:
-                                                                          event
-                                                                              .target
-                                                                              .value,
-                                                                  }
-                                                                : value,
-                                                    ),
-                                                )
-                                            }
-                                            className="rounded-md border-slate-300"
-                                        >
-                                            <option value="">
-                                                Specific approver
-                                            </option>
-                                            {users.map((u) => (
-                                                <option key={u.id} value={u.id}>
-                                                    {u.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <input
-                                            name={`steps[${index}][approver_role_code]`}
-                                            value={step.approver_role_code}
-                                            disabled={
-                                                step.assignment_type !== 'role'
-                                            }
-                                            onChange={(event) =>
-                                                setBuilderSteps((current) =>
-                                                    current.map(
-                                                        (value, position) =>
-                                                            position === index
-                                                                ? {
-                                                                      ...value,
-                                                                      approver_role_code:
-                                                                          event
-                                                                              .target
-                                                                              .value,
-                                                                  }
-                                                                : value,
-                                                    ),
-                                                )
-                                            }
-                                            placeholder="Role code"
-                                            className="rounded-md border-slate-300"
-                                        />
-                                        <div className="flex gap-2">
-                                            <select
-                                                name={`steps[${index}][execution_mode]`}
-                                                value={step.execution_mode}
-                                                onChange={(event) =>
-                                                    setBuilderSteps((current) =>
-                                                        current.map(
-                                                            (
-                                                                value,
-                                                                position,
-                                                            ) =>
-                                                                position ===
-                                                                index
-                                                                    ? {
-                                                                          ...value,
-                                                                          execution_mode:
-                                                                              event
-                                                                                  .target
-                                                                                  .value as BuilderStep['execution_mode'],
-                                                                      }
-                                                                    : value,
-                                                        ),
-                                                    )
-                                                }
-                                                className="min-w-0 flex-1 rounded-md border-slate-300"
-                                            >
-                                                <option value="sequential">
-                                                    Sequential
-                                                </option>
-                                                <option value="parallel">
-                                                    Parallel
-                                                </option>
-                                            </select>
-                                            {builderSteps.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    className="text-sm text-rose-700"
-                                                    onClick={() =>
-                                                        setBuilderSteps(
-                                                            (current) =>
-                                                                current.filter(
-                                                                    (
-                                                                        _,
-                                                                        position,
-                                                                    ) =>
-                                                                        position !==
-                                                                        index,
-                                                                ),
-                                                        )
-                                                    }
-                                                >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                                {builderSteps.length < 10 && (
-                                    <button
-                                        type="button"
-                                        className="text-sm font-medium text-indigo-700"
-                                        onClick={() =>
-                                            setBuilderSteps((current) => [
-                                                ...current,
-                                                newBuilderStep(),
-                                            ])
-                                        }
-                                    >
-                                        Add step
-                                    </button>
-                                )}
-                            </div>
-                            <div className="md:col-span-2">
-                                <PrimaryButton>
-                                    Save Workflow Version
+                <Card
+                    title="Workflow Definitions"
+                    description="Versioned routing definitions for financial transactions and leave applications."
+                >
+                    <div className="space-y-4">
+                        {can.manage && (
+                            <div>
+                                <PrimaryButton
+                                    onClick={() => setDefinitionOpen(true)}
+                                >
+                                    Create New Workflow
                                 </PrimaryButton>
                             </div>
-                        </form>
-                    </Card>
-                )}
-                <Card title="Workflow Definitions">
-                    <DataTable
-                        data={definitions}
-                        keyExtractor={(item: Definition) => item.id}
-                        columns={[
-                            {
-                                header: 'Workflow',
-                                accessor: (item: Definition) =>
-                                    `${item.name} v${item.version}`,
-                            },
-                            {
-                                header: 'Subject',
-                                accessor: (item: Definition) =>
-                                    item.subject_type,
-                            },
-                            {
-                                header: 'Range',
-                                accessor: (item: Definition) =>
-                                    `${item.amount_min ?? '-'} to ${item.amount_max ?? '-'}`,
-                            },
-                            {
-                                header: 'Steps',
-                                accessor: (item: Definition) =>
-                                    item.steps
-                                        .map(
-                                            (step) =>
-                                                `${step.step_no}: ${step.assignment_type}`,
-                                        )
-                                        .join(', '),
-                            },
-                            {
-                                header: 'Active',
-                                accessor: (item: Definition) =>
-                                    item.is_active ? 'Yes' : 'No',
-                            },
-                        ]}
-                    />
-                </Card>
-                <Card title="My Approval History">
-                    <DataTable
-                        data={history}
-                        keyExtractor={(item: Approval) => item.id}
-                        columns={[
-                            {
-                                header: 'Document',
-                                accessor: (item: Approval) =>
-                                    item.instance.subject_type,
-                            },
-                            {
-                                header: 'Step',
-                                accessor: (item: Approval) => item.step_no,
-                            },
-                            {
-                                header: 'Status',
-                                accessor: (item: Approval) => item.status,
-                            },
-                            {
-                                header: 'Acted',
-                                accessor: (item: Approval) =>
-                                    item.acted_at ?? '-',
-                            },
-                        ]}
-                    />
+                        )}
+                        <DataTable
+                            data={definitions}
+                            keyExtractor={(item: Definition) => item.id}
+                            columns={[
+                                {
+                                    header: 'Workflow',
+                                    accessor: (item: Definition) =>
+                                        `${item.name} v${item.version}`,
+                                },
+                                {
+                                    header: 'Subject',
+                                    accessor: (item: Definition) =>
+                                        item.subject_type,
+                                },
+                                {
+                                    header: 'Range',
+                                    accessor: (item: Definition) =>
+                                        `${item.amount_min ?? '-'} to ${item.amount_max ?? '-'}`,
+                                },
+                                {
+                                    header: 'Steps',
+                                    accessor: (item: Definition) =>
+                                        item.steps
+                                            .map(
+                                                (step) =>
+                                                    `${step.step_no}: ${step.assignment_type}`,
+                                            )
+                                            .join(', '),
+                                },
+                                {
+                                    header: 'Active',
+                                    accessor: (item: Definition) =>
+                                        item.is_active ? 'Yes' : 'No',
+                                },
+                            ]}
+                        />
+                    </div>
                 </Card>
             </div>
+
+            <WorkflowDefinitionDialog
+                open={definitionOpen}
+                onClose={() => setDefinitionOpen(false)}
+                users={users}
+            />
+            <WorkflowDelegationDialog
+                open={delegationOpen}
+                onClose={() => setDelegationOpen(false)}
+                users={users}
+            />
         </AuthenticatedLayout>
     );
 }

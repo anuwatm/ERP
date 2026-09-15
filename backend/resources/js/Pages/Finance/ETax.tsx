@@ -47,12 +47,16 @@ export default function ETax({
     invoices,
     payments,
     notes,
+    canManage,
+    canSubmit,
 }: {
     config: Config;
     documents: Document[];
     invoices: Source[];
     payments: Source[];
     notes: Source[];
+    canManage: boolean;
+    canSubmit: boolean;
 }) {
     const settings = useForm({
         _method: 'patch',
@@ -118,7 +122,10 @@ export default function ETax({
                             <option value="manual_export">
                                 Manual XML Export
                             </option>
-                            <option value="provider">Certified Provider</option>
+                            <option value="mock">Mock (no delivery)</option>
+                            <option value="provider" disabled>
+                                Provider (not configured)
+                            </option>
                         </select>
                         <input
                             value={settings.data.provider_code}
@@ -154,14 +161,25 @@ export default function ETax({
                             className="rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
                         />
                         <div className="md:col-span-2">
-                            <PrimaryButton disabled={settings.processing}>
+                            <PrimaryButton
+                                disabled={settings.processing || !canManage}
+                            >
                                 Save Configuration
                             </PrimaryButton>
                         </div>
+                        {Object.values(settings.errors).map((error) => (
+                            <p
+                                role="alert"
+                                className="text-sm text-red-600"
+                                key={error}
+                            >
+                                {error}
+                            </p>
+                        ))}
                     </form>
                 </Card>
                 <Card
-                    title="Generate e-Tax XML"
+                    title="Prepare Internal XML"
                     description="XML uses the internal provider-mapping profile. Validate against the certified provider's current ETDA/RD schema before production submission."
                 >
                     <form
@@ -239,11 +257,21 @@ export default function ETax({
                         <PrimaryButton
                             disabled={
                                 generation.processing ||
+                                !canManage ||
                                 !generation.data.source_id
                             }
                         >
                             Generate XML
                         </PrimaryButton>
+                        {Object.values(generation.errors).map((error) => (
+                            <p
+                                role="alert"
+                                className="text-sm text-red-600"
+                                key={error}
+                            >
+                                {error}
+                            </p>
+                        ))}
                     </form>
                 </Card>
                 <Card
@@ -296,14 +324,35 @@ export default function ETax({
                                                   : 'neutral'
                                         }
                                     >
-                                        {document.status}
+                                        {document.status === 'simulated'
+                                            ? 'Simulated (not submitted)'
+                                            : document.status}
                                     </Badge>
                                 ),
                             },
                             {
                                 header: 'Attempts',
-                                accessor: (document) =>
-                                    document.attempts.length,
+                                accessor: (document) => (
+                                    <div>
+                                        <span>
+                                            {document.attempts.length} / 3
+                                        </span>
+                                        {document.last_error && (
+                                            <p className="max-w-xs break-words text-xs text-red-600">
+                                                {document.last_error}
+                                            </p>
+                                        )}
+                                        {document.attempts.map((attempt) => (
+                                            <div
+                                                className="text-xs"
+                                                key={attempt.id}
+                                            >
+                                                {attempt.status}:{' '}
+                                                {attempt.response_message}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ),
                             },
                             {
                                 header: 'Action',
@@ -319,23 +368,34 @@ export default function ETax({
                                                 XML
                                             </SecondaryButton>
                                         </a>
-                                        {!['submitted', 'accepted'].includes(
-                                            document.status,
-                                        ) && (
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() =>
-                                                    router.post(
-                                                        route(
-                                                            'e-tax.documents.submit',
-                                                            document.id,
-                                                        ),
-                                                    )
-                                                }
-                                            >
-                                                Queue
-                                            </SecondaryButton>
-                                        )}
+                                        {canSubmit &&
+                                            config.mode === 'mock' &&
+                                            document.attempts.length < 3 &&
+                                            [
+                                                'generated',
+                                                'signed',
+                                                'error',
+                                                'rejected',
+                                            ].includes(document.status) && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        router.post(
+                                                            route(
+                                                                'e-tax.documents.submit',
+                                                                document.id,
+                                                            ),
+                                                        )
+                                                    }
+                                                >
+                                                    {document.status ===
+                                                        'error' ||
+                                                    document.status ===
+                                                        'rejected'
+                                                        ? 'Retry mock'
+                                                        : 'Run mock'}
+                                                </SecondaryButton>
+                                            )}
                                     </div>
                                 ),
                             },

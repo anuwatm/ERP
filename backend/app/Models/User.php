@@ -75,6 +75,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(NotificationPreference::class);
     }
 
+    public function channelPreferences(): HasMany
+    {
+        return $this->hasMany(UserChannelPreference::class);
+    }
+
     public function hasPermissionCode(string $permission): bool
     {
         return $this->roles()

@@ -127,10 +127,11 @@ class FixedAssetController extends Controller
         DB::transaction(function () use ($request, $fixedAsset, $files): void {
             $asset = FixedAsset::where('org_id', $request->user()->org_id)->lockForUpdate()->findOrFail($fixedAsset->id);
             $previous = $asset->attachment_file_id;
-            $files->delete($asset->attachment);
+            $previousFile = $asset->attachment;
             $file = $files->store($request, $request->file('attachment'), 'fixed_asset', $asset->id, 'fixed_asset_proof');
             $asset->update(['attachment_file_id' => $file->id, 'updated_by' => $request->user()->id]);
             AuditLog::create(['org_id' => $asset->org_id, 'actor_user_id' => $request->user()->id, 'action' => 'fixed_asset.attachment_upload', 'entity_type' => 'fixed_asset', 'entity_id' => $asset->id, 'before_json' => ['attachment_file_id' => $previous], 'after_json' => ['attachment_file_id' => $file->id], 'request_id' => (string) Str::uuid()]);
+            $files->delete($previousFile);
         });
 
         return back()->with('success', 'Fixed asset proof uploaded.');

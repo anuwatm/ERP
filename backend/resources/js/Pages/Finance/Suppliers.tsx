@@ -1,13 +1,17 @@
-import InputLabel from '@/Components/InputLabel';
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import { EditorField, EditorChoice } from '@/Components/UI/EditorFields';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
 type Supplier = {
@@ -44,33 +48,68 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
         null,
     );
     const form = useForm<SupplierForm>(emptySupplier);
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const { auth } = usePage<PageProps>().props;
+    const canCreate = auth.permissions.includes('suppliers.create');
+    const canEdit = auth.permissions.includes('suppliers.update');
+    const canDelete = auth.permissions.includes('suppliers.delete');
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        setEditingSupplier(null);
+        form.setDefaults(emptySupplier);
+        form.setData(emptySupplier);
+        form.clearErrors();
+        submission.reset();
+    };
+    const create = () => {
+        if (!canCreate || form.processing) return;
+        guard.request(() => {
+            close();
+            setOpen(true);
+        });
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        if (form.processing || (editingSupplier ? !canEdit : !canCreate))
+            return;
         const options = {
             preserveScroll: true,
-            onSuccess: () => {
-                form.setData(emptySupplier);
-                setEditingSupplier(null);
-            },
+            onSuccess: close,
         };
 
         if (editingSupplier) {
             form.patch(route('suppliers.update', editingSupplier.id), options);
         } else {
-            form.post(route('suppliers.store'), options);
+            form.post(route('suppliers.store'), {
+                ...options,
+                headers: submission.headers(),
+            });
         }
     };
 
     const edit = (supplier: Supplier) => {
-        setEditingSupplier(supplier);
-        form.setData({
-            name: supplier.name,
-            tax_id: supplier.tax_id ?? '',
-            email: supplier.email ?? '',
-            phone: supplier.phone ?? '',
-            address: supplier.address ?? '',
-            status: supplier.status,
+        if (!canEdit || form.processing) return;
+        guard.request(() => {
+            setOpen(true);
+            setMinimized(false);
+            form.clearErrors();
+            submission.reset();
+            setEditingSupplier(supplier);
+            const data = {
+                name: supplier.name,
+                tax_id: supplier.tax_id ?? '',
+                email: supplier.email ?? '',
+                phone: supplier.phone ?? '',
+                address: supplier.address ?? '',
+                status: supplier.status,
+            };
+            form.setDefaults(data);
+            form.setData(data);
         });
     };
 
@@ -81,8 +120,15 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
                 <PageHeader
                     title="Suppliers"
                     description="Vendor master data for purchase orders and expenses."
+                    actions={
+                        canCreate && (
+                            <PrimaryButton onClick={create}>
+                                + Create Supplier
+                            </PrimaryButton>
+                        )
+                    }
                 />
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+                <div className="space-y-6">
                     <Card
                         title="Supplier List"
                         description="Org-scoped vendors"
@@ -131,21 +177,30 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
                                         <div className="flex flex-wrap gap-2">
                                             <SecondaryButton
                                                 type="button"
+                                                disabled={
+                                                    !canEdit || form.processing
+                                                }
                                                 onClick={() => edit(row)}
                                             >
                                                 Edit
                                             </SecondaryButton>
                                             <SecondaryButton
                                                 type="button"
+                                                disabled={
+                                                    !canDelete ||
+                                                    form.processing
+                                                }
                                                 onClick={() =>
-                                                    router.delete(
-                                                        route(
-                                                            'suppliers.destroy',
-                                                            row.id,
+                                                    guard.request(() =>
+                                                        router.delete(
+                                                            route(
+                                                                'suppliers.destroy',
+                                                                row.id,
+                                                            ),
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
                                                         ),
-                                                        {
-                                                            preserveScroll: true,
-                                                        },
                                                     )
                                                 }
                                             >
@@ -157,105 +212,125 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
                             ]}
                         />
                     </Card>
-                    <Card
+                    <DiscardChangesDialog
+                        open={guard.confirming}
+                        onKeep={guard.keep}
+                        onDiscard={guard.discard}
+                    />
+                    <CreateEditDialog
+                        open={open}
+                        minimized={minimized}
+                        onMinimize={setMinimized}
+                        onClose={() => guard.request(close)}
                         title={
-                            editingSupplier ? 'Edit Supplier' : 'New Supplier'
+                            editingSupplier
+                                ? 'Edit Supplier'
+                                : 'Create Supplier'
                         }
-                        description="Code is generated by number sequence."
+                        breadcrumb="Suppliers / Editor"
+                        entityLabel="Supplier"
+                        draftLabel={form.data.name || 'New supplier'}
+                        storageKey="suppliers-editor-size"
+                        formId="suppliers-editor"
+                        processing={form.processing}
+                        saveDisabled={editingSupplier ? !canEdit : !canCreate}
+                        saveLabel="Save Supplier"
+                        status={
+                            form.isDirty
+                                ? 'Unsaved changes'
+                                : editingSupplier
+                                  ? 'No changes'
+                                  : 'New supplier'
+                        }
+                        errors={form.errors}
+                        onSubmit={submit}
                     >
-                        <form onSubmit={submit} className="space-y-3">
-                            <Field
-                                label="Name"
-                                value={form.data.name}
-                                onChange={(value) =>
-                                    form.setData('name', value)
-                                }
-                            />
-                            <Field
-                                label="Tax ID"
-                                value={form.data.tax_id}
-                                onChange={(value) =>
-                                    form.setData('tax_id', value)
-                                }
-                            />
-                            <Field
-                                label="Email"
-                                value={form.data.email}
-                                onChange={(value) =>
-                                    form.setData('email', value)
-                                }
-                            />
-                            <Field
-                                label="Phone"
-                                value={form.data.phone}
-                                onChange={(value) =>
-                                    form.setData('phone', value)
-                                }
-                            />
-                            <div>
-                                <InputLabel value="Status" />
-                                <select
-                                    className="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm"
-                                    value={form.data.status}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'status',
-                                            event.target.value,
-                                        )
-                                    }
-                                >
-                                    <option value="active">active</option>
-                                    <option value="inactive">inactive</option>
-                                </select>
-                            </div>
-                            <Field
-                                label="Address"
-                                value={form.data.address}
-                                onChange={(value) =>
-                                    form.setData('address', value)
-                                }
-                            />
-                            <div className="flex justify-end gap-2">
-                                {editingSupplier && (
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() => {
-                                            setEditingSupplier(null);
-                                            form.setData(emptySupplier);
-                                        }}
+                        {(expanded) => (
+                            <div className="space-y-6 p-4 sm:p-6">
+                                <section aria-label="Supplier details">
+                                    <h3 className="mb-3 font-semibold">
+                                        Supplier details
+                                    </h3>
+                                    <div
+                                        className={
+                                            expanded
+                                                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                                                : 'grid gap-4 sm:grid-cols-2'
+                                        }
                                     >
-                                        Cancel
-                                    </SecondaryButton>
-                                )}
-                                <PrimaryButton disabled={form.processing}>
-                                    Save Supplier
-                                </PrimaryButton>
+                                        <EditorField
+                                            id="supplier-name"
+                                            label="Name"
+                                            value={form.data.name}
+                                            error={form.errors.name}
+                                            onChange={(v) =>
+                                                form.setData('name', v)
+                                            }
+                                            required
+                                        />
+                                        <EditorField
+                                            id="supplier-tax_id"
+                                            label="Tax ID"
+                                            value={form.data.tax_id}
+                                            error={form.errors.tax_id}
+                                            onChange={(v) =>
+                                                form.setData('tax_id', v)
+                                            }
+                                        />
+                                        <EditorChoice
+                                            id="supplier-status"
+                                            label="Status"
+                                            value={form.data.status}
+                                            error={form.errors.status}
+                                            onChange={(v) =>
+                                                form.setData('status', v)
+                                            }
+                                            options={['active', 'inactive']}
+                                        />
+                                    </div>
+                                </section>
+                                <section aria-label="Contact information">
+                                    <h3 className="mb-3 font-semibold">
+                                        Contact information
+                                    </h3>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <EditorField
+                                            id="supplier-email"
+                                            label="Email"
+                                            value={form.data.email}
+                                            error={form.errors.email}
+                                            onChange={(v) =>
+                                                form.setData('email', v)
+                                            }
+                                            type="email"
+                                        />
+                                        <EditorField
+                                            id="supplier-phone"
+                                            label="Phone"
+                                            value={form.data.phone}
+                                            error={form.errors.phone}
+                                            onChange={(v) =>
+                                                form.setData('phone', v)
+                                            }
+                                            type="tel"
+                                        />
+                                        <EditorField
+                                            id="supplier-address"
+                                            label="Address"
+                                            value={form.data.address}
+                                            error={form.errors.address}
+                                            onChange={(v) =>
+                                                form.setData('address', v)
+                                            }
+                                            multiline
+                                        />
+                                    </div>
+                                </section>
                             </div>
-                        </form>
-                    </Card>
+                        )}
+                    </CreateEditDialog>
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-function Field({
-    label,
-    value,
-    onChange,
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-}) {
-    return (
-        <div>
-            <InputLabel value={label} />
-            <TextInput
-                className="mt-1 block w-full"
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-            />
-        </div>
     );
 }

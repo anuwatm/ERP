@@ -6,12 +6,13 @@ use App\Models\ETaxConfig;
 use App\Models\ETaxDocument;
 use App\Models\ETaxSubmissionAttempt;
 use App\Services\ETax\ETaxDocumentService;
-use App\Services\ETax\ETaxSubmissionAdapter;
+use App\Services\ETax\MockETaxSubmissionAdapter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class SubmitETaxDocument implements ShouldQueue
@@ -20,32 +21,43 @@ class SubmitETaxDocument implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(public string $documentId) {}
-
-    public function handle(ETaxDocumentService $documents, ETaxSubmissionAdapter $adapter): void
+    public function __construct(public string $documentId)
     {
-        $document = ETaxDocument::findOrFail($this->documentId);
-        $config = ETaxConfig::where('org_id', $document->org_id)->first();
-        $attempt = ETaxSubmissionAttempt::create([
-            'org_id' => $document->org_id,
-            'e_tax_document_id' => $document->id,
-            'attempt_no' => ETaxSubmissionAttempt::where('e_tax_document_id', $document->id)->max('attempt_no') + 1,
-            'status' => 'processing',
-            'provider_code' => $config?->provider_code,
-            'started_at' => now(),
-        ]);
+        $this->onQueue('etax');
+    }
 
-        try {
-            if (! $config || $config->mode !== 'provider') {
-                throw new \RuntimeException('A certified provider configuration is required before submission.');
+    public function handle(ETaxDocumentService $documents, MockETaxSubmissionAdapter $adapter): void
+    {
+        DB::transaction(function () use ($documents, $adapter) {
+            // Local mock only. A live adapter must implement durable claim, network call and inquiry/reconciliation separately.
+            $document = ETaxDocument::whereKey($this->documentId)->lockForUpdate()->firstOrFail();
+            if ($document->status !== 'queued' || $document->attempts()->count() >= 3) {
+                return;
             }
-            $result = $adapter->submit($config, $document, $documents->xml($document));
-            $document->update(['status' => 'submitted', 'submitted_at' => now(), 'last_error' => null]);
-            $attempt->update(['status' => 'succeeded', 'external_reference' => $result['external_reference'] ?? null, 'response_code' => $result['response_code'] ?? null, 'response_message' => $result['response_message'] ?? null, 'finished_at' => now()]);
-        } catch (Throwable $exception) {
-            $document->update(['status' => 'rejected', 'rejected_at' => now(), 'last_error' => $exception->getMessage()]);
-            $attempt->update(['status' => 'failed', 'response_message' => $exception->getMessage(), 'finished_at' => now()]);
-            throw $exception;
-        }
+            $config = ETaxConfig::where('org_id', $document->org_id)->first();
+            $attempt = ETaxSubmissionAttempt::create([
+                'org_id' => $document->org_id,
+                'e_tax_document_id' => $document->id,
+                'attempt_no' => ETaxSubmissionAttempt::where('e_tax_document_id', $document->id)->max('attempt_no') + 1,
+                'status' => 'processing',
+                'provider_code' => 'mock',
+                'started_at' => now(),
+            ]);
+
+            try {
+                if (! $config || $config->mode !== 'mock') {
+                    throw new \RuntimeException('Mock mode is not enabled.');
+                }
+                $result = $adapter->submit($config, $document, $documents->xml($document));
+                if (($result['response_message'] ?? null) !== 'SIMULATED_ONLY') {
+                    throw new \RuntimeException('Unexpected mock response.');
+                }
+                $document->update(['status' => 'simulated', 'last_error' => null]);
+                $attempt->update(['status' => 'simulated', 'external_reference' => 'MOCK-'.$document->id, 'response_code' => 200, 'response_message' => 'SIMULATED_ONLY', 'finished_at' => now()]);
+            } catch (Throwable $exception) {
+                $document->update(['status' => 'error', 'last_error' => 'MOCK_FAILED: check mode, XML integrity and required fields.']);
+                $attempt->update(['status' => 'failed', 'response_message' => 'MOCK_FAILED', 'finished_at' => now()]);
+            }
+        }, 3);
     }
 }

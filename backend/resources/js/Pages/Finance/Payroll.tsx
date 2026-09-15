@@ -2,9 +2,14 @@ import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
+import useEditorCoordinator from '@/Hooks/useEditorCoordinator';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import {
+    PayrollPolicyDialog,
+    PayrollProfileDialog,
+    PayrollRunDialog,
+} from './PayrollDialogs';
 
 type Profile = {
     id: string;
@@ -76,13 +81,9 @@ export default function Payroll({
     }[];
     can: { manage: boolean; approve: boolean; pay: boolean; export: boolean };
 }) {
-    const submit = (event: FormEvent<HTMLFormElement>, name: string) => {
-        event.preventDefault();
-        router.post(
-            route(name),
-            Object.fromEntries(new FormData(event.currentTarget)),
-        );
-    };
+    const { activeEditor, setActiveEditor, activeGuardRef, switchEditor } =
+        useEditorCoordinator<'profile' | 'run' | 'policy' | null>(null);
+
     return (
         <AuthenticatedLayout>
             <Head title="Payroll" />
@@ -90,137 +91,70 @@ export default function Payroll({
                 <PageHeader
                     title="Payroll"
                     description="THB payroll, effective-dated tax and social security policies, approvals, payslips and GL."
+                    actions={
+                        can.manage ? (
+                            <div className="flex flex-wrap gap-2">
+                                <PrimaryButton
+                                    onClick={() => switchEditor('run')}
+                                >
+                                    Create Payroll Run
+                                </PrimaryButton>
+                                <button
+                                    type="button"
+                                    onClick={() => switchEditor('profile')}
+                                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    New Employee Profile
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => switchEditor('policy')}
+                                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    New Policy Version
+                                </button>
+                            </div>
+                        ) : undefined
+                    }
                 />
                 <div className="grid gap-6 xl:grid-cols-2">
                     {can.manage && (
-                        <Card title="Employee Payroll Profile">
-                            <form
-                                className="grid gap-3 md:grid-cols-2"
-                                onSubmit={(e) =>
-                                    submit(e, 'payroll.profiles.store')
-                                }
-                            >
-                                <select
-                                    required
-                                    name="user_id"
-                                    className="rounded-md border-slate-300"
+                        <Card
+                            title="Employee Compensation Profiles"
+                            description="Base salary, statutory social security deduction, and disbursement settings."
+                        >
+                            <div className="flex h-full flex-col justify-between space-y-4">
+                                <p className="text-sm text-slate-600 dark:text-slate-300">
+                                    Manage fixed compensation, allowances, and
+                                    withholding rules across active employees.
+                                </p>
+                                <PrimaryButton
+                                    onClick={() => switchEditor('profile')}
+                                    className="w-fit"
                                 >
-                                    <option value="">Employee</option>
-                                    {users.map((u) => (
-                                        <option key={u.id} value={u.id}>
-                                            {u.name} ({u.email})
-                                        </option>
-                                    ))}
-                                </select>
-                                <input
-                                    required
-                                    name="monthly_salary"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Monthly salary"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <input
-                                    name="fixed_allowance"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Fixed allowance"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <input
-                                    name="fixed_deduction"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Fixed deduction"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <input
-                                    name="annual_tax_allowance"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    defaultValue="60000"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <select
-                                    name="payment_method"
-                                    defaultValue="bank_transfer"
-                                    className="rounded-md border-slate-300"
-                                >
-                                    <option value="bank_transfer">
-                                        Bank transfer
-                                    </option>
-                                    <option value="cash">Cash</option>
-                                </select>
-                                <input
-                                    name="payment_reference"
-                                    placeholder="Payment reference"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <label className="flex items-center gap-2 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        name="social_security_enabled"
-                                        defaultChecked
-                                        value="1"
-                                    />{' '}
-                                    Social security
-                                </label>
-                                <input
-                                    type="hidden"
-                                    name="status"
-                                    value="active"
-                                />
-                                <div className="md:col-span-2">
-                                    <PrimaryButton>Save Profile</PrimaryButton>
-                                </div>
-                            </form>
+                                    New Employee Profile
+                                </PrimaryButton>
+                            </div>
                         </Card>
                     )}
                     {can.manage && (
-                        <Card title="Create Payroll Run">
-                            <form
-                                className="grid gap-3 md:grid-cols-2"
-                                onSubmit={(e) =>
-                                    submit(e, 'payroll.runs.store')
-                                }
-                            >
-                                <input
-                                    required
-                                    name="period_start"
-                                    type="date"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <input
-                                    required
-                                    name="period_end"
-                                    type="date"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <input
-                                    required
-                                    name="payment_date"
-                                    type="date"
-                                    className="rounded-md border-slate-300"
-                                />
-                                <select
-                                    name="bank_account_id"
-                                    className="rounded-md border-slate-300"
+                        <Card
+                            title="Payroll Runs & Processing"
+                            description="Periodic salary disbursement cycles, approvals, and general ledger posting."
+                        >
+                            <div className="flex h-full flex-col justify-between space-y-4">
+                                <p className="text-sm text-slate-600 dark:text-slate-300">
+                                    Initiate monthly or semi-monthly wage runs,
+                                    run calculations, and export PND1/SSO
+                                    reports.
+                                </p>
+                                <PrimaryButton
+                                    onClick={() => switchEditor('run')}
+                                    className="w-fit"
                                 >
-                                    <option value="">Cash on hand</option>
-                                    {bankAccounts.map((a) => (
-                                        <option key={a.id} value={a.id}>
-                                            {a.bank_name} - {a.account_name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="md:col-span-2">
-                                    <PrimaryButton>Create Run</PrimaryButton>
-                                </div>
-                            </form>
+                                    Create Payroll Run
+                                </PrimaryButton>
+                            </div>
                         </Card>
                     )}
                 </div>
@@ -343,10 +277,10 @@ export default function Payroll({
                                                         )
                                                     }
                                                 >
-                                                    Pay
+                                                    Mark Paid
                                                 </button>
                                             )}
-                                        {can.export && (
+                                        {run.status === 'paid' && (
                                             <>
                                                 <a
                                                     className="text-slate-700"
@@ -414,106 +348,45 @@ export default function Payroll({
                     />
                 </Card>
                 {can.manage && (
-                    <Card title="Policy Settings">
-                        <form
-                            className="grid gap-3 md:grid-cols-2"
-                            onSubmit={(e) =>
-                                submit(e, 'payroll.policies.store')
-                            }
-                        >
-                            <input
-                                required
-                                name="effective_from"
-                                type="date"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="employment_expense_rate"
-                                type="number"
-                                step="0.01"
-                                defaultValue="50"
-                                placeholder="Employment expense rate (%)"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="employment_expense_cap"
-                                type="number"
-                                step="0.01"
-                                defaultValue="100000"
-                                placeholder="Employment expense cap"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="wage_ceiling"
-                                type="number"
-                                step="0.01"
-                                defaultValue="17500"
-                                placeholder="Social security wage ceiling"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="employee_rate"
-                                type="number"
-                                step="0.01"
-                                defaultValue="5"
-                                placeholder="Employee SS rate (%)"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                name="employer_rate"
-                                type="number"
-                                step="0.01"
-                                defaultValue="5"
-                                placeholder="Employer SS rate (%)"
-                                className="rounded-md border-slate-300"
-                            />
-                            <input
-                                name="source_url"
-                                type="url"
-                                placeholder="Official source URL"
-                                className="rounded-md border-slate-300 md:col-span-2"
-                            />
-                            <textarea
-                                required
-                                name="brackets_json"
-                                defaultValue={
-                                    '[{"up_to":150000,"rate":0},{"up_to":300000,"rate":5},{"up_to":500000,"rate":10},{"up_to":750000,"rate":15},{"up_to":1000000,"rate":20},{"up_to":2000000,"rate":25},{"up_to":5000000,"rate":30},{"up_to":null,"rate":35}]'
-                                }
-                                className="min-h-24 rounded-md border-slate-300 font-mono text-xs md:col-span-2"
-                            />
-                            <div className="md:col-span-2">
-                                <PrimaryButton>
-                                    Save New Policy Version
+                    <Card
+                        title="Policy Settings"
+                        description="Statutory tax brackets and social security contribution rates."
+                    >
+                        <div className="space-y-4">
+                            <div>
+                                <PrimaryButton
+                                    onClick={() => switchEditor('policy')}
+                                >
+                                    New Policy Version
                                 </PrimaryButton>
                             </div>
-                        </form>
-                        <div className="mt-5 grid gap-4 text-sm md:grid-cols-2">
-                            <div>
-                                <div className="font-medium">
-                                    Tax policy versions
-                                </div>
-                                {taxPolicies.map((p) => (
-                                    <div key={p.id}>
-                                        {p.effective_from} - {p.name}
+                            <div className="grid gap-4 text-sm md:grid-cols-2">
+                                <div className="rounded-lg border border-slate-100 p-3 dark:border-slate-800">
+                                    <div className="mb-2 font-medium text-slate-800 dark:text-slate-200">
+                                        Tax Policy Versions
                                     </div>
-                                ))}
-                            </div>
-                            <div>
-                                <div className="font-medium">
-                                    Social security versions
-                                </div>
-                                {socialSecurityPolicies.map((p) => (
-                                    <div key={p.id}>
-                                        {p.effective_from} - {p.name} (
-                                        {p.employee_rate}% / ceiling{' '}
-                                        {money(p.wage_ceiling)})
+                                    <div className="space-y-1 text-slate-600 dark:text-slate-400">
+                                        {taxPolicies.map((p) => (
+                                            <div key={p.id}>
+                                                {p.effective_from} - {p.name}
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                </div>
+                                <div className="rounded-lg border border-slate-100 p-3 dark:border-slate-800">
+                                    <div className="mb-2 font-medium text-slate-800 dark:text-slate-200">
+                                        Social Security Versions
+                                    </div>
+                                    <div className="space-y-1 text-slate-600 dark:text-slate-400">
+                                        {socialSecurityPolicies.map((p) => (
+                                            <div key={p.id}>
+                                                {p.effective_from} - {p.name} (
+                                                {p.employee_rate}% / ceiling{' '}
+                                                {money(p.wage_ceiling)})
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </Card>
@@ -524,6 +397,39 @@ export default function Payroll({
                     guidance before filing.
                 </p>
             </div>
+
+            {activeEditor === 'profile' && (
+                <PayrollProfileDialog
+                    open={true}
+                    onRequestCloseRef={activeGuardRef}
+                    onClose={() => {
+                        activeGuardRef.current = null;
+                        setActiveEditor(null);
+                    }}
+                    users={users}
+                />
+            )}
+            {activeEditor === 'run' && (
+                <PayrollRunDialog
+                    open={true}
+                    onRequestCloseRef={activeGuardRef}
+                    onClose={() => {
+                        activeGuardRef.current = null;
+                        setActiveEditor(null);
+                    }}
+                    bankAccounts={bankAccounts}
+                />
+            )}
+            {activeEditor === 'policy' && (
+                <PayrollPolicyDialog
+                    open={true}
+                    onRequestCloseRef={activeGuardRef}
+                    onClose={() => {
+                        activeGuardRef.current = null;
+                        setActiveEditor(null);
+                    }}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

@@ -1,14 +1,14 @@
-import SecondaryButton from '@/Components/SecondaryButton';
 import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import SecondaryButton from '@/Components/SecondaryButton';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
 import { Head, router } from '@inertiajs/react';
-import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import DeliveryOrderDialog from './DeliveryOrderDialog';
+import VoucherAttachmentDialog from './VoucherAttachmentDialog';
 
 type Row = Record<string, string | number | null | undefined> & { id: string };
 type Invoice = {
@@ -42,6 +42,9 @@ export default function CommercialDocuments({
     invoices: Invoice[];
     warehouses: Warehouse[];
 }) {
+    const [createDoOpen, setCreateDoOpen] = useState(false);
+    const [managingVoucher, setManagingVoucher] = useState<Row | null>(null);
+
     return (
         <AuthenticatedLayout>
             <Head title="Commercial Documents" />
@@ -49,11 +52,30 @@ export default function CommercialDocuments({
                 <PageHeader
                     title="Commercial Documents"
                     description="CN/DN, billing notes, delivery orders, purchase requests, and vouchers."
+                    actions={
+                        <PrimaryButton
+                            type="button"
+                            onClick={() => setCreateDoOpen(true)}
+                        >
+                            + Create Delivery Order
+                        </PrimaryButton>
+                    }
                 />
-                <DeliveryOrderForm
+
+                <DeliveryOrderDialog
+                    open={createDoOpen}
                     invoices={invoices}
                     warehouses={warehouses}
+                    onClose={() => setCreateDoOpen(false)}
                 />
+
+                {managingVoucher && (
+                    <VoucherAttachmentDialog
+                        voucher={managingVoucher}
+                        onClose={() => setManagingVoucher(null)}
+                    />
+                )}
+
                 <div className="grid gap-6 xl:grid-cols-2">
                     <SimpleTable
                         title="Credit / Debit Notes"
@@ -96,159 +118,11 @@ export default function CommercialDocuments({
                         statusKey="status"
                         printType="voucher"
                         isVoucher
+                        onManageProof={(voucher) => setManagingVoucher(voucher)}
                     />
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-function DeliveryOrderForm({
-    invoices,
-    warehouses,
-}: {
-    invoices: Invoice[];
-    warehouses: Warehouse[];
-}) {
-    const form = useForm({
-        invoice_id: '',
-        warehouse_id: '',
-        delivery_date: new Date().toISOString().slice(0, 10),
-        status: 'draft',
-        receiver_name: '',
-        note: '',
-    });
-    const [barcode, setBarcode] = useState('');
-    const [scanResult, setScanResult] = useState('');
-    const selectedInvoice = invoices.find(
-        (invoice) => invoice.id === form.data.invoice_id,
-    );
-    const scan = () => {
-        const product = selectedInvoice?.items.find(
-            (item) =>
-                item.product?.barcode === barcode ||
-                item.product?.sku === barcode,
-        )?.product;
-        setScanResult(
-            product
-                ? `${product.name} matches the selected invoice.`
-                : 'Barcode / SKU does not match the selected invoice.',
-        );
-    };
-    return (
-        <Card title="Create Delivery Order">
-            <form
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    form.post(route('delivery-orders.store'), {
-                        preserveScroll: true,
-                        onSuccess: () =>
-                            form.reset(
-                                'invoice_id',
-                                'warehouse_id',
-                                'receiver_name',
-                                'note',
-                            ),
-                    });
-                }}
-                className="grid gap-3 lg:grid-cols-3"
-            >
-                <select
-                    className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                    value={form.data.invoice_id}
-                    onChange={(event) =>
-                        form.setData('invoice_id', event.target.value)
-                    }
-                    required
-                >
-                    <option value="">Invoice</option>
-                    {invoices.map((invoice) => (
-                        <option key={invoice.id} value={invoice.id}>
-                            {invoice.invoice_no}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                    value={form.data.warehouse_id}
-                    onChange={(event) =>
-                        form.setData('warehouse_id', event.target.value)
-                    }
-                >
-                    <option value="">All warehouse stock</option>
-                    {warehouses.map((warehouse) => (
-                        <option key={warehouse.id} value={warehouse.id}>
-                            {warehouse.code} - {warehouse.name}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                    value={form.data.status}
-                    onChange={(event) =>
-                        form.setData(
-                            'status',
-                            event.target.value as 'draft' | 'delivered',
-                        )
-                    }
-                >
-                    <option value="draft">Draft</option>
-                    <option value="delivered">Delivered</option>
-                </select>
-                <TextInput
-                    type="date"
-                    value={form.data.delivery_date}
-                    onChange={(event) =>
-                        form.setData('delivery_date', event.target.value)
-                    }
-                    required
-                />
-                <TextInput
-                    value={form.data.receiver_name}
-                    onChange={(event) =>
-                        form.setData('receiver_name', event.target.value)
-                    }
-                    placeholder="Receiver name"
-                />
-                <div className="flex gap-2">
-                    <TextInput
-                        value={barcode}
-                        onChange={(event) => setBarcode(event.target.value)}
-                        onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                scan();
-                            }
-                        }}
-                        placeholder="Scan barcode / SKU"
-                        className="w-full"
-                    />
-                    <SecondaryButton type="button" onClick={scan}>
-                        Scan
-                    </SecondaryButton>
-                </div>
-                <textarea
-                    className="block w-full rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:col-span-2"
-                    value={form.data.note}
-                    onChange={(event) =>
-                        form.setData('note', event.target.value)
-                    }
-                    placeholder="Note"
-                />
-                <div>
-                    <PrimaryButton
-                        disabled={form.processing || !form.data.invoice_id}
-                    >
-                        Create DO
-                    </PrimaryButton>
-                </div>
-                {scanResult && (
-                    <p className="text-sm text-slate-600 dark:text-slate-300 lg:col-span-3">
-                        {scanResult}
-                    </p>
-                )}
-            </form>
-        </Card>
     );
 }
 
@@ -261,6 +135,7 @@ function SimpleTable({
     printType,
     isVoucher = false,
     isPurchaseRequest = false,
+    onManageProof,
 }: {
     title: string;
     rows: Row[];
@@ -270,6 +145,7 @@ function SimpleTable({
     printType: string;
     isVoucher?: boolean;
     isPurchaseRequest?: boolean;
+    onManageProof?: (row: Row) => void;
 }) {
     return (
         <Card title={title} description={`${rows.length} document(s)`}>
@@ -346,8 +222,15 @@ function SimpleTable({
                                             Submit Approval
                                         </SecondaryButton>
                                     )}
-                                {isVoucher && (
-                                    <VoucherAttachmentActions row={row} />
+                                {isVoucher && onManageProof && (
+                                    <SecondaryButton
+                                        type="button"
+                                        onClick={() => onManageProof(row)}
+                                    >
+                                        {row.attachment
+                                            ? 'Proof (1)'
+                                            : 'Upload Proof'}
+                                    </SecondaryButton>
                                 )}
                             </div>
                         ),
@@ -355,48 +238,5 @@ function SimpleTable({
                 ]}
             />
         </Card>
-    );
-}
-
-function VoucherAttachmentActions({ row }: { row: Row }) {
-    const form = useForm<{ attachment: File | null }>({ attachment: null });
-    const attachment = row.attachment as
-        { id: string; file_name: string } | null | undefined;
-
-    return (
-        <div className="flex flex-wrap items-center gap-2">
-            <label className="cursor-pointer rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-                {form.processing
-                    ? 'Uploading'
-                    : attachment
-                      ? 'Replace Proof'
-                      : 'Upload Proof'}
-                <input
-                    className="sr-only"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp"
-                    disabled={form.processing}
-                    onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (!file) return;
-
-                        form.setData('attachment', file);
-                        form.post(route('vouchers.attachment.store', row.id), {
-                            forceFormData: true,
-                            preserveScroll: true,
-                            onFinish: () => form.reset('attachment'),
-                        });
-                    }}
-                />
-            </label>
-            {attachment && (
-                <a
-                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-300"
-                    href={route('files.download', attachment.id)}
-                >
-                    {attachment.file_name}
-                </a>
-            )}
-        </div>
     );
 }

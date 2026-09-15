@@ -1,6 +1,7 @@
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Head, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { useState } from 'react';
+import VendorBillDialog from './VendorBillDialog';
 
 type Quote = {
     id: string;
@@ -60,7 +61,7 @@ export default function PortalDashboard({
     submissions,
     documents,
     purchaseOrders,
-    payables,
+    payables = [],
 }: {
     portalUser: { name?: string | null; email: string; party_type: string };
     qrEnabled: boolean;
@@ -69,15 +70,9 @@ export default function PortalDashboard({
     submissions: Submission[];
     documents: PortalDocument[];
     purchaseOrders: PurchaseOrder[];
-    payables: Payable[];
+    payables?: Payable[];
 }) {
-    const submitBill = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        router.post(
-            route('portal.vendor-bills.store'),
-            new FormData(event.currentTarget),
-        );
-    };
+    const [vendorBillDialogOpen, setVendorBillDialogOpen] = useState(false);
     return (
         <>
             <Head title="ERP Portal" />
@@ -211,56 +206,24 @@ export default function PortalDashboard({
                                 ))}
                             </section>
                             <section>
-                                <h2 className="mb-3 text-lg font-bold">
-                                    Submit vendor bill
-                                </h2>
-                                <form
-                                    onSubmit={submitBill}
-                                    className="grid gap-3 border bg-white p-4 md:grid-cols-2"
-                                >
-                                    <input
-                                        name="vendor_invoice_no"
-                                        required
-                                        placeholder="Vendor invoice number"
-                                        className="border"
-                                    />
-                                    <input
-                                        name="invoice_date"
-                                        required
-                                        type="date"
-                                        className="border"
-                                    />
-                                    <input
-                                        name="amount"
-                                        required
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="Amount"
-                                        className="border"
-                                    />
-                                    <input
-                                        name="currency"
-                                        defaultValue="THB"
-                                        required
-                                        maxLength={3}
-                                        className="border"
-                                    />
-                                    <input
-                                        name="file"
-                                        required
-                                        type="file"
-                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                        className="md:col-span-2"
-                                    />
-                                    <textarea
-                                        name="note"
-                                        placeholder="Note"
-                                        className="border md:col-span-2"
-                                    />
-                                    <PrimaryButton>
-                                        Submit for review
+                                <div className="flex items-center justify-between border bg-white p-4">
+                                    <div>
+                                        <h2 className="text-lg font-bold">
+                                            Submit vendor bill
+                                        </h2>
+                                        <p className="text-sm text-slate-600">
+                                            Upload and submit your invoice for
+                                            review and payment.
+                                        </p>
+                                    </div>
+                                    <PrimaryButton
+                                        onClick={() =>
+                                            setVendorBillDialogOpen(true)
+                                        }
+                                    >
+                                        Submit Vendor Bill
                                     </PrimaryButton>
-                                </form>
+                                </div>
                             </section>
                             <section>
                                 <h2 className="mb-3 text-lg font-bold">
@@ -317,6 +280,10 @@ export default function PortalDashboard({
                         </div>
                     </section>
                 </div>
+                <VendorBillDialog
+                    open={vendorBillDialogOpen}
+                    onClose={() => setVendorBillDialogOpen(false)}
+                />
             </main>
         </>
     );

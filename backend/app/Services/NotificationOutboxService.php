@@ -16,6 +16,7 @@ use App\Services\Notifications\TelegramBotDriver;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class NotificationOutboxService
@@ -94,7 +95,8 @@ class NotificationOutboxService
             $outbox->update(['status' => 'sent', 'sent_at' => now()]);
 
             return true;
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
+            Log::warning('Notification delivery failed.', ['outbox_id' => $outbox->id, 'channel' => $outbox->channel, 'attempt' => $outbox->attempt_count, 'exception_type' => get_class($exception)]);
             $terminal = $outbox->attempt_count >= self::MAX_ATTEMPTS;
             NotificationDispatch::create([
                 'notification_outbox_id' => $outbox->id,

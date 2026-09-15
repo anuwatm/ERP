@@ -31,7 +31,8 @@ class ContactController extends Controller
 
         $this->audit($request, 'contact.create', $contact, null, $contact->only($this->trackedFields()));
 
-        return back()->with('success', 'Contact created.');
+        return back()->with('success', 'Contact created.')
+            ->with('created_reference', ['type' => 'contact', 'id' => $contact->id, 'customer_id' => $customer->id, 'name' => $contact->name]);
     }
 
     public function update(Request $request, Contact $contact): RedirectResponse

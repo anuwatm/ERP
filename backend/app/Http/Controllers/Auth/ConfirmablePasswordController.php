@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,12 @@ class ConfirmablePasswordController extends Controller
     /**
      * Confirm the user's password.
      */
-    public function store(Request $request): RedirectResponse
+    public function status(Request $request): JsonResponse
+    {
+        return response()->json(['confirmed' => time() - $request->session()->get('auth.password_confirmed_at', 0) <= config('auth.password_timeout', 10800)]);
+    }
+
+    public function store(Request $request): RedirectResponse|\Illuminate\Http\Response
     {
         if (! Auth::guard('web')->validate([
             'email' => $request->user()->email,
@@ -35,6 +41,10 @@ class ConfirmablePasswordController extends Controller
         }
 
         $request->session()->put('auth.password_confirmed_at', time());
+
+        if ($request->expectsJson()) {
+            return response()->noContent();
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

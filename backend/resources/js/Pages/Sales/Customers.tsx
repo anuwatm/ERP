@@ -1,14 +1,17 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
+import CustomerDialog from './CustomerDialog';
+import ContactDialog from './ContactDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import type { PageProps } from '@/Types/auth';
 import { FormEvent, useState } from 'react';
 
 type Owner = { id: string; name: string; email: string };
@@ -43,7 +46,7 @@ type Customer = {
     deals_count: number;
 };
 
-type CustomerForm = {
+export type CustomerForm = {
     company_name: string;
     tax_id: string;
     customer_type: string;
@@ -58,7 +61,7 @@ type CustomerForm = {
     note: string;
 };
 
-type ContactForm = {
+export type ContactForm = {
     customer_id: string;
     name: string;
     position: string;
@@ -105,20 +108,45 @@ export default function Customers({
     filters: Record<string, string | null>;
     canSeeAllSales: boolean;
 }) {
+    const { auth } = usePage<PageProps>().props;
+    const canCreateCustomer = auth.permissions.includes('customers.create');
+    const canUpdateCustomer = auth.permissions.includes('customers.update');
+    const canDeleteCustomer = auth.permissions.includes('customers.delete');
+    const canCreateContact = auth.permissions.includes('contacts.create');
+    const canUpdateContact = auth.permissions.includes('contacts.update');
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(
         null,
     );
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
     const customerForm = useForm<CustomerForm>(emptyCustomer);
+    const customerSubmission = useSubmissionKey();
+    const contactSubmission = useSubmissionKey();
+    const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
+    const [customerMinimized, setCustomerMinimized] = useState(false);
     const contactForm = useForm<ContactForm>(emptyContact);
+    const [contactDialogOpen, setContactDialogOpen] = useState(false);
+    const [contactMinimized, setContactMinimized] = useState(false);
+    const guard = useDiscardGuard(
+        (customerDialogOpen && customerForm.isDirty) ||
+            (contactDialogOpen && contactForm.isDirty),
+        customerForm.processing || contactForm.processing,
+    );
 
     const submitCustomer = (event: FormEvent) => {
         event.preventDefault();
+        if (
+            customerForm.processing ||
+            (editingCustomer ? !canUpdateCustomer : !canCreateCustomer)
+        )
+            return;
         const options = {
             preserveScroll: true,
             onSuccess: () => {
+                customerForm.setDefaults(emptyCustomer);
                 customerForm.setData(emptyCustomer);
                 setEditingCustomer(null);
+                setCustomerDialogOpen(false);
+                setCustomerMinimized(false);
             },
         };
 
@@ -128,17 +156,28 @@ export default function Customers({
                 options,
             );
         } else {
-            customerForm.post(route('customers.store'), options);
+            customerForm.post(route('customers.store'), {
+                ...options,
+                headers: customerSubmission.headers(),
+            });
         }
     };
 
     const submitContact = (event: FormEvent) => {
         event.preventDefault();
+        if (
+            contactForm.processing ||
+            (editingContact ? !canUpdateContact : !canCreateContact)
+        )
+            return;
         const options = {
             preserveScroll: true,
             onSuccess: () => {
+                contactForm.setDefaults(emptyContact);
                 contactForm.setData(emptyContact);
                 setEditingContact(null);
+                setContactDialogOpen(false);
+                setContactMinimized(false);
             },
         };
 
@@ -150,54 +189,175 @@ export default function Customers({
         } else if (contactForm.data.customer_id) {
             contactForm.post(
                 route('contacts.store', contactForm.data.customer_id),
-                options,
+                { ...options, headers: contactSubmission.headers() },
             );
         }
     };
 
-    const editCustomer = (customer: Customer) => {
-        setEditingCustomer(customer);
-        customerForm.setData({
-            company_name: customer.company_name ?? '',
-            tax_id: customer.tax_id ?? '',
-            customer_type: customer.customer_type ?? 'lead',
-            status: customer.status ?? 'active',
-            owner_id: customer.owner_id ?? '',
-            phone: customer.phone ?? '',
-            email: customer.email ?? '',
-            line_id: customer.line_id ?? '',
-            website: customer.website ?? '',
-            address: customer.address ?? '',
-            source: customer.source ?? '',
-            note: customer.note ?? '',
-        });
+    const closeCustomer = () => {
+        setCustomerDialogOpen(false);
+        setCustomerMinimized(false);
+        setEditingCustomer(null);
+        customerForm.setDefaults(emptyCustomer);
+        customerForm.setData(emptyCustomer);
+        customerForm.clearErrors();
     };
-
-    const editContact = (customer: Customer, contact: Contact) => {
-        setEditingContact(contact);
-        contactForm.setData({
-            customer_id: customer.id,
-            name: contact.name ?? '',
-            position: contact.position ?? '',
-            phone: contact.phone ?? '',
-            email: contact.email ?? '',
-            line_id: contact.line_id ?? '',
-            is_primary: contact.is_primary,
-            note: contact.note ?? '',
+    const closeContact = () => {
+        setContactDialogOpen(false);
+        setContactMinimized(false);
+        setEditingContact(null);
+        contactForm.setDefaults(emptyContact);
+        contactForm.setData(emptyContact);
+        contactForm.clearErrors();
+    };
+    const startCustomer = (customer: Customer | null) => {
+        customerSubmission.reset();
+        closeContact();
+        setEditingCustomer(customer);
+        const data: CustomerForm = customer
+            ? {
+                  company_name: customer.company_name ?? '',
+                  tax_id: customer.tax_id ?? '',
+                  customer_type: customer.customer_type ?? 'lead',
+                  status: customer.status ?? 'active',
+                  owner_id: customer.owner_id ?? '',
+                  phone: customer.phone ?? '',
+                  email: customer.email ?? '',
+                  line_id: customer.line_id ?? '',
+                  website: customer.website ?? '',
+                  address: customer.address ?? '',
+                  source: customer.source ?? '',
+                  note: customer.note ?? '',
+              }
+            : { ...emptyCustomer };
+        customerForm.setDefaults(data);
+        customerForm.setData(data);
+        customerForm.clearErrors();
+        setCustomerDialogOpen(true);
+        setCustomerMinimized(false);
+    };
+    const editCustomer = (customer: Customer) => {
+        if (
+            !canUpdateCustomer ||
+            customerForm.processing ||
+            contactForm.processing
+        )
+            return;
+        if (customerDialogOpen && editingCustomer?.id === customer.id) {
+            setCustomerMinimized(false);
+            return;
+        }
+        guard.request(() => startCustomer(customer));
+    };
+    const createCustomer = () => {
+        if (
+            !canCreateCustomer ||
+            customerForm.processing ||
+            contactForm.processing
+        )
+            return;
+        if (customerDialogOpen && !editingCustomer) {
+            setCustomerMinimized(false);
+            return;
+        }
+        guard.request(() => startCustomer(null));
+    };
+    const editContact = (customer: Customer, contact?: Contact) => {
+        if (
+            (contact ? !canUpdateContact : !canCreateContact) ||
+            customerForm.processing ||
+            contactForm.processing
+        )
+            return;
+        if (
+            contactDialogOpen &&
+            editingContact?.id === contact?.id &&
+            contactForm.data.customer_id === customer.id
+        ) {
+            setContactMinimized(false);
+            return;
+        }
+        guard.request(() => {
+            closeCustomer();
+            setEditingContact(contact ?? null);
+            const data = {
+                customer_id: customer.id,
+                name: contact?.name ?? '',
+                position: contact?.position ?? '',
+                phone: contact?.phone ?? '',
+                email: contact?.email ?? '',
+                line_id: contact?.line_id ?? '',
+                is_primary: contact?.is_primary ?? false,
+                note: contact?.note ?? '',
+            };
+            contactSubmission.reset();
+            contactForm.setDefaults(data);
+            contactForm.setData(data);
+            contactForm.clearErrors();
+            setContactDialogOpen(true);
+            setContactMinimized(false);
         });
     };
 
     return (
         <AuthenticatedLayout>
             <Head title="Customers" />
+            <DiscardChangesDialog
+                open={guard.confirming}
+                onKeep={guard.keep}
+                onDiscard={guard.discard}
+            />
 
             <div className="space-y-6">
                 <PageHeader
                     title="Customers"
                     description="Customer master data, primary contacts, and owner assignment."
+                    actions={
+                        canCreateCustomer && (
+                            <PrimaryButton
+                                type="button"
+                                onClick={createCustomer}
+                                disabled={
+                                    customerForm.processing ||
+                                    contactForm.processing
+                                }
+                            >
+                                + Create Customer
+                            </PrimaryButton>
+                        )
+                    }
                 />
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <CustomerDialog
+                    open={customerDialogOpen}
+                    minimized={customerMinimized}
+                    onMinimize={setCustomerMinimized}
+                    onClose={() => guard.request(closeCustomer)}
+                    editing={!!editingCustomer}
+                    code={editingCustomer?.customer_code}
+                    form={customerForm}
+                    owners={owners}
+                    canSeeAllSales={canSeeAllSales}
+                    onSubmit={submitCustomer}
+                />
+
+                <ContactDialog
+                    open={contactDialogOpen}
+                    minimized={contactMinimized}
+                    onMinimize={setContactMinimized}
+                    onClose={() => guard.request(closeContact)}
+                    editing={!!editingContact}
+                    customer={
+                        customers.find(
+                            (customer) =>
+                                customer.id === contactForm.data.customer_id,
+                        )?.company_name ?? ''
+                    }
+                    form={contactForm}
+                    onSubmit={submitContact}
+                />
+
+                <div>
                     <Card
                         title="Customer List"
                         description="Active CRM accounts"
@@ -250,44 +410,57 @@ export default function Customers({
                                     header: 'Actions',
                                     accessor: (row) => (
                                         <div className="flex flex-wrap gap-2">
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() =>
-                                                    editCustomer(row)
-                                                }
-                                            >
-                                                Edit
-                                            </SecondaryButton>
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() => {
-                                                    contactForm.setData({
-                                                        ...emptyContact,
-                                                        customer_id: row.id,
-                                                    });
-                                                    setEditingContact(null);
-                                                }}
-                                            >
-                                                Contact
-                                            </SecondaryButton>
-                                            {row.deals_count === 0 && (
+                                            {canUpdateCustomer && (
                                                 <SecondaryButton
                                                     type="button"
+                                                    disabled={
+                                                        customerForm.processing ||
+                                                        contactForm.processing
+                                                    }
                                                     onClick={() =>
-                                                        router.delete(
-                                                            route(
-                                                                'customers.destroy',
-                                                                row.id,
-                                                            ),
-                                                            {
-                                                                preserveScroll: true,
-                                                            },
-                                                        )
+                                                        editCustomer(row)
                                                     }
                                                 >
-                                                    Delete
+                                                    Edit
                                                 </SecondaryButton>
                                             )}
+                                            {canCreateContact && (
+                                                <SecondaryButton
+                                                    type="button"
+                                                    disabled={
+                                                        customerForm.processing ||
+                                                        contactForm.processing
+                                                    }
+                                                    onClick={() =>
+                                                        editContact(row)
+                                                    }
+                                                >
+                                                    Add Contact
+                                                </SecondaryButton>
+                                            )}
+                                            {canDeleteCustomer &&
+                                                row.deals_count === 0 && (
+                                                    <SecondaryButton
+                                                        type="button"
+                                                        disabled={
+                                                            customerForm.processing ||
+                                                            contactForm.processing
+                                                        }
+                                                        onClick={() =>
+                                                            router.delete(
+                                                                route(
+                                                                    'customers.destroy',
+                                                                    row.id,
+                                                                ),
+                                                                {
+                                                                    preserveScroll: true,
+                                                                },
+                                                            )
+                                                        }
+                                                    >
+                                                        Delete
+                                                    </SecondaryButton>
+                                                )}
                                         </div>
                                     ),
                                 },
@@ -313,6 +486,11 @@ export default function Customers({
                                             <button
                                                 key={contact.id}
                                                 type="button"
+                                                disabled={
+                                                    !canUpdateContact ||
+                                                    customerForm.processing ||
+                                                    contactForm.processing
+                                                }
                                                 onClick={() =>
                                                     editContact(
                                                         customer,
@@ -336,323 +514,8 @@ export default function Customers({
                             ))}
                         </div>
                     </Card>
-
-                    <div className="space-y-6">
-                        <Card
-                            title={
-                                editingCustomer
-                                    ? 'Edit Customer'
-                                    : 'Create Customer'
-                            }
-                            description="Generate customer code automatically"
-                        >
-                            <form
-                                onSubmit={submitCustomer}
-                                className="space-y-3"
-                            >
-                                <Field
-                                    label="Company Name"
-                                    value={customerForm.data.company_name}
-                                    error={customerForm.errors.company_name}
-                                    onChange={(value) =>
-                                        customerForm.setData(
-                                            'company_name',
-                                            value,
-                                        )
-                                    }
-                                    required
-                                />
-                                <SelectField
-                                    label="Customer Type"
-                                    value={customerForm.data.customer_type}
-                                    onChange={(value) =>
-                                        customerForm.setData(
-                                            'customer_type',
-                                            value,
-                                        )
-                                    }
-                                    options={[
-                                        'lead',
-                                        'prospect',
-                                        'active',
-                                        'inactive',
-                                    ]}
-                                />
-                                <SelectField
-                                    label="Status"
-                                    value={customerForm.data.status}
-                                    onChange={(value) =>
-                                        customerForm.setData('status', value)
-                                    }
-                                    options={['active', 'inactive']}
-                                />
-                                {canSeeAllSales && (
-                                    <SelectField
-                                        label="Owner"
-                                        value={customerForm.data.owner_id}
-                                        onChange={(value) =>
-                                            customerForm.setData(
-                                                'owner_id',
-                                                value,
-                                            )
-                                        }
-                                        options={owners.map(
-                                            (owner) => owner.id,
-                                        )}
-                                        labels={Object.fromEntries(
-                                            owners.map((owner) => [
-                                                owner.id,
-                                                owner.name,
-                                            ]),
-                                        )}
-                                    />
-                                )}
-                                <Field
-                                    label="Email"
-                                    value={customerForm.data.email}
-                                    error={customerForm.errors.email}
-                                    onChange={(value) =>
-                                        customerForm.setData('email', value)
-                                    }
-                                />
-                                <Field
-                                    label="Phone"
-                                    value={customerForm.data.phone}
-                                    error={customerForm.errors.phone}
-                                    onChange={(value) =>
-                                        customerForm.setData('phone', value)
-                                    }
-                                />
-                                <Field
-                                    label="Source"
-                                    value={customerForm.data.source}
-                                    error={customerForm.errors.source}
-                                    onChange={(value) =>
-                                        customerForm.setData('source', value)
-                                    }
-                                />
-                                <div className="flex justify-end gap-2">
-                                    {editingCustomer && (
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() => {
-                                                setEditingCustomer(null);
-                                                customerForm.setData(
-                                                    emptyCustomer,
-                                                );
-                                            }}
-                                        >
-                                            Cancel
-                                        </SecondaryButton>
-                                    )}
-                                    <PrimaryButton
-                                        disabled={customerForm.processing}
-                                        icon={
-                                            <svg
-                                                className="h-4 w-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M5 13l4 4L19 7"
-                                                />
-                                            </svg>
-                                        }
-                                    >
-                                        Save Customer
-                                    </PrimaryButton>
-                                </div>
-                            </form>
-                        </Card>
-
-                        <Card
-                            title={
-                                editingContact ? 'Edit Contact' : 'Add Contact'
-                            }
-                            description="Only one primary contact per customer"
-                        >
-                            <form
-                                onSubmit={submitContact}
-                                className="space-y-3"
-                            >
-                                <SelectField
-                                    label="Customer"
-                                    value={contactForm.data.customer_id}
-                                    onChange={(value) =>
-                                        contactForm.setData(
-                                            'customer_id',
-                                            value,
-                                        )
-                                    }
-                                    options={customers.map(
-                                        (customer) => customer.id,
-                                    )}
-                                    labels={Object.fromEntries(
-                                        customers.map((customer) => [
-                                            customer.id,
-                                            customer.company_name,
-                                        ]),
-                                    )}
-                                />
-                                <Field
-                                    label="Name"
-                                    value={contactForm.data.name}
-                                    error={contactForm.errors.name}
-                                    onChange={(value) =>
-                                        contactForm.setData('name', value)
-                                    }
-                                    required
-                                />
-                                <Field
-                                    label="Position"
-                                    value={contactForm.data.position}
-                                    error={contactForm.errors.position}
-                                    onChange={(value) =>
-                                        contactForm.setData('position', value)
-                                    }
-                                />
-                                <Field
-                                    label="Email"
-                                    value={contactForm.data.email}
-                                    error={contactForm.errors.email}
-                                    onChange={(value) =>
-                                        contactForm.setData('email', value)
-                                    }
-                                />
-                                <Field
-                                    label="Phone"
-                                    value={contactForm.data.phone}
-                                    error={contactForm.errors.phone}
-                                    onChange={(value) =>
-                                        contactForm.setData('phone', value)
-                                    }
-                                />
-                                <label className="flex items-center gap-2 text-sm text-slate-700">
-                                    <input
-                                        type="checkbox"
-                                        checked={contactForm.data.is_primary}
-                                        onChange={(event) =>
-                                            contactForm.setData(
-                                                'is_primary',
-                                                event.target.checked,
-                                            )
-                                        }
-                                    />
-                                    Primary contact
-                                </label>
-                                <div className="flex justify-end gap-2">
-                                    {editingContact && (
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() => {
-                                                setEditingContact(null);
-                                                contactForm.setData(
-                                                    emptyContact,
-                                                );
-                                            }}
-                                        >
-                                            Cancel
-                                        </SecondaryButton>
-                                    )}
-                                    <PrimaryButton
-                                        disabled={contactForm.processing}
-                                        icon={
-                                            <svg
-                                                className="h-4 w-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M5 13l4 4L19 7"
-                                                />
-                                            </svg>
-                                        }
-                                    >
-                                        Save Contact
-                                    </PrimaryButton>
-                                </div>
-                            </form>
-                        </Card>
-                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-function Field({
-    label,
-    value,
-    error,
-    onChange,
-    required = false,
-}: {
-    label: string;
-    value: string;
-    error?: string;
-    onChange: (value: string) => void;
-    required?: boolean;
-}) {
-    const id = label.toLowerCase().replaceAll(' ', '-');
-
-    return (
-        <div>
-            <InputLabel
-                htmlFor={id}
-                value={label}
-                className="mb-1 text-xs font-semibold uppercase text-slate-700"
-            />
-            <TextInput
-                id={id}
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                required={required}
-                className="block w-full text-sm"
-            />
-            <InputError message={error} className="mt-1" />
-        </div>
-    );
-}
-
-function SelectField({
-    label,
-    value,
-    options,
-    labels = {},
-    onChange,
-}: {
-    label: string;
-    value: string;
-    options: string[];
-    labels?: Record<string, string>;
-    onChange: (value: string) => void;
-}) {
-    return (
-        <div>
-            <InputLabel
-                value={label}
-                className="mb-1 text-xs font-semibold uppercase text-slate-700"
-            />
-            <select
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                className="block w-full rounded-xl border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-medium shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-150"
-            >
-                <option value="">Select</option>
-                {options.map((option) => (
-                    <option key={option} value={option}>
-                        {labels[option] ?? option}
-                    </option>
-                ))}
-            </select>
-        </div>
     );
 }

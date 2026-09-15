@@ -1,13 +1,14 @@
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge, { BadgeVariant } from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
+import UserDialog, { UserItem } from './UserDialog';
 
 type Option = {
     id: string;
@@ -15,20 +16,6 @@ type Option = {
     name: string;
     branch_id?: string;
     division_id?: string;
-};
-
-type User = {
-    id: string;
-    name: string;
-    email: string;
-    status: string;
-    position?: string | null;
-    phone?: string | null;
-    person_id?: string | null;
-    branch_id?: string | null;
-    division_id?: string | null;
-    department_id?: string | null;
-    roles: Option[];
 };
 
 const inputClass =
@@ -41,20 +28,31 @@ export default function Users({
     divisions,
     departments,
 }: {
-    users: User[];
+    users: UserItem[];
     roles: Option[];
     branches: Option[];
     divisions: Option[];
     departments: Option[];
 }) {
-    const [selectedUserId, setSelectedUserId] = useState(users[0]?.id ?? '');
     const [query, setQuery] = useState('');
     const [status, setStatus] = useState('all');
     const [roleFilter, setRoleFilter] = useState('all');
     const [branchFilter, setBranchFilter] = useState('all');
 
-    const selectedUser =
-        users.find((user) => user.id === selectedUserId) ?? users[0];
+    // Dialog state
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<UserItem | null>(null);
+
+    const openInviteDialog = () => {
+        setEditingUser(null);
+        setDialogOpen(true);
+    };
+
+    const openEditDialog = (user: UserItem) => {
+        setEditingUser(user);
+        setDialogOpen(true);
+    };
+
     const filteredUsers = users.filter((user) => {
         const haystack =
             `${user.name} ${user.email} ${user.position ?? ''}`.toLowerCase();
@@ -68,27 +66,6 @@ export default function Users({
 
         return matchesText && matchesStatus && matchesRole && matchesBranch;
     });
-
-    const { data, setData, post, processing, reset } = useForm({
-        name: '',
-        email: '',
-        position: '',
-        person_id: '',
-        branch_id: branches[0]?.id ?? '',
-        division_id: divisions[0]?.id ?? '',
-        department_id: departments[0]?.id ?? '',
-        role_id:
-            roles.find((role) => role.code === 'member')?.id ??
-            roles[0]?.id ??
-            '',
-    });
-
-    const submit: FormEventHandler = (event) => {
-        event.preventDefault();
-        post(route('users.invite'), {
-            onSuccess: () => reset('name', 'email', 'position', 'person_id'),
-        });
-    };
 
     const getStatusVariant = (value: string): BadgeVariant => {
         if (value === 'active') return 'success';
@@ -105,85 +82,29 @@ export default function Users({
                 <PageHeader
                     title="User Management"
                     description="Users, organization assignment, and role access"
-                />
-
-                <Card
-                    title="Invite New User"
-                    description="Assign branch, division, department, and role"
-                >
-                    <form
-                        onSubmit={submit}
-                        className="grid gap-4 md:grid-cols-4"
-                    >
-                        <TextInput
-                            placeholder="Full name"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            required
-                        />
-                        <TextInput
-                            type="email"
-                            placeholder="Email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            required
-                        />
-                        <TextInput
-                            placeholder="Position"
-                            value={data.position}
-                            onChange={(e) =>
-                                setData('position', e.target.value)
+                    actions={
+                        <PrimaryButton
+                            onClick={openInviteDialog}
+                            icon={
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                                    />
+                                </svg>
                             }
-                        />
-                        <TextInput
-                            placeholder="Person ID"
-                            value={data.person_id}
-                            onChange={(e) =>
-                                setData('person_id', e.target.value)
-                            }
-                        />
-                        <HierarchySelects
-                            data={data}
-                            setData={setData}
-                            branches={branches}
-                            divisions={divisions}
-                            departments={departments}
-                        />
-                        <select
-                            className={inputClass}
-                            value={data.role_id}
-                            onChange={(e) => setData('role_id', e.target.value)}
                         >
-                            {roles.map((role) => (
-                                <option key={role.id} value={role.id}>
-                                    {role.name}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="md:col-span-4 flex justify-end">
-                            <PrimaryButton
-                                disabled={processing}
-                                icon={
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                                        />
-                                    </svg>
-                                }
-                            >
-                                Send Invitation
-                            </PrimaryButton>
-                        </div>
-                    </form>
-                </Card>
+                            Invite User
+                        </PrimaryButton>
+                    }
+                />
 
                 <Card
                     title="Users Directory"
@@ -243,12 +164,10 @@ export default function Users({
                                 accessor: (user) => (
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            setSelectedUserId(user.id)
-                                        }
-                                        className="text-left"
+                                        onClick={() => openEditDialog(user)}
+                                        className="text-left group"
                                     >
-                                        <span className="block font-semibold text-slate-900 dark:text-white">
+                                        <span className="block font-semibold text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400 transition-colors">
                                             {user.name}
                                         </span>
                                         <span className="text-xs text-slate-500">
@@ -303,7 +222,12 @@ export default function Users({
                             {
                                 header: 'Actions',
                                 accessor: (user) => (
-                                    <div className="flex gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <SecondaryButton
+                                            onClick={() => openEditDialog(user)}
+                                        >
+                                            Edit
+                                        </SecondaryButton>
                                         {user.status !== 'inactive' ? (
                                             <SecondaryButton
                                                 icon={
@@ -375,173 +299,20 @@ export default function Users({
                         ]}
                     />
                 </Card>
-
-                {selectedUser && (
-                    <EditUserCard
-                        user={selectedUser}
-                        roles={roles}
-                        branches={branches}
-                        divisions={divisions}
-                        departments={departments}
-                    />
-                )}
             </div>
-        </AuthenticatedLayout>
-    );
-}
 
-function HierarchySelects({
-    data,
-    setData,
-    branches,
-    divisions,
-    departments,
-}: {
-    data: { branch_id: string; division_id: string; department_id: string };
-    setData: (
-        key: 'branch_id' | 'division_id' | 'department_id',
-        value: string,
-    ) => void;
-    branches: Option[];
-    divisions: Option[];
-    departments: Option[];
-}) {
-    const filteredDivisions = divisions.filter(
-        (division) => division.branch_id === data.branch_id,
-    );
-    const filteredDepartments = departments.filter(
-        (department) =>
-            department.branch_id === data.branch_id &&
-            department.division_id === data.division_id,
-    );
-    return (
-        <>
-            <select
-                className={inputClass}
-                value={data.branch_id}
-                onChange={(e) => setData('branch_id', e.target.value)}
-            >
-                {branches.map((item) => (
-                    <option key={item.id} value={item.id}>
-                        {item.code} - {item.name}
-                    </option>
-                ))}
-            </select>
-            <select
-                className={inputClass}
-                value={data.division_id}
-                onChange={(e) => setData('division_id', e.target.value)}
-            >
-                {filteredDivisions.map((item) => (
-                    <option key={item.id} value={item.id}>
-                        {item.code} - {item.name}
-                    </option>
-                ))}
-            </select>
-            <select
-                className={inputClass}
-                value={data.department_id}
-                onChange={(e) => setData('department_id', e.target.value)}
-            >
-                {filteredDepartments.map((item) => (
-                    <option key={item.id} value={item.id}>
-                        {item.code} - {item.name}
-                    </option>
-                ))}
-            </select>
-        </>
-    );
-}
-
-function EditUserCard({
-    user,
-    roles,
-    branches,
-    divisions,
-    departments,
-}: {
-    user: User;
-    roles: Option[];
-    branches: Option[];
-    divisions: Option[];
-    departments: Option[];
-}) {
-    const form = useForm({
-        name: user.name,
-        email: user.email,
-        position: user.position ?? '',
-        phone: user.phone ?? '',
-        person_id: user.person_id?.replace(/\D/g, '') ?? '',
-        branch_id: user.branch_id ?? branches[0]?.id ?? '',
-        division_id: user.division_id ?? divisions[0]?.id ?? '',
-        department_id: user.department_id ?? departments[0]?.id ?? '',
-        role_id: user.roles[0]?.id ?? roles[0]?.id ?? '',
-    });
-
-    return (
-        <Card
-            title={`Edit ${user.name}`}
-            description="Profile, hierarchy, and role"
-        >
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    form.patch(route('users.update', user.id), {
-                        preserveScroll: true,
-                    });
+            <UserDialog
+                open={dialogOpen}
+                user={editingUser}
+                roles={roles}
+                branches={branches}
+                divisions={divisions}
+                departments={departments}
+                onClose={() => {
+                    setDialogOpen(false);
+                    setEditingUser(null);
                 }}
-                className="grid gap-4 md:grid-cols-4"
-            >
-                <TextInput
-                    value={form.data.name}
-                    onChange={(e) => form.setData('name', e.target.value)}
-                    required
-                />
-                <TextInput
-                    type="email"
-                    value={form.data.email}
-                    onChange={(e) => form.setData('email', e.target.value)}
-                    required
-                />
-                <TextInput
-                    value={form.data.position}
-                    onChange={(e) => form.setData('position', e.target.value)}
-                    placeholder="Position"
-                />
-                <TextInput
-                    value={form.data.phone}
-                    onChange={(e) => form.setData('phone', e.target.value)}
-                    placeholder="Phone"
-                />
-                <TextInput
-                    value={form.data.person_id}
-                    onChange={(e) => form.setData('person_id', e.target.value)}
-                    placeholder="Person ID"
-                />
-                <HierarchySelects
-                    data={form.data}
-                    setData={form.setData}
-                    branches={branches}
-                    divisions={divisions}
-                    departments={departments}
-                />
-                <select
-                    className={inputClass}
-                    value={form.data.role_id}
-                    onChange={(e) => form.setData('role_id', e.target.value)}
-                >
-                    {roles.map((role) => (
-                        <option key={role.id} value={role.id}>
-                            {role.name}
-                        </option>
-                    ))}
-                </select>
-                <div className="md:col-span-4 flex justify-end">
-                    <PrimaryButton disabled={form.processing}>
-                        Save User
-                    </PrimaryButton>
-                </div>
-            </form>
-        </Card>
+            />
+        </AuthenticatedLayout>
     );
 }

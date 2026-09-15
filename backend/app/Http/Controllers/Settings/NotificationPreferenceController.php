@@ -10,6 +10,7 @@ use App\Models\UserChannelPreference;
 use App\Services\NotificationOutboxService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -146,7 +147,13 @@ class NotificationPreferenceController extends Controller
     public function testChannel(Request $request, NotificationChannel $channel, NotificationOutboxService $outbox): RedirectResponse
     {
         abort_unless($channel->org_id === $request->user()->org_id, 404);
-        $outbox->sendTest($channel, $request->user());
+        try {
+            $outbox->sendTest($channel, $request->user());
+        } catch (\Throwable $exception) {
+            Log::warning('Notification channel test failed.', ['channel_id' => $channel->id, 'channel' => $channel->channel, 'exception_type' => get_class($exception)]);
+
+            return back()->withErrors(['channel' => 'Test notification failed. Check channel configuration and try again.']);
+        }
         $this->audit($request, 'notification.channel.test', $channel->id, ['channel' => $channel->channel]);
 
         return back()->with('success', 'Test notification sent.');

@@ -1,7 +1,10 @@
 <?php
 
+use App\Jobs\SubmitETaxDocument;
 use App\Models\AuditLog;
 use App\Models\Document;
+use App\Models\ETaxConfig;
+use App\Models\ETaxDocument;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Services\NotificationOutboxService;
@@ -13,6 +16,24 @@ use Illuminate\Support\Facades\Schedule;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('etax:dispatch-pending {--limit=100}', function () {
+    $limit = filter_var($this->option('limit'), FILTER_VALIDATE_INT);
+    if ($limit === false || $limit < 1 || $limit > 1000) {
+        $this->error('Limit must be between 1 and 1000.');
+
+        return self::FAILURE;
+    }
+    $ids = ETaxDocument::where('status', 'queued')
+        ->whereIn('org_id', ETaxConfig::where('mode', 'mock')->select('org_id'))
+        ->orderBy('created_at')->limit($limit)->pluck('id');
+    foreach ($ids as $id) {
+        SubmitETaxDocument::dispatch($id);
+    }
+    $this->info('Dispatched '.$ids->count().' mock simulation job(s).');
+
+    return self::SUCCESS;
+})->purpose('Recover pending local e-Tax simulations; never sends to an external provider.');
 
 Artisan::command('invoices:mark-overdue', function () {
     $count = 0;

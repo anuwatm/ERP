@@ -11,6 +11,7 @@ use App\Models\Payment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ETaxDocumentService
@@ -20,6 +21,8 @@ class ETaxDocumentService
         $this->assertSource($source, $documentType);
 
         return DB::transaction(function () use ($source, $documentType, $actorId): ETaxDocument {
+            $source = $source->newQuery()->whereKey($source->getKey())->lockForUpdate()->firstOrFail();
+            $this->assertSource($source, $documentType);
             $document = ETaxDocument::query()->lockForUpdate()->firstOrNew([
                 'org_id' => $source->org_id,
                 'source_type' => $source::class,
@@ -27,13 +30,14 @@ class ETaxDocumentService
                 'document_type' => $documentType,
             ]);
 
-            if ($document->exists && in_array($document->status, ['submitted', 'accepted'], true)) {
-                throw new ImmutableETaxDocumentException('A submitted or accepted e-Tax document cannot be regenerated. Issue a credit or debit note instead.');
+            if ($document->exists && (in_array($document->status, ['queued', 'simulated', 'submitted', 'accepted'], true) || $document->attempts()->exists())) {
+                throw new ImmutableETaxDocumentException('A queued or processed e-Tax snapshot cannot be regenerated.');
             }
 
             $payload = $this->payload($source, $documentType);
             $xml = $this->buildXml($payload);
-            $path = 'e-tax/'.$source->org_id.'/'.$documentType.'/'.$payload['document_no'].'.xml';
+            $document->id ??= (string) Str::orderedUuid();
+            $path = 'e-tax/'.$source->org_id.'/'.$documentType.'/'.$document->id.'.xml';
 
             Storage::disk('local')->put($path, $xml);
             $document->fill([
@@ -67,7 +71,12 @@ class ETaxDocumentService
     {
         abort_unless(Storage::disk('local')->exists($document->xml_storage_path), 404, 'e-Tax XML file not found.');
 
-        return Storage::disk('local')->get($document->xml_storage_path);
+        $xml = Storage::disk('local')->get($document->xml_storage_path);
+        if (! hash_equals($document->xml_sha256, hash('sha256', $xml))) {
+            throw new \RuntimeException('e-Tax XML integrity check failed.');
+        }
+
+        return $xml;
     }
 
     private function assertSource(Model $source, string $documentType): void

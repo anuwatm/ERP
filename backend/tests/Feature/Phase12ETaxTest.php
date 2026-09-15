@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\SubmitETaxDocument;
 use App\Models\Customer;
+use App\Models\ETaxConfig;
 use App\Models\ETaxDocument;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -77,6 +78,7 @@ class Phase12ETaxTest extends TestCase
         $this->actingAsOrgUser($user)->get(route('e-tax.rd-prep', ['form' => 'pnd53']))->assertOk()->assertSee('ERP_RD_PREP_DRAFT_V1')->assertSee('EXP-001');
 
         Bus::fake();
+        ETaxConfig::create(['org_id' => $user->org_id, 'mode' => 'mock', 'signature_mode' => 'none']);
         $document = ETaxDocument::create(['org_id' => $user->org_id, 'source_type' => Invoice::class, 'source_id' => (string) Str::uuid(), 'document_type' => 'tax_invoice', 'document_no' => 'INV-Q-001', 'status' => 'generated', 'xml_storage_path' => 'e-tax/test.xml', 'xml_sha256' => hash('sha256', 'test'), 'payload_json' => []]);
         $this->actingAsOrgUser($user)->withSession(['auth.password_confirmed_at' => time()])->post(route('e-tax.documents.submit', $document))->assertSessionHas('success');
         Bus::assertDispatched(SubmitETaxDocument::class, fn (SubmitETaxDocument $job) => $job->documentId === $document->id);

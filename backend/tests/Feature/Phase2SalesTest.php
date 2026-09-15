@@ -70,10 +70,49 @@ class Phase2SalesTest extends TestCase
             );
     }
 
+    public function test_customer_dialog_fields_round_trip_and_validation_preserves_data(): void
+    {
+        $owner = User::factory()->create();
+        $this->attachRole($owner, 'owner', ['customers.create', 'customers.update', 'customers.view']);
+        $payload = [
+            'company_name' => 'Dialog Customer',
+            'tax_id' => '0123456789012',
+            'customer_type' => 'prospect',
+            'status' => 'active',
+            'owner_id' => $owner->id,
+            'email' => 'customer@example.test',
+            'phone' => '021234567',
+            'line_id' => 'customer-line',
+            'website' => 'example.test',
+            'address' => "Building A\nBangkok",
+            'source' => 'Referral',
+            'note' => 'Customer notes',
+        ];
+        $this->actingAsOrgUser($owner)->withSession(['auth.password_confirmed_at' => time()])
+            ->post(route('customers.store'), $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $customer = Customer::where('company_name', 'Dialog Customer')->firstOrFail();
+        $this->assertSame($payload, $customer->only(array_keys($payload)));
+
+        $updated = array_merge($payload, ['company_name' => 'Updated Customer', 'status' => 'inactive', 'note' => 'Updated notes']);
+        $this->patch(route('customers.update', $customer), $updated)->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($updated, $customer->refresh()->only(array_keys($updated)));
+        $this->get(route('customers.index'))->assertInertia(fn (Assert $page) => $page
+            ->component('Sales/Customers')
+            ->where('customers.0.tax_id', $payload['tax_id'])
+            ->where('customers.0.address', $payload['address'])
+            ->where('customers.0.note', 'Updated notes')
+        );
+
+        $this->patch(route('customers.update', $customer), array_merge($updated, [
+            'company_name' => '', 'email' => 'invalid', 'note' => str_repeat('x', 2001),
+        ]))->assertSessionHasErrors(['company_name', 'email', 'note']);
+        $this->assertSame($updated, $customer->refresh()->only(array_keys($updated)));
+    }
+
     public function test_primary_contact_is_unique_per_customer(): void
     {
         $owner = User::factory()->create();
-        $this->attachRole($owner, 'owner', ['contacts.create']);
+        $this->attachRole($owner, 'owner', ['contacts.create', 'contacts.update']);
         $customer = Customer::create(['org_id' => $owner->org_id, 'customer_code' => '000001', 'company_name' => 'Contact Co', 'owner_id' => $owner->id]);
 
         $this->actingAsOrgUser($owner)->withSession(['auth.password_confirmed_at' => time()])
@@ -93,6 +132,30 @@ class Phase2SalesTest extends TestCase
         $this->assertFalse(Contact::where('name', 'First Primary')->firstOrFail()->is_primary);
         $this->assertTrue(Contact::where('name', 'Second Primary')->firstOrFail()->is_primary);
         $this->assertSame(1, Contact::where('customer_id', $customer->id)->where('is_primary', true)->count());
+
+        $first = Contact::where('name', 'First Primary')->firstOrFail();
+        $this->patch(route('contacts.update', $first), [
+            'name' => 'Updated Contact',
+            'position' => 'Manager',
+            'email' => 'updated@example.test',
+            'phone' => '021234567',
+            'line_id' => 'contact-line',
+            'note' => 'Contact dialog notes',
+            'is_primary' => true,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($customer->id, $first->refresh()->customer_id);
+        $this->assertSame('Manager', $first->position);
+        $this->assertSame('contact-line', $first->line_id);
+        $this->assertSame('Contact dialog notes', $first->note);
+        $this->assertTrue($first->is_primary);
+        $this->assertFalse(Contact::where('name', 'Second Primary')->firstOrFail()->is_primary);
+        $this->assertSame(1, Contact::where('customer_id', $customer->id)->where('is_primary', true)->count());
+
+        $this->patch(route('contacts.update', $first), [
+            'name' => '', 'email' => 'invalid', 'note' => str_repeat('x', 2001),
+        ])->assertSessionHasErrors(['name', 'email', 'note']);
+        $this->assertSame('Updated Contact', $first->refresh()->name);
+        $this->assertSame('Contact dialog notes', $first->note);
     }
 
     public function test_deal_stage_rules_and_contact_customer_chain(): void
@@ -180,6 +243,29 @@ class Phase2SalesTest extends TestCase
             ->delete(route('customers.destroy', $customer))->assertStatus(422);
 
         $this->assertFalse($customer->fresh()->trashed());
+    }
+
+    public function test_customer_view_permission_does_not_grant_dialog_writes(): void
+    {
+        $viewer = User::factory()->create();
+        $this->attachRole($viewer, 'sales', ['customers.view']);
+        $customer = Customer::create(['org_id' => $viewer->org_id, 'customer_code' => 'READ001', 'company_name' => 'Read only', 'owner_id' => $viewer->id]);
+        $contact = Contact::create(['org_id' => $viewer->org_id, 'customer_id' => $customer->id, 'name' => 'Read only contact']);
+
+        $this->actingAsOrgUser($viewer)->withSession(['auth.password_confirmed_at' => time()])
+            ->get(route('customers.index'))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.permissions', ['customers.view'])
+                ->has('customers', 1)
+            );
+
+        $this->post(route('customers.store'), ['company_name' => 'Forbidden'])->assertForbidden();
+        $this->patch(route('customers.update', $customer), ['company_name' => 'Forbidden'])->assertForbidden();
+        $this->delete(route('customers.destroy', $customer))->assertForbidden();
+        $this->post(route('contacts.store', $customer), ['name' => 'Forbidden'])->assertForbidden();
+        $this->patch(route('contacts.update', $contact), ['name' => 'Forbidden'])->assertForbidden();
+        $this->assertSame('Read only', $customer->fresh()->company_name);
+        $this->assertSame('Read only contact', $contact->fresh()->name);
     }
 
     private function attachRole(User $user, string $code, array $permissions): Role

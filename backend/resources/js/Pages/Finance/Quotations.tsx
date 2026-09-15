@@ -1,14 +1,24 @@
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import {
+    EditorField,
+    EditorChoice,
+    EditorReference,
+} from '@/Components/UI/EditorFields';
+import EditorLineItems from '@/Components/UI/EditorLineItems';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
-import { Head, router, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { FormEvent, useState } from 'react';
 
 type Customer = { id: string; customer_code: string; company_name: string };
 type Deal = { id: string; title: string; customer_id: string };
@@ -91,11 +101,28 @@ export default function Quotations({
 }) {
     const form = useForm<QuotationForm>(emptyForm);
 
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const [rowKeys, setRowKeys] = useState([crypto.randomUUID()]);
+    const { auth } = usePage<PageProps>().props;
+    const canCreate = auth.permissions.includes('quotations.create');
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        form.setData({ ...emptyForm, items: [{ ...emptyItem }] });
+        form.clearErrors();
+        setRowKeys([crypto.randomUUID()]);
+        submission.reset();
+    };
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        if (!canCreate || form.processing) return;
         form.post(route('quotations.store'), {
             preserveScroll: true,
-            onSuccess: () => form.setData(emptyForm),
+            headers: submission.headers(),
+            onSuccess: close,
         });
     };
 
@@ -128,9 +155,19 @@ export default function Quotations({
             <div className="space-y-6">
                 <PageHeader
                     title="Quotations"
+                    actions={
+                        canCreate && (
+                            <PrimaryButton
+                                disabled={open}
+                                onClick={() => setOpen(true)}
+                            >
+                                + Create Quotation
+                            </PrimaryButton>
+                        )
+                    }
                     description="Sales offers before invoice conversion."
                 />
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
+                <div className="space-y-6">
                     <Card
                         title="Quotation List"
                         description="Commercial documents"
@@ -246,180 +283,270 @@ export default function Quotations({
                             ]}
                         />
                     </Card>
-                    <Card title="New Quotation" description="Draft or sent">
-                        <form onSubmit={submit} className="space-y-3">
-                            <select
-                                className="block w-full rounded-md border-slate-300 text-sm shadow-sm"
-                                value={form.data.customer_id}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'customer_id',
-                                        event.target.value,
-                                    )
-                                }
-                            >
-                                <option value="">Select customer</option>
-                                {customers.map((customer) => (
-                                    <option
-                                        key={customer.id}
-                                        value={customer.id}
-                                    >
-                                        {customer.customer_code} -{' '}
-                                        {customer.company_name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                className="block w-full rounded-md border-slate-300 text-sm shadow-sm"
-                                value={form.data.deal_id}
-                                onChange={(event) =>
-                                    form.setData('deal_id', event.target.value)
-                                }
-                            >
-                                <option value="">No deal</option>
-                                {deals
-                                    .filter(
-                                        (deal) =>
-                                            !form.data.customer_id ||
-                                            deal.customer_id ===
-                                                form.data.customer_id,
-                                    )
-                                    .map((deal) => (
-                                        <option key={deal.id} value={deal.id}>
-                                            {deal.title}
-                                        </option>
-                                    ))}
-                            </select>
-                            <div className="grid grid-cols-2 gap-2">
-                                <TextInput
-                                    type="date"
-                                    value={form.data.issue_date}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'issue_date',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
-                                <TextInput
-                                    type="date"
-                                    value={form.data.valid_until}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'valid_until',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <select
-                                    className="rounded-md border-slate-300 text-sm shadow-sm"
-                                    value={form.data.tax_mode}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'tax_mode',
-                                            event.target.value,
-                                        )
+                    <DiscardChangesDialog
+                        open={guard.confirming}
+                        onKeep={guard.keep}
+                        onDiscard={guard.discard}
+                    />
+                    <CreateEditDialog
+                        open={open}
+                        minimized={minimized}
+                        onMinimize={setMinimized}
+                        onClose={() => guard.request(close)}
+                        title="Create Quotation"
+                        breadcrumb="Finance / Quotation"
+                        entityLabel="Quotation"
+                        draftLabel="New Quotation"
+                        storageKey="quotations-editor-size"
+                        formId="quotations-editor"
+                        processing={form.processing}
+                        saveDisabled={!canCreate}
+                        saveLabel="Save Quotation"
+                        status="Save a draft; server calculates taxes and totals"
+                        errors={form.errors}
+                        onSubmit={submit}
+                    >
+                        {(expanded) => (
+                            <div className="space-y-6 p-4 sm:p-6">
+                                <section
+                                    aria-label="Document details"
+                                    className={
+                                        expanded
+                                            ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                                            : 'grid gap-4 sm:grid-cols-2'
                                     }
                                 >
-                                    {taxModes.map((mode) => (
-                                        <option key={mode} value={mode}>
-                                            {mode}
-                                        </option>
-                                    ))}
-                                </select>
-                                <TextInput
-                                    value={form.data.discount_amount}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'discount_amount',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                            {form.data.items.map((item, index) => (
-                                <div
-                                    key={index}
-                                    className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-slate-900"
-                                >
-                                    <select
-                                        className="block w-full rounded-md border-slate-300 text-sm shadow-sm"
-                                        value={item.product_id}
-                                        onChange={(event) =>
-                                            selectProduct(
-                                                index,
-                                                event.target.value,
-                                            )
+                                    <EditorReference
+                                        id="quotation-customer"
+                                        label="Customer"
+                                        value={form.data.customer_id}
+                                        error={form.errors.customer_id}
+                                        onChange={(v) =>
+                                            form.setData((data) => ({
+                                                ...data,
+                                                customer_id: v,
+                                                deal_id: '',
+                                            }))
                                         }
-                                    >
-                                        <option value="">Manual line</option>
-                                        {products.map((product) => (
-                                            <option
-                                                key={product.id}
-                                                value={product.id}
-                                            >
-                                                {product.sku} - {product.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <TextInput
-                                        className="block w-full"
-                                        placeholder="Description"
-                                        value={item.description}
-                                        onChange={(event) =>
-                                            setItem(
-                                                index,
-                                                'description',
-                                                event.target.value,
+                                        options={customers.map((c) => ({
+                                            id: c.id,
+                                            label:
+                                                c.customer_code +
+                                                ' - ' +
+                                                c.company_name,
+                                        }))}
+                                        required
+                                    />
+                                    <EditorReference
+                                        id="quotation-deal"
+                                        label="Deal"
+                                        value={form.data.deal_id}
+                                        error={form.errors.deal_id}
+                                        onChange={(v) =>
+                                            form.setData('deal_id', v)
+                                        }
+                                        options={deals
+                                            .filter(
+                                                (d) =>
+                                                    !form.data.customer_id ||
+                                                    d.customer_id ===
+                                                        form.data.customer_id,
                                             )
+                                            .map((d) => ({
+                                                id: d.id,
+                                                label: d.title,
+                                            }))}
+                                    />
+                                    <EditorField
+                                        id="quotations-date"
+                                        label="Issue Date"
+                                        type="date"
+                                        value={form.data.issue_date}
+                                        error={form.errors.issue_date}
+                                        onChange={(v) =>
+                                            form.setData('issue_date', v)
+                                        }
+                                        required
+                                    />
+                                    <EditorField
+                                        id="quotations-until"
+                                        label="Valid Until"
+                                        type="date"
+                                        value={form.data.valid_until}
+                                        error={form.errors.valid_until}
+                                        onChange={(v) =>
+                                            form.setData('valid_until', v)
                                         }
                                     />
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <TextInput
-                                            type="number"
-                                            value={item.quantity}
-                                            onChange={(event) =>
-                                                setItem(
-                                                    index,
-                                                    'quantity',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        />
-                                        <TextInput
-                                            type="number"
-                                            value={item.unit_price}
-                                            onChange={(event) =>
-                                                setItem(
-                                                    index,
-                                                    'unit_price',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                            <SecondaryButton
-                                type="button"
-                                onClick={() =>
-                                    form.setData('items', [
-                                        ...form.data.items,
-                                        { ...emptyItem },
-                                    ])
-                                }
-                            >
-                                Add Line
-                            </SecondaryButton>
-                            <div className="flex justify-end">
-                                <PrimaryButton disabled={form.processing}>
-                                    Save Quotation
-                                </PrimaryButton>
+                                    <EditorChoice
+                                        id="quotations-tax"
+                                        label="Tax Mode"
+                                        value={form.data.tax_mode}
+                                        error={form.errors.tax_mode}
+                                        onChange={(v) =>
+                                            form.setData('tax_mode', v)
+                                        }
+                                        options={taxModes}
+                                    />
+                                    <EditorField
+                                        id="quotations-discount"
+                                        label="Document Discount"
+                                        type="number"
+                                        min={0}
+                                        step="0.01"
+                                        value={form.data.discount_amount}
+                                        error={form.errors.discount_amount}
+                                        onChange={(v) =>
+                                            form.setData('discount_amount', v)
+                                        }
+                                    />
+                                    <EditorField
+                                        id="quotations-currency"
+                                        label="Currency"
+                                        value={form.data.currency}
+                                        error={form.errors.currency}
+                                        onChange={(v) =>
+                                            form.setData('currency', v)
+                                        }
+                                        maxLength={3}
+                                        required
+                                    />
+                                    <EditorField
+                                        id="quotations-note"
+                                        label="Notes"
+                                        value={form.data.notes}
+                                        error={form.errors.notes}
+                                        onChange={(v) =>
+                                            form.setData('notes', v)
+                                        }
+                                        multiline
+                                    />
+                                </section>
+                                <EditorLineItems
+                                    rows={form.data.items.map(
+                                        (item, index) => ({
+                                            ...item,
+                                            key: rowKeys[index],
+                                        }),
+                                    )}
+                                    rowKey={(item) => item.key}
+                                    columns={[
+                                        { key: 'product_id', label: 'Product' },
+                                        {
+                                            key: 'description',
+                                            label: 'Description',
+                                        },
+                                        { key: 'quantity', label: 'Quantity' },
+                                        { key: 'unit', label: 'Unit' },
+                                        {
+                                            key: 'unit_price',
+                                            label: 'Unit Price',
+                                        },
+                                        {
+                                            key: 'discount_amount',
+                                            label: 'Discount',
+                                        },
+                                        { key: 'tax_rate', label: 'Tax %' },
+                                    ]}
+                                    errors={form.errors}
+                                    disabled={form.processing}
+                                    onAdd={() => {
+                                        setRowKeys([
+                                            ...rowKeys,
+                                            crypto.randomUUID(),
+                                        ]);
+                                        form.setData('items', [
+                                            ...form.data.items,
+                                            { ...emptyItem },
+                                        ]);
+                                    }}
+                                    onRemove={(index) => {
+                                        setRowKeys(
+                                            rowKeys.filter(
+                                                (_, i) => i !== index,
+                                            ),
+                                        );
+                                        form.setData(
+                                            'items',
+                                            form.data.items.filter(
+                                                (_, i) => i !== index,
+                                            ),
+                                        );
+                                        form.clearErrors();
+                                    }}
+                                    renderCell={(
+                                        item,
+                                        index,
+                                        field,
+                                        errorId,
+                                    ) =>
+                                        field === 'product_id' ? (
+                                            <EditorReference
+                                                id={
+                                                    'quotation-product-' +
+                                                    item.key
+                                                }
+                                                label={
+                                                    'Line ' +
+                                                    (index + 1) +
+                                                    ' Product'
+                                                }
+                                                value={item.product_id}
+                                                onChange={(v) =>
+                                                    selectProduct(index, v)
+                                                }
+                                                options={products.map((p) => ({
+                                                    id: p.id,
+                                                    label:
+                                                        p.sku + ' - ' + p.name,
+                                                }))}
+                                            />
+                                        ) : (
+                                            <input
+                                                aria-label={
+                                                    'Line ' +
+                                                    (index + 1) +
+                                                    ' ' +
+                                                    field.replaceAll('_', ' ')
+                                                }
+                                                aria-invalid={!!errorId}
+                                                aria-describedby={errorId}
+                                                className="w-full min-w-24 rounded-md border-gray-300 bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
+                                                type={
+                                                    [
+                                                        'quantity',
+                                                        'unit_price',
+                                                        'discount_amount',
+                                                        'tax_rate',
+                                                    ].includes(field)
+                                                        ? 'number'
+                                                        : 'text'
+                                                }
+                                                min={
+                                                    field === 'quantity'
+                                                        ? 0.01
+                                                        : 0
+                                                }
+                                                step="0.01"
+                                                value={
+                                                    item[
+                                                        field as keyof typeof emptyItem
+                                                    ]
+                                                }
+                                                onChange={(e) =>
+                                                    setItem(
+                                                        index,
+                                                        field as keyof typeof emptyItem,
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        )
+                                    }
+                                />
                             </div>
-                        </form>
-                    </Card>
+                        )}
+                    </CreateEditDialog>
                 </div>
             </div>
         </AuthenticatedLayout>

@@ -43,6 +43,7 @@ use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\OrganizationSettingsController;
 use App\Http\Controllers\Settings\OrganizationStructureController;
 use App\Http\Controllers\WorkflowController;
+use App\Http\Middleware\EnsureFormSubmission;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -86,7 +87,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:customers.view')
         ->name('customers.index');
     Route::post('/customers', [CustomerController::class, 'store'])
-        ->middleware(['permission:customers.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:customers.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('customers.store');
     Route::patch('/customers/{customer}', [CustomerController::class, 'update'])
         ->middleware(['permission:customers.update', 'password.confirm', 'throttle:10,1'])
@@ -96,7 +97,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('customers.destroy');
 
     Route::post('/customers/{customer}/contacts', [ContactController::class, 'store'])
-        ->middleware(['permission:contacts.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:contacts.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('contacts.store');
     Route::patch('/contacts/{contact}', [ContactController::class, 'update'])
         ->middleware(['permission:contacts.update', 'password.confirm', 'throttle:10,1'])
@@ -109,14 +110,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:deals.view')
         ->name('deals.index');
     Route::post('/deals', [DealController::class, 'store'])
-        ->middleware(['permission:deals.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:deals.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('deals.store');
     Route::patch('/deals/{deal}', [DealController::class, 'update'])
         ->middleware(['permission:deals.update', 'password.confirm', 'throttle:10,1'])
         ->name('deals.update');
 
     Route::post('/activities', [ActivityController::class, 'store'])
-        ->middleware(['permission:activities.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:activities.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('activities.store');
     Route::patch('/activities/{activity}', [ActivityController::class, 'update'])
         ->middleware(['permission:activities.update', 'password.confirm', 'throttle:10,1'])
@@ -128,7 +129,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:products.manage')
         ->name('products.index');
     Route::post('/products', [ProductController::class, 'store'])
-        ->middleware(['permission:products.manage', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:products.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('products.store');
     Route::patch('/products/{product}', [ProductController::class, 'update'])
         ->middleware(['permission:products.manage', 'password.confirm', 'throttle:10,1'])
@@ -140,7 +141,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:suppliers.view')
         ->name('suppliers.index');
     Route::post('/suppliers', [SupplierController::class, 'store'])
-        ->middleware(['permission:suppliers.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:suppliers.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('suppliers.store');
     Route::patch('/suppliers/{supplier}', [SupplierController::class, 'update'])
         ->middleware(['permission:suppliers.update', 'password.confirm', 'throttle:10,1'])
@@ -152,7 +153,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:purchase_orders.view')
         ->name('purchase-orders.index');
     Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])
-        ->middleware(['permission:purchase_orders.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:purchase_orders.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('purchase-orders.store');
     Route::patch('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])
         ->middleware(['permission:purchase_orders.update', 'password.confirm', 'throttle:10,1'])
@@ -173,7 +174,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:invoices.view')
         ->name('invoices.index');
     Route::post('/invoices', [InvoiceController::class, 'store'])
-        ->middleware(['permission:invoices.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:invoices.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('invoices.store');
     Route::patch('/invoices/{invoice}', [InvoiceController::class, 'update'])
         ->middleware(['permission:invoices.update', 'password.confirm', 'throttle:10,1'])
@@ -191,7 +192,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:quotations.view')
         ->name('quotations.index');
     Route::post('/quotations', [QuotationController::class, 'store'])
-        ->middleware(['permission:quotations.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:quotations.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('quotations.store');
     Route::patch('/quotations/{quotation}', [QuotationController::class, 'update'])
         ->middleware(['permission:quotations.update', 'password.confirm', 'throttle:10,1'])
@@ -212,7 +213,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:treasury.accounts.view')
         ->name('bank-accounts.index');
     Route::post('/bank-accounts', [BankAccountController::class, 'store'])
-        ->middleware(['permission:treasury.accounts.manage', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:treasury.accounts.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('bank-accounts.store');
     Route::patch('/bank-accounts/{bankAccount}', [BankAccountController::class, 'update'])
         ->middleware(['permission:treasury.accounts.manage', 'password.confirm', 'throttle:10,1'])
@@ -233,21 +234,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['permission:treasury.reconciliation.manage', 'password.confirm', 'throttle:10,1'])
         ->name('bank-statement-lines.unmatch');
     Route::get('/petty-cash', [TreasuryOperationsController::class, 'pettyCash'])->middleware('permission:petty_cash.view')->name('petty-cash.index');
-    Route::post('/petty-cash/funds', [TreasuryOperationsController::class, 'storeFund'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.funds.store');
-    Route::post('/petty-cash/requests', [TreasuryOperationsController::class, 'storeRequest'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.store');
+    Route::post('/petty-cash/funds', [TreasuryOperationsController::class, 'storeFund'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('petty-cash.funds.store');
+    Route::post('/petty-cash/requests', [TreasuryOperationsController::class, 'storeRequest'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('petty-cash.requests.store');
     Route::post('/petty-cash/requests/{pettyCashRequest}/approve', [TreasuryOperationsController::class, 'approveRequest'])->middleware(['permission:petty_cash.approve', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.approve');
     Route::post('/petty-cash/requests/{pettyCashRequest}/reject', [TreasuryOperationsController::class, 'rejectRequest'])->middleware(['permission:petty_cash.approve', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.reject');
     Route::post('/petty-cash/requests/{pettyCashRequest}/pay', [TreasuryOperationsController::class, 'payRequest'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.requests.pay');
-    Route::post('/petty-cash/reimbursements', [TreasuryOperationsController::class, 'reimburse'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1'])->name('petty-cash.reimbursements.store');
+    Route::post('/petty-cash/reimbursements', [TreasuryOperationsController::class, 'reimburse'])->middleware(['permission:petty_cash.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('petty-cash.reimbursements.store');
     Route::get('/cheques', [TreasuryOperationsController::class, 'cheques'])->middleware('permission:cheques.view')->name('cheques.index');
-    Route::post('/cheques', [TreasuryOperationsController::class, 'storeCheque'])->middleware(['permission:cheques.manage', 'password.confirm', 'throttle:10,1'])->name('cheques.store');
+    Route::post('/cheques', [TreasuryOperationsController::class, 'storeCheque'])->middleware(['permission:cheques.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('cheques.store');
     Route::post('/cheques/{cheque}/transition', [TreasuryOperationsController::class, 'transitionCheque'])->middleware(['permission:cheques.manage', 'password.confirm', 'throttle:10,1'])->name('cheques.transition');
     Route::get('/treasury-reports', [TreasuryReportController::class, 'index'])->middleware('permission:treasury.reports.view')->name('treasury-reports.index');
     Route::get('/accounting/chart-of-accounts', [GeneralLedgerController::class, 'chartOfAccounts'])->middleware('permission:accounting.chart_accounts.view')->name('accounting.chart-of-accounts.index');
-    Route::post('/accounting/chart-of-accounts', [GeneralLedgerController::class, 'storeAccount'])->middleware(['permission:accounting.chart_accounts.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.chart-of-accounts.store');
+    Route::post('/accounting/chart-of-accounts', [GeneralLedgerController::class, 'storeAccount'])->middleware(['permission:accounting.chart_accounts.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('accounting.chart-of-accounts.store');
     Route::patch('/accounting/chart-of-accounts/{chartOfAccount}', [GeneralLedgerController::class, 'updateAccount'])->middleware(['permission:accounting.chart_accounts.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.chart-of-accounts.update');
     Route::get('/accounting/periods', [GeneralLedgerController::class, 'periods'])->middleware('permission:accounting.periods.view')->name('accounting.periods.index');
-    Route::post('/accounting/periods', [GeneralLedgerController::class, 'storePeriod'])->middleware(['permission:accounting.periods.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.periods.store');
+    Route::post('/accounting/periods', [GeneralLedgerController::class, 'storePeriod'])->middleware(['permission:accounting.periods.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('accounting.periods.store');
     Route::post('/accounting/periods/{accountingPeriod}/close', [GeneralLedgerController::class, 'closePeriod'])->middleware(['permission:accounting.periods.manage', 'password.confirm', 'throttle:10,1'])->name('accounting.periods.close');
     Route::get('/accounting/journals', [GeneralLedgerController::class, 'journals'])->middleware('permission:accounting.journals.view')->name('accounting.journals.index');
     Route::post('/accounting/journals', [GeneralLedgerController::class, 'storeJournal'])->middleware(['permission:accounting.journals.post', 'password.confirm', 'throttle:10,1'])->name('accounting.journals.store');
@@ -259,41 +260,41 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/fx-revaluations', [CurrencyController::class, 'revalue'])->middleware(['permission:fx.revalue', 'password.confirm', 'throttle:5,1'])->name('fx-revaluations.store');
     Route::post('/fx-revaluations/reverse', [CurrencyController::class, 'reverse'])->middleware(['permission:fx.revalue', 'password.confirm', 'throttle:5,1'])->name('fx-revaluations.reverse');
     Route::get('/fixed-assets', [FixedAssetController::class, 'index'])->middleware('permission:fixed_assets.view')->name('fixed-assets.index');
-    Route::post('/fixed-assets/categories', [FixedAssetController::class, 'storeCategory'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.categories.store');
-    Route::post('/fixed-assets', [FixedAssetController::class, 'storeAsset'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.store');
+    Route::post('/fixed-assets/categories', [FixedAssetController::class, 'storeCategory'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('fixed-assets.categories.store');
+    Route::post('/fixed-assets', [FixedAssetController::class, 'storeAsset'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('fixed-assets.store');
     Route::post('/fixed-assets/depreciate', [FixedAssetController::class, 'depreciate'])->middleware(['permission:fixed_assets.depreciate', 'password.confirm', 'throttle:5,1'])->name('fixed-assets.depreciate');
     Route::post('/fixed-assets/{fixedAsset}/dispose', [FixedAssetController::class, 'dispose'])->middleware(['permission:fixed_assets.dispose', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.dispose');
     Route::post('/fixed-assets/{fixedAsset}/attachment', [FixedAssetController::class, 'storeAttachment'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.attachment.store');
     Route::get('/payroll', [PayrollController::class, 'index'])->middleware('permission:payroll.view')->name('payroll.index');
     Route::get('/hr', [HrController::class, 'index'])->middleware('permission:hr.self.view')->name('hr.index');
     Route::get('/workflows', [WorkflowController::class, 'index'])->middleware('permission:workflows.view')->name('workflows.index');
-    Route::post('/workflows/definitions', [WorkflowController::class, 'storeDefinition'])->middleware(['permission:workflows.manage', 'password.confirm'])->name('workflows.definitions.store');
+    Route::post('/workflows/definitions', [WorkflowController::class, 'storeDefinition'])->middleware(['permission:workflows.manage', 'password.confirm', EnsureFormSubmission::class])->name('workflows.definitions.store');
     Route::post('/workflows/submit/{subjectType}/{subjectId}', [WorkflowController::class, 'submit'])->middleware(['permission:workflows.view', 'password.confirm'])->name('workflows.submit');
     Route::post('/workflow-approvals/{workflowApproval}/act', [WorkflowController::class, 'act'])->middleware(['permission:workflows.approve', 'password.confirm'])->name('workflows.approvals.act');
-    Route::post('/workflow-delegations', [WorkflowController::class, 'storeDelegation'])->middleware(['permission:workflows.approve', 'password.confirm'])->name('workflows.delegations.store');
+    Route::post('/workflow-delegations', [WorkflowController::class, 'storeDelegation'])->middleware(['permission:workflows.approve', 'password.confirm', EnsureFormSubmission::class])->name('workflows.delegations.store');
     Route::post('/hr/clock-in', [HrController::class, 'clockIn'])->middleware(['permission:hr.self.view', 'throttle:10,1'])->name('hr.clock-in');
     Route::post('/hr/clock-out', [HrController::class, 'clockOut'])->middleware(['permission:hr.self.view', 'throttle:10,1'])->name('hr.clock-out');
-    Route::post('/hr/leave-requests', [HrController::class, 'storeLeaveRequest'])->middleware(['permission:hr.self.view', 'throttle:10,1'])->name('hr.leave-requests.store');
+    Route::post('/hr/leave-requests', [HrController::class, 'storeLeaveRequest'])->middleware(['permission:hr.self.view', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.leave-requests.store');
     Route::post('/hr/leave-requests/{leaveRequest}/submit', [HrController::class, 'submitLeaveRequest'])->middleware(['permission:hr.self.view', 'throttle:10,1'])->name('hr.leave-requests.submit');
     Route::post('/hr/leave-requests/{leaveRequest}/cancel', [HrController::class, 'cancelLeaveRequest'])->middleware(['permission:hr.self.view', 'throttle:10,1'])->name('hr.leave-requests.cancel');
-    Route::post('/hr/shifts', [HrController::class, 'storeShift'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1'])->name('hr.shifts.store');
-    Route::post('/hr/work-profiles', [HrController::class, 'storeWorkProfile'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1'])->name('hr.work-profiles.store');
-    Route::post('/hr/holidays', [HrController::class, 'storeHoliday'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1'])->name('hr.holidays.store');
-    Route::post('/hr/leave-types', [HrController::class, 'storeLeaveType'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1'])->name('hr.leave-types.store');
-    Route::post('/hr/leave-balances', [HrController::class, 'storeLeaveBalance'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1'])->name('hr.leave-balances.store');
-    Route::post('/hr/summaries', [HrController::class, 'storeSummary'])->middleware(['permission:hr.summary.manage', 'password.confirm', 'throttle:10,1'])->name('hr.summaries.store');
+    Route::post('/hr/shifts', [HrController::class, 'storeShift'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.shifts.store');
+    Route::post('/hr/work-profiles', [HrController::class, 'storeWorkProfile'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.work-profiles.store');
+    Route::post('/hr/holidays', [HrController::class, 'storeHoliday'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.holidays.store');
+    Route::post('/hr/leave-types', [HrController::class, 'storeLeaveType'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.leave-types.store');
+    Route::post('/hr/leave-balances', [HrController::class, 'storeLeaveBalance'])->middleware(['permission:hr.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.leave-balances.store');
+    Route::post('/hr/summaries', [HrController::class, 'storeSummary'])->middleware(['permission:hr.summary.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.summaries.store');
     Route::post('/hr/summaries/{attendanceSummary}/lock', [HrController::class, 'lockSummary'])->middleware(['permission:hr.summary.manage', 'password.confirm', 'throttle:10,1'])->name('hr.summaries.lock');
     Route::post('/hr/summaries/{attendanceSummary}/reverse', [HrController::class, 'reverseSummary'])->middleware(['permission:hr.summary.manage', 'password.confirm', 'throttle:10,1'])->name('hr.summaries.reverse');
     Route::get('/documents', [DocumentController::class, 'index'])->middleware('permission:documents.view')->name('documents.index');
-    Route::post('/documents', [DocumentController::class, 'store'])->middleware(['permission:documents.manage', 'password.confirm', 'throttle:10,1'])->name('documents.store');
-    Route::post('/documents/{document}/versions', [DocumentController::class, 'addVersion'])->middleware(['permission:documents.manage', 'password.confirm', 'throttle:10,1'])->name('documents.versions.store');
-    Route::post('/documents/{document}/links', [DocumentController::class, 'storeLink'])->middleware(['permission:documents.manage', 'password.confirm', 'throttle:10,1'])->name('documents.links.store');
-    Route::post('/documents/categories', [DocumentController::class, 'storeCategory'])->middleware(['permission:documents.retention.manage', 'password.confirm', 'throttle:10,1'])->name('documents.categories.store');
-    Route::post('/documents/retention-policies', [DocumentController::class, 'storeRetentionPolicy'])->middleware(['permission:documents.retention.manage', 'password.confirm', 'throttle:10,1'])->name('documents.retention-policies.store');
+    Route::post('/documents', [DocumentController::class, 'store'])->middleware(['permission:documents.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('documents.store');
+    Route::post('/documents/{document}/versions', [DocumentController::class, 'addVersion'])->middleware(['permission:documents.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('documents.versions.store');
+    Route::post('/documents/{document}/links', [DocumentController::class, 'storeLink'])->middleware(['permission:documents.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('documents.links.store');
+    Route::post('/documents/categories', [DocumentController::class, 'storeCategory'])->middleware(['permission:documents.retention.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('documents.categories.store');
+    Route::post('/documents/retention-policies', [DocumentController::class, 'storeRetentionPolicy'])->middleware(['permission:documents.retention.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('documents.retention-policies.store');
     Route::get('/document-versions/{version}/download', [DocumentController::class, 'download'])->middleware('permission:documents.download')->name('documents.versions.download');
-    Route::post('/payroll/profiles', [PayrollController::class, 'storeProfile'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:10,1'])->name('payroll.profiles.store');
-    Route::post('/payroll/policies', [PayrollController::class, 'storePolicies'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:5,1'])->name('payroll.policies.store');
-    Route::post('/payroll/runs', [PayrollController::class, 'storeRun'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:10,1'])->name('payroll.runs.store');
+    Route::post('/payroll/profiles', [PayrollController::class, 'storeProfile'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('payroll.profiles.store');
+    Route::post('/payroll/policies', [PayrollController::class, 'storePolicies'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:5,1', EnsureFormSubmission::class])->name('payroll.policies.store');
+    Route::post('/payroll/runs', [PayrollController::class, 'storeRun'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('payroll.runs.store');
     Route::post('/payroll/runs/{payrollRun}/calculate', [PayrollController::class, 'calculate'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:5,1'])->name('payroll.runs.calculate');
     Route::post('/payroll/runs/{payrollRun}/approve', [PayrollController::class, 'approve'])->middleware(['permission:payroll.approve', 'password.confirm', 'throttle:5,1'])->name('payroll.runs.approve');
     Route::post('/payroll/runs/{payrollRun}/pay', [PayrollController::class, 'pay'])->middleware(['permission:payroll.pay', 'password.confirm', 'throttle:5,1'])->name('payroll.runs.pay');
@@ -307,7 +308,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['permission:billing_notes.create', 'password.confirm', 'throttle:10,1'])
         ->name('billing-notes.store');
     Route::post('/delivery-orders', [CommercialDocumentController::class, 'storeDeliveryOrder'])
-        ->middleware(['permission:delivery_orders.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:delivery_orders.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('delivery-orders.store');
     Route::post('/purchase-requests', [CommercialDocumentController::class, 'storePurchaseRequest'])
         ->middleware(['permission:purchase_requests.create', 'password.confirm', 'throttle:10,1'])
@@ -355,23 +356,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:inventory.view')
         ->name('goods-receipts.index');
     Route::post('/goods-receipts', [GoodsReceiptController::class, 'store'])
-        ->middleware(['permission:inventory.receive', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:inventory.receive', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('goods-receipts.store');
     Route::post('/stock-movements', [GoodsReceiptController::class, 'storeMovement'])
-        ->middleware(['permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:inventory.adjust', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('stock-movements.store');
     Route::get('/inventory-operations', [InventoryOperationsController::class, 'index'])->middleware('permission:inventory.view')->name('inventory-operations.index');
-    Route::post('/warehouses', [InventoryOperationsController::class, 'storeWarehouse'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('warehouses.store');
-    Route::post('/warehouses/{warehouse}/bins', [InventoryOperationsController::class, 'storeBin'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('warehouses.bins.store');
-    Route::post('/inventory-lots', [InventoryOperationsController::class, 'storeLot'])->middleware(['permission:inventory.receive', 'password.confirm'])->name('inventory-lots.store');
-    Route::post('/stock-transfers', [InventoryOperationsController::class, 'transfer'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('stock-transfers.store');
-    Route::post('/stock-counts', [InventoryOperationsController::class, 'stockCount'])->middleware(['permission:inventory.adjust', 'password.confirm'])->name('stock-counts.store');
+    Route::post('/warehouses', [InventoryOperationsController::class, 'storeWarehouse'])->middleware(['permission:inventory.adjust', 'password.confirm', EnsureFormSubmission::class])->name('warehouses.store');
+    Route::post('/warehouses/{warehouse}/bins', [InventoryOperationsController::class, 'storeBin'])->middleware(['permission:inventory.adjust', 'password.confirm', EnsureFormSubmission::class])->name('warehouses.bins.store');
+    Route::post('/inventory-lots', [InventoryOperationsController::class, 'storeLot'])->middleware(['permission:inventory.receive', 'password.confirm', EnsureFormSubmission::class])->name('inventory-lots.store');
+    Route::post('/stock-transfers', [InventoryOperationsController::class, 'transfer'])->middleware(['permission:inventory.adjust', 'password.confirm', EnsureFormSubmission::class])->name('stock-transfers.store');
+    Route::post('/stock-counts', [InventoryOperationsController::class, 'stockCount'])->middleware(['permission:inventory.adjust', 'password.confirm', EnsureFormSubmission::class])->name('stock-counts.store');
     Route::get('/inventory-scan', [InventoryOperationsController::class, 'scan'])->middleware('permission:inventory.view')->name('inventory.scan');
     Route::get('/expenses', [ExpenseController::class, 'index'])
         ->middleware('permission:expenses.view')
         ->name('expenses.index');
     Route::post('/expenses', [ExpenseController::class, 'store'])
-        ->middleware(['permission:expenses.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:expenses.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('expenses.store');
     Route::patch('/expenses/{expense}', [ExpenseController::class, 'update'])
         ->middleware(['permission:expenses.update', 'password.confirm', 'throttle:10,1'])
@@ -398,16 +399,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:projects.view')
         ->name('projects.index');
     Route::post('/projects', [ProjectController::class, 'store'])
-        ->middleware(['permission:projects.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:projects.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('projects.store');
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])
         ->middleware(['permission:projects.update', 'password.confirm', 'throttle:10,1'])
         ->name('projects.update');
     Route::post('/deals/{deal}/project', [ProjectController::class, 'storeFromDeal'])
-        ->middleware(['permission:projects.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:projects.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('deals.projects.store');
     Route::post('/projects/{project}/members', [ProjectController::class, 'storeMember'])
-        ->middleware(['permission:projects.update', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:projects.update', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('projects.members.store');
     Route::delete('/projects/{project}/members/{member}', [ProjectController::class, 'destroyMember'])
         ->middleware(['permission:projects.update', 'password.confirm', 'throttle:10,1'])
@@ -416,19 +417,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:tasks.view')
         ->name('tasks.index');
     Route::post('/tasks', [TaskController::class, 'store'])
-        ->middleware(['permission:tasks.create', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:tasks.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('tasks.store');
     Route::patch('/tasks/{task}', [TaskController::class, 'update'])
         ->middleware(['permission:tasks.update', 'password.confirm', 'throttle:10,1'])
         ->name('tasks.update');
     Route::post('/tasks/{task}/checklists', [TaskController::class, 'storeChecklist'])
-        ->middleware(['permission:tasks.update', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:tasks.update', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('tasks.checklists.store');
     Route::patch('/task-checklists/{checklist}', [TaskController::class, 'toggleChecklist'])
         ->middleware(['permission:tasks.update', 'password.confirm', 'throttle:10,1'])
         ->name('task-checklists.update');
     Route::post('/tasks/{task}/comments', [TaskController::class, 'storeComment'])
-        ->middleware(['permission:tasks.comment', 'password.confirm', 'throttle:10,1'])
+        ->middleware(['permission:tasks.comment', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('tasks.comments.store');
     Route::get('/files/{file}/download', [FileController::class, 'download'])
         ->name('files.download');
@@ -441,6 +442,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/settings/organization/numbering', [OrganizationSettingsController::class, 'updateNumbering'])
         ->middleware(['permission:settings.organization.update', 'password.confirm'])
         ->name('settings.organization.numbering.update');
+    Route::patch('/settings/organization/attendance-privacy', [OrganizationSettingsController::class, 'updateAttendancePrivacy'])
+        ->middleware(['permission:settings.organization.update', 'password.confirm'])
+        ->name('settings.organization.attendance-privacy.update');
     Route::patch('/settings/organization/two-factor', [OrganizationSettingsController::class, 'updateTwoFactor'])
         ->middleware(['permission:settings.organization.update', 'password.confirm'])
         ->name('settings.organization.two-factor.update');
@@ -530,6 +534,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/roles', [RoleController::class, 'index'])
         ->middleware('permission:roles.view')
         ->name('roles.index');
+    Route::post('/roles', [RoleController::class, 'store'])
+        ->middleware(['permission:roles.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('roles.store');
+    Route::patch('/roles/{role}', [RoleController::class, 'update'])
+        ->middleware(['permission:roles.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('roles.update');
     Route::patch('/users/{user}/role', [RoleController::class, 'assign'])
         ->middleware(['permission:roles.update', 'password.confirm', 'throttle:10,1'])
         ->name('users.role.update');

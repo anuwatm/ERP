@@ -8,6 +8,16 @@ use Tests\TestCase;
 
 class PasswordConfirmationTest extends TestCase
 {
+    public function test_dialog_can_confirm_password_without_navigation(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->getJson(route('password.confirm.status'))->assertOk()->assertJson(['confirmed' => false]);
+        $this->postJson('/confirm-password', ['password' => 'incorrect'])->assertUnprocessable()->assertJsonValidationErrors('password');
+        $this->getJson(route('password.confirm.status'))->assertJson(['confirmed' => false]);
+        $this->postJson('/confirm-password', ['password' => 'password'])->assertNoContent();
+        $this->getJson(route('password.confirm.status'))->assertJson(['confirmed' => true]);
+    }
+
     use RefreshDatabase;
 
     public function test_confirm_password_screen_can_be_rendered(): void

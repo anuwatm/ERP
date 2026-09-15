@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:history": "node --test tests/Frontend/historyGuard.test.mjs",
     "build": "tsc && vite build",
     "dev": "vite",
     "lint": "eslint resources/js --max-warnings=0",

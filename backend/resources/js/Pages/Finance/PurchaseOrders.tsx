@@ -1,14 +1,24 @@
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import {
+    EditorField,
+    EditorChoice,
+    EditorReference,
+} from '@/Components/UI/EditorFields';
+import EditorLineItems from '@/Components/UI/EditorLineItems';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
-import { Head, router, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { FormEvent, useState } from 'react';
 
 type Supplier = { id: string; supplier_code: string; name: string };
 type PurchaseOrder = {
@@ -73,11 +83,28 @@ export default function PurchaseOrders({
 }) {
     const form = useForm<PurchaseOrderForm>(emptyForm);
 
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const [rowKeys, setRowKeys] = useState([crypto.randomUUID()]);
+    const { auth } = usePage<PageProps>().props;
+    const canCreate = auth.permissions.includes('purchase_orders.create');
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        form.setData({ ...emptyForm, items: [{ ...emptyItem }] });
+        form.clearErrors();
+        setRowKeys([crypto.randomUUID()]);
+        submission.reset();
+    };
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        if (!canCreate || form.processing) return;
         form.post(route('purchase-orders.store'), {
             preserveScroll: true,
-            onSuccess: () => form.setData(emptyForm),
+            headers: submission.headers(),
+            onSuccess: close,
         });
     };
 
@@ -97,9 +124,19 @@ export default function PurchaseOrders({
             <div className="space-y-6">
                 <PageHeader
                     title="Purchase Orders"
+                    actions={
+                        canCreate && (
+                            <PrimaryButton
+                                disabled={open}
+                                onClick={() => setOpen(true)}
+                            >
+                                + Create Purchase Order
+                            </PrimaryButton>
+                        )
+                    }
                     description="Supplier purchase commitments with server-calculated totals."
                 />
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
+                <div className="space-y-6">
                     <Card title="PO List" description="Procurement documents">
                         <DataTable
                             data={purchaseOrders}
@@ -242,121 +279,220 @@ export default function PurchaseOrders({
                             ]}
                         />
                     </Card>
-                    <Card
-                        title="New Purchase Order"
-                        description="Draft or sent"
+                    <DiscardChangesDialog
+                        open={guard.confirming}
+                        onKeep={guard.keep}
+                        onDiscard={guard.discard}
+                    />
+                    <CreateEditDialog
+                        open={open}
+                        minimized={minimized}
+                        onMinimize={setMinimized}
+                        onClose={() => guard.request(close)}
+                        title="Create Purchase Order"
+                        breadcrumb="Finance / Purchase Order"
+                        entityLabel="Purchase Order"
+                        draftLabel="New Purchase Order"
+                        storageKey="purchase-orders-editor-size"
+                        formId="purchase-orders-editor"
+                        processing={form.processing}
+                        saveDisabled={!canCreate}
+                        saveLabel="Save Purchase Order"
+                        status="Save a draft; server calculates taxes and totals"
+                        errors={form.errors}
+                        onSubmit={submit}
                     >
-                        <form onSubmit={submit} className="space-y-3">
-                            <select
-                                className="block w-full rounded-md border-slate-300 text-sm shadow-sm"
-                                value={form.data.supplier_id}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'supplier_id',
-                                        event.target.value,
-                                    )
-                                }
-                            >
-                                <option value="">Select supplier</option>
-                                {suppliers.map((supplier) => (
-                                    <option
-                                        key={supplier.id}
-                                        value={supplier.id}
-                                    >
-                                        {supplier.supplier_code} -{' '}
-                                        {supplier.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="grid grid-cols-2 gap-2">
-                                <TextInput
-                                    type="date"
-                                    value={form.data.order_date}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'order_date',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
-                                <select
-                                    className="rounded-md border-slate-300 text-sm shadow-sm"
-                                    value={form.data.tax_mode}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'tax_mode',
-                                            event.target.value,
-                                        )
+                        {(expanded) => (
+                            <div className="space-y-6 p-4 sm:p-6">
+                                <section
+                                    aria-label="Document details"
+                                    className={
+                                        expanded
+                                            ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                                            : 'grid gap-4 sm:grid-cols-2'
                                     }
                                 >
-                                    {taxModes.map((mode) => (
-                                        <option key={mode} value={mode}>
-                                            {mode}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            {form.data.items.map((item, index) => (
-                                <div
-                                    key={index}
-                                    className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-slate-900"
-                                >
-                                    <TextInput
-                                        className="block w-full"
-                                        placeholder="Description"
-                                        value={item.description}
-                                        onChange={(event) =>
-                                            setItem(
-                                                index,
-                                                'description',
-                                                event.target.value,
-                                            )
+                                    <EditorReference
+                                        id="po-supplier"
+                                        label="Supplier"
+                                        value={form.data.supplier_id}
+                                        error={form.errors.supplier_id}
+                                        onChange={(v) =>
+                                            form.setData('supplier_id', v)
+                                        }
+                                        options={suppliers.map((s) => ({
+                                            id: s.id,
+                                            label:
+                                                s.supplier_code +
+                                                ' - ' +
+                                                s.name,
+                                        }))}
+                                        required
+                                    />
+                                    <EditorField
+                                        id="purchase-orders-date"
+                                        label="Order Date"
+                                        type="date"
+                                        value={form.data.order_date}
+                                        error={form.errors.order_date}
+                                        onChange={(v) =>
+                                            form.setData('order_date', v)
+                                        }
+                                        required
+                                    />
+                                    <EditorField
+                                        id="purchase-orders-until"
+                                        label="Expected Date"
+                                        type="date"
+                                        value={form.data.expected_date}
+                                        error={form.errors.expected_date}
+                                        onChange={(v) =>
+                                            form.setData('expected_date', v)
                                         }
                                     />
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <TextInput
-                                            type="number"
-                                            value={item.quantity}
-                                            onChange={(event) =>
-                                                setItem(
-                                                    index,
+                                    <EditorChoice
+                                        id="purchase-orders-tax"
+                                        label="Tax Mode"
+                                        value={form.data.tax_mode}
+                                        error={form.errors.tax_mode}
+                                        onChange={(v) =>
+                                            form.setData('tax_mode', v)
+                                        }
+                                        options={taxModes}
+                                    />
+                                    <EditorField
+                                        id="purchase-orders-discount"
+                                        label="Document Discount"
+                                        type="number"
+                                        min={0}
+                                        step="0.01"
+                                        value={form.data.discount_amount}
+                                        error={form.errors.discount_amount}
+                                        onChange={(v) =>
+                                            form.setData('discount_amount', v)
+                                        }
+                                    />
+                                    <EditorField
+                                        id="purchase-orders-currency"
+                                        label="Currency"
+                                        value={form.data.currency}
+                                        error={form.errors.currency}
+                                        onChange={(v) =>
+                                            form.setData('currency', v)
+                                        }
+                                        maxLength={3}
+                                        required
+                                    />
+                                    <EditorField
+                                        id="purchase-orders-note"
+                                        label="Notes"
+                                        value={form.data.note}
+                                        error={form.errors.note}
+                                        onChange={(v) =>
+                                            form.setData('note', v)
+                                        }
+                                        multiline
+                                    />
+                                </section>
+                                <EditorLineItems
+                                    rows={form.data.items.map(
+                                        (item, index) => ({
+                                            ...item,
+                                            key: rowKeys[index],
+                                        }),
+                                    )}
+                                    rowKey={(item) => item.key}
+                                    columns={[
+                                        {
+                                            key: 'description',
+                                            label: 'Description',
+                                        },
+                                        { key: 'quantity', label: 'Quantity' },
+                                        { key: 'unit', label: 'Unit' },
+                                        {
+                                            key: 'unit_price',
+                                            label: 'Unit Price',
+                                        },
+                                        {
+                                            key: 'discount_amount',
+                                            label: 'Discount',
+                                        },
+                                        { key: 'tax_rate', label: 'Tax %' },
+                                    ]}
+                                    errors={form.errors}
+                                    disabled={form.processing}
+                                    onAdd={() => {
+                                        setRowKeys([
+                                            ...rowKeys,
+                                            crypto.randomUUID(),
+                                        ]);
+                                        form.setData('items', [
+                                            ...form.data.items,
+                                            { ...emptyItem },
+                                        ]);
+                                    }}
+                                    onRemove={(index) => {
+                                        setRowKeys(
+                                            rowKeys.filter(
+                                                (_, i) => i !== index,
+                                            ),
+                                        );
+                                        form.setData(
+                                            'items',
+                                            form.data.items.filter(
+                                                (_, i) => i !== index,
+                                            ),
+                                        );
+                                        form.clearErrors();
+                                    }}
+                                    renderCell={(
+                                        item,
+                                        index,
+                                        field,
+                                        errorId,
+                                    ) => (
+                                        <input
+                                            aria-label={
+                                                'Line ' +
+                                                (index + 1) +
+                                                ' ' +
+                                                field.replaceAll('_', ' ')
+                                            }
+                                            aria-invalid={!!errorId}
+                                            aria-describedby={errorId}
+                                            className="w-full min-w-24 rounded-md border-gray-300 bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
+                                            type={
+                                                [
                                                     'quantity',
-                                                    event.target.value,
-                                                )
+                                                    'unit_price',
+                                                    'discount_amount',
+                                                    'tax_rate',
+                                                ].includes(field)
+                                                    ? 'number'
+                                                    : 'text'
                                             }
-                                        />
-                                        <TextInput
-                                            type="number"
-                                            value={item.unit_price}
-                                            onChange={(event) =>
+                                            min={
+                                                field === 'quantity' ? 0.01 : 0
+                                            }
+                                            step="0.01"
+                                            value={
+                                                item[
+                                                    field as keyof typeof emptyItem
+                                                ]
+                                            }
+                                            onChange={(e) =>
                                                 setItem(
                                                     index,
-                                                    'unit_price',
-                                                    event.target.value,
+                                                    field as keyof typeof emptyItem,
+                                                    e.target.value,
                                                 )
                                             }
                                         />
-                                    </div>
-                                </div>
-                            ))}
-                            <SecondaryButton
-                                type="button"
-                                onClick={() =>
-                                    form.setData('items', [
-                                        ...form.data.items,
-                                        { ...emptyItem },
-                                    ])
-                                }
-                            >
-                                Add Line
-                            </SecondaryButton>
-                            <div className="flex justify-end">
-                                <PrimaryButton disabled={form.processing}>
-                                    Save PO
-                                </PrimaryButton>
+                                    )}
+                                />
                             </div>
-                        </form>
-                    </Card>
+                        )}
+                    </CreateEditDialog>
                 </div>
             </div>
         </AuthenticatedLayout>

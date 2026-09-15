@@ -1,10 +1,20 @@
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import {
+    EditorField,
+    EditorChoice,
+    EditorReference,
+} from '@/Components/UI/EditorFields';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { FormEvent, useState } from 'react';
 
 type Account = { id: string; bank_name: string; account_name: string };
 type StatementLine = {
@@ -24,14 +34,6 @@ type Cheque = {
     status: string;
 };
 
-function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    router.post(
-        route('cheques.store'),
-        Object.fromEntries(new FormData(event.currentTarget)),
-    );
-}
-
 export default function Cheques({
     cheques,
     accounts,
@@ -41,10 +43,43 @@ export default function Cheques({
     accounts: Account[];
     statementLines: StatementLine[];
 }) {
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const { auth } = usePage<PageProps>().props;
+    const canManage = auth.permissions.includes('cheques.manage');
+    const form = useForm({
+        bank_account_id: '',
+        direction: 'received',
+        cheque_no: '',
+        bank_name: '',
+        drawer_or_payee: '',
+        amount: '',
+        issue_date: '',
+        due_date: '',
+    });
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        form.reset();
+        form.clearErrors();
+        submission.reset();
+    };
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        if (!canManage || form.processing) return;
+        form.post(route('cheques.store'), {
+            preserveScroll: true,
+            headers: submission.headers(),
+            onSuccess: close,
+        });
+    };
     function transition(
         cheque: Cheque,
         status: 'deposited' | 'cleared' | 'bounced' | 'cancelled',
     ) {
+        if (!canManage || open || form.processing) return;
         const payload: Record<string, string> = { status };
         if (status === 'cleared') {
             const line = statementLines.find(
@@ -67,74 +102,124 @@ export default function Cheques({
             <div className="space-y-6">
                 <PageHeader
                     title="Cheques / PDC"
+                    actions={
+                        canManage && (
+                            <PrimaryButton
+                                disabled={open}
+                                onClick={() => setOpen(true)}
+                            >
+                                + Register Cheque
+                            </PrimaryButton>
+                        )
+                    }
                     description="Register, deposit, clear, bounce, or cancel issued and received cheques."
                 />
-                <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-                    <Card title="Register Cheque">
-                        <form className="space-y-3" onSubmit={submit}>
-                            <select
-                                name="bank_account_id"
-                                className="w-full rounded-md border-slate-300"
+                <div className="space-y-6">
+                    <DiscardChangesDialog
+                        open={guard.confirming}
+                        onKeep={guard.keep}
+                        onDiscard={guard.discard}
+                    />
+                    <CreateEditDialog
+                        open={open}
+                        minimized={minimized}
+                        onMinimize={setMinimized}
+                        onClose={() => guard.request(close)}
+                        title="Register Cheque"
+                        breadcrumb="Treasury / Cheques"
+                        entityLabel="Cheque"
+                        draftLabel={form.data.cheque_no || 'New cheque'}
+                        storageKey="cheque-editor-size"
+                        formId="cheque-editor"
+                        processing={form.processing}
+                        saveDisabled={!canManage}
+                        saveLabel="Register"
+                        status="Register the cheque before deposit or clearance"
+                        errors={form.errors}
+                        onSubmit={submit}
+                    >
+                        {(expanded) => (
+                            <section
+                                aria-label="Cheque details"
+                                className={`grid gap-4 p-4 sm:grid-cols-2 sm:p-6 ${expanded ? 'lg:grid-cols-3' : ''}`}
                             >
-                                <option value="">Bank account</option>
-                                {accounts.map((account) => (
-                                    <option key={account.id} value={account.id}>
-                                        {account.bank_name} -{' '}
-                                        {account.account_name}
-                                    </option>
+                                <EditorReference
+                                    id="cheque-bank-account"
+                                    label="Bank Account"
+                                    value={form.data.bank_account_id}
+                                    error={form.errors.bank_account_id}
+                                    onChange={(v) =>
+                                        form.setData('bank_account_id', v)
+                                    }
+                                    options={accounts.map((a) => ({
+                                        id: a.id,
+                                        label:
+                                            a.bank_name +
+                                            ' - ' +
+                                            a.account_name,
+                                    }))}
+                                />
+                                <EditorChoice
+                                    id="cheque-direction"
+                                    label="Direction"
+                                    value={form.data.direction}
+                                    error={form.errors.direction}
+                                    onChange={(v) =>
+                                        form.setData('direction', v)
+                                    }
+                                    options={['received', 'issued']}
+                                    required
+                                />
+                                {(
+                                    [
+                                        'cheque_no',
+                                        'bank_name',
+                                        'drawer_or_payee',
+                                        'amount',
+                                        'issue_date',
+                                        'due_date',
+                                    ] as const
+                                ).map((field) => (
+                                    <EditorField
+                                        key={field}
+                                        id={'cheque-' + field}
+                                        label={
+                                            {
+                                                cheque_no: 'Cheque Number',
+                                                bank_name: 'Bank',
+                                                drawer_or_payee:
+                                                    'Drawer / Payee',
+                                                amount: 'Amount',
+                                                issue_date: 'Issue Date',
+                                                due_date: 'Due Date',
+                                            }[field]
+                                        }
+                                        value={form.data[field]}
+                                        error={form.errors[field]}
+                                        onChange={(v) => form.setData(field, v)}
+                                        type={
+                                            field.includes('date')
+                                                ? 'date'
+                                                : field === 'amount'
+                                                  ? 'number'
+                                                  : 'text'
+                                        }
+                                        min={
+                                            field === 'amount'
+                                                ? 0.01
+                                                : undefined
+                                        }
+                                        step={
+                                            field === 'amount'
+                                                ? '0.01'
+                                                : undefined
+                                        }
+                                        required
+                                    />
                                 ))}
-                            </select>
-                            <select
-                                name="direction"
-                                required
-                                className="w-full rounded-md border-slate-300"
-                            >
-                                <option value="received">Received</option>
-                                <option value="issued">Issued</option>
-                            </select>
-                            <input
-                                name="cheque_no"
-                                required
-                                placeholder="Cheque number"
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            <input
-                                name="bank_name"
-                                required
-                                placeholder="Bank"
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            <input
-                                name="drawer_or_payee"
-                                required
-                                placeholder="Drawer / payee"
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            <input
-                                name="amount"
-                                required
-                                type="number"
-                                min="0.01"
-                                step="0.01"
-                                placeholder="Amount"
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            <input
-                                name="issue_date"
-                                required
-                                type="date"
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            <input
-                                name="due_date"
-                                required
-                                type="date"
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            <PrimaryButton>Register</PrimaryButton>
-                        </form>
-                    </Card>
-
+                            </section>
+                        )}
+                    </CreateEditDialog>
                     <Card title="Cheque Register">
                         <DataTable
                             data={cheques}

@@ -1,9 +1,15 @@
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import EditorLineItems from '@/Components/UI/EditorLineItems';
+import { EditorField, EditorReference } from '@/Components/UI/EditorFields';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 
 type Account = { id: string; code: string; name: string };
@@ -17,7 +23,18 @@ type Journal = {
     source_type: string | null;
     lines: Line[];
 };
-type DraftLine = { account_code: string; debit: string; credit: string };
+type DraftLine = {
+    key: string;
+    account_code: string;
+    debit: string;
+    credit: string;
+};
+const emptyLine = (): DraftLine => ({
+    key: crypto.randomUUID(),
+    account_code: '',
+    debit: '',
+    credit: '',
+});
 
 export default function Journals({
     journals,
@@ -27,19 +44,72 @@ export default function Journals({
     accounts: Account[];
 }) {
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-    const [description, setDescription] = useState('');
-    const [lines, setLines] = useState<DraftLine[]>([
-        { account_code: '', debit: '', credit: '' },
-        { account_code: '', debit: '', credit: '' },
-    ]);
-
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const form = useForm({
+        posting_date: date,
+        description: '',
+        idempotency_key: crypto.randomUUID(),
+        lines: [emptyLine(), emptyLine()],
+    });
+    const { auth } = usePage<PageProps>().props;
+    const canPost = auth.permissions.includes('accounting.journals.post');
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        form.clearErrors();
+    };
+    const create = () => {
+        if (!canPost || form.processing) return;
+        guard.request(() => {
+            close();
+            const data = {
+                posting_date: date,
+                description: '',
+                idempotency_key: crypto.randomUUID(),
+                lines: [emptyLine(), emptyLine()],
+            };
+            form.setDefaults(data);
+            form.setData(data);
+            setOpen(true);
+        });
+    };
+    const setLine = (
+        index: number,
+        field: 'account_code' | 'debit' | 'credit',
+        value: string,
+    ) =>
+        form.setData(
+            'lines',
+            form.data.lines.map((line, i) =>
+                i === index
+                    ? {
+                          ...line,
+                          [field]: value,
+                          ...(field === 'debit'
+                              ? { credit: '' }
+                              : field === 'credit'
+                                ? { debit: '' }
+                                : {}),
+                      }
+                    : line,
+            ),
+        );
     function submit(event: FormEvent) {
         event.preventDefault();
-        router.post(route('accounting.journals.store'), {
-            posting_date: date,
-            description,
-            idempotency_key: crypto.randomUUID(),
-            lines,
+        if (!canPost || form.processing) return;
+        form.transform((data) => ({
+            ...data,
+            lines: data.lines.map(({ account_code, debit, credit }) => ({
+                account_code,
+                debit,
+                credit,
+            })),
+        }));
+        form.post(route('accounting.journals.store'), {
+            preserveScroll: true,
+            onSuccess: close,
         });
     }
 
@@ -48,141 +118,190 @@ export default function Journals({
             <Head title="Journals" />
             <div className="space-y-6">
                 <PageHeader
+                    actions={
+                        canPost && (
+                            <PrimaryButton onClick={create}>
+                                + Manual Journal
+                            </PrimaryButton>
+                        )
+                    }
                     title="Journal Entries"
                     description="Posted journals are immutable; use reversal for corrections."
                 />
-                <div className="grid gap-6 xl:grid-cols-[400px_minmax(0,1fr)]">
-                    <Card title="Manual Journal">
-                        <form className="space-y-3" onSubmit={submit}>
-                            <input
-                                required
-                                type="date"
-                                value={date}
-                                onChange={(event) =>
-                                    setDate(event.target.value)
-                                }
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            <input
-                                required
-                                value={description}
-                                onChange={(event) =>
-                                    setDescription(event.target.value)
-                                }
-                                placeholder="Description"
-                                className="w-full rounded-md border-slate-300"
-                            />
-                            {lines.map((line, index) => (
-                                <div
-                                    className="grid grid-cols-3 gap-2"
-                                    key={index}
+                <div className="space-y-6">
+                    <DiscardChangesDialog
+                        open={guard.confirming}
+                        onKeep={guard.keep}
+                        onDiscard={guard.discard}
+                    />
+                    <CreateEditDialog
+                        open={open}
+                        minimized={minimized}
+                        onMinimize={setMinimized}
+                        onClose={() => guard.request(close)}
+                        title="Manual Journal"
+                        breadcrumb="Accounting / Journals"
+                        entityLabel="Journal"
+                        draftLabel={form.data.description || 'Manual journal'}
+                        storageKey="journal-editor-size"
+                        formId="journal-editor"
+                        processing={form.processing}
+                        saveDisabled={!canPost}
+                        saveLabel="Post Journal"
+                        status="Post creates an immutable journal; backend validates balance and open period"
+                        errors={form.errors}
+                        onSubmit={submit}
+                    >
+                        {(expanded) => (
+                            <div className="space-y-6 p-4 sm:p-6">
+                                <section
+                                    aria-label="Journal details"
+                                    className={
+                                        expanded
+                                            ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                                            : 'grid gap-4 sm:grid-cols-2'
+                                    }
                                 >
-                                    <select
+                                    <EditorField
+                                        id="journal-date"
+                                        label="Posting Date"
+                                        type="date"
+                                        value={form.data.posting_date}
+                                        error={form.errors.posting_date}
+                                        onChange={(v) =>
+                                            form.setData('posting_date', v)
+                                        }
                                         required
-                                        value={line.account_code}
-                                        onChange={(event) =>
-                                            setLines(
-                                                lines.map((item, itemIndex) =>
-                                                    itemIndex === index
-                                                        ? {
-                                                              ...item,
-                                                              account_code:
-                                                                  event.target
-                                                                      .value,
-                                                          }
-                                                        : item,
-                                                ),
-                                            )
-                                        }
-                                        className="col-span-3 rounded-md border-slate-300"
-                                    >
-                                        <option value="">Account</option>
-                                        {accounts.map((account) => (
-                                            <option
-                                                key={account.id}
-                                                value={account.code}
-                                            >
-                                                {account.code} - {account.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        value={line.debit}
-                                        onChange={(event) =>
-                                            setLines(
-                                                lines.map((item, itemIndex) =>
-                                                    itemIndex === index
-                                                        ? {
-                                                              ...item,
-                                                              debit: event
-                                                                  .target.value,
-                                                              credit: '',
-                                                          }
-                                                        : item,
-                                                ),
-                                            )
-                                        }
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="Debit"
-                                        className="rounded-md border-slate-300"
                                     />
-                                    <input
-                                        value={line.credit}
-                                        onChange={(event) =>
-                                            setLines(
-                                                lines.map((item, itemIndex) =>
-                                                    itemIndex === index
-                                                        ? {
-                                                              ...item,
-                                                              credit: event
-                                                                  .target.value,
-                                                              debit: '',
-                                                          }
-                                                        : item,
-                                                ),
-                                            )
+                                    <EditorField
+                                        id="journal-description"
+                                        label="Description"
+                                        value={form.data.description}
+                                        error={form.errors.description}
+                                        onChange={(v) =>
+                                            form.setData('description', v)
                                         }
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="Credit"
-                                        className="rounded-md border-slate-300"
+                                        required
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setLines(
-                                                lines.filter(
-                                                    (_, itemIndex) =>
-                                                        itemIndex !== index,
-                                                ),
-                                            )
-                                        }
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            ))}
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setLines([
-                                        ...lines,
+                                </section>
+                                <EditorLineItems
+                                    rows={form.data.lines}
+                                    rowKey={(line) => line.key}
+                                    prefix="lines"
+                                    columns={[
                                         {
-                                            account_code: '',
-                                            debit: '',
-                                            credit: '',
+                                            key: 'account_code',
+                                            label: 'Account',
                                         },
-                                    ])
-                                }
-                            >
-                                Add Line
-                            </button>
-                            <PrimaryButton>Post Journal</PrimaryButton>
-                        </form>
-                    </Card>
+                                        { key: 'debit', label: 'Debit' },
+                                        { key: 'credit', label: 'Credit' },
+                                    ]}
+                                    disabled={form.processing}
+                                    errors={form.errors}
+                                    onAdd={() => {
+                                        form.clearErrors();
+                                        form.setData('lines', [
+                                            ...form.data.lines,
+                                            emptyLine(),
+                                        ]);
+                                    }}
+                                    onRemove={(i) => {
+                                        form.clearErrors();
+                                        form.setData(
+                                            'lines',
+                                            form.data.lines.filter(
+                                                (_, index) => index !== i,
+                                            ),
+                                        );
+                                    }}
+                                    renderCell={(
+                                        line,
+                                        index,
+                                        field,
+                                        errorId,
+                                    ) =>
+                                        field === 'account_code' ? (
+                                            <EditorReference
+                                                id={
+                                                    'journal-account-' +
+                                                    line.key
+                                                }
+                                                label={
+                                                    'Line ' +
+                                                    (index + 1) +
+                                                    ' Account'
+                                                }
+                                                value={line.account_code}
+                                                onChange={(v) =>
+                                                    setLine(
+                                                        index,
+                                                        'account_code',
+                                                        v,
+                                                    )
+                                                }
+                                                error={
+                                                    (
+                                                        form.errors as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[
+                                                        'lines.' +
+                                                            index +
+                                                            '.account_code'
+                                                    ]
+                                                }
+                                                options={accounts.map((a) => ({
+                                                    id: a.code,
+                                                    label:
+                                                        a.code + ' - ' + a.name,
+                                                }))}
+                                                required
+                                            />
+                                        ) : (
+                                            <input
+                                                aria-label={
+                                                    'Line ' +
+                                                    (index + 1) +
+                                                    ' ' +
+                                                    field
+                                                }
+                                                aria-invalid={!!errorId}
+                                                aria-describedby={errorId}
+                                                className="w-full min-w-0 rounded border-gray-300 bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={
+                                                    line[
+                                                        field as
+                                                            'debit' | 'credit'
+                                                    ]
+                                                }
+                                                onChange={(e) =>
+                                                    setLine(
+                                                        index,
+                                                        field as
+                                                            'debit' | 'credit',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        )
+                                    }
+                                />
+                            </div>
+                        )}
+                    </CreateEditDialog>
+                    <label className="block text-sm">
+                        Reversal posting date
+                        <input
+                            className="ml-3 rounded border-gray-300"
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                        />
+                    </label>
                     <Card title="Posted Journals">
                         <DataTable
                             data={journals}
@@ -234,9 +353,15 @@ export default function Journals({
                                 {
                                     header: 'Actions',
                                     accessor: (item) =>
+                                        auth.permissions.includes(
+                                            'accounting.journals.reverse',
+                                        ) &&
                                         item.status === 'posted' && (
                                             <button
                                                 type="button"
+                                                disabled={
+                                                    open || form.processing
+                                                }
                                                 onClick={() =>
                                                     router.post(
                                                         route(

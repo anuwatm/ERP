@@ -275,7 +275,7 @@ class Phase5EndToEndTest extends TestCase
         $this->assertStringNotContainsString('9876543210123', $auditPayload);
 
         $uris = collect(Route::getRoutes())->map(fn ($route) => $route->uri())->values();
-        $this->assertFalse($uris->contains(fn (string $uri) => Str::startsWith($uri, 'api/')));
+        $this->assertFalse($uris->contains(fn (string $uri) => Str::startsWith($uri, 'api/') && ! Str::startsWith($uri, 'api/gateway/')));
         $this->assertFalse($uris->contains(fn (string $uri) => str_contains($uri, 'export') && ! Str::startsWith($uri, 'tax-reports/') && ! Str::startsWith($uri, 'payroll/')));
         $this->assertFalse($uris->contains(fn (string $uri) => $uri === 'notifications' || Str::startsWith($uri, 'notifications/')));
         $this->assertFalse($uris->contains(fn (string $uri) => $uri === 'notification-settings' || Str::startsWith($uri, 'notification-settings/')));

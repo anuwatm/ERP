@@ -1,15 +1,23 @@
-import InputLabel from '@/Components/InputLabel';
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import {
+    EditorField,
+    EditorChoice,
+    EditorReference,
+} from '@/Components/UI/EditorFields';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
-import { Head, useForm } from '@inertiajs/react';
-import { FormEvent, ReactNode, useState } from 'react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { FormEvent, useState } from 'react';
 
 type Branch = { id: string; code: string; name: string };
 type Account = {
@@ -17,6 +25,7 @@ type Account = {
     branch_id: string | null;
     branch: Branch | null;
     chart_of_account_id: string | null;
+    chart_of_account: { id: string; code: string; name: string } | null;
     bank_name: string;
     bank_code: string | null;
     branch_name: string | null;
@@ -77,40 +86,74 @@ export default function BankAccounts({
 }) {
     const [editing, setEditing] = useState<Account | null>(null);
     const form = useForm<AccountForm>(emptyForm);
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const { auth } = usePage<PageProps>().props;
+    const canCreate = auth.permissions.includes('treasury.accounts.manage');
+    const canEdit = auth.permissions.includes('treasury.accounts.manage');
+
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        setEditing(null);
+        form.setDefaults(emptyForm);
+        form.setData(emptyForm);
+        form.clearErrors();
+        submission.reset();
+    };
+    const create = () => {
+        if (!canCreate || form.processing) return;
+        guard.request(() => {
+            close();
+            setOpen(true);
+        });
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        if (form.processing || (editing ? !canEdit : !canCreate)) return;
         const options = {
             preserveScroll: true,
-            onSuccess: () => {
-                form.setData(emptyForm);
-                setEditing(null);
-            },
+            onSuccess: close,
         };
 
         if (editing) {
             form.patch(route('bank-accounts.update', editing.id), options);
         } else {
-            form.post(route('bank-accounts.store'), options);
+            form.post(route('bank-accounts.store'), {
+                ...options,
+                headers: submission.headers(),
+            });
         }
     };
 
     const edit = (account: Account) => {
-        setEditing(account);
-        form.setData({
-            branch_id: account.branch_id ?? '',
-            chart_of_account_id: account.chart_of_account_id ?? '',
-            bank_name: account.bank_name,
-            bank_code: account.bank_code ?? '',
-            branch_name: account.branch_name ?? '',
-            account_name: account.account_name,
-            account_number: '',
-            account_type: account.account_type,
-            currency: account.currency,
-            is_cash_account: account.is_cash_account,
-            status: account.status,
-            opening_balance: account.opening_balance,
-            opening_balance_date: account.opening_balance_date ?? '',
+        if (!canEdit || form.processing) return;
+        guard.request(() => {
+            setOpen(true);
+            setMinimized(false);
+            form.clearErrors();
+            submission.reset();
+            setEditing(account);
+            const data = {
+                branch_id: account.branch_id ?? '',
+                chart_of_account_id: account.chart_of_account_id ?? '',
+                bank_name: account.bank_name,
+                bank_code: account.bank_code ?? '',
+                branch_name: account.branch_name ?? '',
+                account_name: account.account_name,
+                account_number: '',
+                account_type: account.account_type,
+                currency: account.currency,
+                is_cash_account: account.is_cash_account,
+                status: account.status,
+                opening_balance: account.opening_balance,
+                opening_balance_date: account.opening_balance_date ?? '',
+            };
+            form.setDefaults(data);
+            form.setData(data);
         });
     };
 
@@ -121,8 +164,15 @@ export default function BankAccounts({
                 <PageHeader
                     title="Bank Accounts"
                     description="Bank and cash account master data for treasury operations."
+                    actions={
+                        canCreate && (
+                            <PrimaryButton onClick={create}>
+                                + Create Account
+                            </PrimaryButton>
+                        )
+                    }
                 />
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+                <div className="space-y-6">
                     <Card
                         title="Accounts"
                         description={`${accounts.length} account(s)`}
@@ -177,6 +227,9 @@ export default function BankAccounts({
                                     accessor: (row) => (
                                         <SecondaryButton
                                             type="button"
+                                            disabled={
+                                                !canEdit || form.processing
+                                            }
                                             onClick={() => edit(row)}
                                         >
                                             Edit
@@ -186,230 +239,281 @@ export default function BankAccounts({
                             ]}
                         />
                     </Card>
-                    <Card
-                        title={editing ? 'Edit Account' : 'New Account'}
-                        description={
-                            editing
-                                ? `Current number: ${editing.account_number_masked}`
-                                : 'Account number is encrypted at rest.'
+                    <DiscardChangesDialog
+                        open={guard.confirming}
+                        onKeep={guard.keep}
+                        onDiscard={guard.discard}
+                    />
+                    <CreateEditDialog
+                        open={open}
+                        minimized={minimized}
+                        onMinimize={setMinimized}
+                        onClose={() => guard.request(close)}
+                        title={editing ? 'Edit Account' : 'Create Account'}
+                        breadcrumb="BankAccounts / Editor"
+                        entityLabel="Account"
+                        draftLabel={form.data.account_name || 'New account'}
+                        storageKey="bank-accounts-editor-size"
+                        formId="bank-accounts-editor"
+                        processing={form.processing}
+                        saveDisabled={editing ? !canEdit : !canCreate}
+                        saveLabel="Save Account"
+                        status={
+                            form.isDirty
+                                ? 'Unsaved changes'
+                                : editing
+                                  ? 'No changes'
+                                  : 'New account'
                         }
+                        errors={form.errors}
+                        onSubmit={submit}
                     >
-                        <form onSubmit={submit} className="space-y-3">
-                            <SelectField
-                                label="Branch Scope"
-                                value={form.data.branch_id}
-                                onChange={(value) =>
-                                    form.setData('branch_id', value)
-                                }
-                            >
-                                <option value="">Organization</option>
-                                {branches.map((branch) => (
-                                    <option key={branch.id} value={branch.id}>
-                                        {branch.code} - {branch.name}
-                                    </option>
-                                ))}
-                            </SelectField>
-                            <SelectField
-                                label="GL Account"
-                                value={form.data.chart_of_account_id}
-                                onChange={(value) =>
-                                    form.setData('chart_of_account_id', value)
-                                }
-                            >
-                                <option value="">
-                                    Use default bank account
-                                </option>
-                                {chartAccounts.map((account) => (
-                                    <option key={account.id} value={account.id}>
-                                        {account.code} - {account.name}
-                                    </option>
-                                ))}
-                            </SelectField>
-                            <Field
-                                label="Bank Name"
-                                value={form.data.bank_name}
-                                onChange={(value) =>
-                                    form.setData('bank_name', value)
-                                }
-                                required
-                            />
-                            <Field
-                                label="Bank Code"
-                                value={form.data.bank_code}
-                                onChange={(value) =>
-                                    form.setData('bank_code', value)
-                                }
-                            />
-                            <Field
-                                label="Bank Branch"
-                                value={form.data.branch_name}
-                                onChange={(value) =>
-                                    form.setData('branch_name', value)
-                                }
-                            />
-                            <Field
-                                label="Account Name"
-                                value={form.data.account_name}
-                                onChange={(value) =>
-                                    form.setData('account_name', value)
-                                }
-                                required
-                            />
-                            <Field
-                                label="Account Number"
-                                value={form.data.account_number}
-                                onChange={(value) =>
-                                    form.setData('account_number', value)
-                                }
-                                required={!editing}
-                                placeholder={
-                                    editing
-                                        ? 'Leave blank to keep current number'
-                                        : ''
-                                }
-                            />
-                            <SelectField
-                                label="Account Type"
-                                value={form.data.account_type}
-                                onChange={(value) =>
-                                    form.setData('account_type', value)
-                                }
-                            >
-                                {accountTypes.map((type) => (
-                                    <option key={type} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
-                            </SelectField>
-                            <Field
-                                label="Currency"
-                                value={form.data.currency}
-                                onChange={(value) =>
-                                    form.setData(
-                                        'currency',
-                                        value.toUpperCase(),
-                                    )
-                                }
-                                required
-                            />
-                            <Field
-                                label="Opening Balance"
-                                type="number"
-                                value={form.data.opening_balance}
-                                onChange={(value) =>
-                                    form.setData('opening_balance', value)
-                                }
-                                required
-                            />
-                            <Field
-                                label="Opening Balance Date"
-                                type="date"
-                                value={form.data.opening_balance_date}
-                                onChange={(value) =>
-                                    form.setData('opening_balance_date', value)
-                                }
-                            />
-                            <SelectField
-                                label="Status"
-                                value={form.data.status}
-                                onChange={(value) =>
-                                    form.setData('status', value)
-                                }
-                            >
-                                {statuses.map((status) => (
-                                    <option key={status} value={status}>
-                                        {status}
-                                    </option>
-                                ))}
-                            </SelectField>
-                            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-                                <input
-                                    type="checkbox"
-                                    checked={form.data.is_cash_account}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'is_cash_account',
-                                            event.target.checked,
-                                        )
-                                    }
-                                />
-                                Cash account
-                            </label>
-                            <div className="flex justify-end gap-2">
-                                {editing && (
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() => {
-                                            setEditing(null);
-                                            form.setData(emptyForm);
-                                        }}
+                        {(expanded) => (
+                            <div className="space-y-6 p-4 sm:p-6">
+                                <section
+                                    aria-label="Scope and references"
+                                    className="space-y-3"
+                                >
+                                    <h3 className="font-semibold">
+                                        Scope and references
+                                    </h3>
+                                    <div
+                                        className={
+                                            expanded
+                                                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                                : 'grid gap-4 sm:grid-cols-2'
+                                        }
                                     >
-                                        Cancel
-                                    </SecondaryButton>
-                                )}
-                                <PrimaryButton disabled={form.processing}>
-                                    Save Account
-                                </PrimaryButton>
+                                        <EditorReference
+                                            id="bank-branch"
+                                            label="Branch Scope"
+                                            value={form.data.branch_id}
+                                            error={form.errors.branch_id}
+                                            onChange={(value) =>
+                                                form.setData('branch_id', value)
+                                            }
+                                            options={branches.map((b) => ({
+                                                id: b.id,
+                                                label: b.code + ' - ' + b.name,
+                                            }))}
+                                            currentLabel={
+                                                editing?.branch
+                                                    ? editing.branch.code +
+                                                      ' - ' +
+                                                      editing.branch.name
+                                                    : undefined
+                                            }
+                                            emptyLabel="Organization"
+                                        />
+                                        <EditorReference
+                                            id="bank-gl"
+                                            label="GL Account"
+                                            value={
+                                                form.data.chart_of_account_id
+                                            }
+                                            error={
+                                                form.errors.chart_of_account_id
+                                            }
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'chart_of_account_id',
+                                                    value,
+                                                )
+                                            }
+                                            options={chartAccounts.map((a) => ({
+                                                id: a.id,
+                                                label: a.code + ' - ' + a.name,
+                                            }))}
+                                            emptyLabel="Use default bank account"
+                                            currentLabel={
+                                                editing?.chart_of_account
+                                                    ? `${editing.chart_of_account.code} - ${editing.chart_of_account.name}`
+                                                    : undefined
+                                            }
+                                        />
+                                    </div>
+                                </section>
+                                <section
+                                    aria-label="Bank details"
+                                    className="space-y-3"
+                                >
+                                    <h3 className="font-semibold">
+                                        Bank details
+                                    </h3>
+                                    <div
+                                        className={
+                                            expanded
+                                                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                                : 'grid gap-4 sm:grid-cols-2'
+                                        }
+                                    >
+                                        <EditorField
+                                            id="bank-accounts-bank_name"
+                                            label="Bank Name"
+                                            value={form.data.bank_name}
+                                            error={form.errors.bank_name}
+                                            onChange={(value) =>
+                                                form.setData('bank_name', value)
+                                            }
+                                            required
+                                        />
+                                        <EditorField
+                                            id="bank-accounts-bank_code"
+                                            label="Bank Code"
+                                            value={form.data.bank_code}
+                                            error={form.errors.bank_code}
+                                            onChange={(value) =>
+                                                form.setData('bank_code', value)
+                                            }
+                                        />
+                                        <EditorField
+                                            id="bank-accounts-branch_name"
+                                            label="Bank Branch"
+                                            value={form.data.branch_name}
+                                            error={form.errors.branch_name}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'branch_name',
+                                                    value,
+                                                )
+                                            }
+                                        />
+                                        <EditorField
+                                            id="bank-accounts-account_name"
+                                            label="Account Name"
+                                            value={form.data.account_name}
+                                            error={form.errors.account_name}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'account_name',
+                                                    value,
+                                                )
+                                            }
+                                            required
+                                        />
+                                        <EditorField
+                                            id="bank-accounts-account_number"
+                                            label="Account Number"
+                                            value={form.data.account_number}
+                                            error={form.errors.account_number}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'account_number',
+                                                    value,
+                                                )
+                                            }
+                                            required={!editing}
+                                        />
+                                        <EditorChoice
+                                            id="bank-accounts-account_type"
+                                            label="Account Type"
+                                            value={form.data.account_type}
+                                            error={form.errors.account_type}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'account_type',
+                                                    value,
+                                                )
+                                            }
+                                            options={accountTypes}
+                                        />
+                                    </div>
+                                </section>
+                                <p className="text-sm">
+                                    {editing
+                                        ? 'Current number: ' +
+                                          editing.account_number_masked +
+                                          '. Leave Account Number blank to keep it.'
+                                        : 'Account number is encrypted at rest.'}
+                                </p>
+                                <section
+                                    aria-label="Opening balance and status"
+                                    className="space-y-3"
+                                >
+                                    <h3 className="font-semibold">
+                                        Opening balance and status
+                                    </h3>
+                                    <div
+                                        className={
+                                            expanded
+                                                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                                : 'grid gap-4 sm:grid-cols-2'
+                                        }
+                                    >
+                                        <EditorField
+                                            id="bank-accounts-currency"
+                                            label="Currency"
+                                            value={form.data.currency}
+                                            error={form.errors.currency}
+                                            onChange={(value) =>
+                                                form.setData('currency', value)
+                                            }
+                                            required
+                                        />
+                                        <EditorField
+                                            id="bank-accounts-opening_balance"
+                                            label="Opening Balance"
+                                            value={form.data.opening_balance}
+                                            error={form.errors.opening_balance}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'opening_balance',
+                                                    value,
+                                                )
+                                            }
+                                            type="number"
+                                            step="0.01"
+                                            required
+                                        />
+                                        <EditorField
+                                            id="bank-accounts-opening_balance_date"
+                                            label="Opening Balance Date"
+                                            value={
+                                                form.data.opening_balance_date
+                                            }
+                                            error={
+                                                form.errors.opening_balance_date
+                                            }
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'opening_balance_date',
+                                                    value,
+                                                )
+                                            }
+                                            type="date"
+                                        />
+                                        <EditorChoice
+                                            id="bank-accounts-status"
+                                            label="Status"
+                                            value={form.data.status}
+                                            error={form.errors.status}
+                                            onChange={(value) =>
+                                                form.setData('status', value)
+                                            }
+                                            options={statuses}
+                                        />
+                                        <label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    form.data.is_cash_account
+                                                }
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'is_cash_account',
+                                                        e.target.checked,
+                                                    )
+                                                }
+                                            />
+                                            Cash account
+                                        </label>
+                                    </div>
+                                </section>
                             </div>
-                        </form>
-                    </Card>
+                        )}
+                    </CreateEditDialog>
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-function Field({
-    label,
-    value,
-    onChange,
-    type = 'text',
-    required = false,
-    placeholder = '',
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    type?: string;
-    required?: boolean;
-    placeholder?: string;
-}) {
-    return (
-        <div>
-            <InputLabel value={label} />
-            <TextInput
-                className="mt-1 block w-full"
-                type={type}
-                value={value}
-                required={required}
-                placeholder={placeholder}
-                onChange={(event) => onChange(event.target.value)}
-            />
-        </div>
-    );
-}
-
-function SelectField({
-    label,
-    value,
-    onChange,
-    children,
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    children: ReactNode;
-}) {
-    return (
-        <div>
-            <InputLabel value={label} />
-            <select
-                className="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm"
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-            >
-                {children}
-            </select>
-        </div>
     );
 }

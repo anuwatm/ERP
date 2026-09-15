@@ -1,17 +1,24 @@
 # GPT Decision Log
 
-Last updated: 2026-09-10
+## สถานะและงานค้าง
 
-Purpose: เก็บเฉพาะสถานะปัจจุบัน, ข้อตกลงที่ยังมีผล และ guardrail ของงานที่ยังไม่เริ่ม. รายละเอียด Phase ที่ปิดแล้วดู `checklist.md`, `README.md`, `gemini.md` และ Git history.
+- **Phase 23.1: Complete & Closed (2026-09-16)** — ตรวจรับ Exit Criteria 23.1.6 ผ่านครบถ้วนบน Verified Scope:
+  - Inventory 91 surfaces บน 60 หน้าจอ 92 ไฟล์ได้รับการปรับปรุงสู่ `CreateEditDialog` หรือมี Documented Exceptions ครบถ้วน
+  - ไร้ duplicate forms หรือ dead imports/components, ESLint/Prettier/Vite build 100% clean
+  - Backend regression 311 tests (2,575 assertions), Frontend unit 23 tests ผ่าน 100%
+  - สรุปขอบเขตและอัปเดต `README.md`, `docs/CURRENT_IMPLEMENTATION.md`, `docs/ROUTES_AND_SCREENS.md`, `checklist.md` ครบถ้วน
+- **Deferred B01–B08:** งาน browser/network/performance matrix ที่เหลือคงเป็น deferred ตามข้อตกลงผู้ใช้อนุมัติ 2026-09-15 (ดูขั้นตอนและเกณฑ์ใน `docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md`)
+- **Phase ถัดไป:** Phase 23.2 System-wide Dashboard Redesign (ตาม `erp-dashboard-design-concept.md`) หรือ Phase 24 Direct e-Tax Foundation
 
----
 
-## Current Status
+## ข้อตกลงและงาน deferred ที่ยังมีผล
 
-- Phase 1-22: closed.
-- Latest verification (2026-09-10): SQLite regression 57 tests / 325 assertions; isolated MySQL Phase 23 plus concurrency 15 tests / 101 assertions, including migration/rollback. The configured local database migrations are complete. Live provider certification is still not complete.
-- Phase 23: closed on 2026-09-10 by explicit user scope decision. QR/Settings, Opn checkout/event verification, signed settlement intake, Payment/GL reconciliation and local MySQL verification are complete. The user has not requested the actual settlement bridge connection, so merchant provisioning, live bridge integration and sandbox/banking scan are deferred outside Phase 23 closure. They are not claimed as tested or completed. No live-payment configuration or accounting guard was changed by this closure. Details: `docs/PHASE_23_PAYMENT_GATEWAY.md`.
-- งานที่เป็น security, data integrity, regression หรือ production blocker ใน phase ที่ปิดแล้ว แก้ได้เมื่อมี test และบันทึกเหตุผล.
+- Browser acceptance ทั้ง Phase ยังไม่ครบ: external Portal, processing/network failures, permission combinations, native reload, physical mobile keyboard, Safari/WebKit และ MySQL concurrency ยังต้องตรวจแยก.
+- ห้ามส่ง exception message ดิบเข้า UI/log เพราะอาจมี token/URL/response secret; ใช้ข้อความทั่วไปกับ metadata ที่อนุญาต.
+- DLQ replay/reset ยัง deferred: ต้องกำหนด permission/org, audit, retry cap, message expiry และ recipient authorization ก่อน replay. Quiet hours คง suppress; defer ต้องมี policy expiry/dedupe/urgent precedence ก่อนเปลี่ยน behavior.
+- คง 12 backend-only write routes เป็น backend-only; ไม่สร้าง UI เพิ่มโดยไม่มี requirement. แยก Portal identity/scope จาก staff auth และคง backend authorization.
+- การแก้ security/data-integrity/regression/production blocker ใน Phase ที่ปิดแล้วทำได้เมื่อมี test และบันทึกเหตุผล. การปิด Phase ไม่ใช่ production certification หรือคำสั่งเปิด live integrations/ส่ง notification จริง.
+- Destructive database tests ใช้ฐานข้อมูลแยกเท่านั้น: ผล MySQL เดิมใช้ `127.0.0.1:33073`, `erp_phase23_test`; ห้ามใช้ operational `erp`. สถานะ service/runtime เก่าไม่ใช่สถานะปัจจุบัน ต้องตรวจใหม่ก่อนใช้งาน.
 
 ## Active Guardrails
 
@@ -50,14 +57,12 @@ Purpose: เก็บเฉพาะสถานะปัจจุบัน, ข
 
 - Phase 23 implementation details and diagram: `docs/PHASE_23_PAYMENT_GATEWAY.md`. Intent amount uses integer satang; webhook hashes exact bytes with a five-minute signature window, deduplicates events and locks invoice before receipt/GL posting. Closed periods roll back the entire event transaction. Late/mismatched payments are review-only.
 - HMAC is a trusted settlement-bridge protocol, not an assumed provider API. Opn requires API verification, 2C2P uses provider JWT and inquiry contracts, GB Prime Pay requires the contracted integration version. No live settlement claim without provider evidence.
-- `mysql8` Windows service start was initially denied. The configured MySQL server at `127.0.0.1:3306`, database `erp`, subsequently became reachable; all four pending Phase 21-23 migrations completed as batch 14 on 2026-09-10. Destructive tests use only a separate MySQL 8.0.17 instance at `127.0.0.1:33073`, database `erp_phase23_test`, data under `temp/phase23-mysql-20260909`; never the operational database. See Phase 23 verification record for results.
 - Opn reserves `creating` before an external API call; ambiguous results become `creation_unknown` and block retries. Pending/unresolved charges block provider, mode and merchant-key changes; uncertain creation also blocks receiver changes after local expiry. Provider callback confirmation alone never posts accounting.
 - Opn `provider_paid_at` comes from authenticated charge retrieval and is distinct from final `settled_at`. QR expiry checks customer payment time; receipt/GL uses settlement date. A two-day payout delay is covered by the native-provider fixture test. Do not collapse these timestamps when implementing the real settlement bridge.
 - Opn test mode never posts Payment/GL, even after a signed settlement with provider confirmation. Accounting tests use mocked live-mode provider responses, not real API calls. Payment/settlement timestamps normalize to the existing application timezone (UTC).
-- MySQL exposed a Phase 23 fixture with a 7-character customer code against `CHAR(6)`; corrected to `GATE01`. Phase 15 rollback also needed foreign keys removed before columns and an organization index restored before dropping its composite replacement. These are compatibility fixes, not inventory business-rule changes.
 
 - Portal ใช้ external identity แยกจาก staff session, scoped access, expiry/revocation, rate limit, audit และ private DMS authorization; ไม่มี public document URL.
-- Phase 22 completed: one-time 30-minute Magic Link, hashed/revocable 8-hour portal session, org/party-scoped customer and supplier dashboards, invoice draft from accepted quotation, and vendor bill quarantine. Portal intake ห้ามสร้าง AP/GL อัตโนมัติ; ต้องผ่าน scan และ finance review ก่อน.
+- Portal intake ห้ามสร้าง AP/GL อัตโนมัติ; ต้องผ่าน scan และ finance review ก่อน.
 - Payment gateway ต้อง verify signature, deduplicate, handle event ordering และ reconcile invoice/payment/final settlement ก่อนสร้าง receipt หรือ GL.
 - e-Tax ต้องใช้ certified provider, key vault/HSM boundary, outbox/reconciliation และ legal review; ห้ามเก็บ private key ใน database.
 - OCR สร้าง assisted draft พร้อม confidence, source retention และ human review เท่านั้น; ห้าม auto-post.

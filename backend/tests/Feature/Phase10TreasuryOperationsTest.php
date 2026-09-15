@@ -111,6 +111,45 @@ class Phase10TreasuryOperationsTest extends TestCase
                 ->where('accounts.0.expected_balance', 1300));
     }
 
+    public function test_dialog_retry_preserves_fund_request_and_reimbursement_contracts(): void
+    {
+        $user = User::factory()->create();
+        $role = $this->attachRole($user, 'dialog', ['petty_cash.manage']);
+        $this->actingAsOrgUser($user)->withSession(['auth.password_confirmed_at' => time()]);
+        $headers = ['X-Form-Submission' => (string) Str::uuid()];
+        $fundData = ['custodian_user_id' => $user->id, 'bank_account_id' => '', 'imprest_amount' => '500.25'];
+        $this->post(route('petty-cash.funds.store'), array_merge($fundData, ['imprest_amount' => '0']), $headers)->assertSessionHasErrors('imprest_amount');
+        for ($i = 0; $i < 2; $i++) {
+            $this->post(route('petty-cash.funds.store'), $fundData, $headers)->assertRedirect()->assertSessionHasNoErrors();
+        }
+        $this->assertDatabaseCount('petty_cash_funds', 1);
+        $fund = PettyCashFund::firstOrFail();
+        $this->assertNull($fund->bank_account_id);
+        $this->assertEquals('500.25', $fund->imprest_amount);
+        $headers = ['X-Form-Submission' => (string) Str::uuid()];
+        $requestData = ['petty_cash_fund_id' => $fund->id, 'amount' => '12.34', 'expense_date' => '2026-09-14', 'purpose' => 'Fixture supplies'];
+        $this->post(route('petty-cash.requests.store'), array_merge($requestData, ['purpose' => '']), $headers)->assertSessionHasErrors('purpose');
+        for ($i = 0; $i < 2; $i++) {
+            $this->post(route('petty-cash.requests.store'), $requestData, $headers)->assertRedirect()->assertSessionHasNoErrors();
+        }
+        $this->assertDatabaseCount('petty_cash_requests', 1);
+        $this->assertDatabaseHas('petty_cash_requests', ['purpose' => 'Fixture supplies', 'status' => 'submitted', 'requester_id' => $user->id]);
+        $this->assertDatabaseCount('journal_entries', 0);
+        $headers = ['X-Form-Submission' => (string) Str::uuid()];
+        $data = ['petty_cash_fund_id' => $fund->id, 'bank_account_id' => '', 'amount' => '12.34', 'reimbursed_at' => '2026-09-14', 'note' => 'Fixture replenishment'];
+        $this->post(route('petty-cash.reimbursements.store'), array_merge($data, ['amount' => '0']), $headers)->assertSessionHasErrors('amount');
+        for ($i = 0; $i < 2; $i++) {
+            $this->post(route('petty-cash.reimbursements.store'), $data, $headers)->assertRedirect()->assertSessionHasNoErrors();
+        }
+        $this->assertDatabaseCount('petty_cash_reimbursements', 1);
+        $this->assertDatabaseHas('petty_cash_reimbursements', ['note' => 'Fixture replenishment', 'bank_account_id' => null]);
+        $this->assertDatabaseCount('journal_entries', 1);
+        $this->assertDatabaseHas('journal_entries', ['source_type' => 'petty_cash_reimbursement', 'posting_event' => 'reimbursed']);
+        $role->permissions()->detach();
+        $user->unsetRelation('roles');
+        $this->actingAsOrgUser($user)->post(route('petty-cash.reimbursements.store'), $data, $headers)->assertForbidden();
+    }
+
     private function account(User $user, string $openingBalance = '0.00'): BankAccount
     {
         return BankAccount::create(['org_id' => $user->org_id, 'bank_name' => 'Example Bank', 'account_name' => 'Operating', 'account_number' => '1234567890', 'account_number_hash' => hash('sha256', '1234567890'), 'account_type' => 'savings', 'currency' => 'THB', 'status' => 'active', 'opening_balance' => $openingBalance]);

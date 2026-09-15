@@ -1,14 +1,17 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import { EditorField, EditorChoice } from '@/Components/UI/EditorFields';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
+import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 import { money } from '@/Utils/format';
 
@@ -58,38 +61,72 @@ const emptyProduct: ProductForm = {
 export default function Products({ products }: { products: Product[] }) {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const form = useForm<ProductForm>(emptyProduct);
+    const [open, setOpen] = useState(false);
+    const [minimized, setMinimized] = useState(false);
+    const { auth } = usePage<PageProps>().props;
+    const canCreate = auth.permissions.includes('products.manage');
+    const canEdit = auth.permissions.includes('products.manage');
+    const canDelete = auth.permissions.includes('products.manage');
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
+    const close = () => {
+        setOpen(false);
+        setMinimized(false);
+        setEditingProduct(null);
+        form.setDefaults(emptyProduct);
+        form.setData(emptyProduct);
+        form.clearErrors();
+        submission.reset();
+    };
+    const create = () => {
+        if (!canCreate || form.processing) return;
+        guard.request(() => {
+            close();
+            setOpen(true);
+        });
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        if (form.processing || (editingProduct ? !canEdit : !canCreate)) return;
         const options = {
             preserveScroll: true,
-            onSuccess: () => {
-                form.setData(emptyProduct);
-                setEditingProduct(null);
-            },
+            onSuccess: close,
         };
 
         if (editingProduct) {
             form.patch(route('products.update', editingProduct.id), options);
         } else {
-            form.post(route('products.store'), options);
+            form.post(route('products.store'), {
+                ...options,
+                headers: submission.headers(),
+            });
         }
     };
 
     const editProduct = (product: Product) => {
-        setEditingProduct(product);
-        form.setData({
-            sku: product.sku ?? '',
-            barcode: product.barcode ?? '',
-            reorder_point: product.reorder_point ?? '0',
-            name: product.name ?? '',
-            type: product.type ?? 'service',
-            category: product.category ?? '',
-            unit: product.unit ?? '',
-            price: product.price ?? '0.00',
-            cost: product.cost ?? '0.00',
-            is_active: product.is_active,
-            description: product.description ?? '',
+        if (!canEdit || form.processing) return;
+        guard.request(() => {
+            setOpen(true);
+            setMinimized(false);
+            form.clearErrors();
+            submission.reset();
+            setEditingProduct(product);
+            const data = {
+                sku: product.sku ?? '',
+                barcode: product.barcode ?? '',
+                reorder_point: product.reorder_point ?? '0',
+                name: product.name ?? '',
+                type: product.type ?? 'service',
+                category: product.category ?? '',
+                unit: product.unit ?? '',
+                price: product.price ?? '0.00',
+                cost: product.cost ?? '0.00',
+                is_active: product.is_active,
+                description: product.description ?? '',
+            };
+            form.setDefaults(data);
+            form.setData(data);
         });
     };
 
@@ -101,9 +138,16 @@ export default function Products({ products }: { products: Product[] }) {
                 <PageHeader
                     title="Products/Services"
                     description="Finance catalog for invoice line items."
+                    actions={
+                        canCreate && (
+                            <PrimaryButton onClick={create}>
+                                + Create Item
+                            </PrimaryButton>
+                        )
+                    }
                 />
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="space-y-6">
                     <Card
                         title="Catalog"
                         description="Items available for billing"
@@ -168,21 +212,30 @@ export default function Products({ products }: { products: Product[] }) {
                                         <div className="flex flex-wrap gap-2">
                                             <SecondaryButton
                                                 type="button"
+                                                disabled={
+                                                    !canEdit || form.processing
+                                                }
                                                 onClick={() => editProduct(row)}
                                             >
                                                 Edit
                                             </SecondaryButton>
                                             <SecondaryButton
                                                 type="button"
+                                                disabled={
+                                                    !canDelete ||
+                                                    form.processing
+                                                }
                                                 onClick={() =>
-                                                    router.delete(
-                                                        route(
-                                                            'products.destroy',
-                                                            row.id,
+                                                    guard.request(() =>
+                                                        router.delete(
+                                                            route(
+                                                                'products.destroy',
+                                                                row.id,
+                                                            ),
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
                                                         ),
-                                                        {
-                                                            preserveScroll: true,
-                                                        },
                                                     )
                                                 }
                                             >
@@ -195,190 +248,216 @@ export default function Products({ products }: { products: Product[] }) {
                         />
                     </Card>
 
-                    <Card
+                    <DiscardChangesDialog
+                        open={guard.confirming}
+                        onKeep={guard.keep}
+                        onDiscard={guard.discard}
+                    />
+                    <CreateEditDialog
+                        open={open}
+                        minimized={minimized}
+                        onMinimize={setMinimized}
+                        onClose={() => guard.request(close)}
                         title={editingProduct ? 'Edit Item' : 'Create Item'}
-                        description="Products, services, or packages"
+                        breadcrumb="Products / Editor"
+                        entityLabel="Item"
+                        draftLabel={form.data.name || 'New item'}
+                        storageKey="products-editor-size"
+                        formId="products-editor"
+                        processing={form.processing}
+                        saveDisabled={editingProduct ? !canEdit : !canCreate}
+                        saveLabel="Save Item"
+                        status={
+                            form.isDirty
+                                ? 'Unsaved changes'
+                                : editingProduct
+                                  ? 'No changes'
+                                  : 'New item'
+                        }
+                        errors={form.errors}
+                        onSubmit={submit}
                     >
-                        <form onSubmit={submit} className="space-y-3">
-                            <Field
-                                label="SKU"
-                                value={form.data.sku}
-                                error={form.errors.sku}
-                                onChange={(value) => form.setData('sku', value)}
-                            />
-                            <Field
-                                label="Barcode"
-                                value={form.data.barcode}
-                                error={form.errors.barcode}
-                                onChange={(value) =>
-                                    form.setData('barcode', value)
-                                }
-                            />
-                            <Field
-                                label="Reorder Point"
-                                type="number"
-                                value={form.data.reorder_point}
-                                error={form.errors.reorder_point}
-                                onChange={(value) =>
-                                    form.setData('reorder_point', value)
-                                }
-                            />
-                            <Field
-                                label="Name"
-                                value={form.data.name}
-                                error={form.errors.name}
-                                onChange={(value) =>
-                                    form.setData('name', value)
-                                }
-                                required
-                            />
-                            <SelectField
-                                label="Type"
-                                value={form.data.type}
-                                onChange={(value) =>
-                                    form.setData('type', value)
-                                }
-                                options={['service', 'product', 'package']}
-                            />
-                            <Field
-                                label="Category"
-                                value={form.data.category}
-                                error={form.errors.category}
-                                onChange={(value) =>
-                                    form.setData('category', value)
-                                }
-                            />
-                            <Field
-                                label="Unit"
-                                value={form.data.unit}
-                                error={form.errors.unit}
-                                onChange={(value) =>
-                                    form.setData('unit', value)
-                                }
-                            />
-                            <Field
-                                label="Price"
-                                type="number"
-                                value={form.data.price}
-                                error={form.errors.price}
-                                onChange={(value) =>
-                                    form.setData('price', value)
-                                }
-                                required
-                            />
-                            <Field
-                                label="Cost"
-                                type="number"
-                                value={form.data.cost}
-                                error={form.errors.cost}
-                                onChange={(value) =>
-                                    form.setData('cost', value)
-                                }
-                            />
-                            <label className="flex items-center gap-2 text-sm text-slate-700">
-                                <input
-                                    type="checkbox"
-                                    checked={form.data.is_active}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'is_active',
-                                            event.target.checked,
-                                        )
-                                    }
-                                />
-                                Active
-                            </label>
-                            <div className="flex justify-end gap-2">
-                                {editingProduct && (
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() => {
-                                            setEditingProduct(null);
-                                            form.setData(emptyProduct);
-                                        }}
+                        {(expanded) => (
+                            <div className="space-y-6 p-4 sm:p-6">
+                                <section
+                                    aria-label="Item details"
+                                    className="space-y-3"
+                                >
+                                    <h3 className="font-semibold">
+                                        Item details
+                                    </h3>
+                                    <div
+                                        className={
+                                            expanded
+                                                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                                : 'grid gap-4 sm:grid-cols-2'
+                                        }
                                     >
-                                        Cancel
-                                    </SecondaryButton>
-                                )}
-                                <PrimaryButton disabled={form.processing}>
-                                    Save Item
-                                </PrimaryButton>
+                                        <EditorField
+                                            id="products-name"
+                                            label="Name"
+                                            value={form.data.name}
+                                            error={form.errors.name}
+                                            onChange={(value) =>
+                                                form.setData('name', value)
+                                            }
+                                            required
+                                        />
+                                        <EditorField
+                                            id="products-sku"
+                                            label="SKU"
+                                            value={form.data.sku}
+                                            error={form.errors.sku}
+                                            onChange={(value) =>
+                                                form.setData('sku', value)
+                                            }
+                                        />
+                                        <EditorField
+                                            id="products-barcode"
+                                            label="Barcode"
+                                            value={form.data.barcode}
+                                            error={form.errors.barcode}
+                                            onChange={(value) =>
+                                                form.setData('barcode', value)
+                                            }
+                                        />
+                                        <EditorChoice
+                                            id="products-type"
+                                            label="Type"
+                                            value={form.data.type}
+                                            error={form.errors.type}
+                                            onChange={(value) =>
+                                                form.setData('type', value)
+                                            }
+                                            options={[
+                                                'service',
+                                                'product',
+                                                'package',
+                                            ]}
+                                        />
+                                        <EditorField
+                                            id="products-category"
+                                            label="Category"
+                                            value={form.data.category}
+                                            error={form.errors.category}
+                                            onChange={(value) =>
+                                                form.setData('category', value)
+                                            }
+                                        />
+                                        <EditorField
+                                            id="products-unit"
+                                            label="Unit"
+                                            value={form.data.unit}
+                                            error={form.errors.unit}
+                                            onChange={(value) =>
+                                                form.setData('unit', value)
+                                            }
+                                        />
+                                    </div>
+                                </section>
+                                <section
+                                    aria-label="Pricing and stock"
+                                    className="space-y-3"
+                                >
+                                    <h3 className="font-semibold">
+                                        Pricing and stock
+                                    </h3>
+                                    <div
+                                        className={
+                                            expanded
+                                                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                                : 'grid gap-4 sm:grid-cols-2'
+                                        }
+                                    >
+                                        <EditorField
+                                            id="products-price"
+                                            label="Price"
+                                            value={form.data.price}
+                                            error={form.errors.price}
+                                            onChange={(value) =>
+                                                form.setData('price', value)
+                                            }
+                                            type="number"
+                                            min={0}
+                                            step="0.01"
+                                            required
+                                        />
+                                        <EditorField
+                                            id="products-cost"
+                                            label="Cost"
+                                            value={form.data.cost}
+                                            error={form.errors.cost}
+                                            onChange={(value) =>
+                                                form.setData('cost', value)
+                                            }
+                                            type="number"
+                                            min={0}
+                                            step="0.01"
+                                        />
+                                        <EditorField
+                                            id="products-reorder_point"
+                                            label="Reorder Point"
+                                            value={form.data.reorder_point}
+                                            error={form.errors.reorder_point}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'reorder_point',
+                                                    value,
+                                                )
+                                            }
+                                            type="number"
+                                            min={0}
+                                            step="0.01"
+                                        />
+                                        <label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={form.data.is_active}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'is_active',
+                                                        e.target.checked,
+                                                    )
+                                                }
+                                            />
+                                            Active
+                                        </label>
+                                    </div>
+                                </section>
+                                <section
+                                    aria-label="Description"
+                                    className="space-y-3"
+                                >
+                                    <h3 className="font-semibold">
+                                        Description
+                                    </h3>
+                                    <div
+                                        className={
+                                            expanded
+                                                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                                : 'grid gap-4 sm:grid-cols-2'
+                                        }
+                                    >
+                                        <EditorField
+                                            id="products-description"
+                                            label="Description"
+                                            value={form.data.description}
+                                            error={form.errors.description}
+                                            onChange={(value) =>
+                                                form.setData(
+                                                    'description',
+                                                    value,
+                                                )
+                                            }
+                                            multiline
+                                        />
+                                    </div>
+                                </section>
                             </div>
-                        </form>
-                    </Card>
+                        )}
+                    </CreateEditDialog>
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-function Field({
-    label,
-    value,
-    error,
-    onChange,
-    type = 'text',
-    required = false,
-}: {
-    label: string;
-    value: string;
-    error?: string;
-    onChange: (value: string) => void;
-    type?: string;
-    required?: boolean;
-}) {
-    const id = label.toLowerCase().replaceAll(' ', '-');
-
-    return (
-        <div>
-            <InputLabel
-                htmlFor={id}
-                value={label}
-                className="mb-1 text-xs font-semibold uppercase text-slate-700"
-            />
-            <TextInput
-                id={id}
-                type={type}
-                step={type === 'number' ? '0.01' : undefined}
-                min={type === 'number' ? '0' : undefined}
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                required={required}
-                className="block w-full text-sm"
-            />
-            <InputError message={error} className="mt-1" />
-        </div>
-    );
-}
-
-function SelectField({
-    label,
-    value,
-    options,
-    onChange,
-}: {
-    label: string;
-    value: string;
-    options: string[];
-    onChange: (value: string) => void;
-}) {
-    return (
-        <div>
-            <InputLabel
-                value={label}
-                className="mb-1 text-xs font-semibold uppercase text-slate-700"
-            />
-            <select
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                className="block w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-900 shadow-sm transition-colors duration-150 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-            >
-                {options.map((option) => (
-                    <option key={option} value={option}>
-                        {option}
-                    </option>
-                ))}
-            </select>
-        </div>
     );
 }

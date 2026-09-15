@@ -3,9 +3,11 @@ import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
+import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import RolePermissionsDialog, { RoleItem } from './RolePermissionsDialog';
 
 type Permission = {
     id: string;
@@ -14,38 +16,23 @@ type Permission = {
     action: string;
     description?: string | null;
 };
-type Role = {
-    id: string;
-    code: string;
-    name: string;
-    permissions_count: number;
-    users_count: number;
-    permissions: Permission[];
-};
 
 export default function Roles({
     roles,
     permissions,
+    canManage,
 }: {
-    roles: Role[];
+    canManage: boolean;
+    roles: RoleItem[];
     permissions: Permission[];
 }) {
-    const editableRoles = roles.filter((role) => role.code !== 'owner');
-    const [selectedRoleId, setSelectedRoleId] = useState(
-        editableRoles[0]?.id ?? roles[0]?.id ?? '',
-    );
-    const selectedRole =
-        roles.find((role) => role.id === selectedRoleId) ?? roles[0];
-    const groupedPermissions = useMemo(() => {
-        return permissions.reduce<Record<string, Permission[]>>(
-            (groups, permission) => {
-                groups[permission.module] = groups[permission.module] ?? [];
-                groups[permission.module].push(permission);
-                return groups;
-            },
-            {},
-        );
-    }, [permissions]);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
+
+    const openPermissionsDialog = (role: RoleItem) => {
+        setSelectedRole(role);
+        setDialogOpen(true);
+    };
 
     return (
         <AuthenticatedLayout>
@@ -58,8 +45,21 @@ export default function Roles({
                 />
 
                 <Card
-                    title="System Roles"
+                    title="Roles"
                     description={`${roles.length} roles configured`}
+                    action={
+                        canManage && (
+                            <PrimaryButton
+                                disabled={dialogOpen}
+                                onClick={() => {
+                                    setSelectedRole(null);
+                                    setDialogOpen(true);
+                                }}
+                            >
+                                Create Role
+                            </PrimaryButton>
+                        )
+                    }
                 >
                     <DataTable
                         data={roles}
@@ -70,10 +70,11 @@ export default function Roles({
                                 accessor: (role) => (
                                     <button
                                         type="button"
+                                        disabled={dialogOpen}
                                         onClick={() =>
-                                            setSelectedRoleId(role.id)
+                                            openPermissionsDialog(role)
                                         }
-                                        className="text-left"
+                                        className="text-left group flex items-center"
                                     >
                                         <Badge
                                             variant={
@@ -87,7 +88,7 @@ export default function Roles({
                                                 {role.code}
                                             </span>
                                         </Badge>
-                                        <span className="ml-3 font-semibold text-slate-900 dark:text-white">
+                                        <span className="ml-3 font-semibold text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400 transition-colors">
                                             {role.name}
                                         </span>
                                     </button>
@@ -96,7 +97,7 @@ export default function Roles({
                             {
                                 header: 'Permissions',
                                 accessor: (role) => (
-                                    <span className="font-mono text-xs font-semibold text-slate-700">
+                                    <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
                                         {role.permissions_count}
                                     </span>
                                 ),
@@ -104,7 +105,7 @@ export default function Roles({
                             {
                                 header: 'Users',
                                 accessor: (role) => (
-                                    <span className="text-sm text-slate-600">
+                                    <span className="text-sm text-slate-600 dark:text-slate-400">
                                         {role.users_count}
                                     </span>
                                 ),
@@ -122,124 +123,39 @@ export default function Roles({
                                         </Badge>
                                     ),
                             },
+                            {
+                                header: 'Actions',
+                                accessor: (role) => (
+                                    <SecondaryButton
+                                        disabled={dialogOpen}
+                                        onClick={() =>
+                                            openPermissionsDialog(role)
+                                        }
+                                    >
+                                        {role.code === 'owner' || !canManage
+                                            ? 'View Role'
+                                            : 'Edit Role'}
+                                    </SecondaryButton>
+                                ),
+                            },
                         ]}
                     />
                 </Card>
-
-                {selectedRole && (
-                    <PermissionMatrix
-                        role={selectedRole}
-                        groupedPermissions={groupedPermissions}
-                    />
-                )}
             </div>
+
+            {dialogOpen && (
+                <RolePermissionsDialog
+                    key={selectedRole?.id ?? 'create'}
+                    canManage={canManage}
+                    open={dialogOpen}
+                    role={selectedRole}
+                    permissions={permissions}
+                    onClose={() => {
+                        setDialogOpen(false);
+                        setSelectedRole(null);
+                    }}
+                />
+            )}
         </AuthenticatedLayout>
-    );
-}
-
-function PermissionMatrix({
-    role,
-    groupedPermissions,
-}: {
-    role: Role;
-    groupedPermissions: Record<string, Permission[]>;
-}) {
-    const form = useForm({
-        permission_ids: role.permissions.map((permission) => permission.id),
-    });
-    const immutable = role.code === 'owner';
-
-    const togglePermission = (permissionId: string, checked: boolean) => {
-        const current = new Set(form.data.permission_ids);
-        if (checked) current.add(permissionId);
-        else current.delete(permissionId);
-        form.setData('permission_ids', Array.from(current));
-    };
-
-    return (
-        <Card
-            title={`Permission Matrix: ${role.name}`}
-            description={
-                immutable
-                    ? 'Owner permissions are immutable'
-                    : 'Update role permission assignment'
-            }
-        >
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!immutable)
-                        form.patch(route('roles.permissions.update', role.id), {
-                            preserveScroll: true,
-                        });
-                }}
-                className="space-y-5"
-            >
-                {Object.entries(groupedPermissions).map(([module, items]) => (
-                    <section
-                        key={module}
-                        className="border-b border-slate-100 pb-4 last:border-b-0"
-                    >
-                        <h4 className="mb-3 text-sm font-semibold uppercase text-slate-500">
-                            {module}
-                        </h4>
-                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                            {items.map((permission) => (
-                                <label
-                                    key={permission.id}
-                                    className="flex min-h-14 items-start gap-3 rounded-md border border-slate-200 p-3 text-sm"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        disabled={immutable || form.processing}
-                                        checked={form.data.permission_ids.includes(
-                                            permission.id,
-                                        )}
-                                        onChange={(e) =>
-                                            togglePermission(
-                                                permission.id,
-                                                e.target.checked,
-                                            )
-                                        }
-                                        className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <span>
-                                        <span className="block font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                            {permission.code}
-                                        </span>
-                                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                                            {permission.description ??
-                                                permission.action}
-                                        </span>
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-                    </section>
-                ))}
-                <div className="flex justify-end">
-                    <PrimaryButton
-                        disabled={immutable || form.processing}
-                        icon={
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M5 13l4 4L19 7"
-                                />
-                            </svg>
-                        }
-                    >
-                        Save Permissions
-                    </PrimaryButton>
-                </div>
-            </form>
-        </Card>
     );
 }

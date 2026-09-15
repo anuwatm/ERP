@@ -9,7 +9,9 @@ class ETaxConfig extends Model
 {
     use UsesOrderedUuid;
 
-    public const MODES = ['disabled', 'manual_export', 'provider'];
+    public const MODES = ['disabled', 'manual_export', 'mock', 'provider'];
+
+    protected $hidden = ['provider_settings'];
 
     protected $fillable = ['org_id', 'mode', 'provider_code', 'certificate_reference', 'certificate_expires_at', 'signature_mode', 'provider_settings', 'created_by', 'updated_by'];
 

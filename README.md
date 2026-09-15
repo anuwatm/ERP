@@ -1,5 +1,7 @@
 # Company OS / Lightweight ERP
 
+สถานะล่าสุด (2026-09-16): **Phase 23.1 Master Dialog Standard เสร็จสมบูรณ์ (Complete & Closed)** — มาตรฐาน Modal Dialog สร้าง/แก้ไขครอบคลุมครบ 60 หน้าจอ 92 ไฟล์ พร้อม single active editor coordinator (`useEditorCoordinator`), comprehensive dirty detection ทุกฟิลด์, Idempotent submission key, และ discard guard; ผ่านการทดสอบ Full Backend Regression 311 tests (2,575 assertions), Frontend Unit 23 tests, Pint/ESLint/Prettier/Vite production build 100% (ดูรายละเอียดใน [`checklist.md`](checklist.md), [`docs/PHASE_23_1_MASTER_ROLLOUT.md`](docs/PHASE_23_1_MASTER_ROLLOUT.md), และ [`docs/PHASE_23_1_FORM_INVENTORY.md`](docs/PHASE_23_1_FORM_INVENTORY.md))
+
 ระบบ ERP ขนาดเบาสำหรับ SME, บริษัทบริการ, software agency, studio, ทีมจัดซื้อ/คลังสินค้า และทีมส่งมอบงานภายในองค์กร
 
 ระบบนี้ออกแบบให้ครอบคลุม flow หลักของธุรกิจบริการและการค้า:
@@ -8,11 +10,27 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะล่าสุด: **Phase 23 Done**; Thai PromptPay QR (Tag 29/30), Opn provider verification, HMAC-SHA256 settlement bridge intake, payload deduplication, และ atomic Payment/Double-entry GL reconciliation (เชื่อมต่อ bridge จริง deferred จนกว่าจะมีการขอใช้งาน)
-ฟีเจอร์หลักในระบบครอบคลุมตั้งแต่ Foundation, Multi-tenant, Auth, RBAC, Master Data, CRM, Sales Pipeline, Invoicing & VAT Compliance, Payments & Reversals, Expenses, Projects & Project Members, Tasks & Collaboration, Executive/Finance/Delivery/Sales/Admin Dashboards, Reporting Filters, Configurable Number Sequences, Suppliers, Purchase Orders, Official PDF/Print (Invoice, Tax Invoice/Receipt, PO, 50-Tawi), Inventory & Goods Receipts (GRN & Stock Ledger), Tax & Aging Reports (Sales Tax ภ.พ.30, Purchase Tax, WHT ภ.ง.ด. 3/53, AR/AP Aging), In-App Notifications & Mail Queues, Commercial & Procurement Documents (Quotations, CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers), Treasury/Banking/Cash Management (Bank Accounts, CSV Statement Reconciliation, Petty Cash, Cheques/PDC, Voucher Attachments, Treasury Reports), General Ledger & Double-Entry Accounting (COA, Periods, Journal Entries, GL Reports), E-Tax Private XML & RD Prep Export, Fixed Assets & Depreciation, Multi-Currency & FX (Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation), Payroll (effective-dated policy, payslip, PND1/SSO workpapers, GL posting), DMS & Compliance, 2FA TOTP, Dynamic Approval Workflow Engine, Notification Outbox, Passwordless Customer/Supplier Portal, และ PromptPay / Payment Gateway Settlement
+สถานะระบบ: **Phase 1 - 23 และ Phase 23.1 เสร็จสมบูรณ์ (Complete & Closed)**; ฟีเจอร์ครอบคลุม:
+- Foundation, Multi-tenant, Breeze Auth, RBAC 7 บทบาท, Master Data & Audit Logs
+- CRM, Sales Pipeline (Deals/Activities), Quotations, Commercial Docs (CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers)
+- Invoicing, Official PDF/Print (Invoice, Receipt, PO, 50-Tawi), Tax Reports (ภ.พ.30, ภ.ง.ด. 3/53, AR/AP Aging), VAT Compliance
+- Payments, Reversals, Expenses & Direct Settlement, Thai PromptPay QR (Tag 29/30) & Payment Gateway Settlement Bridge
+- Projects, Project Members, Tasks & Collaboration, Delivery Dashboard
+- Advanced Inventory, Warehouses, Bins, Lots & Expiry, Barcode/QR Scanning, Stock Differencing
+- Treasury & Banking: Bank Accounts (เข้ารหัส), Statement Reconciliation, Petty Cash, Cheques/PDC
+- General Ledger & Double-Entry Accounting: Chart of Accounts, Accounting Periods, Automated Journals, GL Reports
+- Multi-Currency & FX: Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation, FCD Accounts
+- Fixed Assets & Straight-Line Depreciation, Asset Register & Disposal
+- HR & Attendance: Privacy-first Clock-in (SHA-256 IP/GPS), Leave Entitlements, Locked Attendance Summaries
+- Payroll: Policy Versioning, Social Security, Progressive Tax, Direct Settlement, Payslip PDF, ภ.ง.ด. 1/1ก Workpapers
+- Enterprise DMS: Versioning, Central Repository, 5-Level Sensitivity, Retention Policies & Legal Hold
+- Security 2FA: Offline TOTP (RFC 6238), Recovery Codes, Trusted Devices, Owner Reset
+- Central Dynamic Approval Workflow: Threshold Evaluation, SoD Deadlock Guard, Delegation, Multi-step Approvers
+- Operational Notification Outbox: LINE OA / Slack / Telegram (Encrypted Vault), Exponential Backoff, Quiet Hours, Safe Daily Digest
+- External Customer & Supplier Portals: Passwordless Magic Link, Scoped Sessions, Quotation Acceptance, Vendor Bill Intake
+- System-wide Create/Edit Dialog Standardization: Modal Dialog สอดคล้องกันทั้งระบบ พร้อม single active editor coordinator และ discard guard ป้องกัน data loss
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
-เอกสารสรุป runtime ปัจจุบันอยู่ที่ [`docs/CURRENT_IMPLEMENTATION.md`](docs/CURRENT_IMPLEMENTATION.md)
 
 ---
 
@@ -286,6 +304,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 21** | **Done** | Operational notification outbox, encrypted external channels, retry/dead-letter, quiet hours and safe digest |
 | **Phase 22** | **Done** | Passwordless customer/supplier portals, scoped commercial data, online quotation acceptance, vendor-bill quarantine and private DMS downloads |
 | **Phase 23** | **Done** | Closed on 2026-09-10 per user-approved scope: QR, Settings, Opn adapter, reconciliation and local tests complete; live settlement bridge and sandbox/scan certification deferred until connection is requested |
+| **Phase 24** | **Foundation complete** | Reuses Phase 12 e-Tax tables and screen; opt-in local mock, immutable queued XML, bounded retries and private payloads. Real provider/schema/signing integration deferred. See [foundation](docs/PHASE_24_ETAX_FOUNDATION.md). |
 
 ---
 

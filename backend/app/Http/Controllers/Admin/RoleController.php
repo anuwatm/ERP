@@ -29,7 +29,66 @@ class RoleController extends Controller
                 ->orderBy('code')
                 ->get(),
             'permissions' => Permission::orderBy('module')->orderBy('code')->get(['id', 'code', 'module', 'action', 'description']),
+            'canManage' => auth()->user()->hasPermissionCode('roles.manage'),
         ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $actor = $request->user();
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:50', 'regex:/^[a-z][a-z0-9_]*$/', Rule::notIn(['owner', 'admin', 'finance', 'sales', 'project_manager', 'member', 'viewer']), Rule::unique('roles')->where('org_id', $actor->org_id)],
+            'name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'permission_ids' => ['present', 'array'],
+            'permission_ids.*' => ['uuid', 'distinct', Rule::exists('permissions', 'id')],
+        ]);
+        DB::transaction(function () use ($actor, $validated): void {
+            $role = Role::create([
+                'org_id' => $actor->org_id,
+                'code' => $validated['code'],
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'is_system' => false,
+            ]);
+            $role->permissions()->sync($validated['permission_ids']);
+            $this->audit($actor, 'role.create', 'role', $role->id, null, $validated);
+        });
+
+        return back()->with('success', 'Role created.');
+    }
+
+    public function update(Request $request, Role $role): RedirectResponse
+    {
+        $actor = $request->user();
+        abort_unless($role->org_id === $actor->org_id, 404);
+        abort_if($role->code === 'owner', 422, 'Owner role is immutable.');
+        $validated = $request->validate([
+            // Codes are stable identifiers used by existing system policies.
+            'code' => ['required', Rule::in([$role->code])],
+            'name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'permission_ids' => ['present', 'array'],
+            'permission_ids.*' => ['uuid', 'distinct', Rule::exists('permissions', 'id')],
+        ]);
+        DB::transaction(function () use ($actor, $role, $validated): void {
+            $role = Role::whereKey($role->id)->lockForUpdate()->firstOrFail();
+            $before = $role->only(['code', 'name', 'description']);
+            $before['permission_ids'] = $role->permissions()->pluck('permissions.id')->sort()->values()->all();
+            $role->update(['name' => $validated['name'], 'description' => $validated['description'] ?? null]);
+            $role->permissions()->sync($validated['permission_ids']);
+            $afterIds = $role->permissions()->pluck('permissions.id')->sort()->values()->all();
+            if ($before['permission_ids'] !== $afterIds) {
+                $userIds = $role->users()->pluck('users.id')->all();
+                User::whereIn('id', $userIds)->update(['remember_token' => null]);
+                if (Schema::hasTable('sessions')) {
+                    DB::table('sessions')->whereIn('user_id', $userIds)->delete();
+                }
+            }
+            $this->audit($actor, 'role.update', 'role', $role->id, $before, $validated);
+        });
+
+        return back()->with('success', 'Role updated.');
     }
 
     public function assign(Request $request, User $user): RedirectResponse
