@@ -1,6 +1,6 @@
-# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 60+ Tables)
+# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 61+ Tables)
 
-เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 60+ ตาราง** อ้างอิงตามโครงสร้างฐานข้อมูลกลาง [`docs/database/DATABASE.md`](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md) (Single Source of Truth) ครอบคลุมฟังก์ชันตั้งแต่ Phase 0 ถึง Phase 23 พร้อมคำอธิบายความสัมพันธ์, Primary Keys, Foreign Keys, Constraints, และกฎทางธุรกิจภาษาไทยอย่างละเอียด
+เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 61+ ตาราง** อ้างอิงตามโครงสร้างฐานข้อมูลกลาง [`docs/database/DATABASE.md`](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md) (Single Source of Truth) ครอบคลุมฟังก์ชันตั้งแต่ Phase 0 ถึง Phase 23.1 พร้อมคำอธิบายความสัมพันธ์, Primary Keys, Foreign Keys, Constraints, และกฎทางธุรกิจภาษาไทยอย่างละเอียด
 
 ---
 
@@ -23,7 +23,8 @@
 15. [Domain 14: ระบบส่งการแจ้งเตือนหลายช่องทางและกล่องขาออก (Operational Notification Outbox & Multi-Channel - Phase 21)](#15-domain-14-ระบบส่งการแจ้งเตือนหลายช่องทางและกล่องขาออก-operational-notification-outbox--multi-channel---phase-21)
 16. [Domain 15: พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า (Customer & Supplier Self-Service Portal - Phase 22)](#16-domain-15-พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า-customer--supplier-self-service-portal---phase-22)
 17. [Domain 16: การรับชำระเงินเกตเวย์และพร้อมเพย์ (PromptPay & Payment Gateway Settlement - Phase 23)](#17-domain-16-การรับชำระเงินเกตเวย์และพร้อมเพย์-promptpay--payment-gateway-settlement---phase-23)
-18. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#18-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
+18. [Domain 17: ระบบควบคุมความปลอดภัยและการส่งแบบฟอร์มซ้ำ (Idempotent Form Submissions - Phase 23.1)](#18-domain-17-ระบบควบคุมความปลอดภัยและการส่งแบบฟอร์มซ้ำ-idempotent-form-submissions---phase-231)
+19. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#19-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
 
 ---
 
@@ -97,6 +98,7 @@ erDiagram
     INVOICES ||--o{ GATEWAY_TRANSACTIONS : "1:N intents"
     GATEWAY_TRANSACTIONS o|--o| PAYMENTS : "0..1:1 ชำระสำเร็จ"
     PAYMENT_GATEWAY_CONFIGS ||--o{ WEBHOOK_EVENTS : "1:N intake events"
+    USERS ||--o{ FORM_SUBMISSIONS : "1:N ป้องกันส่งซ้ำ (Phase 23.1)"
 ```
 
 ---
@@ -1345,7 +1347,37 @@ erDiagram
 
 ---
 
-## 18. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
+## 18. Domain 17: ระบบควบคุมความปลอดภัยและการส่งแบบฟอร์มซ้ำ (Idempotent Form Submissions - Phase 23.1)
+
+ครอบคลุมตาราง `form_submissions` ที่ทำหน้าที่บันทึก Submission Key (UUID) และ Fingerprint (SHA-256) ป้องกันการส่งแบบฟอร์มซ้ำ (Double Submission Guard) และรองรับ Safe Retry ทั่วทั้งระบบ โดยทำงานผ่าน `EnsureFormSubmission` Middleware
+
+```mermaid
+erDiagram
+    FORM_SUBMISSIONS {
+        bigint id PK
+        uuid user_id FK "อ้างอิงผู้ใช้งานที่ส่งฟอร์ม"
+        uuid submission_key "UUID ประจำ Draft ฟอร์ม (Unique ร่วมกับ user_id)"
+        varchar fingerprint "SHA-256 Hash ของ Payload ข้อมูลฟอร์ม"
+        json result "ผลลัพธ์คำขอเดิมที่แคชไว้ส่งคืนกรณี Retry"
+        timestamp created_at "เวลาที่เริ่มส่งฟอร์ม"
+    }
+
+    USERS ||--o{ FORM_SUBMISSIONS : "submits"
+```
+
+### กฎและข้อกำหนดเชิงธุรกิจ (Business Rules)
+1. **Unique Submission Key ต่อผู้ใช้:**  
+   - มี Unique Constraint `['user_id', 'submission_key']` เพื่อป้องกัน Race Condition จากการกดปุ่ม Submit ซ้ำ หรือปัญหาความล่าช้าของเครือข่าย
+2. **Fingerprint Verification:**  
+   - มีการคำนวณ SHA-256 Hash ของ Request Payload เพื่อตรวจจับและรับรองว่าเป็นการ Retry ข้อมูลชุดเดิมจริง
+3. **HTTP 422 Non-Consumption:**  
+   - กรณีเซิร์ฟเวอร์ตอบกลับ Validation Error (HTTP 422) จะไม่มีการบันทึกผลลัพธ์หรือบริโภค Submission Key ทำให้ผู้ใช้สามารถแก้ไขข้อผิดพลาดบน Modal Dialog เดิมและกด Submit ใหม่ได้ทันทีโดยไม่สูญเสีย Draft
+4. **Cached Response Replay:**  
+   - หากตรวจพบ Submission Key ซ้ำที่มีการบันทึกสำเร็จไปแล้ว ระบบจะส่งคืนผลลัพธ์ JSON Receipt เดิมทันที โดยไม่รัน Controller Action ซ้ำซ้อน และไม่สร้างข้อมูลซ้ำในฐานข้อมูล
+
+---
+
+## 19. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
 
 1. **ระบบคีย์หลัก (Primary Keys):**  
    - ทุกตารางใช้ Primary Key ชื่อ `id` เป็นชนิด **Time-Ordered UUID (UUIDv7)** เพื่อประสิทธิภาพในการทำ Indexing และป้องกันการคาดเดา ID ข้อมูล

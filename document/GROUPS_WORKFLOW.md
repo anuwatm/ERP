@@ -13,7 +13,7 @@
 | **Group 3** | [Project Delivery & Execution](#group-3-project-delivery--execution-โมดูล-09-11) | `09-11` (Projects, Tasks, Milestones) | 3 | แปลง Deal สู่ Project &rarr; จ่ายงาน Tasks &rarr; ตรวจรับ Milestones |
 | **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses, Assets, FX, E-Tax) | 5 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; รายจ่าย &rarr; Treasury/GL &rarr; สินทรัพย์, FX, e-Tax |
 | **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, DMS, Outbox) | 5 | Event Trigger, Dashboard, ระบบไฟล์แนบ, DMS Lifecycle และ Notification Outbox |
-| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-23) | `24-31` (PO, Inventory/Lots, Payroll, Accounting, Workflows, Portal, Gateway) | 6 | จัดซื้อ, สต็อก/Lot, เงินเดือน, Central Workflow, Customer/Supplier Portal, และ Gateway Settlement |
+| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-23) | `24-31` (PO, Inventory/Lots, Payroll, Accounting, Workflows, Portal, Gateway, Dialog Standard) | 7 | จัดซื้อ, สต็อก/Lot, เงินเดือน, Central Workflow, Customer/Supplier Portal, Gateway Settlement, และ Master Dialog Standard |
 
 ---
 
@@ -911,6 +911,74 @@ sequenceDiagram
     else งวดบัญชีปิดอยู่
         ERP-->>Bridge: 422 Unprocessable (Rollback ทั้งหมดเพื่อให้ Retry ภายหลัง)
     end
+```
+
+---
+
+### 6.7 Diagram: Master Create/Edit Dialog Standard & Editor Coordinator Lifecycle (Phase 23.1)
+ผังกระบวนการมาตรฐานของฟอร์ม Create / Edit Dialog และ Single Active Editor Lifecycle: การรับประกันมีฟอร์มเปิดได้เพียง 1 รายการผ่าน `useEditorCoordinator`, การตรวจสอบสถานะข้อมูลถูกแก้ไข (Deep Dirty Detection), การแจ้งเตือนก่อนปิดฟอร์มเมื่อมีข้อมูลที่ยังไม่ได้บันทึก (`confirmUnsavedChanges`), การป้องกันส่งฟอร์มซ้ำระดับ Frontend (`isSubmitting` flag & disabled state) และการป้องกันระดับ Backend Idempotency ด้วย `EnsureFormSubmission` Middleware ร่วมกับ `X-Submission-Key` (UUIDv4) และตาราง `form_submissions`
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as ผู้ใช้งาน (User)
+    participant Page as หน้าจอหลัก (Master Page / List)
+    participant Coord as useEditorCoordinator
+    participant Dialog as Create/Edit Dialog
+    participant Mid as EnsureFormSubmission Middleware
+    participant Svc as Backend Service & DB
+    participant FormSub as ตาราง form_submissions
+
+    User->>Page: 1. กดปุ่มสร้าง/แก้ไขรายการ (Create / Edit Action)
+    Page->>Coord: 2. เรียก open(editorId, initialData)
+    alt มี Editor อื่นเปิดค้างอยู่และมีการแก้ไขข้อมูล (Dirty)
+        Coord-->>User: แสดงคำเตือน "มีฟอร์มอื่นที่ยังไม่บันทึก ต้องการสลับหรือไม่?"
+        opt ผู้ใช้กดยกเลิก
+            User-->>Coord: ยกเลิกการเปิดใหม่ คงฟอร์มเดิมไว้
+        end
+    end
+    Coord->>Dialog: 3. เปิด Dialog + สร้าง X-Submission-Key (UUIDv4) ใหม่
+    Dialog-->>User: แสดงหน้าต่างฟอร์มพร้อมข้อมูลเริ่มต้น
+
+    User->>Dialog: 4. กรอกข้อมูลหรือปรับปรุงฟิลด์ต่างๆ
+    Dialog->>Coord: 5. คำนวณ Dirty State (Deep Compare vs Initial State)
+    
+    alt ผู้ใช้กดปิด (ESC / Backdrop Click / Close Button)
+        User->>Dialog: กดปิดหน้าต่าง
+        Dialog->>Coord: ตรวจสอบสถานะ isDirty
+        alt isDirty == true
+            Coord-->>User: แสดง Unsaved Changes Alert Modal
+            opt ยืนยันการปิด
+                User->>Coord: ยืนยันปิดฟอร์ม (Discard Changes)
+                Coord->>Dialog: Reset ฟอร์มและปิด Dialog (close())
+            end
+        else isDirty == false
+            Coord->>Dialog: ปิด Dialog ทันทีโดยไม่รบกวนผู้ใช้
+        end
+    end
+
+    User->>Dialog: 6. กดปุ่มบันทึก (Submit Form)
+    Dialog->>Dialog: 7. ตรวจสอบ Client Validation + ตั้ง isSubmitting = true (Disable Submit Button)
+    Dialog->>Mid: 8. POST/PUT Request พร้อม Headers: X-Submission-Key: {UUID}
+    
+    Mid->>FormSub: 9. ตรวจสอบ submission_key + user_id
+    alt พบ Key ซ้ำและผลการประมวลผลถูก Cache ไว้แล้ว (Idempotent Replay)
+        FormSub-->>Mid: คืนค่า Response JSON เดิมที่เคยบันทึกไว้
+        Mid-->>Dialog: 200/201 OK Replayed Response (ไม่ทำงานซ้ำ)
+    else มี Request กำลังประมวลผลอยู่ภายใต้ Key เดียวกัน (In-Flight Lock)
+        Mid-->>Dialog: 409 Conflict / 422 ซ้ำซ้อน กำลังประมวลผล
+    else เป็น Request ใหม่ (First Seen)
+        Mid->>Svc: 10. ส่งต่อไปยัง Controller & Domain Service
+        Svc->>Svc: 11. ตรวจสอบ Business Rules & อัปเดตข้อมูลใน DB Transaction
+        Svc-->>Mid: ผลการบันทึกสำเร็จ (Success Payload)
+        Mid->>FormSub: 12. บันทึก submission_key, user_id, fingerprint, result JSON
+        Mid-->>Dialog: 13. 200/201 Created/Updated Response
+    end
+
+    Dialog->>Coord: 14. Reset isDirty & markClean()
+    Dialog->>Page: 15. Trigger refreshData() รีเฟรชตารางข้อมูล
+    Coord->>Dialog: 16. ปิด Dialog (close())
+    Dialog-->>User: แสดง Toast แจ้งเตือน "บันทึกข้อมูลเรียบร้อย"
 ```
 
 ---

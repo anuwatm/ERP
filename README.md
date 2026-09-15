@@ -38,16 +38,17 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 ระบบมีชุด Diagram สถาปัตยกรรม เวิร์กโฟลว์ และผังฐานข้อมูลฉบับสมบูรณ์ (Archify Interactive HTML + Mermaid Diagrams):
 
-* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 15 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
-* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 15 ชุดหลัก
-* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (25 Diagrams)
-* 🗄️ **[Full Database ER Diagram (60+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 16 โดเมนหลัก
+* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 16 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
+* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 16 ชุดหลัก
+* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (24 Diagrams)
+* 🗄️ **[Full Database ER Diagram (61+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 17 โดเมนหลัก
 * 💰 **[Payroll Phase 16B Design](docs/PHASE_16B_PAYROLL_DESIGN.md)** — ขอบเขต payroll, policy snapshot, privacy, payslip/workpaper และ GL boundary
 * 🔄 **[Payroll Policy, Approval & GL Flow](document/11_payroll_policy_gl_flow.html)** — Interactive workflow ของการคำนวณ อนุมัติ จ่ายเงิน และลงบัญชี
 * 📂 **[DMS Document Lifecycle](document/12_document_management_lifecycle.html)** — Interactive intake, versioning และ expiry ของระบบเอกสารองค์กร (Phase 17)
 * 🔐 **[2FA TOTP & Privileged Gate Sequence](document/13_two_factor_auth_sequence.html)** — Interactive sequence ของการยืนยันตัวตนสองขั้นตอนและอุปกรณ์ที่เชื่อถือได้ (Phase 18)
 * ⚡ **[Approval Workflow Instance Lifecycle](document/14_approval_workflow_engine.html)** — Interactive lifecycle ของการประเมินสายอนุมัติพลวัต (Phase 20)
 * 💳 **[PromptPay Thai QR & Payment Gateway Settlement Flow](document/15_payment_gateway_settlement.html)** — Interactive sequence ของการสร้าง QR พร้อมเพย์, ยืนยัน Opn charge และ signed settlement bridge (Phase 23)
+* 📋 **[Master Dialog Standard & Editor Coordinator Lifecycle](document/16_master_dialog_editor_lifecycle.html)** — Interactive lifecycle ของระบบ modal dialog สร้าง/แก้ไข, การตรวจจับ dirty state, การยืนยันก่อนปิด และการป้องกันส่งซ้ำระดับ client/backend (Phase 23.1)
 
 ---
 

@@ -25,7 +25,8 @@
 | **13** | [Two-Factor Authentication & Privileged Access Flow](#13-two-factor-authentication--privileged-access-flow) | Sequence | [`13_two_factor_auth_sequence.html`](./13_two_factor_auth_sequence.html) | [`specs/13_two_factor_auth_sequence.json`](./specs/13_two_factor_auth_sequence.json) |
 | **14** | [Approval Workflow Instance Lifecycle](#14-approval-workflow-instance-lifecycle) | Lifecycle | [`14_approval_workflow_engine.html`](./14_approval_workflow_engine.html) | [`specs/14_approval_workflow_engine.json`](./specs/14_approval_workflow_engine.json) |
 | **15** | [PromptPay Thai QR & Payment Gateway Settlement Flow](#15-promptpay-thai-qr--payment-gateway-settlement-flow) | Sequence | [`15_payment_gateway_settlement.html`](./15_payment_gateway_settlement.html) | [`specs/15_payment_gateway_settlement.json`](./specs/15_payment_gateway_settlement.json) |
-| **All** | [Full Database ER Diagram (60+ Tables)](#16-full-database-er-diagram-60-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
+| **16** | [Master Dialog Standard & Editor Lifecycle](#16-master-dialog-standard--editor-lifecycle) | Lifecycle | [`16_master_dialog_editor_lifecycle.html`](./16_master_dialog_editor_lifecycle.html) | [`specs/16_master_dialog_editor_lifecycle.json`](./specs/16_master_dialog_editor_lifecycle.json) |
+| **All** | [Full Database ER Diagram (61+ Tables)](#17-full-database-er-diagram-61-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
 
 ---
 
@@ -446,9 +447,47 @@ sequenceDiagram
 
 ---
 
-### 16. Full Database ER Diagram (60+ Tables)
+### 16. Master Dialog Standard & Editor Lifecycle
+- **ไฟล์ HTML:** [`16_master_dialog_editor_lifecycle.html`](./16_master_dialog_editor_lifecycle.html)
+- **ไฟล์ JSON Spec:** [`specs/16_master_dialog_editor_lifecycle.json`](./specs/16_master_dialog_editor_lifecycle.json)
+- **วัตถุประสงค์:** วงจรสถานะของ Master Create/Edit Dialog and Single Active Editor Lifecycle (Phase 23.1): ควบคุมการเปิด Modal เพียง 1 ตัวผ่าน `useEditorCoordinator`, ตรวจจับการเปลี่ยนแปลงข้อมูล (Comprehensive Deep Dirty Detection), ยืนยันก่อนปิดเมื่อมีข้อมูลที่ยังไม่ได้บันทึก (`confirmUnsavedChanges`), ป้องกันการกดส่งซ้ำฝั่ง Client และรับประกัน Idempotent Backend Submission ผ่าน `EnsureFormSubmission` Middleware + `X-Submission-Key`
+- **Mermaid Preview:**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: พร้อมใช้งาน (No Active Editor)
+    
+    Idle --> Initializing: open(editorId, initialData)
+    Initializing --> Clean: โหลดข้อมูลสำเร็จ / Deep Clone initial state
+    
+    Clean --> Dirty: ผู้ใช้แก้ไขข้อมูล (User Mutates Fields)
+    Dirty --> Clean: Reset ข้อมูลกลับสู่ Initial State
+    
+    Clean --> Closed: Close Request (ESC / Cancel) - ปิดทันที
+    Dirty --> ConfirmClose: Close Request (ESC / Cancel / Backdrop)
+    
+    ConfirmClose --> Dirty: ผู้ใช้กด "แก้ไขต่อ" (Keep Editing)
+    ConfirmClose --> Discarded: ผู้ใช้ยืนยัน "ละทิ้งข้อมูล" (Discard Changes)
+    Discarded --> Closed: Reset Form State
+    
+    Dirty --> Submitting: Submit Form (ตั้ง isSubmitting = true)
+    Clean --> Submitting: Submit Form (เช่น สถานะเปลี่ยนทันที)
+    
+    Submitting --> ValidationFailed: Client / Server Validation Error
+    ValidationFailed --> Dirty: แก้ไขข้อผิดพลาด
+    
+    Submitting --> Succeeded: บันทึกสำเร็จ (200/201 OK)
+    Succeeded --> Clean: markClean() & แจ้งเตือน Toast
+    Clean --> Closed: ปิด Dialog & Refresh Data Table
+    
+    Closed --> Idle: คืนสถานะ Active Editor ว่าง
+```
+
+---
+
+### 17. Full Database ER Diagram (61+ Tables)
 - **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
-- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 60+ ตาราง ครอบคลุม 16 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, และกฎ Multi-Tenancy Scoping (`org_id`)
+- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 61+ ตาราง ครอบคลุม 17 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, กฎ Multi-Tenancy Scoping (`org_id`), และระบบป้องกันส่งซ้ำ `form_submissions`
 - **Mermaid Preview (Master Cross-Domain):**
 
 ```mermaid
@@ -457,6 +496,7 @@ erDiagram
     BRANCHES ||--o{ DIVISIONS : "1:N"
     DIVISIONS ||--o{ DEPARTMENTS : "1:N"
     DEPARTMENTS ||--o{ USERS : "1:N"
+    USERS ||--o{ FORM_SUBMISSIONS : "1:N (Phase 23.1)"
     ORGANIZATIONS ||--o{ CUSTOMERS : "1:N"
     CUSTOMERS ||--o{ CONTACTS : "1:N"
     CUSTOMERS ||--o{ DEALS : "1:N"
@@ -489,9 +529,9 @@ erDiagram
 
 ---
 
-### 17. 6 Domain Group Workflows (31 Modules)
+### 18. 6 Domain Group Workflows (31 Modules)
 - **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
-- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 23 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
+- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 24 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
 - **Mermaid Preview (Inter-Group Interaction):**
 
 ```mermaid
@@ -513,7 +553,7 @@ flowchart LR
    - สามารถกดปุ่มสลับ **Light / Dark mode**, **Focus View**, **Pan & Zoom**, และ **Export เป็น SVG / PNG / WebP** ได้ทันที
 2. **เปิดดูเอกสารผังรายกลุ่มและ ERD:**
    - ผังการทำงาน 6 กลุ่มโมดูล (31 Modules): [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
-   - ผังฐานข้อมูล 38+ ตาราง: [`document/DATABASE_ERD.md`](./DATABASE_ERD.md)
+   - ผังฐานข้อมูล 61+ ตาราง: [`document/DATABASE_ERD.md`](./DATABASE_ERD.md)
 3. **แก้ไขหรือสร้างใหม่:**
    - ไฟล์ JSON Specification อยู่ในโฟลเดอร์ [`document/specs/`](./specs/)
    - สามารถรันคำสั่ง `node <archify-path>/bin/archify.mjs deliver <type> <spec.json> <output.html> --quality showcase --json` เพื่อ render ใหม่ได้ตลอดเวลา

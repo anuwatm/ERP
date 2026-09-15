@@ -583,6 +583,28 @@
         </div>
       </div>
 
+      <!-- 16 Master Dialog Standard & Single Active Editor Lifecycle -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-lifecycle">Lifecycle</span>
+          <h2 class="card-title">16. Master Dialog Standard & Single Active Editor Lifecycle</h2>
+          <p class="card-desc">
+            มาตรฐานหน้าต่างฟอร์ม Phase 23.1: ควบคุมให้มี Active Modal เพียง 1 ตัวผ่าน useEditorCoordinator, ตรวจจับการแก้ไขฟอร์มละเอียดทุกฟิลด์ (Deep Dirty Detection), แจ้งเตือนยืนยันก่อนปิดเมื่อมีข้อมูลที่ยังไม่ได้บันทึก, ป้องกัน Double-Submit และประมวลผล Idempotency ฝั่งเซิร์ฟเวอร์ด้วย EnsureFormSubmission Middleware ร่วมกับ X-Submission-Key
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">useEditorCoordinator</span>
+            <span class="meta-chip">Deep Dirty Detection</span>
+            <span class="meta-chip">Unsaved Changes Modal</span>
+            <span class="meta-chip">EnsureFormSubmission</span>
+            <span class="meta-chip">Idempotent UUID Key</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="16_master_dialog_editor_lifecycle.html" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+          <a href="specs/16_master_dialog_editor_lifecycle.json" target="_blank" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
     </div>
 
     <!-- 6 Domain Groups (31 Modules) Section -->
@@ -715,7 +737,7 @@
         </div>
         <div class="card-actions">
           <a href="GROUPS_WORKFLOW.md#group-6-operations--advanced-extensions-phase-7-18" target="_blank" class="btn-open">ดูผัง Group 6 &rarr;</a>
-          <span class="btn-json">3 Diagrams</span>
+          <span class="btn-json">7 Diagrams</span>
         </div>
       </div>
 

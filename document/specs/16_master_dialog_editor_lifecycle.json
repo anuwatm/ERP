@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Master Dialog Standard & Single Active Editor Lifecycle",
+    "subtitle": "Phase 23.1 unified modal dialog, dirty state detection, switch coordination, and idempotent retry",
+    "output": "document/16_master_dialog_editor_lifecycle.html",
+    "viewBox": [980, 660],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "draft-editing",
+        "label": "Draft Editing & Modification",
+        "focus": ["draft", "editing", "submitting"],
+        "note": "User opens Create or Edit dialog; in-memory state tracks pristine vs modified field status across all control types."
+      },
+      {
+        "id": "switch-guard",
+        "label": "Switch Coordinator & Guard",
+        "focus": ["editing", "submitting", "intercepted"],
+        "note": "Single active editor rule intercepts navigation or opening a new form; user confirms Keep or Discard."
+      },
+      {
+        "id": "submission-and-retry",
+        "label": "Submission & Safe Retry",
+        "focus": ["submitting", "committed", "validation_err"],
+        "note": "Idempotent submission key protects against double-submit; 422 errors keep draft data for zero-loss correction."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Active Editor Lifecycle" },
+    { "id": "terminal", "label": "Guard & Error Outcomes" }
+  ],
+  "states": [
+    { "id": "draft", "type": "start", "label": "Dialog Opened", "sublabel": "Initial draft / prefill", "lane": "main", "col": 0, "step": "01", "tag": "Pristine" },
+    { "id": "editing", "type": "active", "label": "Draft Modified", "sublabel": "Field changes detected", "lane": "main", "col": 1, "step": "02", "tag": "Dirty Tracked" },
+    { "id": "submitting", "type": "active", "label": "Active Submission", "sublabel": "UUID key & locked", "lane": "main", "col": 2, "step": "03", "tag": "Key Locked" },
+    { "id": "committed", "type": "success", "label": "Saved & Closed", "sublabel": "Receipt recorded", "lane": "main", "col": 3, "step": "04", "tag": "Committed" },
+    { "id": "intercepted", "type": "waiting", "label": "Switch Intercepted", "sublabel": "Discard changes guard", "lane": "terminal", "col": 1, "tag": "Keep or Discard" },
+    { "id": "validation_err", "type": "failure", "label": "Validation 422", "sublabel": "Draft preserved for retry", "lane": "terminal", "col": 2, "tag": "Safe Retry" }
+  ],
+  "transitions": [
+    { "id": "t-draft-editing", "from": "draft", "to": "editing", "variant": "default" },
+    { "id": "t-editing-submitting", "from": "editing", "to": "submitting", "variant": "emphasis" },
+    { "id": "t-submitting-committed", "from": "submitting", "to": "committed", "variant": "emphasis" },
+    { "id": "t-submitting-intercepted", "from": "submitting", "to": "intercepted", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "t-submitting-err", "from": "submitting", "to": "validation_err", "variant": "default", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Single Active Editor Architecture",
+      "items": [
+        "useEditorCoordinator enforces maximum 1 active editor draft across all 60 pages / 92 files",
+        "Attempts to switch form or navigate back with unsaved changes trigger DiscardChangesDialog",
+        "User choice 'Keep' preserves draft in memory; 'Discard' resets cleanly and opens requested editor"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Comprehensive Dirty Detection",
+      "items": [
+        "Tracks scalar inputs, dates, numbers, checkboxes, and barcode scanner inputs",
+        "Multi-warehouse, lot, and bin location pickers accurately detected on value change",
+        "Line items, indexed monetary values, and DMS file attachments tracked against initial state"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Idempotent Submission Protection",
+      "items": [
+        "EnsureFormSubmission middleware records submission_key and sha256 fingerprint in form_submissions",
+        "Duplicate POST attempts return cached JSON receipt without duplicate database creation",
+        "HTTP 422 validation errors never consume submission key, preserving draft for immediate retry"
+      ]
+    }
+  ]
+}
