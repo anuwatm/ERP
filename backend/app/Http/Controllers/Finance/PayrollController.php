@@ -13,7 +13,9 @@ use App\Models\SocialSecurityPolicy;
 use App\Models\User;
 use App\Services\NumberSequenceService;
 use App\Services\PayrollService;
+use App\Services\PayslipMailService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -115,32 +117,53 @@ class PayrollController extends Controller
     {
         $this->owned($request, $payrollRun);
         abort_unless(in_array($type, ['pnd1', 'social-security'], true), 404);
-        $payrollRun->load('items.user', 'items.profile');
+        $payrollRun->load(['items.user', 'items.profile', 'items.employee']);
 
         return response()->streamDownload(function () use ($payrollRun, $type): void {
             $out = fopen('php://output', 'w');
             fputcsv($out, $type === 'pnd1' ? ['period_end', 'employee_name', 'tax_id', 'gross_income', 'withholding_tax'] : ['period_end', 'employee_name', 'employee_contribution', 'employer_contribution']);
+            $periodEnd = Carbon::parse($payrollRun->period_end)->toDateString();
             foreach ($payrollRun->items as $item) {
-                fputcsv($out, $type === 'pnd1' ? [$payrollRun->period_end->toDateString(), $item->user->name, $item->profile->tax_id ?: $item->user->person_id, $item->salary_amount + $item->allowance_amount, $item->withholding_tax_amount] : [$payrollRun->period_end->toDateString(), $item->user->name, $item->employee_social_security_amount, $item->employer_social_security_amount]);
+                $name = $item->employee ? trim("{$item->employee->first_name} {$item->employee->last_name}") : ($item->user?->name ?? 'Employee');
+                $taxId = $item->profile?->tax_id ?: ($item->employee?->tax_id ?: ($item->user?->person_id ?? ''));
+                $gross = $item->salary_amount + $item->allowance_amount + $item->ot_amount;
+                fputcsv($out, $type === 'pnd1' ? [$periodEnd, $name, $taxId, $gross, $item->withholding_tax_amount] : [$periodEnd, $name, $item->employee_social_security_amount, $item->employer_social_security_amount]);
             }
             fclose($out);
         }, "{$type}-{$payrollRun->run_no}.csv", ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
-    public function printPayslip(Request $request, PayrollItem $payrollItem): View
+    public function printPayslip(Request $request, PayrollItem|string $payrollItem): View
     {
+        $payrollItem = $payrollItem instanceof PayrollItem ? $payrollItem : PayrollItem::findOrFail($payrollItem);
         abort_unless($payrollItem->org_id === $request->user()->org_id, 404);
-        abort_unless($payrollItem->user_id === $request->user()->id || $request->user()->hasPermissionCode('payroll.view'), 403);
-        $payrollItem->load(['run', 'user', 'profile']);
+        $isSelf = ($payrollItem->user_id && $payrollItem->user_id === $request->user()->id) || ($payrollItem->employee && $payrollItem->employee->user_id === $request->user()->id);
+        abort_unless($isSelf || $request->user()->hasPermissionCode('payroll.view'), 403);
+        $payrollItem->load(['run.organization', 'user', 'profile', 'employee']);
 
-        return view('payroll.payslip', ['item' => $payrollItem, 'organization' => $request->user()->organization]);
+        return view('payroll.payslip', ['item' => $payrollItem, 'organization' => $payrollItem->run?->organization ?: $request->user()->organization]);
     }
 
-    public function payslipPdf(Request $request, PayrollItem $payrollItem)
+    public function payslipPdf(Request $request, PayrollItem|string $payrollItem)
     {
+        $payrollItem = $payrollItem instanceof PayrollItem ? $payrollItem : PayrollItem::findOrFail($payrollItem);
         $view = $this->printPayslip($request, $payrollItem);
 
         return Pdf::loadHTML($view->render())->setPaper('a4')->download("payslip-{$payrollItem->run->run_no}.pdf");
+    }
+
+    public function emailPayslip(Request $request, PayrollItem|string $payrollItem, PayslipMailService $mailService): RedirectResponse
+    {
+        $payrollItem = $payrollItem instanceof PayrollItem ? $payrollItem : PayrollItem::findOrFail($payrollItem);
+        abort_unless($payrollItem->org_id === $request->user()->org_id, 404);
+        abort_unless($request->user()->hasPermissionCode('payroll.manage'), 403);
+        $result = $mailService->sendPayslip($payrollItem);
+        if (! $result['sent']) {
+            return back()->withErrors(['email' => $result['error'] ?: 'Failed to send payslip email.']);
+        }
+        $this->audit($request, 'payroll_item.email_payslip', 'payroll_item', $payrollItem->id, ['recipient' => $result['recipient']]);
+
+        return back()->with('success', "Payslip sent to {$result['recipient']}.");
     }
 
     private function owned(Request $request, PayrollRun $run): void

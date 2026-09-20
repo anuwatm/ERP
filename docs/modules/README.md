@@ -71,9 +71,9 @@
 | --- | --- | --- | --- |
 | [24-purchase-orders.md](./24-purchase-orders.md) | Purchase Orders | Phase 7 implemented | Done |
 | [25-inventory.md](./25-inventory.md) | Inventory / Stock | Phase 15 implemented | Done |
-| [26-employees.md](./26-employees.md) | HR: Employees | V1 light / V2 | P1 |
-| [27-attendance-leave.md](./27-attendance-leave.md) | Attendance / Leave | V2 | P2 |
-| [28-payroll.md](./28-payroll.md) | Payroll | Phase 16B implemented | Done |
+| [26-employees.md](./26-employees.md) | HR: Employees | Phase 23.3 core implemented | In progress |
+| [27-attendance-leave.md](./27-attendance-leave.md) | Attendance / Leave | Phase 19 + 23.3 extension | In progress |
+| [28-payroll.md](./28-payroll.md) | Payroll | Phase 16B done; 23.3 integration | In progress |
 | [29-ai-assistant.md](./29-ai-assistant.md) | AI Assistant | V2 | P2 |
 | [30-accounting-integration.md](./30-accounting-integration.md) | Accounting Integration | V2 | P2 |
 | [22-self-service-portals.md](./22-self-service-portals.md) | Customer & Supplier Self-Service Portals | Phase 22 implemented | Done |
@@ -93,6 +93,3 @@ Current flow summary: Customer -> Deal -> Quotation/Invoice -> Payment -> Treasu
 1. แก้ [`docs/database/DATABASE.md`](../database/DATABASE.md) ก่อน
 2. อัปเดต module file ที่เกี่ยวข้อง
 3. ตรวจ FK cross-module ให้ไม่ขัดกัน
-
-
-

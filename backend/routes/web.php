@@ -33,6 +33,9 @@ use App\Http\Controllers\Finance\TreasuryOperationsController;
 use App\Http\Controllers\Finance\TreasuryReportController;
 use App\Http\Controllers\Finance\VendorPaymentController;
 use App\Http\Controllers\GatewayController;
+use App\Http\Controllers\Hr\AttendanceImportController;
+use App\Http\Controllers\Hr\EmployeeController;
+use App\Http\Controllers\Hr\RosterController;
 use App\Http\Controllers\HrController;
 use App\Http\Controllers\HrDashboardController;
 use App\Http\Controllers\PortalController;
@@ -282,6 +285,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/fixed-assets/{fixedAsset}/attachment', [FixedAssetController::class, 'storeAttachment'])->middleware(['permission:fixed_assets.manage', 'password.confirm', 'throttle:10,1'])->name('fixed-assets.attachment.store');
     Route::get('/payroll', [PayrollController::class, 'index'])->middleware('permission:payroll.view')->name('payroll.index');
     Route::get('/hr', [HrController::class, 'index'])->middleware('permission:hr.self.view')->name('hr.index');
+    Route::get('/hr/employees', [EmployeeController::class, 'index'])->middleware('permission:hr.employees.view')->name('hr.employees.index');
+    Route::post('/hr/employees', [EmployeeController::class, 'store'])->middleware(['permission:hr.employees.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.employees.store');
+    Route::patch('/hr/employees/{employee}', [EmployeeController::class, 'update'])->middleware(['permission:hr.employees.manage', 'password.confirm', 'throttle:10,1'])->name('hr.employees.update');
+    Route::patch('/hr/employees/account/{employee}', [EmployeeController::class, 'linkAccount'])->middleware(['permission:hr.employees.manage', 'password.confirm', 'throttle:10,1'])->name('hr.employees.account.link');
+    Route::get('/hr/roster', [RosterController::class, 'index'])->middleware('permission:hr.shifts.manage')->name('hr.roster.index');
+    Route::post('/hr/roster/schedules', [RosterController::class, 'storeSchedule'])->middleware(['permission:hr.shifts.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.roster.schedules.store');
+    Route::post('/hr/roster/batch', [RosterController::class, 'batchAssign'])->middleware(['permission:hr.shifts.manage', 'password.confirm', 'throttle:5,1', EnsureFormSubmission::class])->name('hr.roster.batch.store');
+    Route::get('/hr/attendance-import', [AttendanceImportController::class, 'index'])->middleware('permission:hr.attendance.import')->name('hr.attendance-import.index');
+    Route::get('/hr/attendance-import/template', [AttendanceImportController::class, 'template'])->middleware('permission:hr.attendance.import')->name('hr.attendance-import.template');
+    Route::post('/hr/attendance-import', [AttendanceImportController::class, 'import'])->middleware(['permission:hr.attendance.import', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.attendance-import.store');
+    Route::post('/hr/attendance-import/reconcile', [AttendanceImportController::class, 'reconcile'])->middleware(['permission:hr.attendance.import', 'password.confirm', 'throttle:5,1', EnsureFormSubmission::class])->name('hr.attendance-import.reconcile');
+    Route::post('/hr/attendance-import/{attendance}/correct', [AttendanceImportController::class, 'correct'])->middleware(['permission:hr.attendance.import', 'password.confirm', 'throttle:10,1'])->name('hr.attendance-import.correct');
     Route::get('/workflows', [WorkflowController::class, 'index'])->middleware('permission:workflows.view')->name('workflows.index');
     Route::post('/workflows/definitions', [WorkflowController::class, 'storeDefinition'])->middleware(['permission:workflows.manage', 'password.confirm', EnsureFormSubmission::class])->name('workflows.definitions.store');
     Route::post('/workflows/submit/{subjectType}/{subjectId}', [WorkflowController::class, 'submit'])->middleware(['permission:workflows.view', 'password.confirm'])->name('workflows.submit');
@@ -316,6 +331,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/payroll/runs/{payrollRun}/exports/{type}', [PayrollController::class, 'export'])->middleware('permission:payroll.export')->name('payroll.runs.export');
     Route::get('/payroll/payslips/{payrollItem}/print', [PayrollController::class, 'printPayslip'])->name('payroll.payslips.print');
     Route::get('/payroll/payslips/{payrollItem}/pdf', [PayrollController::class, 'payslipPdf'])->name('payroll.payslips.pdf');
+    Route::post('/payroll/payslips/{payrollItem}/email', [PayrollController::class, 'emailPayslip'])->middleware(['permission:payroll.manage', 'password.confirm', 'throttle:10,1'])->name('payroll.payslips.email');
     Route::post('/credit-debit-notes', [CommercialDocumentController::class, 'storeCreditDebitNote'])
         ->middleware(['permission:credit_debit_notes.create', 'password.confirm', 'throttle:10,1'])
         ->name('credit-debit-notes.store');

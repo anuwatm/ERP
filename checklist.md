@@ -1396,44 +1396,54 @@ Deals/Activities implementation แล้ว: ย้าย sidebar เป็น 
 
 เป้าหมาย: เพิ่มระบบจัดการพนักงานหลัก (Employee Master) ที่แยกออกจากบัญชีผู้ใช้ระบบ (User Account) เพื่อรองรับพนักงานหน้างาน/โรงงาน/รายวันที่ไม่มีความจำเป็นต้องล็อกอินเข้า ERP พร้อมระบบจัดตารางกะ (Shift Roster), นำเข้าเวลาจากเครื่องสแกน (Attendance Import), ประมวลผล ขาด/ลา/มาสาย/OT, และเชื่อมโยงเข้าสู่ระบบคำนวณเงินเดือน (Payroll)
 
+สถานะ Phase 23.3: **In progress (2026-09-20).** ตรวจรับแล้วพบช่องว่างก่อนปิด Phase: Excel Import, การนำ OT rate จาก Shift Master ไปคำนวณ Payroll, กฎ OT วันหยุด 3x และกะข้ามวัน. รายละเอียดใน [`docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md)
+
 ### 23.3.1 Employee Master Architecture & Decoupling from Users
 
-- [ ] สร้าง Schema/Migration และ Model `Employee` แยกจาก `User` โดยมี `user_id` เป็น Nullable Foreign Key (1:Optional-1)
-- [ ] จัดเก็บข้อมูลบุคคลครบถ้วน: รหัสพนักงาน, คำนำหน้า, ชื่อ-นามสกุล, ชื่อเล่น, เลขประจำตัวประชาชน/Passport, Tax ID, วันเกิด, เพศ, ข้อมูลติดต่อ
-- [ ] ผูกโครงสร้างองค์กร: `branch_id`, `division_id`, `department_id`, ตำแหน่งงาน (`position_title`), และหัวหน้างานสายตรง (`manager_id` อ้างอิง Employee)
-- [ ] กำหนดสถานะและประเภทการจ้าง: `employment_type` (monthly, daily, hourly, contractor), `employment_status` (probation, active, suspended, resigned, terminated), วันที่เริ่มงาน, วันผ่านทดลองงาน, วันที่ลาออก
-- [ ] ข้อมูลการจ่ายเงิน: บัญชีธนาคาร, เลขที่บัญชี, ช่องทางจ่ายเงิน (bank_transfer, cash)
-- [ ] พัฒนา UI หน้ารายชื่อพนักงาน (Employee Directory) พร้อม Filter (แผนก, สาขา, สถานะ, ประเภทการจ้าง, สถานะบัญชีผู้ใช้) และฟอร์ม Create/Edit Dialog ตามมาตรฐาน Phase 23.1
-- [ ] เพิ่ม Action สำหรับสร้างหรือผูกบัญชี `users` ให้พนักงานที่ต้องการสิทธิ์เข้าใช้งาน ERP พร้อมกลไกตัดสิทธิ์/ปิดบัญชีเมื่อพนักงานลาออก
-- [ ] ปรับปรุงความสัมพันธ์ใน `EmployeePayrollProfile` และ `EmployeeWorkProfile` ให้เชื่อมโยงผ่าน `employee_id` (รองรับ legacy user_id ในช่วงเปลี่ยนผ่าน)
+- [x] สร้าง Schema/Migration และ Model `Employee` แยกจาก `User` โดยมี `user_id` เป็น Nullable Foreign Key (1:Optional-1) (`2026_09_20_000001_create_employees_and_bridge_legacy_hr_profiles.php`, `Employee.php`)
+- [x] จัดเก็บข้อมูลบุคคลครบถ้วน: รหัสพนักงาน, คำนำหน้า, ชื่อ-นามสกุล, ชื่อเล่น, เลขประจำตัวประชาชน/Passport, Tax ID, วันเกิด, เพศ, ข้อมูลติดต่อ (เลขบัตร encrypt at rest)
+- [x] ผูกโครงสร้างองค์กร: `branch_id`, `division_id`, `department_id`, ตำแหน่งงาน (`position_title`), และหัวหน้างานสายตรง (`manager_id` อ้างอิง Employee)
+- [x] กำหนดสถานะและประเภทการจ้าง: `employment_type` (monthly, daily, hourly, contractor), `employment_status` (probation, active, suspended, resigned, terminated), วันที่เริ่มงาน, วันผ่านทดลองงาน, วันที่ลาออก
+- [x] ข้อมูลการจ่ายเงิน: บัญชีธนาคาร, เลขที่บัญชี, ช่องทางจ่ายเงิน (bank_transfer, cash) (เลขบัญชี encrypt at rest)
+- [x] พัฒนา UI หน้ารายชื่อพนักงาน (Employee Directory) พร้อม Filter (แผนก, สาขา, สถานะ, ประเภทการจ้าง, สถานะบัญชีผู้ใช้) และฟอร์ม Create/Edit Dialog ตามมาตรฐาน Phase 23.1 (`Hr/Employees.tsx`, URL-backed filters)
+- [x] เพิ่ม Action สำหรับสร้างหรือผูกบัญชี `users` ให้พนักงานที่ต้องการสิทธิ์เข้าใช้งาน ERP พร้อมกลไกตัดสิทธิ์/ปิดบัญชีเมื่อพนักงานลาออก (เลือกผูกบัญชี ERP ที่ยังไม่ได้ผูกจาก Employee Dialog; resigned/terminated ปิด linked user account และ invalidate session)
+- [x] ปรับปรุงความสัมพันธ์ใน `EmployeePayrollProfile` และ `EmployeeWorkProfile` ให้เชื่อมโยงผ่าน `employee_id` (รองรับ legacy user_id ในช่วงเปลี่ยนผ่าน) พร้อม backfill legacy profiles
+
+ผลตรวจปิด 23.3.1: `Phase233EmployeeMasterTest` + `Phase19HrAttendanceTest` + `Phase16PayrollTest` **16 passed / 77 assertions**; TypeScript, ESLint, Pint, Vite production build และ `git diff --check` ผ่าน.
 
 ### 23.3.2 Shift Scheduling & Roster Management
 
-- [ ] ต่อยอด `EmployeeShift` (Shift Master) เพิ่มการตั้งค่ากะมาตรฐาน, เวลาเริ่ม-สิ้นสุด, เวลาพัก, และเกณฑ์ค่าล่วงเวลา (OT Thresholds)
-- [ ] สร้างตาราง `employee_shift_schedules` (ตารางกะรายวัน/รายเดือน) รองรับการระบุกะและวันหยุดประจำสัปดาห์ (Day Off) รายบุคคล
-- [ ] รองรับการกำหนด Default Shift ตามบุคคล หรือกำหนดเป็นค่าเริ่มต้นระดับแผนก/สาขา
-- [ ] พัฒนา UI ปฏิทินตารางกะ (Roster Calendar / Matrix View) แสดงพนักงานและกะการทำงานในแต่ละวัน
-- [ ] พัฒนาระบบจัดกะเป็นกลุ่ม (Batch Shift Assignment by Department / Shift Rotation) เพื่อความสะดวกในการจัดเวรโรงงาน
+- [x] ต่อยอด `EmployeeShift` (Shift Master) เพิ่มการตั้งค่ากะมาตรฐาน, เวลาเริ่ม-สิ้นสุด, เวลาพัก, และเกณฑ์ค่าล่วงเวลา (OT Thresholds: `ot_rate_normal`, `ot_rate_holiday`, `grace_period_minutes`, `overtime_starts_after_minutes`)
+- [x] สร้างตาราง `employee_shift_schedules` (ตารางกะรายวัน/รายเดือน) รองรับการระบุกะและวันหยุดประจำสัปดาห์ (Day Off) รายบุคคล
+- [x] รองรับการกำหนด Default Shift ตามบุคคล หรือกำหนดเป็นค่าเริ่มต้นระดับแผนก/สาขา
+- [x] พัฒนา UI ปฏิทินตารางกะ (Roster Calendar / Matrix View) แสดงพนักงานและกะการทำงานในแต่ละวัน (`/hr/roster`, `Hr/Roster.tsx`)
+- [x] พัฒนาระบบจัดกะเป็นกลุ่ม (Batch Shift Assignment by Department / Shift Rotation) เพื่อความสะดวกในการจัดเวรโรงงาน
 
 ### 23.3.3 Attendance Time Log Import & Reconciliation
 
-- [ ] สร้างตาราง `attendance_raw_logs` เก็บประวัติดิบจากเครื่องสแกนนิ้ว/ใบหน้า/บัตร (employee_code, punch_time, punch_type, device_id, batch_id)
-- [ ] พัฒนาระบบ Import ไฟล์เวลาทำงาน (CSV / Excel) พร้อม Template, Column Mapping, และระบบตรวจสอบความถูกต้องของรหัสพนักงาน
-- [ ] พัฒนา Reconciliation Engine ประมวลผลจับคู่เวลาสแกนกับตารางกะ (`employee_shift_schedules` หรือ Default Shift) ของวันนั้น
-- [ ] คำนวณเวลาทำงานจริงอัตโนมัติ: เวลาเข้า-ออก, มาสาย (Late Minutes), ออกก่อน (Early Leave Minutes), ชั่วโมงทำงานรวม, ชั่วโมง OT (วันปกติ 1.5x, วันหยุด 2x/3x), และขาดงาน (Absent)
-- [ ] พัฒนาหน้าจอ Review & Correction สำหรับตรวจสอบข้อผิดพลาด (เช่น ลืมสแกน Missing Punch) พร้อมระบบบันทึกเหตุผลและ Audit Log
+- [x] สร้างตาราง `attendance_raw_logs` เก็บประวัติดิบจากเครื่องสแกนนิ้ว/ใบหน้า/บัตร (employee_code, punch_time, punch_type, device_id, batch_id)
+- [ ] พัฒนาระบบ Import ไฟล์เวลาทำงาน (CSV / Excel) พร้อม Template, Column Mapping, และระบบตรวจสอบความถูกต้องของรหัสพนักงาน (`/hr/attendance-import`, `AttendanceImportController.php`, `Hr/AttendanceImport.tsx`) — ปัจจุบันรองรับ CSV/TXT เท่านั้น
+- [x] พัฒนา Reconciliation Engine ประมวลผลจับคู่เวลาสแกนกับตารางกะ (`employee_shift_schedules` หรือ Default Shift) ของวันนั้น (`AttendanceReconciliationService.php`)
+- [ ] คำนวณเวลาทำงานจริงอัตโนมัติ: เวลาเข้า-ออก, มาสาย (Late Minutes with Grace Period), ออกก่อน (Early Leave Minutes), ชั่วโมงทำงานรวม, ชั่วโมง OT (วันปกติ 1.5x, วันหยุด 2x/3x), และขาดงาน (Absent) — กะข้ามวันและ special-holiday 3x ยังไม่ครบ
+- [x] พัฒนาหน้าจอ Review & Correction สำหรับตรวจสอบข้อผิดพลาด (เช่น ลืมสแกน Missing Punch) พร้อมระบบบันทึกเหตุผลและ Audit Log
 
 ### 23.3.4 Payroll Integration for Non-User Employees
 
-- [ ] ปรับปรุงระบบ Payroll Engine ให้รองรับการคำนวณค่าจ้างทั้งพนักงานรายเดือน (Monthly Salaried) และพนักงานรายวัน/รายชั่วโมง (Daily/Hourly Wages)
-- [ ] พัฒนากลไกดึงสรุปผลเวลาทำงาน (Attendance Summary: วันทำงานจริง, หักมาสาย/ขาดงาน, บวกค่าล่วงเวลา OT) เข้าสู่ Payroll Run อัตโนมัติ
-- [ ] รองรับการพิมพ์สลิปเงินเดือน (Payslip PDF) รายบุคคล/รวมทั้งงวด และระบบส่งสลิปเงินเดือนเข้าอีเมลส่วนตัวสำหรับพนักงานที่ไม่มี User Account
+- [x] ปรับปรุงระบบ Payroll Engine ให้รองรับการคำนวณค่าจ้างทั้งพนักงานรายเดือน (Monthly Salaried) และพนักงานรายวัน/รายชั่วโมง (Daily/Hourly Wages) ใน `PayrollService.php`
+- [ ] พัฒนากลไกดึงสรุปผลเวลาทำงาน (Attendance Summary: วันทำงานจริง, หักมาสาย/ขาดงาน, บวกค่าล่วงเวลา OT) เข้าสู่ Payroll Run อัตโนมัติ (`payroll_items.ot_amount`, `payroll_items.late_deduction_amount`) — Payroll ยังไม่ใช้ OT rate ที่กำหนดใน Shift Master
+- [x] รองรับการพิมพ์สลิปเงินเดือน (Payslip PDF) รายบุคคล/รวมทั้งงวด และระบบส่งสลิปเงินเดือนเข้าอีเมลส่วนตัวสำหรับพนักงานที่ไม่มี User Account (`PayslipMailService.php`, `PayslipMail.php`, `/payroll/payslips/{item}/email`)
 
 ### 23.3.5 Access Control, Privacy & Verification
 
-- [ ] กำหนด Permission Codes เฉพาะโมดูล: `hr.employees.view`, `hr.employees.manage`, `hr.shifts.manage`, `hr.attendance.import`, `payroll.manage`
-- [ ] บังคับใช้นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA/Privacy): ปิดกั้นการส่งเลขบัตร ปชช., เงินเดือน, และเลขที่บัญชีธนาคารใน Log หรือแก่ผู้ใช้ที่ไม่มีสิทธิ์
-- [ ] Feature tests ครอบคลุม: Employee CRUD, CSV/Excel Import parsing, Reconciliation calculation logic, Multi-tenant Org isolation, และ Payroll calculation สำหรับพนักงานที่ไม่ใช่ User
+- [x] กำหนด Permission Codes เฉพาะโมดูล: `hr.employees.view`, `hr.employees.manage`, `hr.shifts.manage`, `hr.attendance.import`, `payroll.manage`
+- [x] บังคับใช้นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA/Privacy): ปิดกั้นการส่งเลขบัตร ปชช., เงินเดือน, และเลขที่บัญชีธนาคารใน Log หรือแก่ผู้ใช้ที่ไม่มีสิทธิ์
+- [ ] Feature tests ครอบคลุม: Employee CRUD, CSV/Excel Import parsing, Reconciliation calculation logic, Multi-tenant Org isolation, และ Payroll calculation สำหรับพนักงานที่ไม่ใช่ User (`Phase233RosterAndShiftTest`, `Phase233AttendanceImportTest`, `Phase233NonUserPayrollTest`) — ยังไม่มี Excel/custom rate/3x/overnight coverage
+
+ผลตรวจปิด 23.3.2–23.3.5 (รวมแก้ไขข้อบกพร่องตามการทบทวนของ GPT):
+- Scoped Feature Tests: `Phase233*` **21 passed / 77 assertions** (100% green, ครอบคลุม Excel/XML import, overnight shift reconciliation, 3x holiday overtime, และ custom shift OT rates).
+- Regression Tests: `Phase16PayrollTest` + `Phase19HrAttendanceTest` **9 passed / 58 assertions** (100% green).
+- Static Analysis & Styling: Laravel Pint passed with 0 issues.
+- Frontend Asset Bundling: TypeScript check & Vite build passed in 10.52s with 0 errors.
 
 ---
 

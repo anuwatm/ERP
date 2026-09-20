@@ -10,11 +10,25 @@ class EmployeePayrollProfile extends Model
 {
     use UsesOrderedUuid;
 
-    protected $fillable = ['org_id', 'user_id', 'monthly_salary', 'fixed_allowance', 'fixed_deduction', 'annual_tax_allowance', 'tax_id', 'social_security_enabled', 'payment_method', 'payment_reference', 'status', 'updated_by'];
+    protected $fillable = [
+        'org_id', 'employee_id', 'user_id', 'monthly_salary', 'wage_type', 'daily_rate', 'hourly_rate',
+        'fixed_allowance', 'fixed_deduction', 'annual_tax_allowance', 'tax_id',
+        'social_security_enabled', 'payment_method', 'payment_reference', 'status', 'updated_by',
+    ];
 
     protected function casts(): array
     {
-        return ['social_security_enabled' => 'boolean'];
+        return [
+            'social_security_enabled' => 'boolean',
+            'daily_rate' => 'float',
+            'hourly_rate' => 'float',
+            'monthly_salary' => 'float',
+        ];
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function user(): BelongsTo

@@ -2,7 +2,7 @@
 
 สถานะ 2026-09-16: **Phase 23.1 Master Dialog Standard เสร็จสมบูรณ์ (Complete & Closed)** — มาตรฐาน Modal Create/Edit ครอบคลุม 60 หน้า 92 ไฟล์ พร้อม `useEditorCoordinator`, dirty detection ทุกฟิลด์, discard guard, และ idempotent submission; backend 311 tests / 2,575 assertions, frontend 23 tests ผ่าน 100%. ขอบเขต browser matrix B01-B08 เป็น deferred ตามที่ได้รับอนุมัติ (docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md). Phase 23.1.6 Exit Criteria ปิดเรียบร้อย.
 
-เอกสารนี้เป็นภาพรวม implementation ณ Phase 23.1. ใช้สำหรับอ่านระบบปัจจุบันร่วมกับ source code; ไม่แทน migration, route หรือ test ซึ่งเป็น source of truth ของ runtime.
+เอกสารนี้เป็นภาพรวม implementation ณ Phase 23.3 ที่ยังอยู่ระหว่างดำเนินการ. ใช้สำหรับอ่านระบบปัจจุบันร่วมกับ source code; ไม่แทน migration, route หรือ test ซึ่งเป็น source of truth ของ runtime.
 
 ## Runtime
 
@@ -35,6 +35,7 @@
 | 22 | External portals | Passwordless magic-link authentication, scoped customer quotation acceptance/invoice views, supplier PO/vendor bill intake, and private DMS access |
 | 23 | Payment gateway foundation | Thai PromptPay QR (Tag 29/30), Opn API verification, HMAC-SHA256 settlement bridge intake, idempotency replay guard, atomic payment and GL posting |
 | 23.1 | Master dialog standard | System-wide Create/Edit Modal Dialog standard (`CreateEditDialog`), single active editor coordinator (`useEditorCoordinator`), comprehensive dirty detection, discard guard, and submission idempotency across 60 pages / 92 files |
+| 23.3 | HR Employee / attendance / payroll | Employee Master แยก User, roster, CSV/TXT raw-log import/reconciliation, daily/hourly non-user payroll และ payslip email; **In progress** เพราะ Excel import, configured OT rate, 3x holiday และ overnight shifts ยังไม่ครบ |
 
 ## Current Boundaries
 
@@ -49,6 +50,7 @@
 | Notifications | `NotificationService` records a dedupe event then writes delivery records to `notification_outbox`. The dispatcher retries failures with exponential backoff up to five attempts, retaining failed records and dispatch attempts. External channels are disabled until configured and opted into by each user |
 | Gateway payments | Phase 23 closed on 2026-09-10 per user-approved scope: QR, encrypted settings, Opn adapter, signed settlement intake, dedupe and atomic Payment/GL implemented and locally verified. Actual merchant bridge and sandbox certification are deferred until connection is requested; closure does not enable live payments. See `PHASE_23_PAYMENT_GATEWAY.md`. |
 | Master dialog standard | Phase 23.1 closed on 2026-09-16 on verified scope: 60 pages / 92 files converted to `CreateEditDialog` with single active editor coordinator (`useEditorCoordinator`), dirty detection, discard guard, and submission idempotency. Comprehensive physical browser/network matrix (B01-B08) deferred per user approval. See `docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md`. |
+| HR Phase 23.3 | Do not treat Phase 23.3 as closed. CSV/TXT import is implemented, but Excel import, use of configured Shift OT rates in payroll, special-holiday 3x and overnight shift reconciliation remain open. See `PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`. |
 | Future domains | Direct e-Tax gateway, forecasting, OCR, manufacturing and POS are planned from Phase 24 onward; customer/supplier self-service portals are complete in Phase 22 |
 
 ## Source Navigation

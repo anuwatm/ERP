@@ -715,7 +715,7 @@ flowchart TD
 ---
 
 ### 6.2 Diagram: Phase 16B Payroll, Policy & GL Flow
-Phase 16B ใช้ `users` เป็น employee identity; attendance, leave และ OT ยังไม่อยู่ใน calculation scope
+Phase 16B ใช้ `users` เป็น employee identity. Phase 23.3 เพิ่ม Employee Master และ attendance input แล้ว แต่ยัง **ไม่ผ่านการปิด Phase**: Excel import, configured OT rate, 3x special holiday และ overnight shift ยังไม่ครบ. ดู [`17_hr_employee_attendance_payroll.md`](./17_hr_employee_attendance_payroll.md).
 
 ```mermaid
 flowchart TD
@@ -731,6 +731,19 @@ flowchart TD
     Approve --> Workpaper["PND1 / SSO workpaper CSV"]
     Approve --> Pay["Mark paid"]
     Pay --> GLSettlement["GL: debit payroll payable<br>credit mapped bank/cash"]
+```
+
+### 6.2A Diagram: Phase 23.3 HR Employee, Attendance & Payroll Boundary
+
+```mermaid
+flowchart LR
+    Employee["Employee\nuser optional"] --> Roster["Shift schedule"]
+    Shift["Shift Master"] --> Roster
+    Csv["CSV/TXT import"] --> Raw["Raw logs"] --> Recon["Reconciliation"]
+    Roster --> Recon --> Attendance["Attendance minutes"] --> Payroll["Payroll item"]
+    Excel["Excel import"] -. open .-> Raw
+    Shift -. "OT rate not yet applied" .-> Payroll
+    Overnight["Overnight shifts"] -. open .-> Recon
 ```
 
 ---

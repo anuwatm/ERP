@@ -26,6 +26,7 @@
 | **14** | [Approval Workflow Instance Lifecycle](#14-approval-workflow-instance-lifecycle) | Lifecycle | [`14_approval_workflow_engine.html`](./14_approval_workflow_engine.html) | [`specs/14_approval_workflow_engine.json`](./specs/14_approval_workflow_engine.json) |
 | **15** | [PromptPay Thai QR & Payment Gateway Settlement Flow](#15-promptpay-thai-qr--payment-gateway-settlement-flow) | Sequence | [`15_payment_gateway_settlement.html`](./15_payment_gateway_settlement.html) | [`specs/15_payment_gateway_settlement.json`](./specs/15_payment_gateway_settlement.json) |
 | **16** | [Master Dialog Standard & Editor Lifecycle](#16-master-dialog-standard--editor-lifecycle) | Lifecycle | [`16_master_dialog_editor_lifecycle.html`](./16_master_dialog_editor_lifecycle.html) | [`specs/16_master_dialog_editor_lifecycle.json`](./specs/16_master_dialog_editor_lifecycle.json) |
+| **17** | [HR Employee, Attendance & Payroll Integration](./17_hr_employee_attendance_payroll.md) | Workflow / dataflow | [`17_hr_employee_attendance_payroll.md`](./17_hr_employee_attendance_payroll.md) | — |
 | **All** | [Full Database ER Diagram (61+ Tables)](#17-full-database-er-diagram-61-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
 
 ---

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Attendance;
 use App\Models\EmployeePayrollProfile;
 use App\Models\PayrollItem;
 use App\Models\PayrollRun;
@@ -32,7 +33,10 @@ class PayrollService
             if (! in_array($run->status, ['draft', 'calculated'], true)) {
                 throw ValidationException::withMessages(['payroll' => 'Only draft or calculated payroll runs can be calculated.']);
             }
-            $profiles = EmployeePayrollProfile::where('org_id', $run->org_id)->where('status', 'active')->with('user:id,name,person_id')->get();
+            $profiles = EmployeePayrollProfile::where('org_id', $run->org_id)
+                ->where('status', 'active')
+                ->with(['user:id,name,person_id', 'employee:id,first_name,last_name,employee_code,employment_type'])
+                ->get();
             if ($profiles->isEmpty()) {
                 throw ValidationException::withMessages(['payroll' => 'Create at least one active employee payroll profile first.']);
             }
@@ -42,7 +46,7 @@ class PayrollService
             foreach ($profiles as $profile) {
                 $item = $this->itemPayload($run, $profile);
                 PayrollItem::create($item);
-                $totals['gross'] += $item['salary_amount'] + $item['allowance_amount'];
+                $totals['gross'] += $item['salary_amount'] + $item['allowance_amount'] + $item['ot_amount'];
                 $totals['employee_ss'] += $item['employee_social_security_amount'];
                 $totals['employer_ss'] += $item['employer_social_security_amount'];
                 $totals['tax'] += $item['withholding_tax_amount'];
@@ -57,7 +61,7 @@ class PayrollService
                 'net_pay_amount' => round($totals['net'], 2),
             ]);
 
-            return $run->fresh('items.user');
+            return $run->fresh(['items.user', 'items.employee']);
         });
     }
 
@@ -110,9 +114,64 @@ class PayrollService
 
     private function itemPayload(PayrollRun $run, EmployeePayrollProfile $profile): array
     {
-        $salary = round((float) $profile->monthly_salary, 2);
+        $profile->loadMissing('employee.workProfile.shift');
+        $employeeId = $profile->employee_id ?: ($profile->employee?->id);
+        $periodStart = Carbon::parse($run->period_start)->toDateString();
+        $periodEnd = Carbon::parse($run->period_end)->toDateString();
+
+        $attendances = Attendance::where('org_id', $run->org_id)
+            ->where(function ($q) use ($employeeId, $profile) {
+                if ($employeeId) {
+                    $q->where('employee_id', $employeeId);
+                } elseif ($profile->user_id) {
+                    $q->where('user_id', $profile->user_id);
+                }
+            })
+            ->whereBetween('work_date', [$periodStart, $periodEnd])
+            ->with(['shift'])
+            ->get();
+
+        $workedDays = $attendances->where('is_absent', false)->whereNotNull('clock_in_at')->count();
+        $workedMinutes = (int) $attendances->sum('worked_minutes');
+        $otNormalMinutes = (int) $attendances->sum('ot_normal_minutes');
+        $otHolidayMinutes = (int) $attendances->sum('ot_holiday_minutes');
+        $otSpecialMinutes = (int) $attendances->sum('ot_special_minutes');
+        $lateMinutes = (int) $attendances->sum('late_minutes');
+
+        $wageType = $profile->wage_type ?: 'monthly';
+        $monthlySalary = round((float) $profile->monthly_salary, 2);
+        $dailyRate = (float) ($profile->daily_rate ?: ($monthlySalary > 0 ? round($monthlySalary / 30, 2) : 0));
+        $hourlyRate = (float) ($profile->hourly_rate ?: ($dailyRate > 0 ? round($dailyRate / 8, 2) : ($monthlySalary > 0 ? round($monthlySalary / 240, 2) : 0)));
+
+        if ($wageType === 'daily') {
+            $salary = $workedDays > 0 ? round($workedDays * $dailyRate, 2) : $monthlySalary;
+        } elseif ($wageType === 'hourly') {
+            $salary = $workedMinutes > 0 ? round(($workedMinutes / 60) * $hourlyRate, 2) : $monthlySalary;
+        } else {
+            $salary = $monthlySalary;
+        }
+
+        $defaultShift = $profile->employee?->workProfile?->shift;
+        $totalOtAmount = 0.0;
+        foreach ($attendances as $att) {
+            $shift = $att->shift ?: $defaultShift;
+            $rateNormal = (float) ($shift?->ot_rate_normal ?: 1.50);
+            $rateHoliday = (float) ($shift?->ot_rate_holiday ?: 2.00);
+            $rateSpecial = (float) ($shift?->ot_rate_special_holiday ?: 3.00);
+
+            $normalPay = (($att->ot_normal_minutes / 60) * $hourlyRate * $rateNormal);
+            $holidayPay = (($att->ot_holiday_minutes / 60) * $hourlyRate * $rateHoliday);
+            $specialPay = ((($att->ot_special_minutes ?? 0) / 60) * $hourlyRate * $rateSpecial);
+
+            $totalOtAmount += ($normalPay + $holidayPay + $specialPay);
+        }
+
+        $otAmount = round($totalOtAmount, 2);
+        $lateDeduction = round(($lateMinutes / 60) * $hourlyRate, 2);
         $allowance = round((float) $profile->fixed_allowance, 2);
-        $gross = $salary + $allowance;
+        $other = round((float) $profile->fixed_deduction, 2);
+        $gross = max(0, $salary + $allowance + $otAmount - $lateDeduction);
+
         $socialPolicy = $run->socialSecurityPolicy;
         $employeeSs = $profile->social_security_enabled ? round(min($gross, (float) $socialPolicy->wage_ceiling) * (float) $socialPolicy->employee_rate / 100, 2) : 0;
         $employerSs = $profile->social_security_enabled ? round(min($gross, (float) $socialPolicy->wage_ceiling) * (float) $socialPolicy->employer_rate / 100, 2) : 0;
@@ -121,10 +180,39 @@ class PayrollService
         $expense = min($annualIncome * (float) $taxPolicy->employment_expense_rate / 100, (float) $taxPolicy->employment_expense_cap);
         $annualTaxable = max(0, $annualIncome - $expense - (float) $profile->annual_tax_allowance - ($employeeSs * 12));
         $withholding = round($this->progressiveTax($annualTaxable, $taxPolicy->brackets_json) / 12, 2);
-        $other = round((float) $profile->fixed_deduction, 2);
         $net = max(0, round($gross - $other - $employeeSs - $withholding, 2));
 
-        return ['org_id' => $run->org_id, 'payroll_run_id' => $run->id, 'employee_payroll_profile_id' => $profile->id, 'user_id' => $profile->user_id, 'salary_amount' => $salary, 'allowance_amount' => $allowance, 'other_deduction_amount' => $other, 'employee_social_security_amount' => $employeeSs, 'employer_social_security_amount' => $employerSs, 'withholding_tax_amount' => $withholding, 'net_pay_amount' => $net, 'calculation_snapshot' => ['annual_income' => $annualIncome, 'employment_expense' => $expense, 'annual_taxable_income' => $annualTaxable, 'tax_policy_id' => $taxPolicy->id, 'social_security_policy_id' => $socialPolicy->id, 'calculated_at' => Carbon::now()->toIso8601String()]];
+        return [
+            'org_id' => $run->org_id,
+            'payroll_run_id' => $run->id,
+            'employee_payroll_profile_id' => $profile->id,
+            'employee_id' => $employeeId,
+            'user_id' => $profile->user_id,
+            'salary_amount' => $salary,
+            'allowance_amount' => $allowance,
+            'ot_amount' => $otAmount,
+            'late_deduction_amount' => $lateDeduction,
+            'other_deduction_amount' => $other,
+            'employee_social_security_amount' => $employeeSs,
+            'employer_social_security_amount' => $employerSs,
+            'withholding_tax_amount' => $withholding,
+            'net_pay_amount' => $net,
+            'calculation_snapshot' => [
+                'wage_type' => $wageType,
+                'worked_days' => $workedDays,
+                'worked_minutes' => $workedMinutes,
+                'ot_normal_minutes' => $otNormalMinutes,
+                'ot_holiday_minutes' => $otHolidayMinutes,
+                'ot_special_minutes' => $otSpecialMinutes,
+                'late_minutes' => $lateMinutes,
+                'annual_income' => $annualIncome,
+                'employment_expense' => $expense,
+                'annual_taxable_income' => $annualTaxable,
+                'tax_policy_id' => $taxPolicy->id,
+                'social_security_policy_id' => $socialPolicy->id,
+                'calculated_at' => Carbon::now()->toIso8601String(),
+            ],
+        ];
     }
 
     private function progressiveTax(float $income, array $brackets): float

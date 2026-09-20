@@ -10,11 +10,16 @@ class EmployeeWorkProfile extends Model
 {
     use UsesOrderedUuid;
 
-    protected $fillable = ['org_id', 'user_id', 'employee_shift_id', 'manager_user_id', 'employee_code', 'employment_type', 'started_on', 'ended_on'];
+    protected $fillable = ['org_id', 'employee_id', 'user_id', 'employee_shift_id', 'manager_user_id', 'employee_code', 'employment_type', 'started_on', 'ended_on'];
 
     protected function casts(): array
     {
         return ['started_on' => 'date', 'ended_on' => 'date'];
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function user(): BelongsTo

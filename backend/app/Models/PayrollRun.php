@@ -18,6 +18,11 @@ class PayrollRun extends Model
         return ['period_start' => 'date', 'period_end' => 'date', 'payment_date' => 'date', 'approved_at' => 'datetime', 'paid_at' => 'datetime'];
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class, 'org_id');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(PayrollItem::class);

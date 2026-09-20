@@ -3,81 +3,36 @@
 | Meta | Value |
 | --- | --- |
 | Module code | `payroll` |
-| Version | Phase 16B implemented |
-| Status | Done |
-| Schema กลาง | [`../database/DATABASE.md`](../database/DATABASE.md) §8.5–8.9 |
+| Version | Phase 16B implemented; Phase 23.3 integration in progress |
+| Status | Core payroll done; attendance/shift integration not accepted |
 
----
+## หน้าที่
 
-## 1. ชื่อ Module
+- Payroll policy แบบ effective-dated, calculation snapshot, payslip PDF, PND1/SSO workpaper และ GL posting.
+- รองรับ `EmployeePayrollProfile` ที่ผูก Employee ไม่มี `user_id`; wage type `monthly`, `daily`, `hourly`.
+- Payroll item เก็บ `employee_id`, `ot_amount` และ `late_deduction_amount`; ส่ง payslip เข้า email ส่วนตัวได้.
 
-**Payroll** — เงินเดือนและสลิป
+## Data flow
 
----
-
-## 2. รายละเอียด / หน้าที่
-
-- คำนวณเงินเดือนจาก employee payroll profile ที่ active
-- ล็อก version ของ policy ภาษีและประกันสังคมตามวันสิ้นงวด
-- สร้าง payslip PDF และ workpaper CSV
-- อนุมัติรอบจ่ายและ post GL; บันทึกการจ่ายแยกจาก `VendorPayment`
-
-**ข้อควรระวัง:** เกี่ยวข้องกฎหมาย/ภาษี — ไม่ทำเต็มในระยะแรก  
-ระบบนี้เป็น operational payroll เบื้องต้น ไม่ทดแทนระบบบัญชีภาษี
-
----
-
-## 3. Workflow
-
-### 3.1 เปิดรอบจ่าย
-
-```text
-สร้าง `payroll_runs` (period_start, period_end, payment_date) status=draft
-→ lock `payroll_tax_policies` + `social_security_policies`
-→ calculate สร้าง `payroll_items` พร้อม snapshot
-→ approve + GL posting → status=approved
-→ mark paid + GL settlement → status=paid
+```mermaid
+flowchart LR
+    Employee["Employee\nuser optional"] --> Profile["Employee Payroll Profile"]
+    Attendance["Attendance minutes"] --> Calc["Payroll calculation"]
+    Profile --> Calc
+    Policy["Tax / Social policy snapshot"] --> Calc
+    Calc --> Item["Payroll Item"] --> Payslip["PDF / email"]
+    Item --> GL["Approve / Pay / GL"]
 ```
 
-### 3.2 ออก payslip
+## Route และสิทธิ์
 
-```text
-Employee ดูได้เฉพาะ `payroll_item.user_id` ของตนเอง
-→ export PDF
-→ Finance ที่มี `payroll.view` ดูได้ตาม org
-```
+| Action | Route | Permission |
+| --- | --- | --- |
+| Payroll workspace | `GET /payroll` | `payroll.view` |
+| Manage profile/run | `/payroll/profiles`, `/payroll/runs...` | `payroll.manage` + password confirm |
+| Payslip PDF | `/payroll/payslips/{payrollItem}/pdf` | owner หรือ `payroll.view` |
+| Email payslip | `POST /payroll/payslips/{payrollItem}/email` | `payroll.manage` + password confirm |
 
----
+## ช่องว่างก่อนปิด Phase 23.3
 
-## 4. Data Flow
-
-```text
-users ──1:1── employee_payroll_profiles
-                    │
-                    ▼
-policy versions ──► payroll_runs 1──* payroll_items
-                    │                 │
-                    ├──► journal_entries
-                    └──► payslip PDF / CSV workpapers
-```
-
----
-
-## 5. โครงสร้าง Database
-
-### ตารางหลัก (own)
-
-| Table | Role |
-| --- | --- |
-| `employee_payroll_profiles` | salary, fixed adjustments, payment and social-security setting per user |
-| `payroll_tax_policies` | effective-dated PIT brackets and deductions |
-| `social_security_policies` | effective-dated contribution rates and ceiling |
-| `payroll_runs` | payroll period, locked policy IDs, totals and lifecycle |
-| `payroll_items` | per-user calculation snapshot; source for payslip |
-
-### Business rules
-
-- 1 profile ต่อ run ไม่ซ้ำ (`UNIQUE(payroll_run_id, employee_payroll_profile_id)`)
-- calculated/approved/paid run แก้ profile หรือ policy ย้อนหลังไม่ได้
-- payslip ใช้ owner-or-`payroll.view` guard
-- ภ.ง.ด.1/SSO CSV เป็น workpaper ไม่ใช่ certified filing format
+Payroll ใช้ OT multiplier ตายตัว 1.5/2.0 จึงยังไม่ใช้ rate ที่ตั้งใน Shift Master และยังไม่มี special-holiday 3x. ดู [`../PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](../PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md).

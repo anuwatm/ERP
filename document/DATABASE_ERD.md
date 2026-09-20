@@ -1,6 +1,6 @@
 # ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 61+ Tables)
 
-เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 61+ ตาราง** อ้างอิงตามโครงสร้างฐานข้อมูลกลาง [`docs/database/DATABASE.md`](file:///c:/LocalDevine/www/ERP/docs/database/DATABASE.md) (Single Source of Truth) ครอบคลุมฟังก์ชันตั้งแต่ Phase 0 ถึง Phase 23.1 พร้อมคำอธิบายความสัมพันธ์, Primary Keys, Foreign Keys, Constraints, และกฎทางธุรกิจภาษาไทยอย่างละเอียด
+เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 61+ ตาราง** อ้างอิง migration runtime เป็นหลัก. ครอบคลุม Phase 0 ถึง 23.1 และมีส่วนขยาย Phase 23.3 ที่สถานะ **In progress**; รายละเอียด acceptance อยู่ใน [`../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md).
 
 ---
 
@@ -24,7 +24,8 @@
 16. [Domain 15: พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า (Customer & Supplier Self-Service Portal - Phase 22)](#16-domain-15-พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า-customer--supplier-self-service-portal---phase-22)
 17. [Domain 16: การรับชำระเงินเกตเวย์และพร้อมเพย์ (PromptPay & Payment Gateway Settlement - Phase 23)](#17-domain-16-การรับชำระเงินเกตเวย์และพร้อมเพย์-promptpay--payment-gateway-settlement---phase-23)
 18. [Domain 17: ระบบควบคุมความปลอดภัยและการส่งแบบฟอร์มซ้ำ (Idempotent Form Submissions - Phase 23.1)](#18-domain-17-ระบบควบคุมความปลอดภัยและการส่งแบบฟอร์มซ้ำ-idempotent-form-submissions---phase-231)
-19. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#19-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
+19. [Domain 18: HR Employee, Roster & Raw Attendance (Phase 23.3 In progress)](#19-domain-18-hr-employee-roster--raw-attendance-phase-233-in-progress)
+20. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#20-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
 
 ---
 
@@ -1377,7 +1378,79 @@ erDiagram
 
 ---
 
-## 19. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
+## 19. Domain 18: HR Employee, Roster & Raw Attendance (Phase 23.3 In progress)
+
+Phase 23.3 เพิ่ม schema ต่อไปนี้แล้ว แต่ยังไม่ใช่ Phase ที่ปิด: Excel import, rate propagation เข้า payroll, special-holiday 3x และ overnight shift ยังค้าง. รายละเอียดอยู่ใน [`../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md).
+
+```mermaid
+erDiagram
+    EMPLOYEES {
+        uuid id PK
+        uuid org_id FK
+        uuid user_id FK "nullable, unique per org"
+        varchar employee_code
+        varchar employment_type
+        varchar employment_status
+    }
+    EMPLOYEE_SHIFTS {
+        uuid id PK
+        uuid org_id FK
+        decimal ot_rate_normal
+        decimal ot_rate_holiday
+        decimal ot_rate_special_holiday
+    }
+    EMPLOYEE_SHIFT_SCHEDULES {
+        uuid id PK
+        uuid org_id FK
+        uuid employee_id FK
+        uuid employee_shift_id FK
+        date schedule_date
+        boolean is_day_off
+    }
+    ATTENDANCE_RAW_LOGS {
+        uuid id PK
+        uuid org_id FK
+        uuid employee_id FK
+        uuid batch_id
+        datetime punch_time
+        varchar punch_type
+        varchar status
+    }
+    ATTENDANCES {
+        uuid id PK
+        uuid org_id FK
+        uuid employee_id FK
+        uuid employee_shift_id FK
+        date work_date
+        int worked_minutes
+        int ot_normal_minutes
+        int ot_holiday_minutes
+        int ot_special_minutes
+    }
+    EMPLOYEE_PAYROLL_PROFILES {
+        uuid employee_id FK "nullable during legacy bridge"
+        varchar wage_type
+        decimal daily_rate
+        decimal hourly_rate
+    }
+    PAYROLL_ITEMS {
+        uuid employee_id FK
+        decimal ot_amount
+        decimal late_deduction_amount
+    }
+
+    USERS o|--o| EMPLOYEES : "optional account"
+    EMPLOYEES ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "scheduled"
+    EMPLOYEE_SHIFTS ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "assigned"
+    EMPLOYEES o|--o{ ATTENDANCE_RAW_LOGS : "matched punches"
+    EMPLOYEES ||--o{ ATTENDANCES : "daily records"
+    EMPLOYEES o|--o| EMPLOYEE_PAYROLL_PROFILES : "pay profile"
+    EMPLOYEES o|--o{ PAYROLL_ITEMS : "payroll result"
+```
+
+---
+
+## 20. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
 
 1. **ระบบคีย์หลัก (Primary Keys):**  
    - ทุกตารางใช้ Primary Key ชื่อ `id` เป็นชนิด **Time-Ordered UUID (UUIDv7)** เพื่อประสิทธิภาพในการทำ Indexing และป้องกันการคาดเดา ID ข้อมูล

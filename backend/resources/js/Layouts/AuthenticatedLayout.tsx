@@ -724,9 +724,36 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'Employee Directory',
+                    href: route('hr.employees.index'),
+                    active: route().current('hr.employees.*'),
+                    permission: 'hr.employees.view',
+                    icon: (
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m18 0v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
+                    ),
+                },
+                {
+                    name: 'Shift Roster',
+                    href: route('hr.roster.index'),
+                    active: route().current('hr.roster.*'),
+                    permission: 'hr.shifts.manage',
+                    icon: (
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    ),
+                },
+                {
+                    name: 'Attendance Import',
+                    href: route('hr.attendance-import.index'),
+                    active: route().current('hr.attendance-import.*'),
+                    permission: 'hr.attendance.import',
+                    icon: (
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    ),
+                },
+                {
                     name: 'HR & Attendance',
                     href: route('hr.index'),
-                    active: route().current('hr.*'),
+                    active: route().current('hr.index'),
                     permission: 'hr.self.view',
                     icon: (
                         <svg

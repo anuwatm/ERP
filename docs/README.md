@@ -4,7 +4,7 @@
 
 > สถานะเอกสาร: ไฟล์ `modules/` และ `database/DATABASE.md` ส่วนใหญ่เป็น planning baseline ของ MVP. สำหรับ implementation ปัจจุบัน ให้ยึด `backend/database/migrations`, `backend/routes/web.php`, `document/DATABASE_ERD.md`, `document/GROUPS_WORKFLOW.md` และ `checklist.md` ตามลำดับ
 
-**เริ่มอ่าน implementation ปัจจุบัน:** [`CURRENT_IMPLEMENTATION.md`](./CURRENT_IMPLEMENTATION.md)
+**เริ่มอ่าน implementation ปัจจุบัน:** [`CURRENT_IMPLEMENTATION.md`](./CURRENT_IMPLEMENTATION.md) และสถานะ HR Phase 23.3: [`PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](./PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md)
 
 **เริ่มที่:** [`../PROJECT.md`](../PROJECT.md) — นิยามโปรเจกต์ + stack + authority ของเอกสาร
 
@@ -25,6 +25,7 @@
 | [PHASE_12_ETAX_DESIGN.md](./PHASE_12_ETAX_DESIGN.md) | Phase 12 e-Tax XML generation, hash integrity, private storage & RD Prep |
 | [PHASE_13_FIXED_ASSETS_DESIGN.md](./PHASE_13_FIXED_ASSETS_DESIGN.md) | Phase 13 fixed assets register, straight-line depreciation & GL posting |
 | [PHASE_16B_PAYROLL_DESIGN.md](./PHASE_16B_PAYROLL_DESIGN.md) | Phase 16B payroll, policy, payslip and GL design |
+| [PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md](./PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md) | Phase 23.3 HR Employee Master, roster, attendance/payroll integration และ acceptance gaps |
 | [VALIDATION_RULES.md](./VALIDATION_RULES.md) | กฎ validation ฝั่ง server |
 | [PHASE_ACCEPTANCE_CRITERIA.md](./PHASE_ACCEPTANCE_CRITERIA.md) | DoD ราย Phase |
 | [ROUTES_AND_SCREENS.md](./ROUTES_AND_SCREENS.md) | หน้าและ route ราย Phase |
@@ -32,8 +33,8 @@
 | [`database/DATABASE.md`](./database/DATABASE.md) | Schema planning baseline (ไม่ใช่ schema runtime หลัง Phase 8) |
 | [`modules/README.md`](./modules/README.md) | ดัชนี module docs (31 ไฟล์) |
 | [`modules/*.md`](./modules/) | รายละเอียดต่อ module: หน้าที่, workflow, data flow, DB |
-| [`../document/index.html`](../document/index.html) | **Diagram Portal Hub** — รวม Interactive Standalone HTML Diagrams ทั้ง 13 ชุด |
-| [`../document/README.md`](../document/README.md) | สารบัญและ Mermaid Diagrams ทั้งหมด 13 ชุดหลักของระบบ |
+| [`../document/index.html`](../document/index.html) | **Diagram Portal Hub** — รวม Interactive Standalone HTML Diagrams ทั้ง 17 รายการ |
+| [`../document/README.md`](../document/README.md) | สารบัญและ Mermaid Diagrams ทั้งหมด 17 รายการหลักของระบบ |
 | [`../document/GROUPS_WORKFLOW.md`](../document/GROUPS_WORKFLOW.md) | ผังการทำงาน 6 กลุ่มโมดูลหลัก (31 Modules / 23 Diagrams) |
 | [`../document/DATABASE_ERD.md`](../document/DATABASE_ERD.md) | **Full Database ER Diagram** (50+ ตาราง ครอบคลุม 12 โดเมน) |
 | [`../ERP_FEATURE_PLAN.md`](../ERP_FEATURE_PLAN.md) | แผนยาว / backlog (authority ต่ำสุดเมื่อขัด MVP) |
@@ -52,4 +53,3 @@
 ```text
 CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 ```
-

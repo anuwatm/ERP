@@ -227,6 +227,21 @@ Create/Edit entry points ทั้งหมด 60 หน้า 92 ไฟล์�
   - `BankStatements.import` และ `ETax.generate` คง specialized action dialog flow
 - **Form Inventory & Map:** ดูรายละเอียดรายฟอร์ม 91 รายการได้ใน `docs/PHASE_23_1_FORM_INVENTORY.md`
 
+## Phase 23.3: HR Employee, Roster & Attendance Import (In progress)
+
+| Screen / Action | Route | Permission |
+| --- | --- | --- |
+| Employee Directory | `GET /hr/employees` | `hr.employees.view` |
+| Create / update Employee | `POST/PATCH /hr/employees...` | `hr.employees.manage` + password confirm |
+| Link Employee account | `PATCH /hr/employees/account/{employee}` | `hr.employees.manage` + password confirm |
+| Roster | `GET /hr/roster` | `hr.shifts.manage` |
+| Schedule / batch roster | `POST /hr/roster/schedules`, `POST /hr/roster/batch` | `hr.shifts.manage` + password confirm |
+| Attendance import/template | `GET /hr/attendance-import`, `/template` | `hr.attendance.import` |
+| Import / reconcile / correction | `POST /hr/attendance-import`, `/reconcile`, `/{attendance}/correct` | `hr.attendance.import` + password confirm |
+| Email payslip | `POST /payroll/payslips/{payrollItem}/email` | `payroll.manage` + password confirm |
+
+> Import ปัจจุบันรับ CSV/TXT เท่านั้น; Phase 23.3 ยังไม่ปิด. ดู `PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`.
+
 
 - ไม่มี user invited: แสดงปุ่ม invite.
 - ไม่มี customer: แสดงปุ่ม create customer.

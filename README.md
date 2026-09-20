@@ -10,7 +10,7 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะระบบ: **Phase 1 - 23 และ Phase 23.1 เสร็จสมบูรณ์ (Complete & Closed); Phase 23.2 กำลังตรวจรับ** ตาม [`checklist.md`](checklist.md) และ [`Phase 23.2.7 verification`](docs/PHASE_23_2_7_VERIFICATION.md); ฟีเจอร์ครอบคลุม:
+สถานะระบบ: **Phase 1 - 23 และ Phase 23.1 เสร็จสมบูรณ์ (Complete & Closed); Phase 23.2 และ 23.3 กำลังตรวจรับ/ดำเนินการ** ตาม [`checklist.md`](checklist.md), [`Phase 23.2.7 verification`](docs/PHASE_23_2_7_VERIFICATION.md) และ [`Phase 23.3 HR status`](docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md); ฟีเจอร์ครอบคลุม:
 - Foundation, Multi-tenant, Breeze Auth, RBAC 7 บทบาท, Master Data & Audit Logs
 - CRM, Sales Pipeline (Deals/Activities), Quotations, Commercial Docs (CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers)
 - Invoicing, Official PDF/Print (Invoice, Receipt, PO, 50-Tawi), Tax Reports (ภ.พ.30, ภ.ง.ด. 3/53, AR/AP Aging), VAT Compliance
@@ -38,11 +38,12 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 ระบบมีชุด Diagram สถาปัตยกรรม เวิร์กโฟลว์ และผังฐานข้อมูลฉบับสมบูรณ์ (Archify Interactive HTML + Mermaid Diagrams):
 
-* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 16 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
-* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 16 ชุดหลัก
+* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 17 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
+* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 17 ชุดหลัก
 * 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (24 Diagrams)
 * 🗄️ **[Full Database ER Diagram (61+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 17 โดเมนหลัก
 * 💰 **[Payroll Phase 16B Design](docs/PHASE_16B_PAYROLL_DESIGN.md)** — ขอบเขต payroll, policy snapshot, privacy, payslip/workpaper และ GL boundary
+* 👥 **[HR Employee, Attendance & Payroll Integration](docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md)** — สถานะ Phase 23.3, data flow และช่องว่างก่อนปิด
 * 🔄 **[Payroll Policy, Approval & GL Flow](document/11_payroll_policy_gl_flow.html)** — Interactive workflow ของการคำนวณ อนุมัติ จ่ายเงิน และลงบัญชี
 * 📂 **[DMS Document Lifecycle](document/12_document_management_lifecycle.html)** — Interactive intake, versioning และ expiry ของระบบเอกสารองค์กร (Phase 17)
 * 🔐 **[2FA TOTP & Privileged Gate Sequence](document/13_two_factor_auth_sequence.html)** — Interactive sequence ของการยืนยันตัวตนสองขั้นตอนและอุปกรณ์ที่เชื่อถือได้ (Phase 18)
@@ -90,7 +91,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Organization** | โครงสร้างบริษัท Multi-tenant, สาขา (Branch), ฝ่าย (Division), แผนก (Department) | Phase 1, 1.1 |
 | **User & Access** | จัดการผู้ใช้, คำเชิญ (Invite), RBAC Roles & Permissions, Disable/Enable ผู้ใช้ | Phase 1, 1.1 |
 | **Two-Factor Auth (2FA)** | TOTP RFC 6238, Recovery Codes, trusted device 1-90 วัน และ Role-based policy (ปิดเป็นค่าเริ่มต้น) | Phase 18 |
-| **HR & Attendance** | Employee work profile, shift, holiday, clock-in/out, leave balance/request, privacy policy และ locked payroll summary bridge | Phase 19 |
+| **HR & Attendance** | Employee Master แยก User, shift roster, CSV/TXT attendance import, reconciliation และ payroll integration สำหรับ non-user employee; Excel import, custom OT rate, 3x holiday และ overnight shift ยังไม่ปิด | Phase 19, 23.3 (In progress) |
 | **Approval Workflow** | Versioned workflow definition, threshold, user/manager/role approver, snapshot, delegation, SoD และ approval inbox | Phase 20 |
 | **Operational Notifications** | Durable outbox, retry/dead-letter, encrypted LINE/Slack/Telegram, opt-in preferences, quiet hours และ safe daily digest | Phase 21 |
 | **Audit Log** | บันทึกประวัติการทำงานสำคัญทุกจุด พร้อม Before/After Snapshot และ User Tracker | Phase 1, 1.1 |

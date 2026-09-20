@@ -3,89 +3,40 @@
 | Meta | Value |
 | --- | --- |
 | Module code | `employees` |
-| Version | V1 light, ใช้จริงขึ้นใน V2 |
-| Priority | P1 |
-| Schema กลาง | [`../database/DATABASE.md`](../database/DATABASE.md) §8.1 |
+| Version | Phase 23.3 implementation in progress |
+| Status | Implemented core; Phase ยังไม่ปิด |
+| Runtime source | `employees` migration, `EmployeeController`, `Hr/Employees.tsx` |
 
----
+## หน้าที่
 
-## 1. ชื่อ Module
+- Employee Master แยกจาก `users`; `user_id` เป็น nullable เพื่อรองรับพนักงานไม่มี ERP login.
+- เก็บรหัสพนักงาน, ชื่อ, ข้อมูลติดต่อ, ตำแหน่ง, โครงสร้างองค์กร, สถานะ/ประเภทการจ้าง และข้อมูลจ่ายเงิน.
+- `national_id` และ `bank_account_number` เข้ารหัส at rest; ห้ามส่งค่าเต็มไป log หรือ UI ที่ไม่มีสิทธิ์.
+- ผูก Employee กับ `employee_work_profiles` และ `employee_payroll_profiles` ผ่าน `employee_id` โดยยังรองรับ legacy `user_id` ระหว่างเปลี่ยนผ่าน.
+- เมื่อสถานะเป็น resigned/terminated จะปิดบัญชี user ที่ผูกอยู่และ invalidate session.
 
-**HR: Employees** — ข้อมูลพนักงาน
+## Workflow
 
----
-
-## 2. รายละเอียด / หน้าที่
-
-- ขึ้นทะเบียนพนักงาน
-- ข้อมูลติดต่อ, ตำแหน่ง, department, branch
-- employment status, start/end date
-- salary base (optional)
-- map กับ user account (`user_id`)
-- เก็บเอกสารพนักงาน (ผ่าน Files)
-
-Phase 16B payroll ใช้ `users` + `employee_payroll_profiles` โดยตรง. ตาราง `employees` และข้อมูล attendance/leave ยังเป็น scope อนาคต จึงห้ามอ้างเป็น input ของ payroll ปัจจุบัน.
-
----
-
-## 3. Workflow
-
-### 3.1 รับพนักงานใหม่
-
-```text
-HR/Admin สร้าง employee
-→ gen employee_code
-→ optional สร้าง/ผูก user login + role
-→ อัปโหลดเอกสาร
-→ status=active
+```mermaid
+flowchart LR
+    Create["สร้าง Employee"] --> Link{"ต้องมี ERP login?"}
+    Link -- ใช่ --> User["ผูก User ที่ยังว่าง"]
+    Link -- ไม่ใช่ --> Employee["Employee ไม่มี user_id"]
+    User --> Employee
+    Employee --> Profiles["Work / Payroll Profile"]
+    Employee --> Roster["Roster / Attendance"]
+    Employee --> Exit["resigned / terminated"]
+    Exit --> Disable["ปิด linked user + invalidate session"]
 ```
 
-### 3.2 ปรับตำแหน่ง/แผนก
+## Route และสิทธิ์
 
-```text
-อัปเดต position, department_id, branch_id
-→ audit
-```
+| Action | Route | Permission |
+| --- | --- | --- |
+| Directory | `GET /hr/employees` | `hr.employees.view` |
+| Create / update | `POST/PATCH /hr/employees...` | `hr.employees.manage` + password confirm |
+| Link account | `PATCH /hr/employees/account/{employee}` | `hr.employees.manage` + password confirm |
 
-### 3.3 ลาออก
+## ข้อจำกัดสถานะ
 
-```text
-employment_status=resigned, end_date
-→ optional deactivate linked user
-```
-
----
-
-## 4. Data Flow
-
-```text
-users / departments / branches
-            │
-            ▼
-        employees (planned)
-            │
-            ├──► attendances / leave_* (future)
-            └──► files (future DMS)
-
-users ──► employee_payroll_profiles ──► payroll_items (Phase 16B)
-```
-
----
-
-## 5. โครงสร้าง Database
-
-### ตารางหลัก (own)
-
-| Table | Role |
-| --- | --- |
-| `employees` | master พนักงาน |
-
-### Field สำคัญ
-
-`user_id`, `employee_code`, `first_name`, `last_name`, `position`, `department_id`, `branch_id`, `employment_status`, `start_date`, `salary_base`
-
-### Business rules
-
-- `user_id` unique ถ้ามี (1 user ต่อ 1 employee)
-- แยก employee ออกจาก users เพราะมีพนักงานที่ไม่มี login
-- salary_base เป็นข้อมูลอ่อนไหว — จำกัด permission
+Employee Master ผ่าน feature tests แล้ว แต่ Phase 23.3 รวมยังไม่ปิด; ดู [`../PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](../PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md).

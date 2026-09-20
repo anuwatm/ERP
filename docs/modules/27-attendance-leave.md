@@ -3,74 +3,36 @@
 | Meta | Value |
 | --- | --- |
 | Module code | `attendance_leave` |
-| Version | V2 |
-| Priority | P2 |
-| Schema กลาง | [`../database/DATABASE.md`](../database/DATABASE.md) §8.2–8.4 |
+| Version | Phase 19 core + Phase 23.3 extension in progress |
+| Status | CSV/TXT import and reconciliation implemented; acceptance gaps remain |
 
----
+## หน้าที่ปัจจุบัน
 
-## 1. ชื่อ Module
+- Self-service clock-in/out, leave request/balance และ attendance summary ของ Phase 19.
+- Phase 23.3 เพิ่ม raw logs, roster-driven reconciliation, late/early/worked/OT minutes, absence และ correction audit.
+- Import route รับ **CSV/TXT** และ template CSV; Excel ยังไม่รองรับ.
 
-**Attendance / Leave** — ระบบเวลาและวันลา
+## Data flow
 
----
-
-## 2. รายละเอียด / หน้าที่
-
-- Clock in / clock out
-- Leave request + approval
-- Leave balance
-- Attendance report + calendar view
-
----
-
-## 3. Workflow
-
-### 3.1 ลงเวลา
-
-```text
-Employee clock in
-→ attendances (work_date, clock_in_at)
-→ เลิกงาน clock_out_at
-→ status present/late ตาม rule
+```mermaid
+flowchart LR
+    Device["Device CSV/TXT"] --> Raw["attendance_raw_logs"]
+    Roster["employee_shift_schedules"] --> Recon["Reconciliation"]
+    Raw --> Recon
+    Recon --> Attendance["attendances"]
+    Leave["leave_requests"] --> Recon
+    Attendance --> Summary["attendance summaries / payroll input"]
 ```
 
-### 3.2 ขอลา
+## Route และสิทธิ์
 
-```text
-สร้าง leave_requests (type, date range, reason)
-→ status=pending
-→ แจ้ง approver
-→ approved/rejected
-→ ถ้า approved: บวก used_days ใน leave_balances
-```
+| Action | Route | Permission |
+| --- | --- | --- |
+| Attendance page / self service | `/hr/attendance` | `attendance.*` ตาม action |
+| Import workspace/template | `GET /hr/attendance-import...` | `hr.attendance.import` |
+| Import, reconcile, correction | `POST /hr/attendance-import...` | `hr.attendance.import` + password confirm |
 
----
+## ช่องว่างก่อนปิด
 
-## 4. Data Flow
-
-```text
-employees
-    │
-    ├──► attendances
-    ├──► leave_requests ──► leave_balances
-    └──► notifications (approval)
-```
-
----
-
-## 5. โครงสร้าง Database
-
-### ตารางหลัก (own)
-
-| Table | Role |
-| --- | --- |
-| `attendances` | ลงเวลาต่อวัน |
-| `leave_requests` | คำขอลา |
-| `leave_balances` | วันลาคงเหลือต่อปี |
-
-### Business rules
-
-- unique (employee_id, work_date)
-- leave ต้องไม่ชนช่วงที่ approved แล้ว (validate)
-- อนุมัติต้องมี permission เหมาะสม
+- Excel import, special-holiday OT 3x และกะข้ามวันยังไม่ครบ.
+- รายละเอียดและเกณฑ์ปิด: [`../PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](../PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md).
