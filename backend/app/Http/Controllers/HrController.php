@@ -34,7 +34,9 @@ class HrController extends Controller
             'workProfile' => EmployeeWorkProfile::where('org_id', $user->org_id)->where('user_id', $user->id)->with(['shift:id,name,starts_at,ends_at,work_minutes_per_day', 'manager:id,name'])->first(),
             'attendance' => Attendance::where('org_id', $user->org_id)->whereIn('user_id', $visibleUserIds)->with('user:id,name', 'shift:id,name,work_minutes_per_day')->latest('clock_in_at')->limit(100)->get(),
             'leaveBalances' => LeaveBalance::where('org_id', $user->org_id)->where('user_id', $user->id)->with('leaveType:id,name,is_paid')->orderByDesc('leave_year')->get(),
-            'leaveRequests' => LeaveRequest::where('org_id', $user->org_id)->whereIn('user_id', $visibleUserIds)->with(['user:id,name', 'leaveType:id,name,is_paid'])->latest('starts_on')->limit(100)->get(),
+            'leaveRequests' => LeaveRequest::where('org_id', $user->org_id)->whereIn('user_id', $visibleUserIds)
+                ->when($request->filled('leave_request_id'), fn ($query) => $query->where('id', $request->query('leave_request_id')))
+                ->with(['user:id,name', 'leaveType:id,name,is_paid'])->latest('starts_on')->limit(100)->get(),
             'summaries' => AttendanceSummary::where('org_id', $user->org_id)->whereIn('user_id', $visibleUserIds)->with('user:id,name')->latest('period_end')->limit(100)->get(),
             'shifts' => EmployeeShift::where('org_id', $user->org_id)->orderBy('code')->get(),
             'leaveTypes' => LeaveType::where('org_id', $user->org_id)->where('is_active', true)->orderBy('name')->get(),

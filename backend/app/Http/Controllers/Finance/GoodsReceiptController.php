@@ -31,6 +31,7 @@ class GoodsReceiptController extends Controller
 
         return Inertia::render('Finance/GoodsReceipts', [
             'goodsReceipts' => GoodsReceipt::where('org_id', $orgId)
+                ->when($request->filled('receipt_id'), fn ($query) => $query->where('id', $request->query('receipt_id')))
                 ->with(['purchaseOrder:id,po_no,supplier_id,status', 'purchaseOrder.supplier:id,name', 'items'])
                 ->latest('received_date')
                 ->latest()

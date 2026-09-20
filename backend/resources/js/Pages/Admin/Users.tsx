@@ -27,16 +27,29 @@ export default function Users({
     branches,
     divisions,
     departments,
+    filters,
+    canInviteUsers,
+    canEditUsers,
+    canDisableUsers,
 }: {
     users: UserItem[];
     roles: Option[];
     branches: Option[];
     divisions: Option[];
     departments: Option[];
+    filters?: {
+        user_id?: string;
+        status?: string;
+        role_id?: string;
+        expired?: string;
+    };
+    canInviteUsers: boolean;
+    canEditUsers: boolean;
+    canDisableUsers: boolean;
 }) {
     const [query, setQuery] = useState('');
-    const [status, setStatus] = useState('all');
-    const [roleFilter, setRoleFilter] = useState('all');
+    const [status, setStatus] = useState(filters?.status ?? 'all');
+    const [roleFilter, setRoleFilter] = useState(filters?.role_id ?? 'all');
     const [branchFilter, setBranchFilter] = useState('all');
 
     // Dialog state
@@ -83,28 +96,44 @@ export default function Users({
                     title="User Management"
                     description="Users, organization assignment, and role access"
                     actions={
-                        <PrimaryButton
-                            onClick={openInviteDialog}
-                            icon={
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                                    />
-                                </svg>
-                            }
-                        >
-                            Invite User
-                        </PrimaryButton>
+                        canInviteUsers ? (
+                            <PrimaryButton
+                                onClick={openInviteDialog}
+                                icon={
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                                        />
+                                    </svg>
+                                }
+                            >
+                                Invite User
+                            </PrimaryButton>
+                        ) : undefined
                     }
                 />
+                {(filters?.user_id ||
+                    filters?.status ||
+                    filters?.role_id ||
+                    filters?.expired) && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Dashboard filter active.{' '}
+                        <a
+                            href={route('users.index')}
+                            className="font-semibold text-indigo-700 underline dark:text-indigo-300"
+                        >
+                            Clear filter
+                        </a>
+                    </p>
+                )}
 
                 <Card
                     title="Users Directory"
@@ -161,20 +190,25 @@ export default function Users({
                         columns={[
                             {
                                 header: 'Member',
-                                accessor: (user) => (
-                                    <button
-                                        type="button"
-                                        onClick={() => openEditDialog(user)}
-                                        className="text-left group"
-                                    >
-                                        <span className="block font-semibold text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400 transition-colors">
+                                accessor: (user) =>
+                                    canEditUsers ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => openEditDialog(user)}
+                                            className="text-left group"
+                                        >
+                                            <span className="block font-semibold text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400 transition-colors">
+                                                {user.name}
+                                            </span>
+                                            <span className="text-xs text-slate-500">
+                                                {user.position || 'No position'}
+                                            </span>
+                                        </button>
+                                    ) : (
+                                        <span className="font-semibold text-slate-900 dark:text-white">
                                             {user.name}
                                         </span>
-                                        <span className="text-xs text-slate-500">
-                                            {user.position || 'No position'}
-                                        </span>
-                                    </button>
-                                ),
+                                    ),
                             },
                             {
                                 header: 'Email',
@@ -223,76 +257,81 @@ export default function Users({
                                 header: 'Actions',
                                 accessor: (user) => (
                                     <div className="flex items-center gap-2">
-                                        <SecondaryButton
-                                            onClick={() => openEditDialog(user)}
-                                        >
-                                            Edit
-                                        </SecondaryButton>
-                                        {user.status !== 'inactive' ? (
+                                        {canEditUsers && (
                                             <SecondaryButton
-                                                icon={
-                                                    <svg
-                                                        className="h-3.5 w-3.5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-                                                        />
-                                                    </svg>
-                                                }
                                                 onClick={() =>
-                                                    router.patch(
-                                                        route(
-                                                            'users.disable',
-                                                            user.id,
-                                                        ),
-                                                        {},
-                                                        {
-                                                            preserveScroll: true,
-                                                        },
-                                                    )
+                                                    openEditDialog(user)
                                                 }
                                             >
-                                                Disable
-                                            </SecondaryButton>
-                                        ) : (
-                                            <SecondaryButton
-                                                icon={
-                                                    <svg
-                                                        className="h-3.5 w-3.5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                        />
-                                                    </svg>
-                                                }
-                                                onClick={() =>
-                                                    router.patch(
-                                                        route(
-                                                            'users.enable',
-                                                            user.id,
-                                                        ),
-                                                        {},
-                                                        {
-                                                            preserveScroll: true,
-                                                        },
-                                                    )
-                                                }
-                                            >
-                                                Enable
+                                                Edit
                                             </SecondaryButton>
                                         )}
+                                        {canDisableUsers &&
+                                            (user.status !== 'inactive' ? (
+                                                <SecondaryButton
+                                                    icon={
+                                                        <svg
+                                                            className="h-3.5 w-3.5"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth="2"
+                                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                                                            />
+                                                        </svg>
+                                                    }
+                                                    onClick={() =>
+                                                        router.patch(
+                                                            route(
+                                                                'users.disable',
+                                                                user.id,
+                                                            ),
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    Disable
+                                                </SecondaryButton>
+                                            ) : (
+                                                <SecondaryButton
+                                                    icon={
+                                                        <svg
+                                                            className="h-3.5 w-3.5"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth="2"
+                                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                            />
+                                                        </svg>
+                                                    }
+                                                    onClick={() =>
+                                                        router.patch(
+                                                            route(
+                                                                'users.enable',
+                                                                user.id,
+                                                            ),
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    Enable
+                                                </SecondaryButton>
+                                            ))}
                                     </div>
                                 ),
                             },
@@ -301,18 +340,20 @@ export default function Users({
                 </Card>
             </div>
 
-            <UserDialog
-                open={dialogOpen}
-                user={editingUser}
-                roles={roles}
-                branches={branches}
-                divisions={divisions}
-                departments={departments}
-                onClose={() => {
-                    setDialogOpen(false);
-                    setEditingUser(null);
-                }}
-            />
+            {(canInviteUsers || canEditUsers) && (
+                <UserDialog
+                    open={dialogOpen}
+                    user={editingUser}
+                    roles={roles}
+                    branches={branches}
+                    divisions={divisions}
+                    departments={departments}
+                    onClose={() => {
+                        setDialogOpen(false);
+                        setEditingUser(null);
+                    }}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

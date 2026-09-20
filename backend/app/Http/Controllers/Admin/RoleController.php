@@ -18,18 +18,21 @@ use Inertia\Response;
 
 class RoleController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $orgId = auth()->user()->org_id;
+        $filters = $request->validate(['role_id' => ['nullable', 'uuid']]);
 
         return Inertia::render('Admin/Roles', [
             'roles' => Role::where('org_id', $orgId)
+                ->when($filters['role_id'] ?? null, fn ($query, $roleId) => $query->whereKey($roleId))
                 ->with(['permissions:id,code,module,action'])
                 ->withCount(['permissions', 'users'])
                 ->orderBy('code')
                 ->get(),
             'permissions' => Permission::orderBy('module')->orderBy('code')->get(['id', 'code', 'module', 'action', 'description']),
             'canManage' => auth()->user()->hasPermissionCode('roles.manage'),
+            'filters' => $filters,
         ]);
     }
 

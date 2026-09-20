@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\TwoFactorTrustedDevice;
 use App\Models\User;
 use App\Services\TwoFactorPolicyService;
+use App\Support\DashboardLanding;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,7 +57,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('two-factor.setup');
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(DashboardLanding::routeFor($user));
     }
 
     public function destroy(Request $request): RedirectResponse

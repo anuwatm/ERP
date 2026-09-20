@@ -15,6 +15,7 @@ use App\Services\FinancialJournalService;
 use App\Services\FxRateService;
 use App\Services\GatewaySettlementService;
 use App\Services\NumberSequenceService;
+use App\Support\DashboardDate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,7 @@ class InvoiceController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'status', 'customer_id', 'project_id']);
+        $filters = $request->only(['search', 'status', 'customer_id', 'project_id', 'from', 'to', 'overdue', 'aging_bucket']);
         $canViewPayments = $user->hasPermissionCode('payments.view');
         $canRecordPayments = $user->hasPermissionCode('payments.create');
         $canReversePayments = $user->hasPermissionCode('payments.reverse');
@@ -49,6 +50,19 @@ class InvoiceController extends Controller
                     ->orWhereHas('customer', fn ($customer) => $customer->where('company_name', 'like', "%{$search}%"));
             }))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when(in_array($filters['aging_bucket'] ?? null, ['no_due_date', 'current', 'days_1_30', 'days_31_60', 'days_61_plus'], true), function ($query) use ($filters) {
+                $query->whereIn('status', ['sent', 'partially_paid', 'overdue'])->where('base_balance_due', '>', 0);
+                match ($filters['aging_bucket']) {
+                    'no_due_date' => $query->whereNull('due_date'),
+                    'current' => $query->whereDate('due_date', '>=', DashboardDate::now()->startOfDay()),
+                    'days_1_30' => $query->whereDate('due_date', '<', DashboardDate::now()->startOfDay())->whereDate('due_date', '>=', DashboardDate::now()->subDays(30)->toDateString()),
+                    'days_31_60' => $query->whereDate('due_date', '<', DashboardDate::now()->subDays(30)->toDateString())->whereDate('due_date', '>=', DashboardDate::now()->subDays(60)->toDateString()),
+                    'days_61_plus' => $query->whereDate('due_date', '<', DashboardDate::now()->subDays(60)->toDateString()),
+                };
+            })
+            ->when(($filters['overdue'] ?? null) === '1', fn ($query) => $query->whereIn('status', ['sent', 'partially_paid', 'overdue'])->where('balance_due', '>', 0)->whereNotNull('due_date')->whereDate('due_date', '<', DashboardDate::now()->toDateString()))
+            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('issue_date', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('issue_date', '<=', $to))
             ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
             ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
             ->latest()

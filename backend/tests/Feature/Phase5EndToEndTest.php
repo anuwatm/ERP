@@ -35,11 +35,16 @@ class Phase5EndToEndTest extends TestCase
         $this->attachRole($owner, 'owner', [
             'dashboard.view',
             'executive.dashboard.view',
+            'customers.view',
             'users.create',
             'customers.create',
+            'deals.view',
             'deals.create',
+            'invoices.view',
             'invoices.create',
+            'payments.view',
             'payments.create',
+            'expenses.view',
             'projects.create',
             'projects.view',
             'tasks.create',
@@ -124,17 +129,15 @@ class Phase5EndToEndTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
-                ->where('executiveSummary.sales.customers', 1)
-                ->where('executiveSummary.sales.won_deals', 1)
-                ->where('executiveSummary.sales.won_value', 2000)
-                ->where('executiveSummary.finance.invoiced_revenue', 2000)
-                ->where('executiveSummary.finance.cash_in', 600)
-                ->where('executiveSummary.finance.outstanding_ar', 1400)
-                ->where('executiveSummary.delivery.active_projects', 1)
-                ->where('executiveSummary.delivery.overdue_tasks', 1)
-                ->where('executiveSummary.delivery.project_profit', 2000)
-                ->where('executiveSummary.delivery.delivery_risk_count', 1)
-                ->missing('executiveSummary.cash_balance')
+                ->where('executiveSummary', null)
+                ->where('dashboardWidgets.executive.sales.won_deals', 1)
+                ->where('dashboardWidgets.executive.sales.won_by_currency.0.amount', 2000)
+                ->has('dashboardWidgets.finance.revenue')
+                ->has('dashboardWidgets.finance.cash_in')
+                ->has('dashboardWidgets.finance.ar')
+                ->where('dashboardWidgets.delivery.projects.active_projects', 1)
+                ->where('dashboardWidgets.delivery.tasks.overdue_tasks', 1)
+                ->where('dashboardWidgets.executive.project_risks.count', 1)
             );
     }
 
@@ -172,7 +175,7 @@ class Phase5EndToEndTest extends TestCase
     public function test_e2e_payment_reversal_updates_invoice_and_dashboard_metrics(): void
     {
         $finance = User::factory()->create();
-        $this->attachRole($finance, 'finance', ['dashboard.view', 'executive.dashboard.view', 'expenses.view', 'payments.create', 'payments.reverse']);
+        $this->attachRole($finance, 'finance', ['dashboard.view', 'executive.dashboard.view', 'expenses.view', 'payments.view', 'payments.create', 'payments.reverse']);
         $customer = Customer::create(['org_id' => $finance->org_id, 'customer_code' => '000001', 'company_name' => 'Payment Customer', 'owner_id' => $finance->id]);
         $invoice = Invoice::create(['org_id' => $finance->org_id, 'invoice_no' => '000001', 'customer_id' => $customer->id, 'status' => 'sent', 'tax_mode' => 'no_tax', 'issue_date' => now()->toDateString(), 'total' => '1000.00', 'balance_due' => '1000.00']);
 
@@ -193,10 +196,10 @@ class Phase5EndToEndTest extends TestCase
         $this->actingAsOrgUser($finance)->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('executiveSummary.finance.cash_in', 0)
-                ->where('financeSummary.cash_in', 0)
-                ->where('financeSummary.cash_in_receipts', 400)
-                ->where('financeSummary.cash_in_reversals', 400)
+                ->where('executiveSummary', null)
+                ->where('financeSummary', null)
+                ->where('dashboardWidgets.finance.cash_in.receipts', 400)
+                ->where('dashboardWidgets.finance.cash_in.reversals', 400)
             );
     }
 

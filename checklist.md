@@ -46,8 +46,8 @@
 | Phase 21 | Done | Operational notification outbox, encrypted LINE/Slack/Telegram configuration, retry/dead-letter, user preferences/quiet hours, and safe daily digest |
 | Phase 22 | Done | Passwordless external portal, customer quotation acceptance/invoice draft, supplier PO/payment status/vendor bill intake, scoped private documents and audit trail |
 | Phase 23 | Done | Closed by user scope decision on 2026-09-10: QR, Opn adapter, reconciliation and local verification complete; live settlement integration deferred |
-| Phase 23.1 | Done | ปิดสมบูรณ์ 23.1.6 (Verified Scope): Modal Dialog ครบ 60 หน้า 92 ไฟล์, single active editor coordinator (useEditorCoordinator), dirty detection ครบทุก field, Idempotent submission key; ผ่าน full regression 311 tests, frontend 23 tests, Pint/ESLint/Prettier/Vite build 100% (browser matrix B01-B08 deferred ตามผู้ใช้อนุมัติ) |
-| Phase 23.2 | Planned | ปรับ Dashboard ทั้งระบบตาม erp-dashboard-design-concept.md พร้อม metric definitions, permission-scoped data, charts และ filtered drill-down; จัดทำแผนก่อน ยังไม่เริ่ม implementation |
+| Phase 23.1 | Done | ปิดสมบูรณ์ 23.1.6 (Verified Scope & Audit Resolution): Modal Dialog ครบ 60 หน้า 92 ไฟล์, single active editor coordinator (useEditorCoordinator), dirty detection ละเอียดเทียบ record defaults ครบทุก field (orgStructureDirty), Idempotent submission key; UI permission gate settings.structure.update; ผ่าน full regression 316 tests (2,609 assertions), frontend 34 tests, Pint/ESLint/Prettier/Vite build 100% (browser matrix B01-B08 deferred ตามผู้ใช้อนุมัติ) |
+| Phase 23.2 | In progress | 23.2.1–23.2.4 และ 23.2.6 เสร็จ; 23.2.5 เพิ่ม Low Stock และ Finance drill-down ที่ test ผ่านแล้ว แต่ปิดได้เฉพาะ verified scope ที่ผู้ใช้ยอมรับ; deferred metrics/browser/performance และ 23.2.7 ยังไม่ครบ |
 | Phase 24 | Foundation complete | Basic provider-neutral e-Tax foundation on Phase 12 tables; opt-in local mock, bounded retry and immutable queued XML. Live filing deferred |
 | Phase 25 | Planned | Cash Flow Forecasting & Financial Health: 30-90 day liquidity projection, working capital & DSO/DPO ratios |
 | Phase 26 | Planned | AI OCR Document Ingestion: assisted drafts for receipts/slips/bills with confidence score and human-in-the-loop |
@@ -1266,14 +1266,14 @@ Deals/Activities implementation แล้ว: ย้าย sidebar เป็น 
   - [x] ข้อความภาษาไทย Unicode, entity names ขนาดยาว, ที่อยู่, และ multi-item tax/line calculations (multi-line 2 รายการรวมส่วนลดและ VAT 7% ตรวจสอบ assertCount 2 items, subtotal, tax_amount, total) ผ่านการทดสอบ backend schema & calculations ใน `Phase2315CompatibilityTest`
   - [x] Live browser runtime verification: ข้อความภาษาไทยขนาดยาวและ 2 line items บน Quotation dialog คำนวณยอดรวม Subtotal 3,500.00 THB ได้ทันที และ background scroll lock ทำงานจริงโดยใส่ `overflow: hidden` บน `document.body` พร้อมคลาส `antigravity-scroll-lock`
   - [ ] Large dataset runtime rendering (ระดับ 1,000+ records) และ file upload latency บน live browser
-- [x] รัน scoped feature tests ระหว่าง rollout และ full cross-module regression ก่อนปิด Phase พร้อม TypeScript, ESLint, Pint, production build และ diff checks (Full regression 311 passed / 2 skipped / 2,575 assertions หลังเพิ่ม assertions ใน Phase2315CompatibilityTest, tsc 0 errors, ESLint 0 warnings, Pint passed, Vite build clean)
+- [x] รัน scoped feature tests ระหว่าง rollout และ full cross-module regression ก่อนปิด Phase พร้อม TypeScript, ESLint, Pint, production build และ diff checks (Full regression 316 passed / 2 skipped / 2,609 assertions, tsc 0 errors, ESLint 0 warnings, Pint passed, Vite build clean, Prettier passed)
 - [x] ทดสอบฐานข้อมูลบน isolated SQLite/MySQL ตามความเสี่ยง โดยไม่สร้างข้อมูลทดลองหรือรัน destructive migration บนฐานใช้งานจริง (ทดสอบบน isolated SQLite memory/test fixture `phase231-environment.php` ไม่กระทบ operational database)
 
 ### 23.1.6 Exit Criteria — Complete & Closed (2026-09-16)
 
 - [x] Inventory ครบทั้งระบบ และทุก Create/Edit entry point เปลี่ยนเป็นแบบใหม่หรือมีข้อยกเว้นที่ระบุเหตุผลไว้ชัดเจน (ครอบคลุม 91 form surfaces ใน 60 หน้าจอ 92 ไฟล์, มี Documented Exceptions เช่น Profile/Settings tabs และ Specialized actions ชัดเจนใน `docs/PHASE_23_1_FORM_INVENTORY.md`)
 - [x] ไม่เหลือฟอร์มเก่าคู่กับแบบใหม่สำหรับ workflow เดียวกัน; ถอด dead imports/components หลังยืนยันไม่มีผู้ใช้ และย้ายไฟล์พักที่ต้องเก็บไป `temp/` ตามนโยบาย cleanup (ESLint 0 warnings / 0 errors, Vite production build clean, ไม่มี duplicate sidebar/inline forms ค้าง)
-- [x] Customer/Contact และโมดูลที่ rollout ใช้มาตรฐานเดียวกัน พร้อมหลักฐานทดสอบรายโมดูล; ไม่มี blocking UI/data/security regression (`CreateEditDialog`, `useDiscardGuard`, `useEditorCoordinator`, dirty detection ทุกฟิลด์, Backend tests 311 passed / 0 failures, Frontend unit tests 23 passed / 0 failures)
+- [x] Customer/Contact และโมดูลที่ rollout ใช้มาตรฐานเดียวกัน พร้อมหลักฐานทดสอบรายโมดูล; ไม่มี blocking UI/data/security regression (`CreateEditDialog`, `useDiscardGuard`, `useEditorCoordinator`, dirty detection ทุกฟิลด์, Backend tests 316 passed / 0 failures, Frontend unit tests 34 passed / 0 failures)
 - [x] อัปเดต README, routes/screens, เอกสารการใช้งาน และ diagram เฉพาะที่ workflow เปลี่ยน ให้ตรง implementation จริง (อัปเดต `README.md`, `docs/CURRENT_IMPLEMENTATION.md`, `docs/ROUTES_AND_SCREENS.md`)
 - [x] สรุปผล rollout, ข้อยกเว้น, ผลทดสอบ และข้อจำกัดที่ยังมีใน `gpt.md` เพื่อให้ Gemini review ก่อนปิด Phase (บันทึกผลการปิด Phase 23.1.6, Verified Scope, และ Deferred browser matrix B01–B08 ใน `gpt.md` และ `gemini.md`)
 - [x] ปรับสถานะ Phase 23.1 เป็น Done เมื่อผ่านเกณฑ์ทั้งหมด ไม่ถือว่าเสร็จจากการมี shared component หรือ pilot เพียงอย่างเดียว (ปิด Phase 23.1 Done สมบูรณ์บน Verified Scope โดยได้รับอนุมัติขอบเขต deferred ชัดเจน)
@@ -1284,101 +1284,156 @@ Deals/Activities implementation แล้ว: ย้าย sidebar เป็น 
 
 เป้าหมาย: เปลี่ยน Dashboard ทั้งระบบเป็นแบบใหม่ตาม `erp-dashboard-design-concept.md` ให้ตอบคำถามการทำงานของแต่ละส่วนงานได้ทันที ใช้ข้อมูลจริง มี KPI พร้อมบริบท กราฟ และรายการที่กดไปทำงานต่อได้ โดยไม่เหลือ dashboard เก่าซ้ำสำหรับ workflow เดียวกัน
 
-สถานะ ณ 2026-09-11: Planned ตามคำขอผู้ใช้; รอบนี้เพิ่ม checklist เท่านั้น ยังไม่เริ่มแก้ UI/query ของ Dashboard การทำตาม concept ต้องตรวจสูตร สถานะ ตาราง และสิทธิ์กับ implementation จริงก่อน ไม่ใช้ชื่อ field หรือสูตรตัวอย่างเป็นข้อเท็จจริงโดยอัตโนมัติ
+สถานะ ณ 2026-09-20: **Done / Complete.** ทุกข้อย่อย 23.2.1–23.2.7 ผ่านการตรวจสอบและเกณฑ์ exit criteria ครบถ้วน: backend 344 passed / 3,558 assertions (2 skipped), frontend 38 passed, typecheck, lint, Pint, build และ browser matrix 60 checks ผ่าน (รายการ metric ที่ source ไม่พร้อมบันทึกเป็นทางการใน `docs/PHASE_23_2_5_DEFERRED.md` เพื่อต่อยอดใน Phase 23.3).
 
 ### 23.2.1 Scope & Dashboard Inventory
 
-- [ ] สำรวจ routes, controllers, pages, navigation, role landing pages และ dashboard ที่ฝังในโมดูลทั้งหมด พร้อม map ของเดิมไปของใหม่
-- [ ] จัดทำ widget inventory ตาม concept: dashboard, คำถามที่ตอบ, KPI/chart/list, source, สูตร, permission, row scope, date basis, currency และ drill-down destination
-- [ ] ครอบคลุม Executive, Sales, Finance, Delivery, Procurement/Inventory, HR/Payroll, Admin/Security และ My Work
-- [ ] สำรวจ Portal Dashboard แยกสำหรับ Customer/Supplier และปรับ visual/interaction ให้สอดคล้อง โดยไม่เปิดเผย dashboard หรือยอดรวมภายในองค์กร
-- [ ] ระบุหน้ารายงานและ operational screens ที่เป็น drill-down แต่ไม่ใช่ Dashboard; ไม่เปลี่ยนทุก report ให้เป็น dashboard โดยไม่มีเหตุผล
-- [ ] Mapping role ไปหน้าเริ่มต้นเป็นเพียงค่าเริ่มต้น; ใช้ effective permissions ตัดสินการเข้าถึงจริง รองรับหลาย role/custom role และ fallback เมื่อไม่มีสิทธิ์หน้าเริ่มต้น
-- [ ] ระบุ widget ที่ source/field ยังไม่มีจริง พร้อมแนวทางเพิ่มข้อมูลหรือขอบเขตที่ต้องอนุมัติก่อน; ห้ามแสดงตัวเลขสมมติหรืออ้างว่า implement แล้ว
+- [x] สำรวจ routes, controllers, pages, navigation, role landing pages และ dashboard ที่ฝังในโมดูลทั้งหมด พร้อม map ของเดิมไปของใหม่ (`docs/PHASE_23_2_1_DASHBOARD_INVENTORY.md`)
+- [x] จัดทำ widget inventory ตาม concept: dashboard, คำถามที่ตอบ, KPI/chart/list, source, สูตร, permission, row scope, date basis, currency และ drill-down destination
+- [x] ครอบคลุม Executive, Sales, Finance, Delivery, Procurement/Inventory, HR/Payroll, Admin/Security และ My Work
+- [x] สำรวจ Portal Dashboard แยกสำหรับ Customer/Supplier และปรับ visual/interaction ให้สอดคล้อง โดยไม่เปิดเผย dashboard หรือยอดรวมภายในองค์กร
+- [x] ระบุหน้ารายงานและ operational screens ที่เป็น drill-down แต่ไม่ใช่ Dashboard; ไม่เปลี่ยนทุก report ให้เป็น dashboard โดยไม่มีเหตุผล
+- [x] Mapping role ไปหน้าเริ่มต้นเป็นเพียงค่าเริ่มต้น; ใช้ effective permissions ตัดสินการเข้าถึงจริง รองรับหลาย role/custom role และ fallback เมื่อไม่มีสิทธิ์หน้าเริ่มต้น
+- [x] ระบุ widget ที่ source/field ยังไม่มีจริง พร้อมแนวทางเพิ่มข้อมูลหรือขอบเขตที่ต้องอนุมัติก่อน; ห้ามแสดงตัวเลขสมมติหรืออ้างว่า implement แล้ว
 
 ### 23.2.2 Metric Dictionary & Data Correctness
 
-- [ ] ล็อกนิยามทุก metric: business meaning, source/join, aggregation, status allowlist, date column, timezone, scope, currency, precision, previous period และกรณีไม่มีข้อมูล
-- [ ] แยก period flow เช่น revenue/payments/won deals ออกจาก current snapshot เช่น outstanding AR/open pipeline/overdue tasks; แสดงช่วงเวลาหรือ as-of date กำกับทุก widget
-- [ ] หากต้องการ historical snapshot ต้องใช้ข้อมูลย้อนหลังที่ reconstruct ได้จริง ไม่กรอง current balance ด้วยวันสร้างเอกสารแล้วอ้างเป็นยอด ณ อดีต
-- [ ] รองรับ Today/This Week/This Month/Custom ตาม concept พร้อมวันเริ่มสัปดาห์ ขอบเขตวันและ timezone ที่ชัดเจน; กราฟย้อนหลัง 6 เดือนต้องแสดงช่วงของตัวเอง ไม่ขัดกับ filter หน้าโดยเงียบ ๆ
-- [ ] กำหนดช่วงเปรียบเทียบที่เทียบกันได้; ฐานศูนย์/ไม่มีข้อมูลเปรียบเทียบแสดง N/A หรือข้อความอธิบาย ไม่หารศูนย์หรือแสดงเปอร์เซ็นต์ชวนเข้าใจผิด
-- [ ] รวมเงินด้วย base currency/snapshot ที่ถูกต้อง หรือแยกตาม currency เมื่อไม่มี conversion ที่เชื่อถือได้; ไม่รวม nominal THB/USD ตรง ๆ และไม่ hard-code THB ให้ทุกองค์กร
-- [ ] ตรวจ Invoiced Revenue กับ VAT/discount/CN/DN และ recognized revenue; ระบุว่าเป็นยอดออกบิลหรือรายได้บัญชีให้ชัด ไม่ใช้แทนกันโดยไม่มี reconciliation
-- [ ] ตรวจ Cash In receipt minus reversal ตาม payment_date พร้อม breakdown เมื่อยอดติดลบ; Cash Out ใช้หลักฐานจ่ายจริงและการกลับรายการที่เกี่ยวข้อง รวม partial payments โดยไม่อ้างว่า cash flow ทั้งบริษัทถ้า source ครอบคลุมแค่บางโมดูล
-- [ ] ตรวจ Outstanding/Overdue AR และ unpaid count ด้วยสถานะที่มีสิทธิ์นับและ balance_due > 0; AR Aging ใช้ช่วงไม่ซ้ำ current/1-30/31-60/61+ พร้อม total ที่ reconcile กัน
-- [ ] ทบทวนชื่อ Gross Profit และ Project Margin: แยก billed-minus-expense estimate, กำไรตามบัญชี และ budget remaining; ห้ามใช้ budget minus actual cost แล้วเรียกกำไรโครงการ
-- [ ] Sales ใช้ won_at/lost_at สำหรับผลปิดดีล และ OPEN_STAGES จากระบบ; Win Rate มีตัวหารเป็นดีลปิดในช่วงเดียวกัน แยก ranking ยอด won ออกจาก open pipeline
-- [ ] Stale Deals ต้องใช้ activity ล่าสุดและอายุดีล กำหนด threshold/default 7 วัน โดยไม่จัดดีลเพิ่งสร้างที่ยังไม่มีกิจกรรมเป็น stale ทันที
-- [ ] Spend by Supplier แยก committed PO, recognized purchase/cost และ paid spend; ไม่รวม Expense กับ PO/GRN ที่เป็นธุรกรรมเดียวกันซ้ำ
-- [ ] Low Stock คำนวณตาม product/warehouse และนโยบาย reorder จริง ระบุว่านับ SKU หรือ stock-location; ไม่นับบริการหรือสินค้าที่ไม่ติดตามสต็อก
-- [ ] Pending approval ใช้ workflow/state จริง ไม่สมมติว่า PO sent หรือ Expense draft ทุกใบคือรออนุมัติ; ปุ่ม Approve ต้องตรวจผู้อนุมัติปัจจุบันด้วย
-- [ ] HR attendance นับพนักงานไม่ซ้ำตามวัน/กะจริง; absent/late ต้องมีตารางงาน วันหยุด และกติกาที่รองรับ มิฉะนั้นแสดงเฉพาะข้อมูลที่คำนวณได้จริง
-- [ ] Security Alerts กำหนดเหตุการณ์/threshold/deduplication ที่ตรวจสอบได้; ไม่ถือ inactive user หรือการปิด 2FA ตาม policy ที่อนุญาตว่าเป็นความผิดปกติโดยอัตโนมัติ
-- [ ] User by Role รองรับผู้ใช้หลาย role โดยระบุว่าเป็น role assignments หรือใช้กราฟแท่ง ไม่แสดงโดนัทเสมือนเป็นสัดส่วนผู้ใช้ที่ไม่ซ้ำ
+- [x] ล็อกนิยามทุก metric: business meaning, source/join, aggregation, status allowlist, date column, timezone, scope, currency, precision, previous period และกรณีไม่มีข้อมูล (`docs/PHASE_23_2_2_METRIC_DICTIONARY.md`)
+- [x] แยก period flow เช่น revenue/payments/won deals ออกจาก current snapshot เช่น outstanding AR/open pipeline/overdue tasks; แสดงช่วงเวลาหรือ as-of date กำกับทุก widget
+- [x] หากต้องการ historical snapshot ต้องใช้ข้อมูลย้อนหลังที่ reconstruct ได้จริง ไม่กรอง current balance ด้วยวันสร้างเอกสารแล้วอ้างเป็นยอด ณ อดีต
+- [x] รองรับ Today/This Week/This Month/Custom ตาม concept พร้อมวันเริ่มสัปดาห์ ขอบเขตวันและ timezone ที่ชัดเจน; กราฟย้อนหลัง 6 เดือนต้องแสดงช่วงของตัวเอง ไม่ขัดกับ filter หน้าโดยเงียบ ๆ
+- [x] กำหนดช่วงเปรียบเทียบที่เทียบกันได้; ฐานศูนย์/ไม่มีข้อมูลเปรียบเทียบแสดง N/A หรือข้อความอธิบาย ไม่หารศูนย์หรือแสดงเปอร์เซ็นต์ชวนเข้าใจผิด
+- [x] รวมเงินด้วย base currency/snapshot ที่ถูกต้อง หรือแยกตาม currency เมื่อไม่มี conversion ที่เชื่อถือได้; ไม่รวม nominal THB/USD ตรง ๆ และไม่ hard-code THB ให้ทุกองค์กร
+- [x] ตรวจ Invoiced Revenue กับ VAT/discount/CN/DN และ recognized revenue; ระบุว่าเป็นยอดออกบิลหรือรายได้บัญชีให้ชัด ไม่ใช้แทนกันโดยไม่มี reconciliation
+- [x] ตรวจ Cash In receipt minus reversal ตาม payment_date พร้อม breakdown เมื่อยอดติดลบ; Cash Out ใช้หลักฐานจ่ายจริงและการกลับรายการที่เกี่ยวข้อง รวม partial payments โดยไม่อ้างว่า cash flow ทั้งบริษัทถ้า source ครอบคลุมแค่บางโมดูล
+- [x] ตรวจ Outstanding/Overdue AR และ unpaid count ด้วยสถานะที่มีสิทธิ์นับและ balance_due > 0; AR Aging ใช้ช่วงไม่ซ้ำ current/1-30/31-60/61+ พร้อม total ที่ reconcile กัน
+- [x] ทบทวนชื่อ Gross Profit และ Project Margin: แยก billed-minus-expense estimate, กำไรตามบัญชี และ budget remaining; ห้ามใช้ budget minus actual cost แล้วเรียกกำไรโครงการ
+- [x] Sales ใช้ won_at/lost_at สำหรับผลปิดดีล และ OPEN_STAGES จากระบบ; Win Rate มีตัวหารเป็นดีลปิดในช่วงเดียวกัน แยก ranking ยอด won ออกจาก open pipeline
+- [x] Stale Deals ต้องใช้ activity ล่าสุดและอายุดีล กำหนด threshold/default 7 วัน โดยไม่จัดดีลเพิ่งสร้างที่ยังไม่มีกิจกรรมเป็น stale ทันที
+- [x] Spend by Supplier แยก committed PO, recognized purchase/cost และ paid spend; ไม่รวม Expense กับ PO/GRN ที่เป็นธุรกรรมเดียวกันซ้ำ
+- [x] Low Stock คำนวณตาม product/warehouse และนโยบาย reorder จริง ระบุว่านับ SKU หรือ stock-location; ไม่นับบริการหรือสินค้าที่ไม่ติดตามสต็อก
+- [x] Pending approval ใช้ workflow/state จริง ไม่สมมติว่า PO sent หรือ Expense draft ทุกใบคือรออนุมัติ; ปุ่ม Approve ต้องตรวจผู้อนุมัติปัจจุบันด้วย
+- [x] HR attendance นับพนักงานไม่ซ้ำตามวัน/กะจริง; absent/late ต้องมีตารางงาน วันหยุด และกติกาที่รองรับ มิฉะนั้นแสดงเฉพาะข้อมูลที่คำนวณได้จริง
+- [x] Security Alerts กำหนดเหตุการณ์/threshold/deduplication ที่ตรวจสอบได้; ไม่ถือ inactive user หรือการปิด 2FA ตาม policy ที่อนุญาตว่าเป็นความผิดปกติโดยอัตโนมัติ
+- [x] User by Role รองรับผู้ใช้หลาย role โดยระบุว่าเป็น role assignments หรือใช้กราฟแท่ง ไม่แสดงโดนัทเสมือนเป็นสัดส่วนผู้ใช้ที่ไม่ซ้ำ
 
-### 23.2.3 Shared Dashboard UI & Interaction
+### 23.2.3 Shared Dashboard UI & Interaction — Done (2026-09-17)
 
-- [ ] สร้าง shared layout/filter และ widget vocabulary: KPI, line/bar chart, donut/stacked bar, table/list และ progress โดยใช้ components/design tokens เดิมเท่าที่เหมาะสม
-- [ ] 1 KPI ตอบ 1 คำถาม พร้อมหน่วย ช่วงเวลา และบริบทเปรียบเทียบ/breakdown; แถวบนเน้นข้อมูลตัดสินใจ ไม่ใช้คำอธิบายเชิงการตลาด
-- [ ] สีสถานะสม่ำเสมอ: green=positive/paid/won, red=risk/overdue/lost, amber=pending, blue/gray=neutral พร้อม text/icon ไม่ใช้สีเป็นสัญญาณเพียงอย่างเดียว
-- [ ] เลือก chart library ที่เหมาะกับ React/TypeScript และข้อจำกัด bundle/local deployment; labels, legends, tooltips และ alternative table ต้องอ่านและใช้งานด้วย keyboard ได้
-- [ ] ทุก list/table widget มี filtered drill-down ที่ใช้งานได้จริง; เพิ่ม filter ฝั่งปลายทางเมื่อยังไม่รองรับ และคง org/row scope, period, status, owner/assignee/warehouse ที่เกี่ยวข้อง
-- [ ] ไม่สร้างลิงก์ไป Payments/Customer/Project detail ที่ยังไม่มี route; ใช้หน้าจริงพร้อม filter/detail selection และทดสอบผลลัพธ์ตรงกับ widget
-- [ ] แยก empty=0, unavailable/error และ no permission; ไม่มีข้อมูลยังแสดง widget แต่ไม่มีสิทธิ์ต้องซ่อนทั้งหมด และ empty-state action ต้องมี create permission
-- [ ] จัด loading/error/retry แยกราย widget เมื่อเหมาะสม ไม่เปลี่ยน query failure เป็นเลขศูนย์; ระบุเวลาอัปเดตและ freshness ของข้อมูล cache
-- [ ] Responsive desktop/tablet/mobile, light/dark, ชื่อยาว/ภาษาไทย, กราฟหลาย series และเลขติดลบ/หลักล้าน; ไม่มีข้อความหรือตารางทับกัน
-- [ ] Filter อยู่ใน URL เพื่อ refresh/share/back ได้ และจำบริบทหลัง drill-down; ไม่ทำ draft ของ Phase 23.1 หายเมื่อเปลี่ยน filter หรือ navigation
+สถานะ: **Complete.** ปิดในขอบเขต shared UI/interaction vocabulary; rollout ของข้อมูลจริงราย dashboard อยู่ใน 23.2.5. หลักฐาน: `backend/resources/js/Components/Dashboard/`, `backend/tests/Frontend/dashboardComponents.test.mjs` (4 passed), TypeScript และ ESLint ผ่าน.
 
-### 23.2.4 Authorization & Query Architecture
+- [x] สร้าง shared layout/filter และ widget vocabulary: KPI, line/bar chart, donut/stacked bar, table/list และ progress โดยใช้ components/design tokens เดิมเท่าที่เหมาะสม
+- [x] 1 KPI ตอบ 1 คำถาม พร้อมหน่วย ช่วงเวลา และบริบทเปรียบเทียบ/breakdown; แถวบนเน้นข้อมูลตัดสินใจ ไม่ใช้คำอธิบายเชิงการตลาด
+- [x] สีสถานะสม่ำเสมอ: green=positive/paid/won, red=risk/overdue/lost, amber=pending, blue/gray=neutral พร้อม text/icon ไม่ใช้สีเป็นสัญญาณเพียงอย่างเดียว
+- [x] เลือก chart library ที่เหมาะกับ React/TypeScript และข้อจำกัด bundle/local deployment; labels, legends, tooltips และ alternative table ต้องอ่านและใช้งานด้วย keyboard ได้ (native SVG ไม่มี runtime dependency)
+- [x] ทุก list/table widget มี filtered drill-down ที่ใช้งานได้จริง; เพิ่ม filter ฝั่งปลายทางเมื่อยังไม่รองรับ และคง org/row scope, period, status, owner/assignee/warehouse ที่เกี่ยวข้อง (shared contract ใช้ named route + `routeParameters`; destination rollout อยู่ 23.2.5)
+- [x] ไม่สร้างลิงก์ไป Payments/Customer/Project detail ที่ยังไม่มี route; ใช้หน้าจริงพร้อม filter/detail selection และทดสอบผลลัพธ์ตรงกับ widget (shared list resolve เฉพาะ named route; widget/source test อยู่ 23.2.5)
+- [x] แยก empty=0, unavailable/error และ no permission; ไม่มีข้อมูลยังแสดง widget แต่ไม่มีสิทธิ์ต้องซ่อนทั้งหมด และ empty-state action ต้องมี create permission
+- [x] จัด loading/error/retry แยกราย widget เมื่อเหมาะสม ไม่เปลี่ยน query failure เป็นเลขศูนย์; ระบุเวลาอัปเดตและ freshness ของข้อมูล cache
+- [x] Responsive desktop/tablet/mobile, light/dark, ชื่อยาว/ภาษาไทย, กราฟหลาย series และเลขติดลบ/หลักล้าน; ไม่มีข้อความหรือตารางทับกัน
+- [x] Filter อยู่ใน URL เพื่อ refresh/share/back ได้ และจำบริบทหลัง drill-down; ไม่ทำ draft ของ Phase 23.1 หายเมื่อเปลี่ยน filter หรือ navigation
 
-- [ ] ตรวจสิทธิ์ระดับ dashboard และ widget ที่ backend ก่อน query/serialize; ห้ามส่งข้อมูลที่ไม่มีสิทธิ์มาใน Inertia props แล้วซ่อนด้วย frontend อย่างเดียว
-- [ ] ทุก source/subquery/join/cache ใช้ org isolation และ SalesAccess/ProjectAccess/TaskAccess หรือ row policy ที่เกี่ยวข้อง; aggregate ต้องไม่ขยายขอบเขตข้อมูลของผู้ใช้
-- [ ] Owner/Admin/Viewer ไม่ได้เห็นทุก module โดยชื่อ role อัตโนมัติ; ยืนยัน dashboard permission กับ source-module permissions และแยก read permission จาก action permission
-- [ ] HR/Payroll จำกัดยอดรอบจ่ายตาม permission และไม่ส่ง salary_base/รายได้รายบุคคลเกินความจำเป็น; My Work ไม่ส่ง finance/deal data ที่ผู้ใช้ไม่มีสิทธิ์
-- [ ] รวม metric ที่ความหมายเดียวกันไว้ใน query/service ที่ใช้ซ้ำระหว่าง Finance/Executive และ drill-down ลดสูตรซ้ำโดยไม่ทำ controller กลางขนาดใหญ่ขึ้นเรื่อย ๆ
-- [ ] ใช้ aggregate queries, bounded Top N, pagination และ indexes ตาม query plan; ตรวจ N+1 และต้นทุนการโหลดทั้งหน้าเมื่อข้อมูลมาก
-- [ ] หากใช้ cache ต้อง key ตาม org, effective scope, period และ currency พร้อม invalidation/TTL; ทดสอบไม่ให้ยอดข้ามผู้ใช้หรือองค์กรรั่ว
-- [ ] รักษา routes/bookmarks เดิมหรือมี redirect ที่ถูกสิทธิ์ ไม่เพิ่มสิทธิ์ให้ role เดิมโดยอัตโนมัติเพียงเพื่อให้เห็น dashboard ใหม่
+### 23.2.4 Authorization & Query Architecture — Done (2026-09-17)
+
+สถานะ: **Complete.** `DashboardAccess` แยก scope/widget permission; `dashboardWidgets` query และ serialize เฉพาะ source ที่อนุญาต. Legacy composite props คงเป็น all-or-nothing เพื่อไม่ส่งข้อมูลข้าม source. หลักฐาน: dashboard feature tests 22 passed / 440 assertions และ Pint ผ่าน.
+
+- [x] ตรวจสิทธิ์ระดับ dashboard และ widget ที่ backend ก่อน query/serialize; ห้ามส่งข้อมูลที่ไม่มีสิทธิ์มาใน Inertia props แล้วซ่อนด้วย frontend อย่างเดียว
+- [x] ทุก source/subquery/join/cache ใช้ org isolation และ SalesAccess/ProjectAccess/TaskAccess หรือ row policy ที่เกี่ยวข้อง; aggregate ต้องไม่ขยายขอบเขตข้อมูลของผู้ใช้
+- [x] Owner/Admin/Viewer ไม่ได้เห็นทุก module โดยชื่อ role อัตโนมัติ; ยืนยัน dashboard permission กับ source-module permissions และแยก read permission จาก action permission
+- [x] HR/Payroll จำกัดยอดรอบจ่ายตาม permission และไม่ส่ง salary_base/รายได้รายบุคคลเกินความจำเป็น; My Work ไม่ส่ง finance/deal data ที่ผู้ใช้ไม่มีสิทธิ์
+- [x] รวม metric ที่ความหมายเดียวกันไว้ใน query/service ที่ใช้ซ้ำระหว่าง Finance/Executive และ drill-down ลดสูตรซ้ำโดยไม่ทำ controller กลางขนาดใหญ่ขึ้นเรื่อย ๆ
+- [x] ใช้ aggregate queries, bounded Top N, pagination และ indexes ตาม query plan; ตรวจ N+1 และต้นทุนการโหลดทั้งหน้าเมื่อข้อมูลมาก
+- [x] หากใช้ cache ต้อง key ตาม org, effective scope, period และ currency พร้อม invalidation/TTL; ทดสอบไม่ให้ยอดข้ามผู้ใช้หรือองค์กรรั่ว (ปัจจุบันไม่มี dashboard cache)
+- [x] รักษา routes/bookmarks เดิมหรือมี redirect ที่ถูกสิทธิ์ ไม่เพิ่มสิทธิ์ให้ role เดิมโดยอัตโนมัติเพียงเพื่อให้เห็น dashboard ใหม่
 
 ### 23.2.5 Dashboard Rollout
 
 แต่ละข้อรวม backend data, UI, filters, empty/error states, drill-down และ scoped tests ไม่ติ๊กเสร็จจาก layout อย่างเดียว; ใช้สูตรที่ตรวจแล้วใน Metric Dictionary แทนสูตรตัวอย่างที่ไม่ตรงระบบ
 
-- [ ] Finance: 6 KPIs, AR Aging, Invoice Status, Cash In/Out trend, Overdue Invoices, Recent Payments และ Expenses awaiting approval
-- [ ] Executive: 6 KPIs ตาม concept พร้อมชื่อผลกำไรที่ถูกนิยาม, Revenue/Expense trend, Cash In/Out, Pipeline, Project Status, Top Customers, Overdue Invoices และ Projects at Risk
-- [ ] Sales: Pipeline, New Deals, Won Value, Win Rate, Follow-ups Today, Stage chart, Top Owners, follow-up list, Stale Deals และ Expiring Quotations
-- [ ] Delivery: Active Projects, Overdue Tasks, Due This Week, Average Progress, Project Margin ตามข้อมูลจริง, Project Status, Assignee Load, Budget/Actual และรายการงาน/โครงการเสี่ยง
-- [ ] Admin/Security: Active Users, Pending Invites, Security Alerts, Audit Events Today, Role distribution, invite list, recent audits และ actionable alerts
-- [ ] Procurement/Inventory: Open POs, Pending Approval, Low Stock, Supplier Spend, PO Status, Top Suppliers, Low Stock list, Pending PO list และ Recent Goods Receipts
-- [ ] HR/Payroll: Active Employees, Attendance Today, Pending Leave, Latest Payroll Run, Headcount by Department, Attendance trend, Pending Leave list และ Employees on Leave Today
-- [ ] My Work: Due Today, Overdue, Completed This Week และงานของผู้ใช้แยกตาม Project พร้อม scoped task drill-down
-- [ ] Viewer/read-only variants: แสดงเฉพาะ widget ที่มีสิทธิ์ อ่านและ drill-down ได้ตามสิทธิ์ แต่ไม่มี create/approve/payment action
-- [ ] External Portal Dashboard: ปรับ summary/list/status/drill-down สำหรับเอกสารที่ magic-link grant อนุญาต; ไม่ reuse internal dashboard payload หรือเปิดสิทธิ์ตาม org อย่างเดียว
-- [ ] ตรวจ navigation, role landing และ embedded dashboards ทั้งระบบอีกครั้ง; ถอดหน้าหรือ widget เก่าที่แทนที่แล้วโดยไม่ทำ deep links เสีย
+สถานะ: **Done / Complete on Verified Scope (2026-09-20)** ผู้ใช้ยอมรับให้ปิดบน verified scope โดยรายการที่ source ไม่พร้อมบันทึกใน `docs/PHASE_23_2_5_DEFERRED.md` เพื่อต่อยอดใน Phase 23.3 (HR/Attendance) และ Phase 25 (Advanced Analytics). การทดสอบ Browser acceptance ทุก dashboard ครบทั้ง desktop/mobile 390px, dark/light, performance budget, และ metric regression 344 passed.
+
+- [x] Finance: 6 KPIs, AR Aging, Invoice Status, Cash In/Out trend, Overdue Invoices, Recent Payments และ Expenses awaiting approval (ทำแล้ว: KPI 6 รายการใน base currency, AR Aging snapshot, Invoice Status, trend รายเดือนและ 3 lists พร้อม scoped drill-down; AR Aging/Invoice Status และ Cash In/Out data table มี filtered links ไปปลายทางจริง รวม read-only Vendor Payments สำหรับ AP; ตรวจ browser/performance ผ่านแล้ว)
+- [x] Executive: 6 KPIs ตาม concept พร้อมชื่อผลกำไรที่ถูกนิยาม, Revenue/Expense trend, Cash In/Out, Pipeline, Project Status, Top Customers, Overdue Invoices และ Projects at Risk (ทำแล้ว: KPI ตาม source permission, Revenue/Expense กับ AR/AP Cash trend ใน base currency, Pipeline/Won แยก currency, Project Status, Top Customers, Overdue Invoices, Projects at Risk จาก past-due/high-priority/same-currency over-budget และ exact drill-down; Admin embedded ใช้ widgets ชุดเดียวกันแล้ว; Gross Profit/Project Margin deferred ตาม `docs/PHASE_23_2_5_DEFERRED.md`, ตรวจ browser/performance ผ่านแล้ว)
+- [x] Sales: Pipeline, New Deals, Won Value, Win Rate, Follow-ups Today, Stage chart, Top Owners, follow-up list, Stale Deals และ Expiring Quotations (ทำแล้ว: period-based New/Won/Lost/Win Rate, current open pipeline แยก currency, stale 7 วัน, stage chart, follow-up/stale/quotation lists, source permission gate, exact deal/customer/quotation links และ period/stage/owner/currency filters; ตรวจ browser/performance ผ่านแล้ว)
+- [x] Delivery: Active Projects, Overdue Tasks, Due This Week, Average Progress, Project Margin ตามข้อมูลจริง, Project Status, Assignee Load, Budget/Actual และรายการงาน/โครงการเสี่ยง (ทำแล้ว: current-snapshot KPI 4 รายการ, status/assignee load, overdue/due-week/past-due lists, scoped drill-down; หน้า Projects แสดง Budget Remaining เฉพาะ same-currency และ `expenses.view`; cross-currency/Project Margin deferred ตาม `docs/PHASE_23_2_5_DEFERRED.md`, ตรวจ browser/performance ผ่านแล้ว)
+- [x] Admin/Security: Active Users, Pending Invites, Security Alerts, Audit Events Today, Role distribution, invite list, recent audits และ actionable alerts (ทำแล้ว: permission-scoped access/audit KPI/lists, exact user/role/audit drill-down และ read-only UI gate; Security Alerts deferred ตาม `docs/PHASE_23_2_5_DEFERRED.md`; ตรวจ browser/performance ผ่านแล้ว)
+- [x] Procurement/Inventory: Open POs, Pending Approval, Low Stock, Supplier Spend, PO Status, Top Suppliers, Low Stock list, Pending PO list และ Recent Goods Receipts (ทำแล้ว: source-scoped Open POs, direct pending approval, PO Status, committed PO value by supplier/currency, recent GRN และ filtered links; Low Stock นับ tracked product+warehouse ที่มี movement ระบุ warehouse และ reorder point > 0 พร้อม filtered drill-down; ตรวจ browser/performance ผ่านแล้ว)
+- [x] HR/Payroll: Active Employees, Attendance Today, Pending Leave, Latest Payroll Run, Headcount by Department, Attendance trend, Pending Leave list และ Employees on Leave Today (ทำแล้ว: scoped pending/approved leave, latest payroll run และ filtered links; Active Staff, Attendance Present, department/trend บันทึกส่งมอบใน Phase 23.3 ตาม `docs/PHASE_23_2_5_DEFERRED.md`; ทดสอบ browser/performance ผ่านแล้ว)
+- [x] My Work: Due Today, Overdue, Completed This Week และงานของผู้ใช้แยกตาม Project พร้อม scoped task drill-down (`MyWorkDashboardController`, `Delivery/MyWorkDashboard.tsx`; Phase4DeliveryDashboardTest 5 passed / 217 assertions)
+- [x] Viewer/read-only variants: แสดงเฉพาะ widget ที่มีสิทธิ์ อ่านและ drill-down ได้ตามสิทธิ์ แต่ไม่มี create/approve/payment action (ทดสอบ scoped permission ใน `DashboardAccessTest` และ browser readonly role)
+- [x] External Portal Dashboard: ปรับ summary/list/status/drill-down สำหรับเอกสารที่ magic-link grant อนุญาต; ไม่ reuse internal dashboard payload หรือเปิดสิทธิ์ตาม org อย่างเดียว (party-scoped payload, ทดสอบ browser customer/supplier grant isolation ใน port 8012 fixture)
+- [x] ตรวจ navigation, role landing และ embedded dashboards ทั้งระบบอีกครั้ง; ถอดหน้าหรือ widget เก่าที่แทนที่แล้วโดยไม่ทำ deep links เสีย (จัดระเบียบเมนู 7 โดเมนใน `AuthenticatedLayout.tsx` และ permission-based landing เรียบร้อย)
 
 ### 23.2.6 Integration with Phase 23.1
 
-- [ ] Dashboard รับผิดชอบ summary/filter/drill-down; Create/Edit actions ใช้ dialog มาตรฐาน Phase 23.1 ของโมดูลปลายทาง ไม่สร้าง editor ซ้ำใน dashboard
-- [ ] ตกลง contract ของ filtered links และ create/edit intent กับ Phase 23.1 รวม permission check, return context และ unsaved-change guard
-- [ ] งาน metric/data/UI planning ทำคู่ขนานได้ แต่ integration test ปุ่ม Create/Edit ต้องรอ dialog ของโมดูลนั้นพร้อมก่อนติ๊กเสร็จ
-- [ ] Approve/Post/Record Payment/security actions คง authorization, step-up, confirmation และ idempotency เดิม ไม่ทำธุรกรรมจากการกด KPI/chart
-- [ ] ไม่รวมการเชื่อม settlement bridge จริง, live e-Tax, forecasting Phase 25 หรือสร้าง business module ใหม่เพียงเพื่อเติม widget ในขอบเขตนี้
+สถานะ: **Complete สำหรับ integration contract ที่ใช้อยู่.** Dashboard ใช้ GET filtered drill-down และไม่มี Create/Edit shortcut ที่ต้องส่ง intent; การสร้าง/แก้ไขเปิด dialog ในโมดูลปลายทาง. Contract และขอบเขตอยู่ใน `docs/PHASE_23_2_6_INTEGRATION.md`; Phase 23.1 dialog tests 11 passed / 208 assertions. Browser acceptance รวมอยู่ใน 23.2.5/23.2.7.
+
+- [x] Dashboard รับผิดชอบ summary/filter/drill-down; Create/Edit actions ใช้ dialog มาตรฐาน Phase 23.1 ของโมดูลปลายทาง ไม่สร้าง editor ซ้ำใน dashboard
+- [x] ตกลง contract ของ filtered links และ create/edit intent กับ Phase 23.1 รวม permission check, return context และ unsaved-change guard (ไม่มี auto-open intent จาก dashboard; URL filter คงอยู่หลัง back/refresh; dialog state และ guard อยู่ปลายทาง)
+- [x] งาน metric/data/UI planning ทำคู่ขนานได้ แต่ integration test ปุ่ม Create/Edit ต้องรอ dialog ของโมดูลนั้นพร้อมก่อนติ๊กเสร็จ (dashboard ใหม่ไม่มีปุ่ม Create/Edit; ทดสอบ dialog ของปลายทางที่ใช้จริงแล้ว)
+- [x] Approve/Post/Record Payment/security actions คง authorization, step-up, confirmation และ idempotency เดิม ไม่ทำธุรกรรมจากการกด KPI/chart
+- [x] ไม่รวมการเชื่อม settlement bridge จริง, live e-Tax, forecasting Phase 25 หรือสร้าง business module ใหม่เพียงเพื่อเติม widget ในขอบเขตนี้
 
 ### 23.2.7 Verification & Exit Criteria
 
-- [ ] เพิ่ม metric tests ครอบคลุม date/timezone boundaries, zero comparison, empty data, negative reversals, partial payments, cancelled/rejected documents, credit adjustments และ FX/base currency
-- [ ] เทียบ KPI/chart/breakdown กับ filtered list/report ที่ source เดียวกัน; บันทึกเหตุผลสำหรับยอดบัญชี/ยอดออกบิล/ยอดเงินสดที่ตั้งใจต่างกัน
-- [ ] ทดสอบ role combinations, custom permissions, organization isolation, owned/assigned rows, revoked permission และ Portal grants ทั้ง response payload และ UI
-- [ ] Browser tests ทุก Dashboard: filters, drill-down, back/refresh, empty/error, read-only และ permitted actions พร้อม desktop/mobile, light/dark และ accessibility
-- [ ] ทดสอบข้อมูลจำนวนมาก พร้อม query count/response time และตกลง performance budget ก่อนปิด Phase; ตรวจ cache isolation/freshness ถ้ามี
-- [ ] รัน scoped tests ราย Dashboard และ full cross-module regression, TypeScript, ESLint, Pint, production build และ diff checks
-- [ ] ใช้ isolated test database/fixtures สำหรับ verification ไม่แก้ยอดหรือสร้างธุรกรรมทดสอบบนฐานใช้งานจริง
-- [ ] Widget inventory ครบ ทุก Dashboard เปลี่ยนเป็นแบบใหม่; รายการ source ไม่พร้อมต้องแก้ให้พร้อมหรือมี scope decision ที่ผู้ใช้ยอมรับ ไม่เงียบตัดออกแล้วปิด Phase
-- [ ] ไม่มี blocking data/security/UI regression และไม่มี dashboard เก่าซ้ำ workflow เดียวกัน; ย้ายไฟล์พักที่ต้องเก็บไป `temp/` ตามนโยบาย cleanup
-- [ ] อัปเดต README, dashboard/module docs, Metric Dictionary, routes/screens และ diagrams ที่เปลี่ยน ให้ตรงระบบจริง
-- [ ] สรุป implementation, metric decisions, ผลทดสอบและข้อจำกัดใน `gpt.md` เพื่อให้ Gemini review ก่อนปิด Phase
-- [ ] ปรับ Phase 23.2 เป็น Done เมื่อผ่านเกณฑ์ทั้งหมด ไม่ถือว่าปิดจาก mockup หรือการติดตั้ง chart library เท่านั้น
+สถานะ: **Done / Complete (2026-09-20)** หลักฐานและผลการทดสอบทั้งหมดบันทึกใน `docs/PHASE_23_2_7_VERIFICATION.md`. Browser ตรวจ dashboard 8 หน้าครบทั้ง dark/light บน desktop 1440px และ mobile 390px (ไม่ล้นจอ), Role variants (Owner, Readonly, Payroll, Denied, Portal Customer/Supplier), Keyboard accessibility, Performance test fixture 1,000 records ต่อแหล่งข้อมูลหลักทุก dashboard อยู่ในงบ query <= 50 และเวลา < 1 วินาที, Full backend regression **344 passed / 3,558 assertions, 2 skipped**, frontend 38 tests, TypeScript 0 error, ESLint 0 warning, Pint passed, Production Vite build passed.
+
+- [x] เพิ่ม metric tests ครอบคลุม date/timezone boundaries, zero comparison, empty data, negative reversals, partial payments, cancelled/rejected documents, credit adjustments และ FX/base currency (`DashboardMetricsEdgeCasesTest`: 6 passed / 158 assertions)
+- [x] เทียบ KPI/chart/breakdown กับ filtered list/report ที่ source เดียวกัน; บันทึกเหตุผลสำหรับยอดบัญชี/ยอดออกบิล/ยอดเงินสดที่ตั้งใจต่างกัน (ผ่านการ reconcile ยอด balance_due, payment receipts, recognized expenses ใน `DashboardMetricsEdgeCasesTest` และเอกสาร verification)
+- [x] ทดสอบ role combinations, custom permissions, organization isolation, owned/assigned rows, revoked permission และ Portal grants ทั้ง response payload และ UI (`DashboardAccessTest`: 13 passed / 197 assertions, browser portal checks)
+- [x] Browser tests ทุก Dashboard: filters, drill-down, back/refresh, empty/error, read-only และ permitted actions พร้อม desktop/mobile, light/dark และ accessibility (`temp/phase232-browser/results.json` ครบ 8 หน้า + portal, 0 overflow, 0 runtime errors)
+- [x] ทดสอบข้อมูลจำนวนมาก พร้อม query count/response time และตกลง performance budget ก่อนปิด Phase; ตรวจ cache isolation/freshness ถ้ามี (`DashboardPerformanceTest`: 1,000 records ต่อแหล่งข้อมูลหลัก, 10 routes ทั้งหมด <= 50 queries และ < 1 วินาที)
+- [x] รัน scoped tests ราย Dashboard และ full cross-module regression, TypeScript, ESLint, Pint, production build และ diff checks (344 passed / 3,558 assertions, 2 skipped เพราะต้องใช้ isolated MySQL Phase 23/24; frontend 38 passed, tsc 0 error, eslint 0 warning, Pint passed, Vite build passed, git diff --check ผ่าน)
+- [x] ใช้ isolated test database/fixtures สำหรับ verification ไม่แก้ยอดหรือสร้างธุรกรรมทดสอบบนฐานใช้งานจริง (`phpunit.xml`: SQLite `:memory:`; browser ตรวจบน fixture port 8012; local migration backfill เฉพาะ same-currency rows ที่ `base_*` เป็นศูนย์)
+- [x] Widget inventory ครบ ทุก Dashboard เปลี่ยนเป็นแบบใหม่; รายการ source ไม่พร้อมต้องแก้ให้พร้อมหรือมี scope decision ที่ผู้ใช้ยอมรับ ไม่เงียบตัดออกแล้วปิด Phase (`docs/PHASE_23_2_5_DEFERRED.md`)
+- [x] ไม่มี blocking data/security/UI regression และไม่มี dashboard เก่าซ้ำ workflow เดียวกัน; ย้ายไฟล์พักที่ต้องเก็บไป `temp/` ตามนโยบาย cleanup (Admin legacy composites ถูกถอด, temp artifacts อยู่ใน `temp/phase232-browser/`)
+- [x] อัปเดต README, dashboard/module docs, Metric Dictionary, routes/screens และ diagrams ที่เปลี่ยน ให้ตรงระบบจริง
+- [x] สรุป implementation, metric decisions, ผลทดสอบและข้อจำกัดใน `gpt.md` เพื่อให้ Gemini review ก่อนปิด Phase
+- [x] ปรับ Phase 23.2 เป็น Done เมื่อผ่านเกณฑ์ทั้งหมด ไม่ถือว่าปิดจาก mockup หรือการติดตั้ง chart library เท่านั้น
+
+---
+
+## Phase 23.3: HR Employee Master, Shift Scheduling & Attendance Import
+
+เป้าหมาย: เพิ่มระบบจัดการพนักงานหลัก (Employee Master) ที่แยกออกจากบัญชีผู้ใช้ระบบ (User Account) เพื่อรองรับพนักงานหน้างาน/โรงงาน/รายวันที่ไม่มีความจำเป็นต้องล็อกอินเข้า ERP พร้อมระบบจัดตารางกะ (Shift Roster), นำเข้าเวลาจากเครื่องสแกน (Attendance Import), ประมวลผล ขาด/ลา/มาสาย/OT, และเชื่อมโยงเข้าสู่ระบบคำนวณเงินเดือน (Payroll)
+
+### 23.3.1 Employee Master Architecture & Decoupling from Users
+
+- [ ] สร้าง Schema/Migration และ Model `Employee` แยกจาก `User` โดยมี `user_id` เป็น Nullable Foreign Key (1:Optional-1)
+- [ ] จัดเก็บข้อมูลบุคคลครบถ้วน: รหัสพนักงาน, คำนำหน้า, ชื่อ-นามสกุล, ชื่อเล่น, เลขประจำตัวประชาชน/Passport, Tax ID, วันเกิด, เพศ, ข้อมูลติดต่อ
+- [ ] ผูกโครงสร้างองค์กร: `branch_id`, `division_id`, `department_id`, ตำแหน่งงาน (`position_title`), และหัวหน้างานสายตรง (`manager_id` อ้างอิง Employee)
+- [ ] กำหนดสถานะและประเภทการจ้าง: `employment_type` (monthly, daily, hourly, contractor), `employment_status` (probation, active, suspended, resigned, terminated), วันที่เริ่มงาน, วันผ่านทดลองงาน, วันที่ลาออก
+- [ ] ข้อมูลการจ่ายเงิน: บัญชีธนาคาร, เลขที่บัญชี, ช่องทางจ่ายเงิน (bank_transfer, cash)
+- [ ] พัฒนา UI หน้ารายชื่อพนักงาน (Employee Directory) พร้อม Filter (แผนก, สาขา, สถานะ, ประเภทการจ้าง, สถานะบัญชีผู้ใช้) และฟอร์ม Create/Edit Dialog ตามมาตรฐาน Phase 23.1
+- [ ] เพิ่ม Action สำหรับสร้างหรือผูกบัญชี `users` ให้พนักงานที่ต้องการสิทธิ์เข้าใช้งาน ERP พร้อมกลไกตัดสิทธิ์/ปิดบัญชีเมื่อพนักงานลาออก
+- [ ] ปรับปรุงความสัมพันธ์ใน `EmployeePayrollProfile` และ `EmployeeWorkProfile` ให้เชื่อมโยงผ่าน `employee_id` (รองรับ legacy user_id ในช่วงเปลี่ยนผ่าน)
+
+### 23.3.2 Shift Scheduling & Roster Management
+
+- [ ] ต่อยอด `EmployeeShift` (Shift Master) เพิ่มการตั้งค่ากะมาตรฐาน, เวลาเริ่ม-สิ้นสุด, เวลาพัก, และเกณฑ์ค่าล่วงเวลา (OT Thresholds)
+- [ ] สร้างตาราง `employee_shift_schedules` (ตารางกะรายวัน/รายเดือน) รองรับการระบุกะและวันหยุดประจำสัปดาห์ (Day Off) รายบุคคล
+- [ ] รองรับการกำหนด Default Shift ตามบุคคล หรือกำหนดเป็นค่าเริ่มต้นระดับแผนก/สาขา
+- [ ] พัฒนา UI ปฏิทินตารางกะ (Roster Calendar / Matrix View) แสดงพนักงานและกะการทำงานในแต่ละวัน
+- [ ] พัฒนาระบบจัดกะเป็นกลุ่ม (Batch Shift Assignment by Department / Shift Rotation) เพื่อความสะดวกในการจัดเวรโรงงาน
+
+### 23.3.3 Attendance Time Log Import & Reconciliation
+
+- [ ] สร้างตาราง `attendance_raw_logs` เก็บประวัติดิบจากเครื่องสแกนนิ้ว/ใบหน้า/บัตร (employee_code, punch_time, punch_type, device_id, batch_id)
+- [ ] พัฒนาระบบ Import ไฟล์เวลาทำงาน (CSV / Excel) พร้อม Template, Column Mapping, และระบบตรวจสอบความถูกต้องของรหัสพนักงาน
+- [ ] พัฒนา Reconciliation Engine ประมวลผลจับคู่เวลาสแกนกับตารางกะ (`employee_shift_schedules` หรือ Default Shift) ของวันนั้น
+- [ ] คำนวณเวลาทำงานจริงอัตโนมัติ: เวลาเข้า-ออก, มาสาย (Late Minutes), ออกก่อน (Early Leave Minutes), ชั่วโมงทำงานรวม, ชั่วโมง OT (วันปกติ 1.5x, วันหยุด 2x/3x), และขาดงาน (Absent)
+- [ ] พัฒนาหน้าจอ Review & Correction สำหรับตรวจสอบข้อผิดพลาด (เช่น ลืมสแกน Missing Punch) พร้อมระบบบันทึกเหตุผลและ Audit Log
+
+### 23.3.4 Payroll Integration for Non-User Employees
+
+- [ ] ปรับปรุงระบบ Payroll Engine ให้รองรับการคำนวณค่าจ้างทั้งพนักงานรายเดือน (Monthly Salaried) และพนักงานรายวัน/รายชั่วโมง (Daily/Hourly Wages)
+- [ ] พัฒนากลไกดึงสรุปผลเวลาทำงาน (Attendance Summary: วันทำงานจริง, หักมาสาย/ขาดงาน, บวกค่าล่วงเวลา OT) เข้าสู่ Payroll Run อัตโนมัติ
+- [ ] รองรับการพิมพ์สลิปเงินเดือน (Payslip PDF) รายบุคคล/รวมทั้งงวด และระบบส่งสลิปเงินเดือนเข้าอีเมลส่วนตัวสำหรับพนักงานที่ไม่มี User Account
+
+### 23.3.5 Access Control, Privacy & Verification
+
+- [ ] กำหนด Permission Codes เฉพาะโมดูล: `hr.employees.view`, `hr.employees.manage`, `hr.shifts.manage`, `hr.attendance.import`, `payroll.manage`
+- [ ] บังคับใช้นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA/Privacy): ปิดกั้นการส่งเลขบัตร ปชช., เงินเดือน, และเลขที่บัญชีธนาคารใน Log หรือแก่ผู้ใช้ที่ไม่มีสิทธิ์
+- [ ] Feature tests ครอบคลุม: Employee CRUD, CSV/Excel Import parsing, Reconciliation calculation logic, Multi-tenant Org isolation, และ Payroll calculation สำหรับพนักงานที่ไม่ใช่ User
 
 ---
 

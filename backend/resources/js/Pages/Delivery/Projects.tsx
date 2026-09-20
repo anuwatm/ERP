@@ -39,7 +39,7 @@ type Project = {
     progress_percent: number;
     budget_amount: string;
     actual_cost?: string;
-    gross_margin?: string;
+    budget_remaining?: string;
     currency: string;
     note?: string | null;
     customer?: Customer | null;
@@ -56,6 +56,9 @@ export default function Projects({
     statuses,
     canSeeAllProjects,
     canReassignProjects,
+    canCreateProjects,
+    canUpdateProjects,
+    filters,
 }: {
     projects: Project[];
     customers: Customer[];
@@ -65,6 +68,8 @@ export default function Projects({
     filters: Record<string, string | null>;
     canSeeAllProjects: boolean;
     canReassignProjects: boolean;
+    canCreateProjects: boolean;
+    canUpdateProjects: boolean;
 }) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -80,14 +85,27 @@ export default function Projects({
                     title="Projects"
                     description="Delivery projects from won deals or manual work."
                     actions={
-                        <PrimaryButton
-                            type="button"
-                            onClick={() => setIsCreateOpen(true)}
-                        >
-                            + New Project
-                        </PrimaryButton>
+                        canCreateProjects ? (
+                            <PrimaryButton
+                                type="button"
+                                onClick={() => setIsCreateOpen(true)}
+                            >
+                                + New Project
+                            </PrimaryButton>
+                        ) : undefined
                     }
                 />
+                {Object.values(filters).some(Boolean) && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Dashboard filter active.{' '}
+                        <a
+                            href={route('projects.index')}
+                            className="font-semibold text-indigo-700 underline dark:text-indigo-300"
+                        >
+                            Clear filter
+                        </a>
+                    </p>
+                )}
 
                 <ProjectEditorDialog
                     open={isCreateOpen || editingProject !== null}
@@ -178,12 +196,16 @@ export default function Projects({
                             {
                                 header: 'Actual Cost',
                                 accessor: (row) =>
-                                    `${money(row.actual_cost ?? '0.00')} ${row.currency}`,
+                                    row.actual_cost === undefined
+                                        ? 'Unavailable'
+                                        : `${money(row.actual_cost)} ${row.currency}`,
                             },
                             {
-                                header: 'Margin',
+                                header: 'Budget Remaining',
                                 accessor: (row) =>
-                                    `${money(row.gross_margin ?? row.budget_amount)} ${row.currency}`,
+                                    row.budget_remaining === undefined
+                                        ? 'Unavailable'
+                                        : `${money(row.budget_remaining)} ${row.currency}`,
                             },
                             {
                                 header: 'Due',
@@ -202,22 +224,28 @@ export default function Projects({
                                 header: 'Actions',
                                 accessor: (row) => (
                                     <div className="flex flex-wrap gap-2">
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() =>
-                                                setEditingProject(row)
-                                            }
-                                        >
-                                            Edit
-                                        </SecondaryButton>
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() =>
-                                                setManagingMembersProject(row)
-                                            }
-                                        >
-                                            Members
-                                        </SecondaryButton>
+                                        {canUpdateProjects && (
+                                            <SecondaryButton
+                                                type="button"
+                                                onClick={() =>
+                                                    setEditingProject(row)
+                                                }
+                                            >
+                                                Edit
+                                            </SecondaryButton>
+                                        )}
+                                        {canUpdateProjects && (
+                                            <SecondaryButton
+                                                type="button"
+                                                onClick={() =>
+                                                    setManagingMembersProject(
+                                                        row,
+                                                    )
+                                                }
+                                            >
+                                                Members
+                                            </SecondaryButton>
+                                        )}
                                     </div>
                                 ),
                             },

@@ -3,7 +3,7 @@ import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
 type AuditActor = {
     id: string;
@@ -34,7 +34,20 @@ function formatJson(value?: Record<string, unknown> | null) {
     );
 }
 
-export default function AuditLogs({ auditLogs }: { auditLogs: Audit[] }) {
+export default function AuditLogs({
+    auditLogs,
+    filters,
+}: {
+    auditLogs: Audit[];
+    filters?: {
+        audit_id?: string;
+        action?: string;
+        from?: string;
+        to?: string;
+        window?: string;
+        sensitive?: string;
+    };
+}) {
     return (
         <AuthenticatedLayout>
             <Head title="System Audit Logs" />
@@ -44,6 +57,22 @@ export default function AuditLogs({ auditLogs }: { auditLogs: Audit[] }) {
                     title="Audit & Event Trail"
                     description="Immutable security log of authentication, role edits, and sensitive tenant events."
                 />
+                {(filters?.audit_id ||
+                    filters?.action ||
+                    filters?.from ||
+                    filters?.to ||
+                    filters?.window ||
+                    filters?.sensitive) && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Dashboard filter active.{' '}
+                        <Link
+                            href={route('audit-logs.index')}
+                            className="font-semibold text-indigo-700 underline dark:text-indigo-300"
+                        >
+                            Clear filter
+                        </Link>
+                    </p>
+                )}
 
                 <Card
                     title="System Audit Events"

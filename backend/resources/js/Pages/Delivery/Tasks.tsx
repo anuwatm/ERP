@@ -54,6 +54,7 @@ export default function Tasks({
     priorities,
     canCreateTasks,
     canUpdateTasks,
+    filters,
 }: {
     tasks: Task[];
     projects: Project[];
@@ -106,6 +107,17 @@ export default function Tasks({
                         )
                     }
                 />
+                {Object.values(filters).some(Boolean) && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Dashboard filter active.{' '}
+                        <a
+                            href={route('tasks.index')}
+                            className="font-semibold text-indigo-700 underline dark:text-indigo-300"
+                        >
+                            Clear filter
+                        </a>
+                    </p>
+                )}
 
                 <TaskEditorDialog
                     open={isCreateOpen || editingTask !== null}

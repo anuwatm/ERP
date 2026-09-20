@@ -1,491 +1,379 @@
-import Badge from '@/Components/UI/Badge';
+import {
+    DashboardChart,
+    DashboardFilterBar,
+    DashboardKpiCard,
+    DashboardLayout,
+    DashboardList,
+} from '@/Components/Dashboard';
+import type { DashboardFilter } from '@/Components/Dashboard';
 import Card from '@/Components/UI/Card';
-import DataTable from '@/Components/UI/DataTable';
-import PageHeader from '@/Components/UI/PageHeader';
-import StatCard from '@/Components/UI/StatCard';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
 type Summary = {
-    customers: number;
-    active_customers: number;
-    open_deals: number;
-    pipeline_value: number;
-    won_deals: number;
-    lost_deals: number;
-    follow_ups_today: number;
-    stale_deals: number;
+    customers: number | null;
+    active_customers: number | null;
+    open_deals: number | null;
+    new_deals: number | null;
+    won_deals: number | null;
+    lost_deals: number | null;
+    win_rate: number | null;
+    follow_ups_today: number | null;
+    stale_deals: number | null;
 };
-
-type PipelineRow = {
-    stage: string;
-    count: number;
-    value: number;
-};
-
-type OwnerRow = {
+type MoneyRow = { currency: string; value: number };
+type PipelineRow = MoneyRow & { stage: string; count: number };
+type OwnerRow = MoneyRow & {
     owner: string;
-    deals_count: number;
-    pipeline_value: number;
+    owner_id: string | null;
+    count: number;
+};
+type FollowUp = {
+    id: string;
+    subject: string | null;
+    entity_type: string;
+    entity_id: string;
+    customer_id: string | null;
+    follow_up_at: string;
+};
+type StaleDeal = {
+    id: string;
+    title: string;
+    stage: string;
+    created_at: string;
+    last_activity_at: string | null;
+};
+type ExpiringQuotation = {
+    id: string;
+    quotation_no: string;
+    valid_until: string;
 };
 
 export default function SalesDashboard({
+    filters,
     summary,
     pipelineByStage,
+    wonValues,
     topOwners,
+    followUps,
+    staleDeals,
+    expiringQuotations,
+    visibility,
 }: {
+    filters: DashboardFilter;
     summary: Summary;
     pipelineByStage: PipelineRow[];
+    wonValues: MoneyRow[];
     topOwners: OwnerRow[];
+    followUps: FollowUp[];
+    staleDeals: StaleDeal[];
+    expiringQuotations: ExpiringQuotation[];
+    visibility: { deals: boolean; customers: boolean; quotations: boolean };
 }) {
+    const periodLabel =
+        filters.period === 'all_time'
+            ? 'All time'
+            : `${filters.from} – ${filters.to}`;
+    const stageCounts = Object.entries(
+        pipelineByStage.reduce<Record<string, number>>((counts, row) => {
+            counts[row.stage] = (counts[row.stage] ?? 0) + row.count;
+            return counts;
+        }, {}),
+    ).map(([label, value]) => ({ label, value }));
+    const range: { from?: string; to?: string } =
+        filters.period === 'all_time'
+            ? {}
+            : { from: filters.from, to: filters.to };
     const cards = [
         {
-            title: 'Customers',
+            question: 'Customers',
             value: summary.customers,
-            color: 'bg-indigo-50 text-indigo-600',
+            visible: visibility.customers,
+            context: 'Current snapshot',
         },
         {
-            title: 'Active Customers',
+            question: 'Active Customers',
             value: summary.active_customers,
-            color: 'bg-emerald-50 text-emerald-600',
+            visible: visibility.customers,
+            context: 'Current snapshot',
         },
         {
-            title: 'Open Deals',
+            question: 'Open Deals',
             value: summary.open_deals,
-            color: 'bg-sky-50 text-sky-600',
+            visible: visibility.deals,
+            context: 'Current snapshot',
         },
         {
-            title: 'Pipeline Value',
-            value: summary.pipeline_value.toLocaleString(),
-            color: 'bg-blue-50 text-blue-600',
+            question: 'New Deals',
+            value: summary.new_deals,
+            visible: visibility.deals,
+            context: periodLabel,
         },
         {
-            title: 'Won Deals',
+            question: 'Won Deals',
             value: summary.won_deals,
-            color: 'bg-green-50 text-green-600',
+            visible: visibility.deals,
+            context: periodLabel,
         },
         {
-            title: 'Lost Deals',
+            question: 'Lost Deals',
             value: summary.lost_deals,
-            color: 'bg-rose-50 text-rose-600',
+            visible: visibility.deals,
+            context: periodLabel,
         },
         {
-            title: 'Follow-ups Today',
+            question: 'Win Rate',
+            value: summary.win_rate === null ? 'N/A' : `${summary.win_rate}%`,
+            visible: visibility.deals,
+            context: `Won / closed deals · ${periodLabel}`,
+        },
+        {
+            question: 'Follow-ups Today',
             value: summary.follow_ups_today,
-            color: 'bg-amber-50 text-amber-600',
+            visible: visibility.deals,
+            context: 'Incomplete activities due today',
         },
         {
-            title: 'Stale Deals',
+            question: 'Stale Deals',
             value: summary.stale_deals,
-            color: 'bg-orange-50 text-orange-600',
+            visible: visibility.deals,
+            context: 'Open, at least 7 days old, no activity in 7 days',
         },
     ];
 
     return (
         <AuthenticatedLayout>
             <Head title="Sales Dashboard" />
-
-            <div className="space-y-6">
-                <PageHeader
-                    title="Sales Dashboard"
-                    description="CRM summary, pipeline health, follow-ups, and stale deal monitor."
-                    actions={<Badge variant="info">Phase 2 Sales Only</Badge>}
+            <DashboardLayout
+                title="Sales Dashboard"
+                description="Pipeline, closed deals and work requiring follow-up."
+            >
+                <DashboardFilterBar
+                    routeName="sales.dashboard"
+                    value={filters}
                 />
-
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {cards.map((card) => (
-                        <StatCard
-                            key={card.title}
-                            title={card.title}
-                            value={card.value}
-                            iconBgColor={card.color}
-                        />
-                    ))}
+                    {cards
+                        .filter((card) => card.visible)
+                        .map((card) => (
+                            <DashboardKpiCard
+                                key={card.question}
+                                question={card.question}
+                                value={card.value ?? 'N/A'}
+                                context={card.context}
+                                tone={
+                                    card.question === 'Stale Deals' ||
+                                    card.question === 'Lost Deals'
+                                        ? 'risk'
+                                        : 'neutral'
+                                }
+                            />
+                        ))}
                 </div>
-
-                <SalesActionAlerts summary={summary} />
-
-                <div className="grid gap-6 xl:grid-cols-2">
-                    <Card
-                        title="Deals Pipeline"
-                        description="Deal count and value by stage"
+                {visibility.deals && (
+                    <nav
+                        aria-label="Sales KPI details"
+                        className="flex flex-wrap gap-4 text-sm"
                     >
-                        <PipelineFunnel rows={pipelineByStage} />
-                        <div className="mt-5">
-                            <DataTable
-                                data={pipelineByStage}
-                                keyExtractor={(row) => row.stage}
-                                columns={[
-                                    {
-                                        header: 'Stage',
-                                        accessor: (row) => (
-                                            <Badge
-                                                variant={
-                                                    row.stage === 'won'
-                                                        ? 'success'
-                                                        : row.stage === 'lost'
-                                                          ? 'danger'
-                                                          : 'info'
-                                                }
-                                            >
-                                                {row.stage}
-                                            </Badge>
-                                        ),
-                                    },
-                                    {
-                                        header: 'Deals',
-                                        accessor: (row) => row.count,
-                                    },
-                                    {
-                                        header: 'Value',
-                                        accessor: (row) =>
-                                            row.value.toLocaleString(),
-                                    },
-                                ]}
+                        <Link
+                            className="text-indigo-700 underline dark:text-indigo-300"
+                            href={route('deals.index', {
+                                created_from: range.from,
+                                created_to: range.to,
+                            })}
+                        >
+                            View new deals
+                        </Link>
+                        <Link
+                            className="text-indigo-700 underline dark:text-indigo-300"
+                            href={route('deals.index', {
+                                stage: 'won',
+                                won_from: range.from,
+                                won_to: range.to,
+                            })}
+                        >
+                            View won deals
+                        </Link>
+                        <Link
+                            className="text-indigo-700 underline dark:text-indigo-300"
+                            href={route('deals.index', {
+                                stage: 'lost',
+                                lost_from: range.from,
+                                lost_to: range.to,
+                            })}
+                        >
+                            View lost deals
+                        </Link>
+                    </nav>
+                )}
+                {visibility.deals && (
+                    <>
+                        <div className="grid gap-4 lg:grid-cols-2">
+                            <Card
+                                title="Open Pipeline"
+                                description="Current open deals; amounts remain separate by currency"
+                            >
+                                <MoneyList
+                                    rows={pipelineByStage.map((row) => ({
+                                        id: `${row.stage}-${row.currency}`,
+                                        label: `${row.stage} · ${row.count} deals`,
+                                        currency: row.currency,
+                                        value: row.value,
+                                        routeParameters: {
+                                            stage: row.stage,
+                                            currency:
+                                                row.currency === 'Unspecified'
+                                                    ? '__unspecified'
+                                                    : row.currency,
+                                        },
+                                    }))}
+                                />
+                            </Card>
+                            <Card
+                                title="Won Deal Value"
+                                description={`Closed in ${periodLabel}; amounts remain separate by currency`}
+                            >
+                                <MoneyList
+                                    rows={wonValues.map((row) => ({
+                                        id: row.currency,
+                                        label: 'Won',
+                                        ...row,
+                                        routeParameters: {
+                                            stage: 'won',
+                                            won_from: range.from,
+                                            won_to: range.to,
+                                            currency:
+                                                row.currency === 'Unspecified'
+                                                    ? '__unspecified'
+                                                    : row.currency,
+                                        },
+                                    }))}
+                                />
+                            </Card>
+                            <Card
+                                title="Top Sales Owners"
+                                description="Open deals by owner and currency; ranked by deal count"
+                            >
+                                <MoneyList
+                                    rows={topOwners.map((row) => ({
+                                        id: `${row.owner_id}-${row.currency}`,
+                                        label: `${row.owner} · ${row.count} deals`,
+                                        currency: row.currency,
+                                        value: row.value,
+                                        routeParameters: {
+                                            owner_id:
+                                                row.owner_id ?? '__unassigned',
+                                            currency:
+                                                row.currency === 'Unspecified'
+                                                    ? '__unspecified'
+                                                    : row.currency,
+                                        },
+                                    }))}
+                                />
+                            </Card>
+                            <DashboardChart
+                                title="Deal Stage"
+                                description="Current open deal count by stage"
+                                data={stageCounts}
+                                kind="bar"
+                                primaryLabel="Deals"
                             />
                         </div>
-                    </Card>
-
-                    <Card
-                        title="Win / Loss Conversion"
-                        description="Closed deal outcome mix"
-                    >
-                        <WonLostDonut summary={summary} />
-                    </Card>
-
-                    <Card
-                        title="Top Sales Owners"
-                        description="Open pipeline ranked by value"
-                    >
-                        <TopOwnerBars rows={topOwners} />
-                        <div className="mt-5">
-                            <DataTable
-                                data={topOwners}
-                                keyExtractor={(row) => row.owner}
-                                columns={[
-                                    {
-                                        header: 'Owner',
-                                        accessor: (row) => row.owner,
-                                    },
-                                    {
-                                        header: 'Open Deals',
-                                        accessor: (row) => row.deals_count,
-                                    },
-                                    {
-                                        header: 'Pipeline Value',
-                                        accessor: (row) =>
-                                            row.pipeline_value.toLocaleString(),
-                                    },
-                                ]}
+                        <div className="grid gap-4 lg:grid-cols-2">
+                            <DashboardList
+                                title="Follow-ups Today"
+                                description="Incomplete activities due today"
+                                items={followUps.map((item) => ({
+                                    id: item.id,
+                                    title: item.subject || 'Follow-up',
+                                    detail: item.follow_up_at,
+                                    ...(item.entity_type === 'deal'
+                                        ? {
+                                              routeName: 'deals.index',
+                                              routeParameters: {
+                                                  deal_id: item.entity_id,
+                                              },
+                                          }
+                                        : item.customer_id
+                                          ? {
+                                                routeName: 'customers.index',
+                                                routeParameters: {
+                                                    customer_id:
+                                                        item.customer_id,
+                                                },
+                                            }
+                                          : {}),
+                                }))}
+                                emptyMessage="No follow-ups due today."
+                            />
+                            <DashboardList
+                                title="Stale Deals"
+                                description="Old open deals with no activity in the last 7 days"
+                                items={staleDeals.map((item) => ({
+                                    id: item.id,
+                                    title: item.title,
+                                    detail: `${item.stage} · ${item.last_activity_at ? `Last activity ${item.last_activity_at}` : 'No activity'} · created ${item.created_at}`,
+                                    routeName: 'deals.index',
+                                    routeParameters: { deal_id: item.id },
+                                }))}
+                                emptyMessage="No stale deals."
                             />
                         </div>
-                    </Card>
-                </div>
-            </div>
+                    </>
+                )}
+                <DashboardList
+                    visible={visibility.quotations}
+                    title="Expiring Quotations"
+                    description="Sent quotations expiring within 7 days"
+                    items={expiringQuotations.map((item) => ({
+                        id: item.id,
+                        title: item.quotation_no,
+                        detail: `Valid until ${item.valid_until}`,
+                        routeName: 'quotations.index',
+                        routeParameters: { quotation_id: item.id },
+                    }))}
+                    emptyMessage="No quotations expiring soon."
+                />
+            </DashboardLayout>
         </AuthenticatedLayout>
     );
 }
 
-function SalesActionAlerts({ summary }: { summary: Summary }) {
-    const totalPressure = summary.follow_ups_today + summary.stale_deals;
-
-    if (totalPressure === 0) {
-        return (
-            <Card
-                title="Sales Action Monitor"
-                description="Follow-up workload and stale deal pressure"
-            >
-                <div className="flex min-h-36 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50/70 p-5 text-center dark:border-emerald-900/70 dark:bg-emerald-950/40">
-                    <div>
-                        <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-100">
-                            Clear
-                        </div>
-                        <div className="mt-1 text-sm font-semibold text-emerald-700/80 dark:text-emerald-200/80">
-                            No follow-ups or stale deals need attention
-                        </div>
-                    </div>
-                </div>
-            </Card>
-        );
-    }
-
+function MoneyList({
+    rows,
+}: {
+    rows: {
+        id: string;
+        label: string;
+        currency: string;
+        value: number;
+        routeParameters?: Record<string, string | null | undefined>;
+    }[];
+}) {
+    if (rows.length === 0)
+        return <p className="text-sm text-slate-500">No data for this view.</p>;
     return (
-        <Card
-            title="Sales Action Monitor"
-            description="Follow-up workload and stale deal pressure"
-            action={
-                <Badge
-                    variant={summary.stale_deals > 0 ? 'warning' : 'info'}
-                    dot
+        <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            {rows.map((row) => (
+                <li
+                    key={row.id}
+                    className="flex justify-between gap-3 py-2 text-sm"
                 >
-                    {totalPressure} Actions
-                </Badge>
-            }
-        >
-            <div className="grid gap-4 lg:grid-cols-2">
-                <SalesActionTile
-                    label="Follow-ups Today"
-                    value={summary.follow_ups_today}
-                    total={totalPressure}
-                    tone="amber"
-                    description="Activities due today"
-                />
-                <SalesActionTile
-                    label="Stale Deals"
-                    value={summary.stale_deals}
-                    total={totalPressure}
-                    tone="rose"
-                    description="Open deals older than 14 days"
-                />
-            </div>
-        </Card>
+                    {row.routeParameters ? (
+                        <Link
+                            className="text-indigo-700 underline dark:text-indigo-300"
+                            href={route('deals.index', row.routeParameters)}
+                        >
+                            {row.label}
+                        </Link>
+                    ) : (
+                        <span>{row.label}</span>
+                    )}
+                    <span className="font-semibold">
+                        {row.currency} {row.value.toLocaleString()}
+                    </span>
+                </li>
+            ))}
+        </ul>
     );
-}
-
-function SalesActionTile({
-    label,
-    value,
-    total,
-    tone,
-    description,
-}: {
-    label: string;
-    value: number;
-    total: number;
-    tone: 'amber' | 'rose';
-    description: string;
-}) {
-    const percent = total > 0 ? value / total : 0;
-    const toneClass =
-        tone === 'amber'
-            ? 'border-amber-200 bg-amber-50/70 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-100'
-            : 'border-rose-200 bg-rose-50/70 text-rose-800 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-100';
-    const barClass = tone === 'amber' ? 'bg-amber-500' : 'bg-rose-500';
-    const dotClass = value > 0 ? barClass + ' animate-pulse' : 'bg-slate-300';
-
-    return (
-        <div className={'rounded-md border p-4 ' + toneClass}>
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide opacity-80">
-                        <span
-                            className={'h-2.5 w-2.5 rounded-full ' + dotClass}
-                        />
-                        {label}
-                    </div>
-                    <div className="mt-1 text-sm font-medium opacity-80">
-                        {description}
-                    </div>
-                </div>
-                <div className="font-mono text-3xl font-bold">{value}</div>
-            </div>
-            <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/70 dark:bg-slate-950/50">
-                <div
-                    className={
-                        'h-full rounded-full transition-all duration-700 ease-out ' +
-                        barClass
-                    }
-                    style={{
-                        width:
-                            String(Math.max(percent * 100, value > 0 ? 8 : 0)) +
-                            '%',
-                    }}
-                />
-            </div>
-            <div className="mt-2 text-xs font-semibold opacity-80">
-                {(percent * 100).toFixed(1)}% of active sales actions
-            </div>
-        </div>
-    );
-}
-function PipelineFunnel({ rows }: { rows: PipelineRow[] }) {
-    const maxValue = Math.max(...rows.map((row) => row.value), 0);
-
-    if (rows.length === 0 || maxValue === 0) {
-        return (
-            <div className="flex min-h-48 items-center justify-center rounded-md border border-slate-200/80 bg-slate-50/70 text-sm font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
-                No pipeline value yet
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-3 rounded-md border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/80">
-            {rows.map((row) => {
-                const width = Math.max((row.value / maxValue) * 100, 10);
-
-                return (
-                    <div key={row.stage} className="space-y-1">
-                        <div className="flex items-center justify-between gap-3 text-xs font-semibold">
-                            <span className="capitalize text-slate-700 dark:text-slate-200">
-                                {row.stage.replace('_', ' ')}
-                            </span>
-                            <span className="font-mono text-slate-950 dark:text-white">
-                                {row.count} deals / {row.value.toLocaleString()}
-                            </span>
-                        </div>
-                        <div className="h-6 overflow-hidden rounded-md bg-slate-200 dark:bg-slate-800">
-                            <div
-                                className={`h-full rounded-r-md ${pipelineStageColor(row.stage)} transition-all duration-700 ease-out`}
-                                style={{ width: `${width}%` }}
-                            />
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
-
-function WonLostDonut({ summary }: { summary: Summary }) {
-    const totalClosed = summary.won_deals + summary.lost_deals;
-    const wonPercent = totalClosed > 0 ? summary.won_deals / totalClosed : 0;
-    const lostPercent = totalClosed > 0 ? summary.lost_deals / totalClosed : 0;
-
-    if (totalClosed === 0) {
-        return (
-            <div className="flex min-h-64 items-center justify-center rounded-md border border-slate-200/80 bg-slate-50/70 text-sm font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
-                No closed deals yet
-            </div>
-        );
-    }
-
-    return (
-        <div className="grid gap-5 md:grid-cols-[180px,1fr] md:items-center">
-            <div className="relative mx-auto h-44 w-44">
-                <svg viewBox="0 0 42 42" className="h-44 w-44 -rotate-90">
-                    <circle
-                        cx="21"
-                        cy="21"
-                        r="15.915"
-                        className="fill-none stroke-slate-100 dark:stroke-slate-800"
-                        strokeWidth="6"
-                    />
-                    <circle
-                        cx="21"
-                        cy="21"
-                        r="15.915"
-                        className="fill-none stroke-emerald-500 transition-all duration-700 ease-out"
-                        strokeWidth="6"
-                        strokeDasharray={`${wonPercent * 100} ${100 - wonPercent * 100}`}
-                    />
-                    <circle
-                        cx="21"
-                        cy="21"
-                        r="15.915"
-                        className="fill-none stroke-rose-500 transition-all duration-700 ease-out"
-                        strokeWidth="6"
-                        strokeDasharray={`${lostPercent * 100} ${100 - lostPercent * 100}`}
-                        strokeDashoffset={String(-wonPercent * 100)}
-                    />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <div className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
-                        Win Rate
-                    </div>
-                    <div className="text-2xl font-bold text-slate-950 dark:text-white">
-                        {(wonPercent * 100).toFixed(1)}%
-                    </div>
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        {totalClosed} closed
-                    </div>
-                </div>
-            </div>
-            <div className="grid gap-2">
-                <SalesMiniMetric
-                    label="Won Deals"
-                    value={summary.won_deals}
-                    tone="emerald"
-                />
-                <SalesMiniMetric
-                    label="Lost Deals"
-                    value={summary.lost_deals}
-                    tone="rose"
-                />
-                <SalesMiniMetric
-                    label="Open Deals"
-                    value={summary.open_deals}
-                    tone="sky"
-                />
-            </div>
-        </div>
-    );
-}
-
-function TopOwnerBars({ rows }: { rows: OwnerRow[] }) {
-    const maxValue = Math.max(...rows.map((row) => row.pipeline_value), 0);
-
-    if (rows.length === 0 || maxValue === 0) {
-        return (
-            <div className="flex min-h-48 items-center justify-center rounded-md border border-slate-200/80 bg-slate-50/70 text-sm font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
-                No owner pipeline yet
-            </div>
-        );
-    }
-
-    return (
-        <div className="grid gap-3 rounded-md border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/80">
-            {rows.map((row) => {
-                const width = Math.max(
-                    (row.pipeline_value / maxValue) * 100,
-                    8,
-                );
-
-                return (
-                    <div key={row.owner}>
-                        <div className="mb-1 flex items-center justify-between gap-3 text-xs font-semibold">
-                            <span className="truncate text-slate-700 dark:text-slate-200">
-                                {row.owner}
-                            </span>
-                            <span className="font-mono text-slate-950 dark:text-white">
-                                {row.pipeline_value.toLocaleString()}
-                            </span>
-                        </div>
-                        <div className="h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                            <div
-                                className="h-full rounded-full bg-indigo-500 transition-all duration-700 ease-out"
-                                style={{ width: `${width}%` }}
-                            />
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
-
-function SalesMiniMetric({
-    label,
-    value,
-    tone,
-}: {
-    label: string;
-    value: string | number;
-    tone: 'emerald' | 'rose' | 'sky';
-}) {
-    const toneClass =
-        tone === 'emerald'
-            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200'
-            : tone === 'rose'
-              ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200'
-              : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200';
-
-    return (
-        <div className={`rounded-md px-3 py-2 ${toneClass}`}>
-            <div className="text-xs font-bold uppercase tracking-wide opacity-80">
-                {label}
-            </div>
-            <div className="mt-1 text-lg font-bold">{value}</div>
-        </div>
-    );
-}
-
-function pipelineStageColor(stage: string) {
-    if (stage === 'won') return 'bg-emerald-500';
-    if (stage === 'lost') return 'bg-rose-500';
-    if (stage === 'proposal') return 'bg-amber-500';
-    if (stage === 'negotiation') return 'bg-violet-500';
-    if (stage === 'qualified') return 'bg-sky-500';
-
-    return 'bg-indigo-500';
 }

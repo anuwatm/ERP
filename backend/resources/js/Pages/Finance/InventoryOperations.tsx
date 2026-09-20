@@ -6,7 +6,8 @@ import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import useEditorCoordinator from '@/Hooks/useEditorCoordinator';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { PageProps } from '@/Types';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     BinDialog,
@@ -26,6 +27,16 @@ type Product = {
     unit: string;
     reorder_point: string;
 };
+type LowStockLocation = {
+    product_id: string;
+    sku: string | null;
+    name: string;
+    unit: string | null;
+    reorder_point: string;
+    warehouse_id: string;
+    warehouse_name: string;
+    on_hand: string;
+};
 type Lot = {
     id: string;
     product_id: string;
@@ -42,8 +53,11 @@ export default function InventoryOperations({
     warehouses: Warehouse[];
     products: Product[];
     lots: Lot[];
-    lowStock: Product[];
+    lowStock: LowStockLocation[];
 }) {
+    const { auth } = usePage<PageProps>().props;
+    const canAdjust = auth.permissions.includes('inventory.adjust');
+    const canReceive = auth.permissions.includes('inventory.receive');
     const [scanCode, setScanCode] = useState('');
     const [scanMessage, setScanMessage] = useState<string | null>(null);
     const [matchedProduct, setMatchedProduct] = useState<Product | null>(null);
@@ -83,65 +97,77 @@ export default function InventoryOperations({
                     title="Inventory Operations"
                     description="Warehouse, bin, lot, barcode, transfer, stock count and reorder control."
                     actions={
-                        <div className="flex flex-wrap gap-2">
-                            <SecondaryButton
-                                type="button"
-                                onClick={() =>
-                                    switchEditor({ type: 'warehouse' })
-                                }
-                            >
-                                + Warehouse
-                            </SecondaryButton>
-                            <SecondaryButton
-                                type="button"
-                                onClick={() =>
-                                    switchEditor({
-                                        type: 'bin',
-                                        warehouseId: '',
-                                    })
-                                }
-                            >
-                                + Bin
-                            </SecondaryButton>
-                            <SecondaryButton
-                                type="button"
-                                onClick={() =>
-                                    switchEditor({
-                                        type: 'lot',
-                                        productId: '',
-                                    })
-                                }
-                            >
-                                + Lot
-                            </SecondaryButton>
-                            <SecondaryButton
-                                type="button"
-                                onClick={() =>
-                                    switchEditor({
-                                        type: 'count',
-                                        productId: '',
-                                    })
-                                }
-                            >
-                                + Physical Count
-                            </SecondaryButton>
-                            <PrimaryButton
-                                type="button"
-                                onClick={() =>
-                                    switchEditor({
-                                        type: 'transfer',
-                                        productId: '',
-                                    })
-                                }
-                            >
-                                + Transfer Stock
-                            </PrimaryButton>
-                        </div>
+                        (canAdjust || canReceive) && (
+                            <div className="flex flex-wrap gap-2">
+                                {canAdjust && (
+                                    <SecondaryButton
+                                        type="button"
+                                        onClick={() =>
+                                            switchEditor({ type: 'warehouse' })
+                                        }
+                                    >
+                                        + Warehouse
+                                    </SecondaryButton>
+                                )}
+                                {canAdjust && (
+                                    <SecondaryButton
+                                        type="button"
+                                        onClick={() =>
+                                            switchEditor({
+                                                type: 'bin',
+                                                warehouseId: '',
+                                            })
+                                        }
+                                    >
+                                        + Bin
+                                    </SecondaryButton>
+                                )}
+                                {canReceive && (
+                                    <SecondaryButton
+                                        type="button"
+                                        onClick={() =>
+                                            switchEditor({
+                                                type: 'lot',
+                                                productId: '',
+                                            })
+                                        }
+                                    >
+                                        + Lot
+                                    </SecondaryButton>
+                                )}
+                                {canAdjust && (
+                                    <SecondaryButton
+                                        type="button"
+                                        onClick={() =>
+                                            switchEditor({
+                                                type: 'count',
+                                                productId: '',
+                                            })
+                                        }
+                                    >
+                                        + Physical Count
+                                    </SecondaryButton>
+                                )}
+                                {canAdjust && (
+                                    <PrimaryButton
+                                        type="button"
+                                        onClick={() =>
+                                            switchEditor({
+                                                type: 'transfer',
+                                                productId: '',
+                                            })
+                                        }
+                                    >
+                                        + Transfer Stock
+                                    </PrimaryButton>
+                                )}
+                            </div>
+                        )
                     }
                 />
 
                 {/* Dialogs - exactly one active editor mounted */}
-                {activeEditor?.type === 'warehouse' && (
+                {canAdjust && activeEditor?.type === 'warehouse' && (
                     <WarehouseDialog
                         open={true}
                         onRequestCloseRef={activeGuardRef}
@@ -152,7 +178,7 @@ export default function InventoryOperations({
                     />
                 )}
 
-                {activeEditor?.type === 'bin' && (
+                {canAdjust && activeEditor?.type === 'bin' && (
                     <BinDialog
                         open={true}
                         warehouses={warehouses}
@@ -165,7 +191,7 @@ export default function InventoryOperations({
                     />
                 )}
 
-                {activeEditor?.type === 'lot' && (
+                {canReceive && activeEditor?.type === 'lot' && (
                     <LotDialog
                         open={true}
                         products={products}
@@ -178,7 +204,7 @@ export default function InventoryOperations({
                     />
                 )}
 
-                {activeEditor?.type === 'transfer' && (
+                {canAdjust && activeEditor?.type === 'transfer' && (
                     <StockTransferDialog
                         open={true}
                         products={products}
@@ -193,7 +219,7 @@ export default function InventoryOperations({
                     />
                 )}
 
-                {activeEditor?.type === 'count' && (
+                {canAdjust && activeEditor?.type === 'count' && (
                     <StockCountDialog
                         open={true}
                         products={products}
@@ -233,41 +259,50 @@ export default function InventoryOperations({
                             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                 {scanMessage}
                             </p>
-                            {matchedProduct && (
+                            {matchedProduct && (canAdjust || canReceive) && (
                                 <div className="flex flex-wrap gap-2">
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() =>
-                                            switchEditor({
-                                                type: 'transfer',
-                                                productId: matchedProduct.id,
-                                            })
-                                        }
-                                    >
-                                        Transfer
-                                    </SecondaryButton>
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() =>
-                                            switchEditor({
-                                                type: 'count',
-                                                productId: matchedProduct.id,
-                                            })
-                                        }
-                                    >
-                                        Count
-                                    </SecondaryButton>
-                                    <SecondaryButton
-                                        type="button"
-                                        onClick={() =>
-                                            switchEditor({
-                                                type: 'lot',
-                                                productId: matchedProduct.id,
-                                            })
-                                        }
-                                    >
-                                        New Lot
-                                    </SecondaryButton>
+                                    {canAdjust && (
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() =>
+                                                switchEditor({
+                                                    type: 'transfer',
+                                                    productId:
+                                                        matchedProduct.id,
+                                                })
+                                            }
+                                        >
+                                            Transfer
+                                        </SecondaryButton>
+                                    )}
+                                    {canAdjust && (
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() =>
+                                                switchEditor({
+                                                    type: 'count',
+                                                    productId:
+                                                        matchedProduct.id,
+                                                })
+                                            }
+                                        >
+                                            Count
+                                        </SecondaryButton>
+                                    )}
+                                    {canReceive && (
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() =>
+                                                switchEditor({
+                                                    type: 'lot',
+                                                    productId:
+                                                        matchedProduct.id,
+                                                })
+                                            }
+                                        >
+                                            New Lot
+                                        </SecondaryButton>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -333,15 +368,17 @@ export default function InventoryOperations({
                         </div>
                     </Card>
 
-                    {/* Low Stock Alerts */}
+                    {/* Low Stock by recorded product/warehouse location */}
                     <Card
-                        title="Low Stock Alerts"
-                        description="Products currently at or below their reorder threshold"
+                        title="Low Stock Locations"
+                        description="Tracked products at recorded warehouse locations with on-hand at or below their reorder point"
                     >
                         {lowStock.length > 0 ? (
                             <DataTable
                                 data={lowStock}
-                                keyExtractor={(row) => row.id}
+                                keyExtractor={(row) =>
+                                    `${row.product_id}-${row.warehouse_id}`
+                                }
                                 columns={[
                                     {
                                         header: 'Product',
@@ -357,27 +394,20 @@ export default function InventoryOperations({
                                         ),
                                     },
                                     {
+                                        header: 'Warehouse',
+                                        accessor: (row) => row.warehouse_name,
+                                    },
+                                    {
+                                        header: 'On Hand',
+                                        accessor: (row) =>
+                                            `${row.on_hand} ${row.unit ?? ''}`,
+                                    },
+                                    {
                                         header: 'Reorder Point',
                                         accessor: (row) => (
                                             <span className="font-semibold text-amber-600 dark:text-amber-400">
                                                 {row.reorder_point} {row.unit}
                                             </span>
-                                        ),
-                                    },
-                                    {
-                                        header: 'Action',
-                                        accessor: (row) => (
-                                            <SecondaryButton
-                                                type="button"
-                                                onClick={() =>
-                                                    switchEditor({
-                                                        type: 'transfer',
-                                                        productId: row.id,
-                                                    })
-                                                }
-                                            >
-                                                Transfer In
-                                            </SecondaryButton>
                                         ),
                                     },
                                 ]}

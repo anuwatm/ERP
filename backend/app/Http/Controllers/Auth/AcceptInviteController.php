@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Support\DashboardLanding;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,7 +58,7 @@ class AcceptInviteController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(DashboardLanding::routeFor($user));
     }
 
     private function validToken(User $user, string $token): bool

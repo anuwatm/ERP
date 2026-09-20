@@ -33,7 +33,9 @@ class PayrollController extends Controller
 
         return Inertia::render('Finance/Payroll', [
             'profiles' => EmployeePayrollProfile::where('org_id', $user->org_id)->with('user:id,name,email,person_id')->orderBy('user_id')->get(),
-            'runs' => PayrollRun::where('org_id', $user->org_id)->with(['items.user:id,name', 'taxPolicy:id,name,effective_from', 'socialSecurityPolicy:id,name,effective_from', 'bankAccount:id,bank_name,account_name'])->latest('period_end')->get(),
+            'runs' => PayrollRun::where('org_id', $user->org_id)
+                ->when($request->filled('run_id'), fn ($query) => $query->where('id', $request->query('run_id')))
+                ->with(['items.user:id,name', 'taxPolicy:id,name,effective_from', 'socialSecurityPolicy:id,name,effective_from', 'bankAccount:id,bank_name,account_name'])->latest('period_end')->get(),
             'users' => User::where('org_id', $user->org_id)->where('status', 'active')->orderBy('name')->get(['id', 'name', 'email', 'person_id']),
             'bankAccounts' => BankAccount::where('org_id', $user->org_id)->where('status', 'active')->orderBy('account_name')->get(['id', 'bank_name', 'account_name']),
             'taxPolicies' => PayrollTaxPolicy::where('org_id', $user->org_id)->latest('effective_from')->get(),

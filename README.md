@@ -10,7 +10,7 @@
 Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
 ```
 
-สถานะระบบ: **Phase 1 - 23 และ Phase 23.1 เสร็จสมบูรณ์ (Complete & Closed)**; ฟีเจอร์ครอบคลุม:
+สถานะระบบ: **Phase 1 - 23 และ Phase 23.1 เสร็จสมบูรณ์ (Complete & Closed); Phase 23.2 กำลังตรวจรับ** ตาม [`checklist.md`](checklist.md) และ [`Phase 23.2.7 verification`](docs/PHASE_23_2_7_VERIFICATION.md); ฟีเจอร์ครอบคลุม:
 - Foundation, Multi-tenant, Breeze Auth, RBAC 7 บทบาท, Master Data & Audit Logs
 - CRM, Sales Pipeline (Deals/Activities), Quotations, Commercial Docs (CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers)
 - Invoicing, Official PDF/Print (Invoice, Receipt, PO, 50-Tawi), Tax Reports (ภ.พ.30, ภ.ง.ด. 3/53, AR/AP Aging), VAT Compliance
@@ -116,7 +116,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Documents (DMS)** | คลังเอกสาร private, versioning, scan gate, sensitivity, expiry alerts, parent authorization, retention/legal hold, quarantine/archive และ explicit purge | Phase 17, 18.1 |
 | **Projects & Tasks** | แปลงจาก Won Deal, สมาชิกโครงการ (Project Members), งานย่อย (Tasks, Checklists, Comments) | Phase 4, 7 |
 | **Notifications** | กระดิ่งแจ้งเตือน In-App, อีเมลคิวแจ้งเตือน (PO, Invoice Due, Assign, Invite), Preferences | Phase 8 |
-| **Dashboards** | Admin, Executive, Finance, Delivery, Sales Dashboards พร้อมตัวกรองช่วงเวลาและกราฟสรุป | Phase 1, 2, 3, 4, 5, 6 |
+| **Dashboards** | Admin, Executive, Finance, Delivery, Sales, My Work, Procurement/Inventory, HR/Payroll และ Portal แบบแยกสิทธิ์ พร้อมตัวกรอง กราฟ และ filtered drill-down; metric ที่ source ยังไม่พร้อมระบุ unavailable | Phase 1–6, 23.2 |
 
 ---
 
@@ -132,7 +132,7 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 - **Authentication & Registration**: สมัครสมาชิกพร้อมสร้าง Organization, สาขาสำนักงานใหญ่ (Head Office), ฝ่าย, แผนก และ Owner ภายใน Database Transaction เดียว
 - **User Invitation**: เชิญผู้ใช้ร่วมงานด้วย Token แบบใช้ครั้งเดียว (One-time Token, TTL 72 ชั่วโมง)
 - **Security Baseline**: ป้องกัน Brute-force ด้วย Rate Limiting, ยืนยันรหัสผ่าน (`password.confirm`) สำหรับ Action สำคัญ, และ Mask ข้อมูลสำคัญ เช่น `person_id`
-- **Admin Dashboard**: แสดงภาพรวมการตั้งค่าองค์กร, สรุปจำนวนผู้ใช้งาน, สรุปสิทธิ์ Roles, แจ้งเตือนความปลอดภัย (Security Alerts) และประวัติ Audit Logs ล่าสุด
+- **Admin Dashboard**: แสดงผู้ใช้ที่ active, pending invites, role distribution และ audit events ตามสิทธิ์ข้อมูล; Security Alerts ยังไม่พร้อมจนกว่าจะกำหนด event source และเกณฑ์ alert
 
 ### Phase 1.1: Admin Master Data & Access Management
 - **Branch Master**: สร้าง/แก้ไข/ปิดใช้งานสาขา, สลับสำนักงานใหญ่ (Head Office Enforcement) พร้อม Audit Log
@@ -318,6 +318,10 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/finance-dashboard` | Finance Dashboard | `expenses.view` |
 | `/delivery-dashboard` | Delivery Dashboard | `dashboard.view` |
 | `/sales-dashboard` | Sales Dashboard | `sales.dashboard.view` |
+| `/my-work` | งานที่มอบหมายให้ผู้ใช้ | `tasks.view` |
+| `/procurement-dashboard` | Procurement/Inventory Dashboard | สิทธิ์ต้นทางของแต่ละ widget |
+| `/hr-dashboard` | HR/Payroll Dashboard | สิทธิ์ HR หรือ Payroll ตาม widget |
+| `/vendor-payments` | รายการ Vendor Payments แบบอ่านอย่างเดียว | `expenses.view` |
 | `/customers` | CRM Customers Management | `customers.view` |
 | `/deals` | Sales Deals Pipeline & Activities | `deals.view` |
 | `/quotations` | Quotations (ใบเสนอราคา) | `quotations.view` |

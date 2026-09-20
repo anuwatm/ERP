@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\DashboardLanding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -36,9 +37,8 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
-
         $user = User::where('email', 'test@example.com')->firstOrFail();
+        $response->assertRedirect(DashboardLanding::routeFor($user));
 
         $this->assertSame('active', $user->status);
         $this->assertSame('local', $user->auth_provider);

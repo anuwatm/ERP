@@ -279,6 +279,12 @@ class Phase1DemoSeeder extends Seeder
             'paid_amount' => 25000,
             'balance_due' => 75000,
             'currency' => 'THB',
+            'base_currency' => 'THB',
+            'exchange_rate' => 1,
+            'base_subtotal' => 100000,
+            'base_total' => 100000,
+            'base_paid_amount' => 25000,
+            'base_balance_due' => 75000,
             'created_by' => $owner->id,
         ]);
         $invoice->items()->create([
@@ -293,8 +299,8 @@ class Phase1DemoSeeder extends Seeder
             'line_total' => 100000,
             'sort_order' => 0,
         ]);
-        Payment::create(['org_id' => $owner->org_id, 'invoice_id' => $invoice->id, 'entry_type' => 'receipt', 'amount' => 30000, 'payment_date' => now()->subDays(3)->toDateString(), 'payment_method' => 'bank_transfer', 'reference_no' => 'UAT-RCPT-001', 'idempotency_key' => 'uat-receipt-001', 'created_by' => $owner->id]);
-        Payment::create(['org_id' => $owner->org_id, 'invoice_id' => $invoice->id, 'entry_type' => 'reversal', 'amount' => 5000, 'payment_date' => now()->subDays(2)->toDateString(), 'payment_method' => 'bank_transfer', 'reference_no' => 'UAT-REV-001', 'idempotency_key' => 'uat-reversal-001', 'created_by' => $owner->id]);
+        Payment::create(['org_id' => $owner->org_id, 'invoice_id' => $invoice->id, 'entry_type' => 'receipt', 'amount' => 30000, 'currency' => 'THB', 'base_currency' => 'THB', 'exchange_rate' => 1, 'base_amount' => 30000, 'payment_date' => now()->subDays(3)->toDateString(), 'payment_method' => 'bank_transfer', 'reference_no' => 'UAT-RCPT-001', 'idempotency_key' => 'uat-receipt-001', 'created_by' => $owner->id]);
+        Payment::create(['org_id' => $owner->org_id, 'invoice_id' => $invoice->id, 'entry_type' => 'reversal', 'amount' => 5000, 'currency' => 'THB', 'base_currency' => 'THB', 'exchange_rate' => 1, 'base_amount' => 5000, 'payment_date' => now()->subDays(2)->toDateString(), 'payment_method' => 'bank_transfer', 'reference_no' => 'UAT-REV-001', 'idempotency_key' => 'uat-reversal-001', 'created_by' => $owner->id]);
 
         $project = Project::create([
             'org_id' => $owner->org_id,
@@ -312,8 +318,8 @@ class Phase1DemoSeeder extends Seeder
             'created_by' => $owner->id,
         ]);
 
-        Expense::create(['org_id' => $owner->org_id, 'expense_no' => 'UAT-EXP-001', 'category' => 'delivery', 'title' => 'UAT approved vendor', 'amount' => 15000, 'expense_date' => now()->subDays(2)->toDateString(), 'project_id' => $project->id, 'status' => 'approved', 'created_by' => $owner->id]);
-        Expense::create(['org_id' => $owner->org_id, 'expense_no' => 'UAT-EXP-002', 'category' => 'delivery', 'title' => 'UAT paid vendor', 'amount' => 10000, 'expense_date' => now()->subDay()->toDateString(), 'project_id' => $project->id, 'status' => 'paid', 'paid_at' => now()->subDay(), 'created_by' => $owner->id]);
+        Expense::create(['org_id' => $owner->org_id, 'expense_no' => 'UAT-EXP-001', 'category' => 'delivery', 'title' => 'UAT approved vendor', 'amount' => 15000, 'base_amount' => 15000, 'expense_date' => now()->subDays(2)->toDateString(), 'project_id' => $project->id, 'status' => 'approved', 'created_by' => $owner->id]);
+        Expense::create(['org_id' => $owner->org_id, 'expense_no' => 'UAT-EXP-002', 'category' => 'delivery', 'title' => 'UAT paid vendor', 'amount' => 10000, 'base_amount' => 10000, 'expense_date' => now()->subDay()->toDateString(), 'project_id' => $project->id, 'status' => 'paid', 'paid_at' => now()->subDay(), 'created_by' => $owner->id]);
         Expense::create(['org_id' => $owner->org_id, 'expense_no' => 'UAT-EXP-003', 'category' => 'delivery', 'title' => 'UAT draft cost', 'amount' => 999, 'expense_date' => now()->toDateString(), 'project_id' => $project->id, 'status' => 'draft', 'created_by' => $owner->id]);
         Expense::create(['org_id' => $owner->org_id, 'expense_no' => 'UAT-EXP-004', 'category' => 'delivery', 'title' => 'UAT rejected cost', 'amount' => 888, 'expense_date' => now()->toDateString(), 'project_id' => $project->id, 'status' => 'rejected', 'created_by' => $owner->id]);
 
@@ -343,7 +349,7 @@ class Phase1DemoSeeder extends Seeder
                 'recognized_expense' => 25000,
                 'active_projects' => 1,
                 'overdue_tasks' => 1,
-                'project_profit' => 75000,
+                'budget_remaining' => 75000,
             ],
         ]);
     }

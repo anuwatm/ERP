@@ -29,7 +29,7 @@ class Phase4DeliveryDashboardTest extends TestCase
         $manager = User::factory()->create();
         $otherOwner = User::factory()->create(['org_id' => $manager->org_id]);
         $assignee = User::factory()->create(['org_id' => $manager->org_id]);
-        $this->attachRole($manager, 'project_manager', ['dashboard.view', 'projects.view', 'tasks.view']);
+        $this->attachRole($manager, 'project_manager', ['dashboard.view', 'projects.view', 'tasks.view', 'expenses.view']);
 
         $active = $this->project($manager, '000001', 'Active Project', $manager->id, [
             'status' => 'active',
@@ -68,7 +68,7 @@ class Phase4DeliveryDashboardTest extends TestCase
             'due_date' => now()->addDay()->toDateString(),
         ]);
 
-        $this->actingAsOrgUser($manager)->get(route('dashboard'))
+        $this->actingAsOrgUser($manager)->get(route('delivery.dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
@@ -76,7 +76,7 @@ class Phase4DeliveryDashboardTest extends TestCase
                 ->where('deliverySummary.overdue_tasks', 1)
                 ->where('deliverySummary.total_budget', 6000)
                 ->where('deliverySummary.actual_cost', 3000)
-                ->where('deliverySummary.project_profit', 3000)
+                ->where('deliverySummary.budget_remaining', 3000)
                 ->where('deliverySummary.delivery_risk.count', 2)
                 ->where('deliverySummary.delivery_risk.over_budget', 1)
                 ->where('deliverySummary.delivery_risk.past_due_projects', 1)
@@ -109,10 +109,9 @@ class Phase4DeliveryDashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
-                ->where('deliverySummary.active_projects', 0)
-                ->where('deliverySummary.overdue_tasks', 1)
-                ->where('deliverySummary.task_load.0.assignee_id', $member->id)
-                ->where('deliverySummary.task_load.0.open_tasks', 1)
+                ->where('deliverySummary', null)
+                ->missing('dashboardWidgets.delivery.projects')
+                ->where('dashboardWidgets.delivery.tasks.overdue_tasks', 1)
             );
     }
 
@@ -127,6 +126,113 @@ class Phase4DeliveryDashboardTest extends TestCase
                 ->component('Dashboard')
                 ->where('deliverySummary', null)
             );
+    }
+
+    public function test_delivery_widgets_are_current_scoped_and_drill_down_without_expense_leakage(): void
+    {
+        $manager = User::factory()->create();
+        $this->attachRole($manager, 'delivery_viewer', ['dashboard.view', 'projects.view', 'tasks.view']);
+        $project = $this->project($manager, 'DLV-1', 'Visible Delivery', $manager->id, [
+            'status' => 'active',
+            'progress_percent' => 40,
+            'due_date' => now()->subDay()->toDateString(),
+        ]);
+        $project->forceFill(['created_at' => now()->subMonths(2)])->save();
+        $overdue = $this->task($manager, $project, 'Overdue scoped task', $manager->id, [
+            'status' => 'todo',
+            'due_date' => now()->subDay()->toDateString(),
+        ]);
+        $this->task($manager, $project, 'Blocked today', $manager->id, [
+            'status' => 'blocked',
+            'due_date' => now()->toDateString(),
+        ]);
+        $this->expense($manager, $project, 'approved', '100.00', 'DLV-EXP');
+
+        $this->actingAsOrgUser($manager)->get(route('delivery.dashboard', ['period' => 'month', 'month' => now()->format('Y-m')]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('deliverySummary', null)
+                ->where('dashboardWidgets.delivery.projects.active_projects', 1)
+                ->where('dashboardWidgets.delivery.projects.average_progress', 40)
+                ->where('dashboardWidgets.delivery.tasks.overdue_tasks', 1)
+                ->where('dashboardWidgets.delivery.tasks.due_this_week', now()->isMonday() ? 1 : 2)
+                ->where('dashboardWidgets.delivery.overdue_tasks.0.id', $overdue->id)
+                ->where('dashboardWidgets.delivery.past_due_projects.0.id', $project->id)
+                ->where('dashboardWidgets.delivery.assignee_load.0.open_tasks', 2));
+
+        $this->actingAsOrgUser($manager)->get(route('projects.index', ['project_id' => $project->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('projects', 1)
+                ->where('projects.0.id', $project->id)
+                ->missing('projects.0.actual_cost')
+                ->missing('projects.0.gross_margin'));
+        $this->actingAsOrgUser($manager)->get(route('tasks.index', ['task_id' => $overdue->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('tasks', 1)->where('tasks.0.id', $overdue->id));
+        $this->actingAsOrgUser($manager)->get(route('tasks.index', ['assignee_id' => $manager->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('tasks', 2));
+        $this->actingAsOrgUser($manager)->get(route('projects.index', ['status' => 'active']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('projects', 1));
+
+        $outsider = User::factory()->create();
+        $outsideProject = $this->project($outsider, 'OUT-1', 'Outside', $outsider->id);
+        $outsideTask = $this->task($outsider, $outsideProject, 'Outside task', $outsider->id);
+        $this->actingAsOrgUser($manager)->get(route('projects.index', ['project_id' => $outsideProject->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('projects', 0));
+        $this->actingAsOrgUser($manager)->get(route('tasks.index', ['task_id' => $outsideTask->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('tasks', 0));
+
+        $this->attachRole($manager, 'expense_viewer', ['expenses.view']);
+        $this->actingAsOrgUser($manager)->get(route('projects.index', ['project_id' => $project->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('projects.0.actual_cost', '100.00')
+                ->where('projects.0.budget_remaining', '-100.00'));
+        Expense::create([
+            'org_id' => $manager->org_id,
+            'expense_no' => 'DLV-FX',
+            'category' => 'delivery',
+            'title' => 'Foreign currency cost',
+            'amount' => 20,
+            'currency' => 'USD',
+            'expense_date' => now()->toDateString(),
+            'project_id' => $project->id,
+            'status' => 'approved',
+            'created_by' => $manager->id,
+        ]);
+        $this->actingAsOrgUser($manager)->get(route('projects.index', ['project_id' => $project->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->missing('projects.0.actual_cost')
+                ->missing('projects.0.budget_remaining'));
+    }
+
+    public function test_my_work_counts_only_assigned_tasks_and_links_to_exact_task(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create(['org_id' => $user->org_id]);
+        $this->attachRole($user, 'worker', ['tasks.view']);
+        $businessNow = now($user->organization?->timezone ?: config('app.timezone'));
+        $today = Task::create(['org_id' => $user->org_id, 'title' => 'Mine today', 'status' => 'todo', 'assignee_id' => $user->id, 'due_date' => $businessNow->toDateString()]);
+        Task::create(['org_id' => $user->org_id, 'title' => 'Mine overdue', 'status' => 'in_progress', 'assignee_id' => $user->id, 'due_date' => $businessNow->subDay()->toDateString()]);
+        Task::create(['org_id' => $user->org_id, 'title' => 'Mine done', 'status' => 'done', 'assignee_id' => $user->id, 'completed_at' => $businessNow]);
+        Task::create(['org_id' => $user->org_id, 'title' => 'Other task', 'status' => 'todo', 'assignee_id' => $other->id, 'due_date' => $businessNow->toDateString()]);
+
+        $this->actingAsOrgUser($user)->get(route('my-work.dashboard'))
+            ->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('summary.due_today', 1)
+            ->where('summary.overdue', 1)
+            ->where('summary.completed_this_week', 1)
+            ->has('groups', 1)
+            ->has('groups.0.tasks', 2)
+            ->where('hasMore', false));
+        $this->get(route('tasks.index', ['task_id' => $today->id]))
+            ->assertInertia(fn (Assert $page) => $page->has('tasks', 1)->where('tasks.0.id', $today->id));
     }
 
     private function project(User $user, string $code, string $name, string $ownerId, array $overrides = []): Project

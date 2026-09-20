@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\DashboardLanding;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,6 +47,6 @@ class ConfirmablePasswordController extends Controller
             return response()->noContent();
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(DashboardLanding::routeFor($request->user()));
     }
 }

@@ -31,7 +31,7 @@ class Phase6DashboardFiltersTest extends TestCase
         $this->travelTo(now()->setDate(2026, 8, 15)->startOfDay());
 
         $owner = User::factory()->create();
-        $this->attachRole($owner, 'director', ['dashboard.view', 'executive.dashboard.view', 'expenses.view', 'projects.view', 'tasks.view']);
+        $this->attachRole($owner, 'director', ['dashboard.view', 'executive.dashboard.view', 'customers.view', 'deals.view', 'invoices.view', 'payments.view', 'expenses.view', 'projects.view', 'tasks.view']);
 
         $augustCustomer = $this->customer($owner, 'AUG-CUSTOMER', '2026-08-03');
         $julyCustomer = $this->customer($owner, 'JUL-CUSTOMER', '2026-07-03');
@@ -61,26 +61,46 @@ class Phase6DashboardFiltersTest extends TestCase
                 ->where('dashboardFilters.period', 'month')
                 ->where('dashboardFilters.start_date', '2026-08-01')
                 ->where('dashboardFilters.end_date', '2026-08-31')
-                ->where('executiveSummary.sales.customers', 1)
-                ->where('executiveSummary.sales.open_deals', 1)
-                ->where('executiveSummary.sales.pipeline_value', 1000)
-                ->where('executiveSummary.sales.won_deals', 1)
-                ->where('executiveSummary.sales.won_value', 500)
-                ->where('executiveSummary.finance.invoiced_revenue', 1200)
-                ->where('executiveSummary.finance.cash_in', 350)
-                ->where('executiveSummary.finance.outstanding_ar', 850)
-                ->where('executiveSummary.finance.recognized_expense', 200)
-                ->where('executiveSummary.finance.gross_profit', 1000)
-                ->where('executiveSummary.delivery.active_projects', 1)
-                ->where('executiveSummary.delivery.overdue_tasks', 1)
-                ->where('executiveSummary.delivery.project_profit', 800)
+                ->where('executiveSummary', null)
+                ->where('dashboardWidgets.executive.sales.open_deals', 1)
+                ->where('dashboardWidgets.executive.sales.pipeline_by_currency.0.amount', 1000)
+                ->where('dashboardWidgets.executive.sales.won_deals', 1)
+                ->where('dashboardWidgets.executive.sales.won_by_currency.0.amount', 500)
+                ->where('dashboardWidgets.delivery.projects.active_projects', 2)
+                ->where('dashboardWidgets.delivery.tasks.overdue_tasks', 2)
+                ->has('dashboardWidgets.executive.revenue_expense_trend', 1)
+                ->where('financeSummary', null)
+                ->where('deliverySummary', null)
+            );
+
+        $this->get(route('dashboard', ['period' => 'today']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('dashboardFilters.period', 'today')
+                ->where('dashboardFilters.start_date', '2026-08-15')
+                ->where('dashboardFilters.end_date', '2026-08-15'));
+        $this->get(route('dashboard', ['period' => 'this_week']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('dashboardFilters.period', 'this_week')
+                ->where('dashboardFilters.start_date', '2026-08-10')
+                ->where('dashboardFilters.end_date', '2026-08-16'));
+
+        $this->get(route('finance.dashboard', ['period' => 'month', 'month' => '2026-08']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
                 ->where('financeSummary.cash_in_receipts', 400)
                 ->where('financeSummary.cash_in_reversals', 50)
                 ->where('financeSummary.previous.invoiced_revenue', 900)
                 ->where('financeSummary.previous.cash_in', 900)
                 ->where('financeSummary.previous.outstanding_ar', 900)
                 ->where('financeSummary.previous.recognized_expense', 1000)
-                ->where('financeSummary.previous.gross_profit', -100)
+                ->where('financeSummary.previous.billed_minus_expense_estimate', -100)
+            );
+
+        $this->get(route('delivery.dashboard', ['period' => 'month', 'month' => '2026-08']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
                 ->where('deliverySummary.total_budget', 1000)
                 ->where('deliverySummary.actual_cost', 200)
             );
@@ -109,6 +129,7 @@ class Phase6DashboardFiltersTest extends TestCase
             'value_amount' => $amount,
             'currency' => 'THB',
             'probability' => $stage === 'won' ? 100 : 60,
+            'won_at' => $stage === 'won' ? $createdAt : null,
             'owner_id' => $owner->id,
         ]);
         $deal->forceFill(['created_at' => $createdAt, 'updated_at' => $createdAt])->saveQuietly();

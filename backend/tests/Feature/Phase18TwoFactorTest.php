@@ -10,6 +10,7 @@ use App\Models\TwoFactorTrustedDevice;
 use App\Models\User;
 use App\Services\TotpService;
 use App\Services\TwoFactorPolicyService;
+use App\Support\DashboardLanding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,7 @@ class Phase18TwoFactorTest extends TestCase
 
         $this->post(route('login'), ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('two-factor.challenge'));
         $this->assertGuest();
-        $this->post(route('two-factor.challenge.verify'), ['code' => $this->currentCode($secret)])->assertRedirect(route('dashboard', absolute: false));
+        $this->post(route('two-factor.challenge.verify'), ['code' => $this->currentCode($secret)])->assertRedirect(DashboardLanding::routeFor($user));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -41,7 +42,7 @@ class Phase18TwoFactorTest extends TestCase
         $user->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_recovery_codes' => [Hash::make('RECOVERY01')], 'two_factor_confirmed_at' => now()])->save();
         session(['two_factor_pending_user_id' => $user->id]);
         $this->post(route('two-factor.challenge.verify'), ['code' => 'INVALID01'])->assertSessionHasErrors('code');
-        $this->post(route('two-factor.challenge.verify'), ['code' => 'RECOVERY01'])->assertRedirect(route('dashboard', absolute: false));
+        $this->post(route('two-factor.challenge.verify'), ['code' => 'RECOVERY01'])->assertRedirect(DashboardLanding::routeFor($user));
         $this->assertSame([], $user->fresh()->two_factor_recovery_codes);
     }
 
@@ -67,7 +68,7 @@ class Phase18TwoFactorTest extends TestCase
         Setting::create(['org_id' => $user->org_id, 'key' => 'security.two_factor', 'value_json' => ['enabled' => false]]);
 
         $this->post(route('login'), ['email' => $user->email, 'password' => 'password'])
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(DashboardLanding::routeFor($user));
         $this->assertAuthenticatedAs($user);
     }
 

@@ -21,7 +21,15 @@ class DealController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'stage', 'owner_id', 'customer_id']);
+        $request->validate([
+            'created_from' => ['nullable', 'date_format:Y-m-d'],
+            'created_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:created_from'],
+            'won_from' => ['nullable', 'date_format:Y-m-d'],
+            'won_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:won_from'],
+            'lost_from' => ['nullable', 'date_format:Y-m-d'],
+            'lost_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:lost_from'],
+        ]);
+        $filters = $request->only(['search', 'stage', 'owner_id', 'customer_id', 'deal_id', 'currency', 'open_only', 'created_from', 'created_to', 'won_from', 'won_to', 'lost_from', 'lost_to']);
         $deals = SalesAccess::scopeDeals(Deal::query(), $user)
             ->with(['customer:id,company_name,customer_code,owner_id', 'contact:id,name,email,phone', 'owner:id,name,email', 'project:id,deal_id,project_code,name', 'activities' => fn ($query) => $query->latest()->limit(5)])
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($inner) use ($search) {
@@ -29,8 +37,17 @@ class DealController extends Controller
                     ->orWhereHas('customer', fn ($customer) => $customer->where('company_name', 'like', "%{$search}%"));
             }))
             ->when($filters['stage'] ?? null, fn ($query, $stage) => $query->where('stage', $stage))
-            ->when(($filters['owner_id'] ?? null) && SalesAccess::canSeeAll($user), fn ($query) => $query->where('owner_id', $filters['owner_id']))
+            ->when(($filters['open_only'] ?? null) === '1', fn ($query) => $query->whereIn('stage', Deal::OPEN_STAGES))
+            ->when(($filters['owner_id'] ?? null) && SalesAccess::canSeeAll($user), fn ($query) => ($filters['owner_id'] === '__unassigned' ? $query->whereNull('owner_id') : $query->where('owner_id', $filters['owner_id'])))
             ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
+            ->when($filters['deal_id'] ?? null, fn ($query, $dealId) => $query->whereKey($dealId))
+            ->when($filters['currency'] ?? null, fn ($query, $currency) => $currency === '__unspecified' ? $query->whereNull('currency') : $query->where('currency', $currency))
+            ->when($filters['created_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['created_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date))
+            ->when($filters['won_from'] ?? null, fn ($query, $date) => $query->whereDate('won_at', '>=', $date))
+            ->when($filters['won_to'] ?? null, fn ($query, $date) => $query->whereDate('won_at', '<=', $date))
+            ->when($filters['lost_from'] ?? null, fn ($query, $date) => $query->whereDate('lost_at', '>=', $date))
+            ->when($filters['lost_to'] ?? null, fn ($query, $date) => $query->whereDate('lost_at', '<=', $date))
             ->latest()
             ->get();
 

@@ -25,7 +25,7 @@ export default function AuthenticatedLayout({
 
     const navItems = [
         {
-            group: 'Core',
+            group: 'Overview',
             items: [
                 {
                     name: 'Dashboard',
@@ -48,11 +48,6 @@ export default function AuthenticatedLayout({
                         </svg>
                     ),
                 },
-            ],
-        },
-        {
-            group: 'Executive',
-            items: [
                 {
                     name: 'Executive Dashboard',
                     href: route('executive.dashboard'),
@@ -74,10 +69,52 @@ export default function AuthenticatedLayout({
                         </svg>
                     ),
                 },
+                {
+                    name: 'My Work',
+                    href: route('my-work.dashboard'),
+                    active: route().current('my-work.dashboard'),
+                    permission: 'tasks.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 7h16M4 12h16M4 17h10"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Approvals',
+                    href: route('workflows.index'),
+                    active: route().current('workflows.*'),
+                    permission: 'workflows.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12l2 2 4-4m5 2a8 8 0 11-16 0 8 8 0 0116 0z"
+                            />
+                        </svg>
+                    ),
+                },
             ],
         },
         {
-            group: 'Sales',
+            group: 'Sales & CRM',
             items: [
                 {
                     name: 'Sales Dashboard',
@@ -142,10 +179,166 @@ export default function AuthenticatedLayout({
                         </svg>
                     ),
                 },
+                {
+                    name: 'Quotations',
+                    href: route('quotations.index'),
+                    active: route().current('quotations.*'),
+                    permission: 'quotations.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12h6m-6 4h6M7 4h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"
+                            />
+                        </svg>
+                    ),
+                },
             ],
         },
         {
-            group: 'Finance',
+            group: 'Procurement & Inventory',
+            items: [
+                {
+                    name: 'Procurement Dashboard',
+                    href: route('procurement.dashboard'),
+                    active: route().current('procurement.dashboard'),
+                    permission: [
+                        'purchase_orders.view',
+                        'inventory.view',
+                        'workflows.approve',
+                    ],
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 7h16M4 12h16M4 17h16"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Purchase Orders',
+                    href: route('purchase-orders.index'),
+                    active: route().current('purchase-orders.*'),
+                    permission: 'purchase_orders.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12h6m-6 4h6M7 4h10l2 2v14H5V6l2-2z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Suppliers',
+                    href: route('suppliers.index'),
+                    active: route().current('suppliers.*'),
+                    permission: 'suppliers.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M3 7h18M5 7v12h14V7M8 11h3m2 0h3M8 15h8"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Products/Services',
+                    href: route('products.index'),
+                    active: route().current('products.*'),
+                    permission: 'products.manage',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Inventory / GRN',
+                    href: route('goods-receipts.index'),
+                    active: route().current('goods-receipts.*'),
+                    permission: 'inventory.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M20 7l-8-4-8 4m16 0v10l-8 4m8-14l-8 4m0 10L4 17V7m8 4L4 7"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Inventory Operations',
+                    href: route('inventory-operations.index'),
+                    active: route().current('inventory-operations.*'),
+                    permission: 'inventory.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7l8-4 8 4M4 7l8 4 8-4m-8 4v9"
+                            />
+                        </svg>
+                    ),
+                },
+            ],
+        },
+        {
+            group: 'Finance & Accounting',
             items: [
                 {
                     name: 'Finance Dashboard',
@@ -190,27 +383,6 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
-                    name: 'Quotations',
-                    href: route('quotations.index'),
-                    active: route().current('quotations.*'),
-                    permission: 'quotations.view',
-                    icon: (
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 12h6m-6 4h6M7 4h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"
-                            />
-                        </svg>
-                    ),
-                },
-                {
                     name: 'Commercial Docs',
                     href: route('commercial-documents.index'),
                     active: route().current('commercial-documents.*'),
@@ -248,90 +420,6 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m-6-6a6 6 0 1112 0 6 6 0 01-12 0z"
-                            />
-                        </svg>
-                    ),
-                },
-                {
-                    name: 'Tax Reports',
-                    href: route('tax-reports.index'),
-                    active: route().current('tax-reports.*'),
-                    permission: 'tax_reports.view',
-                    icon: (
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 17h6m-6-4h6m-6-4h2m-4 12h10a2 2 0 002-2V7l-4-4H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                            />
-                        </svg>
-                    ),
-                },
-                {
-                    name: 'e-Tax & RD Prep',
-                    href: route('e-tax.index'),
-                    active: route().current('e-tax.*'),
-                    permission: 'e_tax.view',
-                    icon: (
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M7 3h7l3 3v15H7V3zm3 7h4m-4 4h4m-4 4h4"
-                            />
-                        </svg>
-                    ),
-                },
-                {
-                    name: 'Suppliers',
-                    href: route('suppliers.index'),
-                    active: route().current('suppliers.*'),
-                    permission: 'suppliers.view',
-                    icon: (
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M3 7h18M5 7v12h14V7M8 11h3m2 0h3M8 15h8"
-                            />
-                        </svg>
-                    ),
-                },
-                {
-                    name: 'Purchase Orders',
-                    href: route('purchase-orders.index'),
-                    active: route().current('purchase-orders.*'),
-                    permission: 'purchase_orders.view',
-                    icon: (
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 12h6m-6 4h6M7 4h10l2 2v14H5V6l2-2z"
                             />
                         </svg>
                     ),
@@ -442,10 +530,10 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
-                    name: 'Payroll',
-                    href: route('payroll.index'),
-                    active: route().current('payroll.*'),
-                    permission: 'payroll.view',
+                    name: 'Tax Reports',
+                    href: route('tax-reports.index'),
+                    active: route().current('tax-reports.*'),
+                    permission: 'tax_reports.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -457,16 +545,16 @@ export default function AuthenticatedLayout({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth="2"
-                                d="M12 4v16m8-8H4m3-5h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z"
+                                d="M9 17h6m-6-4h6m-6-4h2m-4 12h10a2 2 0 002-2V7l-4-4H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                             />
                         </svg>
                     ),
                 },
                 {
-                    name: 'HR & Attendance',
-                    href: route('hr.index'),
-                    active: route().current('hr.*'),
-                    permission: 'hr.self.view',
+                    name: 'e-Tax & RD Prep',
+                    href: route('e-tax.index'),
+                    active: route().current('e-tax.*'),
+                    permission: 'e_tax.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -478,28 +566,7 @@ export default function AuthenticatedLayout({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth="2"
-                                d="M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0M18 8h3m-1.5-1.5v3"
-                            />
-                        </svg>
-                    ),
-                },
-                {
-                    name: 'Approvals',
-                    href: route('workflows.index'),
-                    active: route().current('workflows.*'),
-                    permission: 'workflows.view',
-                    icon: (
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 12l2 2 4-4m5 2a8 8 0 11-16 0 8 8 0 0116 0z"
+                                d="M7 3h7l3 3v15H7V3zm3 7h4m-4 4h4m-4 4h4"
                             />
                         </svg>
                     ),
@@ -630,11 +697,16 @@ export default function AuthenticatedLayout({
                         </svg>
                     ),
                 },
+            ],
+        },
+        {
+            group: 'HR & People',
+            items: [
                 {
-                    name: 'Inventory / GRN',
-                    href: route('goods-receipts.index'),
-                    active: route().current('goods-receipts.*'),
-                    permission: 'inventory.view',
+                    name: 'HR / Payroll Dashboard',
+                    href: route('hr.dashboard'),
+                    active: route().current('hr.dashboard'),
+                    permission: ['hr.manage', 'payroll.view'],
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -646,16 +718,16 @@ export default function AuthenticatedLayout({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth="2"
-                                d="M20 7l-8-4-8 4m16 0v10l-8 4m8-14l-8 4m0 10L4 17V7m8 4L4 7"
+                                d="M4 7h16M4 12h16M4 17h16"
                             />
                         </svg>
                     ),
                 },
                 {
-                    name: 'Inventory Operations',
-                    href: route('inventory-operations.index'),
-                    active: route().current('inventory-operations.*'),
-                    permission: 'inventory.view',
+                    name: 'HR & Attendance',
+                    href: route('hr.index'),
+                    active: route().current('hr.*'),
+                    permission: 'hr.self.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -667,16 +739,16 @@ export default function AuthenticatedLayout({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth="2"
-                                d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7l8-4 8 4M4 7l8 4 8-4m-8 4v9"
+                                d="M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0M18 8h3m-1.5-1.5v3"
                             />
                         </svg>
                     ),
                 },
                 {
-                    name: 'Products/Services',
-                    href: route('products.index'),
-                    active: route().current('products.*'),
-                    permission: 'products.manage',
+                    name: 'Payroll',
+                    href: route('payroll.index'),
+                    active: route().current('payroll.*'),
+                    permission: 'payroll.view',
                     icon: (
                         <svg
                             className="h-5 w-5"
@@ -688,7 +760,7 @@ export default function AuthenticatedLayout({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth="2"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                d="M12 4v16m8-8H4m3-5h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z"
                             />
                         </svg>
                     ),
@@ -696,7 +768,7 @@ export default function AuthenticatedLayout({
             ],
         },
         {
-            group: 'Delivery',
+            group: 'Delivery & Projects',
             items: [
                 {
                     name: 'Delivery Dashboard',
@@ -715,27 +787,6 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M9 17H7a2 2 0 01-2-2V5a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8m-4-4v8"
-                            />
-                        </svg>
-                    ),
-                },
-                {
-                    name: 'Tasks',
-                    href: route('tasks.index'),
-                    active: route().current('tasks.*'),
-                    permission: 'tasks.view',
-                    icon: (
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 11l3 3L22 4M7 5H4a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2v-5M7 12h1m-1 4h6"
                             />
                         </svg>
                     ),
@@ -761,10 +812,31 @@ export default function AuthenticatedLayout({
                         </svg>
                     ),
                 },
+                {
+                    name: 'Tasks',
+                    href: route('tasks.index'),
+                    active: route().current('tasks.*'),
+                    permission: 'tasks.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 11l3 3L22 4M7 5H4a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2v-5M7 12h1m-1 4h6"
+                            />
+                        </svg>
+                    ),
+                },
             ],
         },
         {
-            group: 'Administration',
+            group: 'Administration & Settings',
             items: [
                 {
                     name: 'Users',
@@ -829,18 +901,6 @@ export default function AuthenticatedLayout({
                         </svg>
                     ),
                 },
-            ],
-        },
-        {
-            group: 'Organization Settings',
-            items: [
-                {
-                    name: 'Payment Gateway',
-                    href: route('gateway.settings'),
-                    active: route().current('gateway.settings'),
-                    permission: 'settings.organization.view',
-                    icon: <span aria-hidden="true">฿</span>,
-                },
                 {
                     name: 'Organization Profile',
                     href: route('settings.organization.edit'),
@@ -884,6 +944,13 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'Payment Gateway',
+                    href: route('gateway.settings'),
+                    active: route().current('gateway.settings'),
+                    permission: 'settings.organization.view',
+                    icon: <span aria-hidden="true">฿</span>,
+                },
+                {
                     name: 'Notifications',
                     href: route('settings.notifications.edit'),
                     active: route().current('settings.notifications.*'),
@@ -911,13 +978,15 @@ export default function AuthenticatedLayout({
     const visibleNavItems = navItems
         .map((section) => ({
             ...section,
-            items: section.items.filter((item) =>
-                Array.isArray(item.permission)
-                    ? item.permission.some((permission) =>
-                          permissions.includes(permission),
-                      )
-                    : permissions.includes(item.permission),
-            ),
+            items: section.items.filter((item) => {
+                if (item.href === route('hr.dashboard')) {
+                    return permissions.includes('payroll.view') ||
+                        (permissions.includes('hr.manage') && permissions.includes('hr.self.view'));
+                }
+                return Array.isArray(item.permission)
+                    ? item.permission.some((permission) => permissions.includes(permission))
+                    : permissions.includes(item.permission);
+            }),
         }))
         .filter((section) => section.items.length > 0);
     return (

@@ -18,9 +18,32 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PaymentController extends Controller
 {
+    public function index(Request $request): Response
+    {
+        $filters = $request->only(['payment_id', 'entry_type', 'from', 'to']);
+        $payments = Payment::query()
+            ->where('org_id', $request->user()->org_id)
+            ->with(['invoice:id,invoice_no', 'invoice.customer:id,company_name'])
+            ->when($filters['payment_id'] ?? null, fn ($query, $paymentId) => $query->whereKey($paymentId))
+            ->when(in_array($filters['entry_type'] ?? null, ['receipt', 'reversal'], true), fn ($query) => $query->where('entry_type', $filters['entry_type']))
+            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('payment_date', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('payment_date', '<=', $to))
+            ->latest('payment_date')
+            ->latest('created_at')
+            ->paginate(25)
+            ->withQueryString();
+
+        return Inertia::render('Finance/Payments', [
+            'payments' => $payments,
+            'filters' => $filters,
+        ]);
+    }
+
     public function store(Request $request, Invoice $invoice, FileAttachmentManager $files, FinancialJournalService $journals, FxRateService $fxRates): RedirectResponse
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);

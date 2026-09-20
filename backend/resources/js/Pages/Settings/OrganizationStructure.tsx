@@ -5,8 +5,9 @@ import Card from '@/Components/UI/Card';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { PageProps } from '@/Types';
 import {
     BranchDialog,
     DivisionDialog,
@@ -136,6 +137,10 @@ export default function OrganizationStructure({
     departments: Department[];
     users: OrgUser[];
 }) {
+    const { auth } = usePage<PageProps>().props;
+    const canManageStructure =
+        auth?.permissions?.includes('settings.structure.update') ?? false;
+
     const [tab, setTab] = useState<Tab>('branches');
     const [searchQuery, setSearchQuery] = useState('');
     const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -321,31 +326,37 @@ export default function OrganizationStructure({
     );
 
     const openCreateBranch = () => {
+        if (!canManageStructure) return;
         setEditingBranch(null);
         setBranchDialogOpen(true);
     };
 
     const openEditBranch = (branch: Branch) => {
+        if (!canManageStructure) return;
         setEditingBranch(branch);
         setBranchDialogOpen(true);
     };
 
     const openCreateDivision = () => {
+        if (!canManageStructure) return;
         setEditingDivision(null);
         setDivisionDialogOpen(true);
     };
 
     const openEditDivision = (division: Division) => {
+        if (!canManageStructure) return;
         setEditingDivision(division);
         setDivisionDialogOpen(true);
     };
 
     const openCreateDepartment = () => {
+        if (!canManageStructure) return;
         setEditingDepartment(null);
         setDepartmentDialogOpen(true);
     };
 
     const openEditDepartment = (department: Department) => {
+        if (!canManageStructure) return;
         setEditingDepartment(department);
         setDepartmentDialogOpen(true);
     };
@@ -355,10 +366,12 @@ export default function OrganizationStructure({
         id: string,
         data: Record<string, string | boolean | null>,
     ) => {
+        if (!canManageStructure) return;
         router.patch(route(name, id), data, { preserveScroll: true });
     };
 
     const destroy = (name: string, id: string) => {
+        if (!canManageStructure) return;
         if (window.confirm('Confirm delete this record?')) {
             router.delete(route(name, id), { preserveScroll: true });
         }
@@ -1917,26 +1930,28 @@ export default function OrganizationStructure({
                             title="Branches"
                             description={`${branches.length} total branches registered`}
                             action={
-                                <PrimaryButton
-                                    onClick={openCreateBranch}
-                                    icon={
-                                        <svg
-                                            className="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M12 4v16m8-8H4"
-                                            />
-                                        </svg>
-                                    }
-                                >
-                                    New Branch
-                                </PrimaryButton>
+                                canManageStructure ? (
+                                    <PrimaryButton
+                                        onClick={openCreateBranch}
+                                        icon={
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                        }
+                                    >
+                                        New Branch
+                                    </PrimaryButton>
+                                ) : undefined
                             }
                         >
                             <DataTable
@@ -1988,43 +2003,52 @@ export default function OrganizationStructure({
                                             />
                                         ),
                                     },
-                                    {
-                                        header: 'Actions',
-                                        accessor: (branch) => (
-                                            <div className="flex flex-wrap gap-2">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openEditBranch(branch)
-                                                    }
-                                                >
-                                                    Edit
-                                                </SecondaryButton>
-                                                {branch.status === 'active' && (
-                                                    <SecondaryButton
-                                                        onClick={() =>
-                                                            patch(
-                                                                'settings.branches.disable',
-                                                                branch.id,
-                                                                {},
-                                                            )
-                                                        }
-                                                    >
-                                                        Disable
-                                                    </SecondaryButton>
-                                                )}
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        destroy(
-                                                            'settings.branches.destroy',
-                                                            branch.id,
-                                                        )
-                                                    }
-                                                >
-                                                    Delete
-                                                </SecondaryButton>
-                                            </div>
-                                        ),
-                                    },
+                                    ...(canManageStructure
+                                        ? [
+                                              {
+                                                  header: 'Actions',
+                                                  accessor: (
+                                                      branch: Branch,
+                                                  ) => (
+                                                      <div className="flex flex-wrap gap-2">
+                                                          <SecondaryButton
+                                                              onClick={() =>
+                                                                  openEditBranch(
+                                                                      branch,
+                                                                  )
+                                                              }
+                                                          >
+                                                              Edit
+                                                          </SecondaryButton>
+                                                          {branch.status ===
+                                                              'active' && (
+                                                              <SecondaryButton
+                                                                  onClick={() =>
+                                                                      patch(
+                                                                          'settings.branches.disable',
+                                                                          branch.id,
+                                                                          {},
+                                                                      )
+                                                                  }
+                                                              >
+                                                                  Disable
+                                                              </SecondaryButton>
+                                                          )}
+                                                          <SecondaryButton
+                                                              onClick={() =>
+                                                                  destroy(
+                                                                      'settings.branches.destroy',
+                                                                      branch.id,
+                                                                  )
+                                                              }
+                                                          >
+                                                              Delete
+                                                          </SecondaryButton>
+                                                      </div>
+                                                  ),
+                                              },
+                                          ]
+                                        : []),
                                 ]}
                             />
                         </Card>
@@ -2038,26 +2062,28 @@ export default function OrganizationStructure({
                             title="Divisions"
                             description={`${divisions.length} total divisions registered`}
                             action={
-                                <PrimaryButton
-                                    onClick={openCreateDivision}
-                                    icon={
-                                        <svg
-                                            className="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M12 4v16m8-8H4"
-                                            />
-                                        </svg>
-                                    }
-                                >
-                                    New Division
-                                </PrimaryButton>
+                                canManageStructure ? (
+                                    <PrimaryButton
+                                        onClick={openCreateDivision}
+                                        icon={
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                        }
+                                    >
+                                        New Division
+                                    </PrimaryButton>
+                                ) : undefined
                             }
                         >
                             <DataTable
@@ -2095,46 +2121,52 @@ export default function OrganizationStructure({
                                             />
                                         ),
                                     },
-                                    {
-                                        header: 'Actions',
-                                        accessor: (division) => (
-                                            <div className="flex flex-wrap gap-2">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openEditDivision(
-                                                            division,
-                                                        )
-                                                    }
-                                                >
-                                                    Edit
-                                                </SecondaryButton>
-                                                {division.status ===
-                                                    'active' && (
-                                                    <SecondaryButton
-                                                        onClick={() =>
-                                                            patch(
-                                                                'settings.divisions.disable',
-                                                                division.id,
-                                                                {},
-                                                            )
-                                                        }
-                                                    >
-                                                        Disable
-                                                    </SecondaryButton>
-                                                )}
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        destroy(
-                                                            'settings.divisions.destroy',
-                                                            division.id,
-                                                        )
-                                                    }
-                                                >
-                                                    Delete
-                                                </SecondaryButton>
-                                            </div>
-                                        ),
-                                    },
+                                    ...(canManageStructure
+                                        ? [
+                                              {
+                                                  header: 'Actions',
+                                                  accessor: (
+                                                      division: Division,
+                                                  ) => (
+                                                      <div className="flex flex-wrap gap-2">
+                                                          <SecondaryButton
+                                                              onClick={() =>
+                                                                  openEditDivision(
+                                                                      division,
+                                                                  )
+                                                              }
+                                                          >
+                                                              Edit
+                                                          </SecondaryButton>
+                                                          {division.status ===
+                                                              'active' && (
+                                                              <SecondaryButton
+                                                                  onClick={() =>
+                                                                      patch(
+                                                                          'settings.divisions.disable',
+                                                                          division.id,
+                                                                          {},
+                                                                      )
+                                                                  }
+                                                              >
+                                                                  Disable
+                                                              </SecondaryButton>
+                                                          )}
+                                                          <SecondaryButton
+                                                              onClick={() =>
+                                                                  destroy(
+                                                                      'settings.divisions.destroy',
+                                                                      division.id,
+                                                                  )
+                                                              }
+                                                          >
+                                                              Delete
+                                                          </SecondaryButton>
+                                                      </div>
+                                                  ),
+                                              },
+                                          ]
+                                        : []),
                                 ]}
                             />
                         </Card>
@@ -2148,26 +2180,28 @@ export default function OrganizationStructure({
                             title="Departments"
                             description={`${departments.length} total departments registered`}
                             action={
-                                <PrimaryButton
-                                    onClick={openCreateDepartment}
-                                    icon={
-                                        <svg
-                                            className="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M12 4v16m8-8H4"
-                                            />
-                                        </svg>
-                                    }
-                                >
-                                    New Department
-                                </PrimaryButton>
+                                canManageStructure ? (
+                                    <PrimaryButton
+                                        onClick={openCreateDepartment}
+                                        icon={
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                        }
+                                    >
+                                        New Department
+                                    </PrimaryButton>
+                                ) : undefined
                             }
                         >
                             <DataTable
@@ -2214,46 +2248,52 @@ export default function OrganizationStructure({
                                             />
                                         ),
                                     },
-                                    {
-                                        header: 'Actions',
-                                        accessor: (department) => (
-                                            <div className="flex flex-wrap gap-2">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openEditDepartment(
-                                                            department,
-                                                        )
-                                                    }
-                                                >
-                                                    Edit
-                                                </SecondaryButton>
-                                                {department.status ===
-                                                    'active' && (
-                                                    <SecondaryButton
-                                                        onClick={() =>
-                                                            patch(
-                                                                'settings.departments.disable',
-                                                                department.id,
-                                                                {},
-                                                            )
-                                                        }
-                                                    >
-                                                        Disable
-                                                    </SecondaryButton>
-                                                )}
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        destroy(
-                                                            'settings.departments.destroy',
-                                                            department.id,
-                                                        )
-                                                    }
-                                                >
-                                                    Delete
-                                                </SecondaryButton>
-                                            </div>
-                                        ),
-                                    },
+                                    ...(canManageStructure
+                                        ? [
+                                              {
+                                                  header: 'Actions',
+                                                  accessor: (
+                                                      department: Department,
+                                                  ) => (
+                                                      <div className="flex flex-wrap gap-2">
+                                                          <SecondaryButton
+                                                              onClick={() =>
+                                                                  openEditDepartment(
+                                                                      department,
+                                                                  )
+                                                              }
+                                                          >
+                                                              Edit
+                                                          </SecondaryButton>
+                                                          {department.status ===
+                                                              'active' && (
+                                                              <SecondaryButton
+                                                                  onClick={() =>
+                                                                      patch(
+                                                                          'settings.departments.disable',
+                                                                          department.id,
+                                                                          {},
+                                                                      )
+                                                                  }
+                                                              >
+                                                                  Disable
+                                                              </SecondaryButton>
+                                                          )}
+                                                          <SecondaryButton
+                                                              onClick={() =>
+                                                                  destroy(
+                                                                      'settings.departments.destroy',
+                                                                      department.id,
+                                                                  )
+                                                              }
+                                                          >
+                                                              Delete
+                                                          </SecondaryButton>
+                                                      </div>
+                                                  ),
+                                              },
+                                          ]
+                                        : []),
                                 ]}
                             />
                         </Card>
@@ -2261,35 +2301,39 @@ export default function OrganizationStructure({
                 )}
             </div>
 
-            <BranchDialog
-                open={branchDialogOpen}
-                branch={editingBranch}
-                onClose={() => {
-                    setBranchDialogOpen(false);
-                    setEditingBranch(null);
-                }}
-            />
+            {canManageStructure && (
+                <>
+                    <BranchDialog
+                        open={branchDialogOpen}
+                        branch={editingBranch}
+                        onClose={() => {
+                            setBranchDialogOpen(false);
+                            setEditingBranch(null);
+                        }}
+                    />
 
-            <DivisionDialog
-                open={divisionDialogOpen}
-                division={editingDivision}
-                branches={branches}
-                onClose={() => {
-                    setDivisionDialogOpen(false);
-                    setEditingDivision(null);
-                }}
-            />
+                    <DivisionDialog
+                        open={divisionDialogOpen}
+                        division={editingDivision}
+                        branches={branches}
+                        onClose={() => {
+                            setDivisionDialogOpen(false);
+                            setEditingDivision(null);
+                        }}
+                    />
 
-            <DepartmentDialog
-                open={departmentDialogOpen}
-                department={editingDepartment}
-                branches={branches}
-                divisions={divisions}
-                onClose={() => {
-                    setDepartmentDialogOpen(false);
-                    setEditingDepartment(null);
-                }}
-            />
+                    <DepartmentDialog
+                        open={departmentDialogOpen}
+                        department={editingDepartment}
+                        branches={branches}
+                        divisions={divisions}
+                        onClose={() => {
+                            setDepartmentDialogOpen(false);
+                            setEditingDepartment(null);
+                        }}
+                    />
+                </>
+            )}
         </AuthenticatedLayout>
     );
 }

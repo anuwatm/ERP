@@ -10,6 +10,7 @@ use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\Warehouse;
 use App\Models\WarehouseBin;
+use App\Support\LowStockLocations;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,13 +24,15 @@ class InventoryOperationsController extends Controller
     public function index(Request $request): Response
     {
         $orgId = $request->user()->org_id;
-        $stockByProduct = StockMovement::where('org_id', $orgId)->selectRaw('product_id, SUM(quantity) quantity')->groupBy('product_id');
+        $lowStock = LowStockLocations::query($orgId)
+            ->when($request->filled('product_id'), fn ($query) => $query->where('products.id', $request->query('product_id')))
+            ->when($request->filled('warehouse_id'), fn ($query) => $query->where('warehouses.id', $request->query('warehouse_id')));
 
         return Inertia::render('Finance/InventoryOperations', [
             'warehouses' => Warehouse::where('org_id', $orgId)->with('bins')->orderBy('code')->get(),
             'lots' => InventoryLot::where('org_id', $orgId)->where(fn ($query) => $query->whereNull('expires_at')->orWhereDate('expires_at', '>=', today()))->orderBy('lot_no')->get(),
             'products' => Product::where('org_id', $orgId)->where('type', 'product')->orderBy('name')->get(['id', 'sku', 'barcode', 'name', 'unit', 'reorder_point']),
-            'lowStock' => Product::where('org_id', $orgId)->where('reorder_point', '>', 0)->get()->filter(fn (Product $product) => (float) $stockByProduct->clone()->where('product_id', $product->id)->sum('quantity') <= (float) $product->reorder_point)->values(),
+            'lowStock' => $lowStock->orderBy('products.name')->orderBy('warehouses.name')->get(),
             'transfers' => StockTransfer::where('org_id', $orgId)->latest('transfer_date')->limit(50)->get(),
         ]);
     }

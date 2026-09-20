@@ -30,7 +30,7 @@ class Phase5ExecutiveDashboardTest extends TestCase
     public function test_executive_permission_sees_sales_finance_delivery_metrics_without_cash_balance(): void
     {
         $owner = User::factory()->create();
-        $this->attachRole($owner, 'director', ['dashboard.view', 'executive.dashboard.view']);
+        $this->attachRole($owner, 'director', ['dashboard.view', 'executive.dashboard.view', 'customers.view', 'deals.view', 'invoices.view', 'payments.view', 'expenses.view', 'projects.view', 'tasks.view']);
 
         $customer = Customer::create([
             'org_id' => $owner->org_id,
@@ -76,6 +76,11 @@ class Phase5ExecutiveDashboardTest extends TestCase
             'paid_amount' => '350.00',
             'balance_due' => '850.00',
             'currency' => 'THB',
+            'base_currency' => 'THB',
+            'exchange_rate' => 1,
+            'base_total' => '1200.00',
+            'base_paid_amount' => '350.00',
+            'base_balance_due' => '850.00',
             'created_by' => $owner->id,
         ]);
 
@@ -84,6 +89,7 @@ class Phase5ExecutiveDashboardTest extends TestCase
             'invoice_id' => $invoice->id,
             'entry_type' => 'receipt',
             'amount' => '400.00',
+            'base_amount' => '400.00',
             'payment_date' => now()->toDateString(),
             'payment_method' => 'bank_transfer',
             'created_by' => $owner->id,
@@ -94,6 +100,7 @@ class Phase5ExecutiveDashboardTest extends TestCase
             'invoice_id' => $invoice->id,
             'entry_type' => 'reversal',
             'amount' => '50.00',
+            'base_amount' => '50.00',
             'payment_date' => now()->toDateString(),
             'payment_method' => 'bank_transfer',
             'created_by' => $owner->id,
@@ -118,6 +125,7 @@ class Phase5ExecutiveDashboardTest extends TestCase
             'category' => 'delivery',
             'title' => 'Approved Cost',
             'amount' => '300.00',
+            'base_amount' => '300.00',
             'expense_date' => now()->toDateString(),
             'project_id' => $project->id,
             'status' => 'approved',
@@ -150,23 +158,30 @@ class Phase5ExecutiveDashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
-                ->where('executiveSummary.sales.customers', 1)
-                ->where('executiveSummary.sales.open_deals', 1)
-                ->where('executiveSummary.sales.pipeline_value', 1000)
-                ->where('executiveSummary.sales.won_deals', 1)
-                ->where('executiveSummary.sales.won_value', 500)
-                ->where('executiveSummary.finance.invoiced_revenue', 1200)
-                ->where('executiveSummary.finance.cash_in', 350)
-                ->where('executiveSummary.finance.outstanding_ar', 850)
-                ->where('executiveSummary.finance.overdue_ar', 850)
-                ->where('executiveSummary.finance.recognized_expense', 300)
-                ->where('executiveSummary.finance.gross_profit', 900)
-                ->where('executiveSummary.delivery.active_projects', 1)
-                ->where('executiveSummary.delivery.overdue_tasks', 1)
-                ->where('executiveSummary.delivery.project_profit', 700)
-                ->where('executiveSummary.delivery.delivery_risk_count', 1)
-                ->missing('executiveSummary.cash_balance')
+                ->where('executiveSummary', null)
+                ->where('dashboardWidgets.executive.sales.open_deals', 1)
+                ->where('dashboardWidgets.executive.sales.pipeline_by_currency.0.amount', 1000)
+                ->where('dashboardWidgets.executive.sales.won_deals', 1)
+                ->where('dashboardWidgets.executive.sales.won_by_currency.0.amount', 500)
+                ->where('dashboardWidgets.delivery.projects.active_projects', 1)
+                ->where('dashboardWidgets.delivery.tasks.overdue_tasks', 1)
+                ->where('dashboardWidgets.executive.project_risks.count', 1)
+                ->where('dashboardWidgets.executive.project_risks.items.0.reasons', ['Past due', 'High-priority open task'])
+                ->has('dashboardWidgets.finance.revenue')
+                ->has('dashboardWidgets.finance.cash_in')
+                ->has('dashboardWidgets.finance.ar')
+                ->has('dashboardWidgets.finance.expense')
             );
+
+        $this->get(route('executive.dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('executiveSummary', null)
+                ->has('dashboardWidgets.executive.sales')
+                ->has('dashboardWidgets.executive.revenue_expense_trend', 12)
+                ->has('dashboardWidgets.executive.top_customers', 1)
+                ->has('dashboardWidgets.finance.overdue_invoices', 1)
+                ->has('dashboardWidgets.executive.project_risks.items', 1));
     }
 
     public function test_non_executive_finance_user_does_not_receive_executive_summary(): void
@@ -181,6 +196,75 @@ class Phase5ExecutiveDashboardTest extends TestCase
                 ->where('executiveSummary', null)
                 ->has('financeSummary')
             );
+    }
+
+    public function test_executive_widgets_keep_sales_scope_and_currencies_separate(): void
+    {
+        $director = User::factory()->create();
+        $other = User::factory()->create(['org_id' => $director->org_id]);
+        $this->attachRole($director, 'director', ['dashboard.view', 'executive.dashboard.view', 'deals.view']);
+        $customer = Customer::create(['org_id' => $director->org_id, 'customer_code' => 'EXEC-SCOPE', 'company_name' => 'Scoped', 'owner_id' => $director->id]);
+        foreach ([
+            ['title' => 'Own THB', 'stage' => 'proposal', 'currency' => 'THB', 'amount' => 100, 'owner' => $director->id],
+            ['title' => 'Own USD', 'stage' => 'proposal', 'currency' => 'USD', 'amount' => 50, 'owner' => $director->id],
+            ['title' => 'Other THB', 'stage' => 'proposal', 'currency' => 'THB', 'amount' => 900, 'owner' => $other->id],
+            ['title' => 'Own won', 'stage' => 'won', 'currency' => 'THB', 'amount' => 200, 'owner' => $director->id],
+        ] as $item) {
+            Deal::create([
+                'org_id' => $director->org_id,
+                'title' => $item['title'],
+                'customer_id' => $customer->id,
+                'stage' => $item['stage'],
+                'currency' => $item['currency'],
+                'value_amount' => $item['amount'],
+                'owner_id' => $item['owner'],
+                'won_at' => $item['stage'] === 'won' ? now() : null,
+            ]);
+        }
+
+        $this->actingAsOrgUser($director)->get(route('executive.dashboard', ['period' => 'month', 'month' => now()->format('Y-m')]))
+            ->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('executiveSummary', null)
+            ->where('dashboardWidgets.executive.sales.open_deals', 2)
+            ->where('dashboardWidgets.executive.sales.won_deals', 1)
+            ->has('dashboardWidgets.executive.sales.pipeline_by_currency', 2)
+            ->where('dashboardWidgets.executive.sales.pipeline_by_currency.0.amount', 100)
+            ->where('dashboardWidgets.executive.sales.pipeline_by_currency.1.amount', 50)
+            ->where('dashboardWidgets.executive.sales.won_by_currency.0.amount', 200)
+            ->missing('dashboardWidgets.executive.top_customers')
+            ->missing('dashboardWidgets.executive.revenue_expense_trend')
+            );
+    }
+
+    public function test_project_risk_uses_same_currency_approved_cost_and_project_scope(): void
+    {
+        $director = User::factory()->create();
+        $other = User::factory()->create(['org_id' => $director->org_id]);
+        $this->attachRole($director, 'director', ['dashboard.view', 'executive.dashboard.view', 'projects.view', 'expenses.view']);
+        foreach ([
+            ['code' => 'RISK-THB', 'owner' => $director->id, 'cost_currency' => 'THB'],
+            ['code' => 'RISK-FX', 'owner' => $director->id, 'cost_currency' => 'USD'],
+            ['code' => 'RISK-HIDDEN', 'owner' => $other->id, 'cost_currency' => 'THB'],
+        ] as $item) {
+            $project = Project::create([
+                'org_id' => $director->org_id, 'project_code' => $item['code'], 'name' => $item['code'],
+                'owner_id' => $item['owner'], 'status' => 'active', 'due_date' => now()->addWeek()->toDateString(),
+                'budget_amount' => 100, 'currency' => 'THB',
+            ]);
+            Expense::create([
+                'org_id' => $director->org_id, 'expense_no' => 'EXP-'.$item['code'],
+                'category' => 'delivery', 'title' => $item['code'], 'amount' => 150,
+                'currency' => $item['cost_currency'], 'expense_date' => now()->toDateString(),
+                'project_id' => $project->id, 'status' => 'approved',
+            ]);
+        }
+
+        $this->actingAsOrgUser($director)->get(route('executive.dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('dashboardWidgets.executive.project_risks.count', 1)
+                ->has('dashboardWidgets.executive.project_risks.items', 1)
+                ->where('dashboardWidgets.executive.project_risks.items.0.project_code', 'RISK-THB')
+                ->where('dashboardWidgets.executive.project_risks.items.0.reasons', ['Over budget']));
     }
 
     private function attachRole(User $user, string $code, array $permissions): Role

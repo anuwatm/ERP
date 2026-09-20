@@ -23,7 +23,7 @@ class QuotationController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'status', 'customer_id']);
+        $filters = $request->only(['search', 'status', 'customer_id', 'quotation_id']);
 
         return Inertia::render('Finance/Quotations', [
             'quotations' => Quotation::query()
@@ -35,6 +35,7 @@ class QuotationController extends Controller
                 }))
                 ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
                 ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
+                ->when($filters['quotation_id'] ?? null, fn ($query, $quotationId) => $query->whereKey($quotationId))
                 ->latest()
                 ->get(),
             'customers' => Customer::where('org_id', $user->org_id)->orderBy('company_name')->get(['id', 'customer_code', 'company_name']),

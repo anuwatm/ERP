@@ -23,7 +23,7 @@ class TaskController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'status', 'project_id', 'assignee_id']);
+        $filters = $request->only(['task_id', 'search', 'status', 'project_id', 'assignee_id', 'unassigned']);
         $canSeeAll = TaskAccess::canSeeAll($user);
 
         $tasks = TaskAccess::scopeTasks(Task::query(), $user)
@@ -33,13 +33,15 @@ class TaskController extends Controller
                 'checklists:id,task_id,title,is_done,sort_order',
                 'comments.user:id,name,email',
             ])
+            ->when($filters['task_id'] ?? null, fn ($query, $taskId) => $query->whereKey($taskId))
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($inner) use ($search) {
                 $inner->where('title', 'like', "%{$search}%")
                     ->orWhereHas('project', fn ($project) => $project->where('name', 'like', "%{$search}%"));
             }))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
-            ->when(($filters['assignee_id'] ?? null) && $canSeeAll, fn ($query) => $query->where('assignee_id', $filters['assignee_id']))
+            ->when($filters['assignee_id'] ?? null, fn ($query, $assigneeId) => $query->where('assignee_id', $assigneeId))
+            ->when(($filters['unassigned'] ?? null) === '1', fn ($query) => $query->whereNull('assignee_id'))
             ->orderByRaw("CASE status WHEN 'todo' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'blocked' THEN 3 WHEN 'done' THEN 4 ELSE 5 END")
             ->orderBy('due_date')
             ->latest()

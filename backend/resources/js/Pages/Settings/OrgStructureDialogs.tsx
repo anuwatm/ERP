@@ -4,7 +4,12 @@ import { EditorField, EditorReference } from '@/Components/UI/EditorFields';
 import useDiscardGuard from '@/Hooks/useDiscardGuard';
 import useSubmissionKey from '@/Hooks/useSubmissionKey';
 import { useForm } from '@inertiajs/react';
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+    isBranchDirty,
+    isDivisionDirty,
+    isDepartmentDirty,
+} from './orgStructureDirty';
 
 export type Branch = {
     id: string;
@@ -47,29 +52,37 @@ export function BranchDialog({
     const isEdit = Boolean(branch);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const form = useForm({
-        name: branch?.name ?? '',
-        phone: branch?.phone ?? '',
-        address: branch?.address ?? '',
-        is_head_office: branch?.is_head_office ?? false,
-    });
+    const defaultData = useMemo(
+        () => ({
+            name: branch?.name ?? '',
+            phone: branch?.phone ?? '',
+            address: branch?.address ?? '',
+            is_head_office: branch?.is_head_office ?? false,
+        }),
+        [branch?.name, branch?.phone, branch?.address, branch?.is_head_office],
+    );
+
+    const form = useForm({ ...defaultData });
 
     useEffect(() => {
         if (open) {
-            form.setData({
-                name: branch?.name ?? '',
-                phone: branch?.phone ?? '',
-                address: branch?.address ?? '',
-                is_head_office: branch?.is_head_office ?? false,
-            });
+            form.setData(defaultData);
             form.clearErrors();
             resetSubmissionKey();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, branch]);
+    }, [open, branch?.id]);
 
-    const isDirty = form.data.name !== '';
+    const isDirty = open && isBranchDirty(form.data, defaultData);
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const handleClose = () => {
+        form.setData(defaultData);
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -78,9 +91,7 @@ export function BranchDialog({
                 headers: headers(),
                 preserveScroll: true,
                 onSuccess: () => {
-                    form.reset();
-                    resetSubmissionKey();
-                    onClose();
+                    handleClose();
                 },
             });
         } else {
@@ -88,9 +99,7 @@ export function BranchDialog({
                 headers: headers(),
                 preserveScroll: true,
                 onSuccess: () => {
-                    form.reset();
-                    resetSubmissionKey();
-                    onClose();
+                    handleClose();
                 },
             });
         }
@@ -104,7 +113,7 @@ export function BranchDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(handleClose)}
                 title={
                     isEdit
                         ? `Edit Branch: ${branch?.name}`
@@ -222,27 +231,40 @@ export function DivisionDialog({
     const [minimized, setMinimized] = useState(false);
     const isEdit = Boolean(division);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
-    const activeBranches = branches.filter((b) => b.status === 'active');
+    const activeBranches = useMemo(
+        () => branches.filter((b) => b.status === 'active'),
+        [branches],
+    );
 
-    const form = useForm({
-        branch_id: division?.branch_id ?? activeBranches[0]?.id ?? '',
-        name: division?.name ?? '',
-    });
+    const defaultData = useMemo(
+        () => ({
+            branch_id: division?.branch_id ?? activeBranches[0]?.id ?? '',
+            name: division?.name ?? '',
+        }),
+        [division?.branch_id, division?.name, activeBranches],
+    );
+
+    const form = useForm({ ...defaultData });
 
     useEffect(() => {
         if (open) {
-            form.setData({
-                branch_id: division?.branch_id ?? activeBranches[0]?.id ?? '',
-                name: division?.name ?? '',
-            });
+            form.setData(defaultData);
             form.clearErrors();
             resetSubmissionKey();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, division]);
+    }, [open, division?.id]);
 
-    const isDirty = form.data.name !== '';
+    const isDirty = open && isDivisionDirty(form.data, defaultData);
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const handleClose = () => {
+        form.setData(defaultData);
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -251,9 +273,7 @@ export function DivisionDialog({
                 headers: headers(),
                 preserveScroll: true,
                 onSuccess: () => {
-                    form.reset();
-                    resetSubmissionKey();
-                    onClose();
+                    handleClose();
                 },
             });
         } else {
@@ -261,9 +281,7 @@ export function DivisionDialog({
                 headers: headers(),
                 preserveScroll: true,
                 onSuccess: () => {
-                    form.reset();
-                    resetSubmissionKey();
-                    onClose();
+                    handleClose();
                 },
             });
         }
@@ -277,7 +295,7 @@ export function DivisionDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(handleClose)}
                 title={
                     isEdit
                         ? `Edit Division: ${division?.name}`
@@ -373,39 +391,42 @@ export function DepartmentDialog({
     const [minimized, setMinimized] = useState(false);
     const isEdit = Boolean(department);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
-    const activeBranches = branches.filter((b) => b.status === 'active');
-    const activeDivisions = divisions.filter((d) => d.status === 'active');
-
-    const defaultBranchId =
-        department?.branch_id ?? activeBranches[0]?.id ?? '';
-    const validBranchDivisions = activeDivisions.filter(
-        (d) => d.branch_id === defaultBranchId,
+    const activeBranches = useMemo(
+        () => branches.filter((b) => b.status === 'active'),
+        [branches],
     );
-    const defaultDivisionId =
-        department?.division_id ?? validBranchDivisions[0]?.id ?? '';
+    const activeDivisions = useMemo(
+        () => divisions.filter((d) => d.status === 'active'),
+        [divisions],
+    );
 
-    const form = useForm({
-        branch_id: defaultBranchId,
-        division_id: defaultDivisionId,
-        name: department?.name ?? '',
-    });
+    const defaultData = useMemo(() => {
+        const bId = department?.branch_id ?? activeBranches[0]?.id ?? '';
+        const bDivs = activeDivisions.filter((d) => d.branch_id === bId);
+        const dId = department?.division_id ?? bDivs[0]?.id ?? '';
+        return {
+            branch_id: bId,
+            division_id: dId,
+            name: department?.name ?? '',
+        };
+    }, [
+        department?.branch_id,
+        department?.division_id,
+        department?.name,
+        activeBranches,
+        activeDivisions,
+    ]);
+
+    const form = useForm({ ...defaultData });
 
     useEffect(() => {
         if (open) {
-            const bId = department?.branch_id ?? activeBranches[0]?.id ?? '';
-            const bDivs = activeDivisions.filter((d) => d.branch_id === bId);
-            const dId = department?.division_id ?? bDivs[0]?.id ?? '';
-
-            form.setData({
-                branch_id: bId,
-                division_id: dId,
-                name: department?.name ?? '',
-            });
+            form.setData(defaultData);
             form.clearErrors();
             resetSubmissionKey();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, department]);
+    }, [open, department?.id]);
 
     const handleBranchChange = (newBranchId: string) => {
         const branchDivs = activeDivisions.filter(
@@ -418,8 +439,16 @@ export function DepartmentDialog({
         }));
     };
 
-    const isDirty = form.data.name !== '';
+    const isDirty = open && isDepartmentDirty(form.data, defaultData);
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const handleClose = () => {
+        form.setData(defaultData);
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -428,9 +457,7 @@ export function DepartmentDialog({
                 headers: headers(),
                 preserveScroll: true,
                 onSuccess: () => {
-                    form.reset();
-                    resetSubmissionKey();
-                    onClose();
+                    handleClose();
                 },
             });
         } else {
@@ -438,9 +465,7 @@ export function DepartmentDialog({
                 headers: headers(),
                 preserveScroll: true,
                 onSuccess: () => {
-                    form.reset();
-                    resetSubmissionKey();
-                    onClose();
+                    handleClose();
                 },
             });
         }
@@ -458,7 +483,7 @@ export function DepartmentDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(handleClose)}
                 title={
                     isEdit
                         ? `Edit Department: ${department?.name}`

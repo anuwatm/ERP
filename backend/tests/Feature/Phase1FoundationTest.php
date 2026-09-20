@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\DashboardLanding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -26,7 +27,7 @@ class Phase1FoundationTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect(route('dashboard', absolute: false));
+        ])->assertRedirect(DashboardLanding::routeFor($user));
 
         $this->assertNotNull($user->refresh()->last_login_at);
         $this->assertTrue(AuditLog::where('action', 'auth.login')->where('entity_id', $user->id)->exists());
@@ -42,7 +43,7 @@ class Phase1FoundationTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect(route('dashboard', absolute: false));
+        ])->assertRedirect(DashboardLanding::routeFor($user));
 
         $this->assertNotSame($oldSessionId, session()->getId());
     }

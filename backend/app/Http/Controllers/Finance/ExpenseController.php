@@ -30,7 +30,7 @@ class ExpenseController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'status', 'category', 'project_id']);
+        $filters = $request->only(['search', 'status', 'category', 'project_id', 'from', 'to']);
 
         $expenses = Expense::query()
             ->where('org_id', $user->org_id)
@@ -39,6 +39,8 @@ class ExpenseController extends Controller
                     ->orWhere('title', 'like', "%{$search}%");
             }))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('expense_date', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('expense_date', '<=', $to))
             ->when($filters['category'] ?? null, fn ($query, $category) => $query->where('category', $category))
             ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
             ->with(['receiptFile:id,file_name,mime_type,size_bytes', 'project:id,project_code,name', 'supplier:id,name,tax_id', 'bankAccount:id,bank_name,account_name'])

@@ -22,7 +22,7 @@
 | Users | `GET /users` | `users.view` |
 | Invite User | `POST /users/invite` | `users.create` |
 | Update User | `PATCH /users/{user}` | `users.update` |
-| Roles/Permissions | `GET /roles` | `roles.manage` |
+| Roles/Permissions | `GET /roles` | `roles.view` |
 | Audit Log | `GET /audit-logs` | `audit.view` |
 
 
@@ -49,8 +49,11 @@
 | Update User | `PATCH /users/{user}` | `users.update` |
 | Disable User | `PATCH /users/{user}/disable` | `users.disable` |
 | Re-enable User | `PATCH /users/{user}/enable` | `users.disable` |
-| Roles / Permissions | `GET /roles` | `roles.manage` |
+| Roles Catalog / Matrix | `GET /roles` | `roles.view` |
+| Create Role | `POST /roles` | `roles.manage` |
+| Update Role | `PATCH /roles/{role}` | `roles.manage` |
 | Update Role Permissions | `PATCH /roles/{role}/permissions` | `roles.manage` |
+| Assign User Role | `PATCH /users/{user}/role` | `roles.update` |
 
 ## Phase 2: CRM / Sales
 
@@ -111,6 +114,18 @@
 | Executive Dashboard Filters | `GET /dashboard?month=YYYY-MM` | `dashboard.view` |
 | Finance Dashboard Filters | `GET /finance-dashboard?month=YYYY-MM` | `expenses.view` |
 | Delivery Dashboard Filters | `GET /delivery-dashboard?month=YYYY-MM` | `dashboard.view` |
+
+## Phase 23.2.5: Additional dashboards
+
+| Screen | Route | Permission |
+| --- | --- | --- |
+| My Work | `GET /my-work` | `tasks.view`; assigned tasks only |
+| Procurement / Inventory Dashboard | `GET /procurement-dashboard` | At least one of `purchase_orders.view`, `inventory.view`, `workflows.approve`; each widget checks its source permission |
+| HR / Payroll Dashboard | `GET /hr-dashboard` | `payroll.view` or both `hr.manage` and `hr.self.view`; each widget checks its source permission |
+| Vendor Payments (Finance cash-out drill-down) | `GET /vendor-payments?from=YYYY-MM-DD&to=YYYY-MM-DD` | `expenses.view`; read-only and organization-scoped |
+| External Portal Dashboard | `GET /portal` | Valid scoped portal session; customer/supplier party grant, separate from staff dashboards |
+
+All dashboard list links use GET filters on the destination; create/edit and transactional actions remain on the destination module. See `docs/PHASE_23_2_6_INTEGRATION.md`.
 
 ## Phase 7: Post-MVP Features
 

@@ -25,11 +25,12 @@ class ProjectController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'status', 'owner_id', 'customer_id']);
+        $filters = $request->only(['project_id', 'search', 'status', 'owner_id', 'customer_id']);
         $canSeeAll = ProjectAccess::canSeeAll($user);
 
         $projects = ProjectAccess::scopeProjects(Project::query(), $user)
             ->with(['customer:id,company_name,customer_code', 'deal:id,title', 'owner:id,name,email', 'members.user:id,name,email'])
+            ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->whereKey($projectId))
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($inner) use ($search) {
                 $inner->where('name', 'like', "%{$search}%")
                     ->orWhere('project_code', 'like', "%{$search}%")
@@ -41,7 +42,9 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        $this->attachProjectCosts($projects, $user->org_id);
+        if ($user->hasPermissionCode('expenses.view')) {
+            $this->attachProjectCosts($projects, $user->org_id);
+        }
 
         return Inertia::render('Delivery/Projects', [
             'projects' => $projects,
@@ -52,6 +55,8 @@ class ProjectController extends Controller
             'filters' => $filters,
             'canSeeAllProjects' => $canSeeAll,
             'canReassignProjects' => $user->hasPermissionCode('projects.reassign'),
+            'canCreateProjects' => $user->hasPermissionCode('projects.create'),
+            'canUpdateProjects' => $user->hasPermissionCode('projects.update'),
         ]);
     }
 
@@ -65,16 +70,21 @@ class ProjectController extends Controller
 
         $costs = Expense::where('org_id', $orgId)
             ->whereIn('project_id', $projectIds)
-            ->whereIn('status', ['approved', 'paid'])
-            ->selectRaw('project_id, SUM(amount) as actual_cost')
-            ->groupBy('project_id')
-            ->pluck('actual_cost', 'project_id');
+            ->whereIn('status', ['approved', 'partially_paid', 'paid'])
+            ->selectRaw('project_id, currency, SUM(amount) as actual_cost')
+            ->groupBy('project_id', 'currency')
+            ->get()
+            ->groupBy('project_id');
 
         $projects->each(function ($project) use ($costs): void {
-            $actualCost = round((float) ($costs[$project->id] ?? 0), 2);
+            $rows = $costs[$project->id] ?? collect();
+            if ($rows->contains(fn ($row) => $row->currency !== $project->currency)) {
+                return;
+            }
+            $actualCost = round((float) $rows->sum('actual_cost'), 2);
             $budget = (float) ($project->budget_amount ?? 0);
             $project->setAttribute('actual_cost', number_format($actualCost, 2, '.', ''));
-            $project->setAttribute('gross_margin', number_format($budget - $actualCost, 2, '.', ''));
+            $project->setAttribute('budget_remaining', number_format($budget - $actualCost, 2, '.', ''));
         });
     }
 

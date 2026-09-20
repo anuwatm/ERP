@@ -57,18 +57,25 @@ class PortalController extends Controller
     {
         $user = $this->user($request, $access);
         $qrEnabled = PaymentGatewayConfig::where('org_id', $user->org_id)->where('enabled', true)->exists();
-        $quotations = $user->party_type === 'customer' ? Quotation::where('org_id', $user->org_id)->where('customer_id', $user->party_id)->whereIn('status', ['sent', 'approved', 'converted'])->get(['id', 'quotation_no', 'status', 'issue_date', 'valid_until', 'total', 'currency']) : collect();
-        $invoices = $user->party_type === 'customer' ? Invoice::where('org_id', $user->org_id)->where('customer_id', $user->party_id)->whereIn('status', ['sent', 'partially_paid', 'paid', 'overdue'])->get(['id', 'invoice_no', 'status', 'issue_date', 'due_date', 'total', 'balance_due', 'currency']) : collect();
-        $submissions = $user->party_type === 'supplier' ? VendorBillSubmission::where('org_id', $user->org_id)->where('supplier_id', $user->party_id)->latest()->get(['id', 'vendor_invoice_no', 'invoice_date', 'amount', 'currency', 'status', 'created_at']) : collect();
-        $purchaseOrders = $user->party_type === 'supplier' ? PurchaseOrder::where('org_id', $user->org_id)->where('supplier_id', $user->party_id)->whereIn('status', ['sent', 'approved', 'partially_received', 'received', 'closed'])->get(['id', 'po_no', 'status', 'order_date', 'expected_date', 'total', 'currency']) : collect();
-        $payables = $user->party_type === 'supplier' ? Expense::where('org_id', $user->org_id)->where('supplier_id', $user->party_id)->whereIn('status', ['approved', 'partially_paid', 'paid'])->get(['id', 'expense_no', 'status', 'expense_date', 'payable_total', 'balance_due', 'currency', 'paid_at']) : collect();
-        $documents = Document::where('org_id', $user->org_id)
-            ->whereHas('links', fn ($query) => $query->where('linkable_type', $user->party_type)->where('linkable_id', $user->party_id))
-            ->with('currentVersion:id,document_id,original_name,scan_status')
-            ->latest()
-            ->get(['id', 'document_no', 'title', 'current_version_id']);
+        $pages = [];
+        $paginate = function ($query, array $columns, string $key) use (&$pages) {
+            $page = $query->orderByDesc('created_at')->orderBy('id')->paginate(25, $columns, $key.'_page')->withQueryString();
+            $pages[$key] = ['total' => $page->total(), 'current' => $page->currentPage(), 'last' => $page->lastPage(), 'previous' => $page->previousPageUrl(), 'next' => $page->nextPageUrl()];
 
-        return Inertia::render('Portal/Dashboard', ['qrEnabled' => $qrEnabled, 'portalUser' => $user->only(['email', 'name', 'party_type']), 'quotations' => $quotations, 'invoices' => $invoices, 'submissions' => $submissions, 'purchaseOrders' => $purchaseOrders, 'payables' => $payables, 'documents' => $documents]);
+            return $page->getCollection();
+        };
+        $quotations = $user->party_type === 'customer' ? $paginate(Quotation::where('org_id', $user->org_id)->where('customer_id', $user->party_id)->whereIn('status', ['sent', 'approved', 'converted']), ['id', 'quotation_no', 'status', 'issue_date', 'valid_until', 'total', 'currency'], 'quotations') : collect();
+        $invoiceQuery = Invoice::where('org_id', $user->org_id)->where('customer_id', $user->party_id)->whereIn('status', ['sent', 'partially_paid', 'paid', 'overdue']);
+        $openInvoiceCount = $user->party_type === 'customer' ? (clone $invoiceQuery)->where('balance_due', '>', 0)->count() : 0;
+        $invoices = $user->party_type === 'customer' ? $paginate($invoiceQuery, ['id', 'invoice_no', 'status', 'issue_date', 'due_date', 'total', 'balance_due', 'currency'], 'invoices') : collect();
+        $submissions = $user->party_type === 'supplier' ? $paginate(VendorBillSubmission::where('org_id', $user->org_id)->where('supplier_id', $user->party_id), ['id', 'vendor_invoice_no', 'invoice_date', 'amount', 'currency', 'status', 'created_at'], 'submissions') : collect();
+        $purchaseOrders = $user->party_type === 'supplier' ? $paginate(PurchaseOrder::where('org_id', $user->org_id)->where('supplier_id', $user->party_id)->whereIn('status', ['sent', 'approved', 'partially_received', 'received', 'closed']), ['id', 'po_no', 'status', 'order_date', 'expected_date', 'total', 'currency'], 'purchaseOrders') : collect();
+        $payables = $user->party_type === 'supplier' ? $paginate(Expense::where('org_id', $user->org_id)->where('supplier_id', $user->party_id)->whereIn('status', ['approved', 'partially_paid', 'paid']), ['id', 'expense_no', 'status', 'expense_date', 'payable_total', 'balance_due', 'currency', 'paid_at'], 'payables') : collect();
+        $documents = $paginate(Document::where('org_id', $user->org_id)
+            ->whereHas('links', fn ($query) => $query->where('linkable_type', $user->party_type)->where('linkable_id', $user->party_id))
+            ->with('currentVersion:id,document_id,original_name,scan_status'), ['id', 'document_no', 'title', 'current_version_id'], 'documents');
+
+        return Inertia::render('Portal/Dashboard', ['qrEnabled' => $qrEnabled, 'portalUser' => $user->only(['email', 'name', 'party_type']), 'quotations' => $quotations, 'invoices' => $invoices, 'submissions' => $submissions, 'purchaseOrders' => $purchaseOrders, 'payables' => $payables, 'documents' => $documents, 'pages' => $pages, 'openInvoiceCount' => $openInvoiceCount]);
     }
 
     public function acceptQuotation(Request $request, Quotation $quotation, PortalAccessService $access, NumberSequenceService $numbers): RedirectResponse

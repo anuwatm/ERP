@@ -1,5 +1,5 @@
 import PrimaryButton from '@/Components/PrimaryButton';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import VendorBillDialog from './VendorBillDialog';
 
@@ -62,6 +62,8 @@ export default function PortalDashboard({
     documents,
     purchaseOrders,
     payables = [],
+    pages,
+    openInvoiceCount,
 }: {
     portalUser: { name?: string | null; email: string; party_type: string };
     qrEnabled: boolean;
@@ -71,8 +73,46 @@ export default function PortalDashboard({
     documents: PortalDocument[];
     purchaseOrders: PurchaseOrder[];
     payables?: Payable[];
+    pages: Record<string, { total: number; current: number; last: number; previous: string | null; next: string | null }>;
+    openInvoiceCount: number;
 }) {
     const [vendorBillDialogOpen, setVendorBillDialogOpen] = useState(false);
+    const isCustomer = portalUser.party_type === 'customer';
+    const summaries = isCustomer
+        ? [
+              {
+                  label: 'Quotations',
+                  count: pages.quotations?.total ?? 0,
+                  target: 'quotations',
+              },
+              {
+                  label: 'Open invoices',
+                  count: openInvoiceCount,
+                  target: 'invoices',
+              },
+              {
+                  label: 'Documents',
+                  count: pages.documents?.total ?? 0,
+                  target: 'documents',
+              },
+          ]
+        : [
+              {
+                  label: 'Purchase orders',
+                  count: pages.purchaseOrders?.total ?? 0,
+                  target: 'purchase-orders',
+              },
+              {
+                  label: 'Submitted bills',
+                  count: pages.submissions?.total ?? 0,
+                  target: 'submitted-bills',
+              },
+              {
+                  label: 'Documents',
+                  count: pages.documents?.total ?? 0,
+                  target: 'documents',
+              },
+          ];
     return (
         <>
             <Head title="ERP Portal" />
@@ -96,13 +136,49 @@ export default function PortalDashboard({
                             Sign out
                         </button>
                     </header>
+                    <nav aria-label="Document pagination" className="flex flex-wrap gap-4 text-sm">
+                        {Object.entries(pages).filter(([, page]) => page.last > 1).map(([key, page]) => {
+                            const label = ({ quotations: 'Quotations', invoices: 'Invoices', submissions: 'Submitted bills', purchaseOrders: 'Purchase orders', payables: 'Payables', documents: 'Documents' } as Record<string, string>)[key];
+                            return <div key={key} className="rounded-lg border border-slate-200 bg-white p-3">
+                                <p>{label}: page {page.current} of {page.last} · {page.total} records</p>
+                                <div className="mt-2 flex gap-4">
+                                    {page.previous && <Link href={page.previous} aria-label={`Previous ${label} page`} className="text-indigo-700 underline">Previous</Link>}
+                                    {page.next && <Link href={page.next} aria-label={`Next ${label} page`} className="text-indigo-700 underline">Next</Link>}
+                                </div>
+                            </div>;
+                        })}
+                    </nav>
+                    <nav
+                        aria-label="Portal summary"
+                        className="grid gap-3 sm:grid-cols-3"
+                    >
+                        {summaries.map((summary) => (
+                            <a
+                                key={summary.label}
+                                href={`#${summary.target}`}
+                                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <span className="block text-sm text-slate-600">
+                                    {summary.label}
+                                </span>
+                                <span className="mt-2 block text-2xl font-bold">
+                                    {summary.count}
+                                </span>
+                            </a>
+                        ))}
+                    </nav>
                     {portalUser.party_type === 'customer' && (
                         <>
-                            <section>
+                            <section id="quotations">
                                 <h2 className="mb-3 text-lg font-bold">
                                     Quotations
                                 </h2>
                                 <div className="space-y-2">
+                                    {quotations.length === 0 && (
+                                        <p className="text-sm text-slate-600">
+                                            No quotations available.
+                                        </p>
+                                    )}
                                     {quotations.map((quote) => (
                                         <div
                                             key={quote.id}
@@ -141,11 +217,16 @@ export default function PortalDashboard({
                                     ))}
                                 </div>
                             </section>
-                            <section>
+                            <section id="invoices">
                                 <h2 className="mb-3 text-lg font-bold">
                                     Invoices
                                 </h2>
                                 <div className="space-y-2">
+                                    {invoices.length === 0 && (
+                                        <p className="text-sm text-slate-600">
+                                            No invoices available.
+                                        </p>
+                                    )}
                                     {invoices.map((invoice) => (
                                         <div
                                             key={invoice.id}
@@ -177,10 +258,15 @@ export default function PortalDashboard({
                     )}
                     {portalUser.party_type === 'supplier' && (
                         <>
-                            <section>
+                            <section id="purchase-orders">
                                 <h2 className="mb-3 text-lg font-bold">
                                     Purchase orders
                                 </h2>
+                                {purchaseOrders.length === 0 && (
+                                    <p className="text-sm text-slate-600">
+                                        No purchase orders available.
+                                    </p>
+                                )}
                                 {purchaseOrders.map((item) => (
                                     <div
                                         key={item.id}
@@ -195,6 +281,11 @@ export default function PortalDashboard({
                                 <h2 className="mb-3 text-lg font-bold">
                                     Payment status
                                 </h2>
+                                {payables.length === 0 && (
+                                    <p className="text-sm text-slate-600">
+                                        No payment status available.
+                                    </p>
+                                )}
                                 {payables.map((item) => (
                                     <div
                                         key={item.id}
@@ -225,10 +316,15 @@ export default function PortalDashboard({
                                     </PrimaryButton>
                                 </div>
                             </section>
-                            <section>
+                            <section id="submitted-bills">
                                 <h2 className="mb-3 text-lg font-bold">
                                     Submitted bills
                                 </h2>
+                                {submissions.length === 0 && (
+                                    <p className="text-sm text-slate-600">
+                                        No submitted bills.
+                                    </p>
+                                )}
                                 {submissions.map((item) => (
                                     <div
                                         key={item.id}
@@ -242,9 +338,14 @@ export default function PortalDashboard({
                             </section>
                         </>
                     )}
-                    <section>
+                    <section id="documents">
                         <h2 className="mb-3 text-lg font-bold">Documents</h2>
                         <div className="space-y-2">
+                            {documents.length === 0 && (
+                                <p className="text-sm text-slate-600">
+                                    No documents available.
+                                </p>
+                            )}
                             {documents.map((document) => (
                                 <div
                                     key={document.id}

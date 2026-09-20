@@ -22,25 +22,40 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $user = auth()->user();
         $canViewFullPersonId = $user->roles()->whereHas('permissions', fn ($query) => $query->where('code', 'person_id.view_full'))->exists();
+        $filters = $request->validate([
+            'user_id' => ['nullable', 'uuid'],
+            'status' => ['nullable', Rule::in(['active', 'invited', 'inactive'])],
+            'role_id' => ['nullable', 'uuid'],
+            'expired' => ['nullable', Rule::in(['1'])],
+        ]);
 
         return Inertia::render('Admin/Users', [
-            'users' => User::where('org_id', $user->org_id)->with('roles:id,code,name')->orderBy('name')->get()->map(fn (User $item) => [
-                'id' => $item->id,
-                'name' => $item->name,
-                'email' => $item->email,
-                'status' => $item->status,
-                'position' => $item->position,
-                'phone' => $item->phone,
-                'person_id' => $canViewFullPersonId ? $item->person_id : PersonIdMask::mask($item->person_id),
-                'branch_id' => $item->branch_id,
-                'division_id' => $item->division_id,
-                'department_id' => $item->department_id,
-                'roles' => $item->roles->map->only(['id', 'code', 'name'])->values(),
-            ]),
+            'users' => User::where('org_id', $user->org_id)
+                ->when($filters['user_id'] ?? null, fn ($query, $userId) => $query->whereKey($userId))
+                ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+                ->when($filters['role_id'] ?? null, fn ($query, $roleId) => $query->whereHas('roles', fn ($roles) => $roles->whereKey($roleId)))
+                ->when(($filters['expired'] ?? null) === '1', fn ($query) => $query->where('status', 'invited')->where('invite_expires_at', '<', now()))
+                ->with('roles:id,code,name')->orderBy('name')->get()->map(fn (User $item) => [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'email' => $item->email,
+                    'status' => $item->status,
+                    'position' => $item->position,
+                    'phone' => $item->phone,
+                    'person_id' => $canViewFullPersonId ? $item->person_id : PersonIdMask::mask($item->person_id),
+                    'branch_id' => $item->branch_id,
+                    'division_id' => $item->division_id,
+                    'department_id' => $item->department_id,
+                    'roles' => $item->roles->map->only(['id', 'code', 'name'])->values(),
+                ]),
+            'filters' => $filters,
+            'canInviteUsers' => $user->hasPermissionCode('users.create'),
+            'canEditUsers' => $user->hasPermissionCode('users.update'),
+            'canDisableUsers' => $user->hasPermissionCode('users.disable'),
             'roles' => Role::where('org_id', $user->org_id)->orderBy('code')->get(['id', 'code', 'name']),
             'branches' => Branch::where('org_id', $user->org_id)->where('status', 'active')->orderBy('code')->get(['id', 'code', 'name']),
             'divisions' => Division::where('org_id', $user->org_id)->where('status', 'active')->orderBy('code')->get(['id', 'branch_id', 'code', 'name']),

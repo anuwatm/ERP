@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Services\OrganizationProvisioner;
+use App\Support\DashboardLanding;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,6 @@ class RegisteredUserController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(DashboardLanding::routeFor($user));
     }
 }

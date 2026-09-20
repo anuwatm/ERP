@@ -268,6 +268,62 @@ class Phase2SalesTest extends TestCase
         $this->assertSame('Read only contact', $contact->fresh()->name);
     }
 
+    public function test_sales_dashboard_separates_currency_and_period_and_excludes_new_deals_from_stale(): void
+    {
+        $owner = User::factory()->create();
+        $this->attachRole($owner, 'owner', ['sales.dashboard.view', 'deals.view', 'customers.view']);
+        $customer = Customer::create(['org_id' => $owner->org_id, 'customer_code' => 'DASH001', 'company_name' => 'Dashboard Customer', 'owner_id' => $owner->id]);
+        Deal::create(['org_id' => $owner->org_id, 'title' => 'New THB', 'customer_id' => $customer->id, 'stage' => 'new', 'currency' => 'THB', 'value_amount' => 100, 'owner_id' => $owner->id]);
+        Deal::create(['org_id' => $owner->org_id, 'title' => 'New USD', 'customer_id' => $customer->id, 'stage' => 'proposal', 'currency' => 'USD', 'value_amount' => 50, 'owner_id' => $owner->id]);
+        $stale = Deal::create(['org_id' => $owner->org_id, 'title' => 'Old THB', 'customer_id' => $customer->id, 'stage' => 'qualified', 'currency' => 'THB', 'value_amount' => 200, 'owner_id' => $owner->id]);
+        $stale->forceFill(['created_at' => now()->subDays(10)])->save();
+        Deal::create(['org_id' => $owner->org_id, 'title' => 'Won', 'customer_id' => $customer->id, 'stage' => 'won', 'currency' => 'THB', 'value_amount' => 300, 'won_at' => now(), 'owner_id' => $owner->id]);
+        Deal::create(['org_id' => $owner->org_id, 'title' => 'Old loss', 'customer_id' => $customer->id, 'stage' => 'lost', 'currency' => 'THB', 'value_amount' => 400, 'lost_at' => now()->subMonths(2), 'owner_id' => $owner->id]);
+
+        $this->actingAsOrgUser($owner)->get(route('sales.dashboard', ['period' => 'month']))
+            ->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('summary.open_deals', 3)
+            ->where('summary.new_deals', 5)
+            ->where('summary.won_deals', 1)
+            ->where('summary.lost_deals', 0)
+            ->where('summary.win_rate', 100)
+            ->where('summary.stale_deals', 1)
+            ->where('staleDeals.0.title', 'Old THB')
+            ->where('staleDeals.0.last_activity_at', null)
+            ->has('pipelineByStage', 3)
+            ->has('wonValues', 1)
+            ->where('wonValues.0.currency', 'THB')
+            ->where('wonValues.0.value', 300)
+            );
+        $this->get(route('deals.index', ['stage' => 'new', 'currency' => 'THB']))
+            ->assertInertia(fn (Assert $page) => $page->has('deals', 1)->where('deals.0.title', 'New THB'));
+        $this->get(route('deals.index', ['stage' => 'won', 'won_from' => now()->startOfMonth()->toDateString(), 'won_to' => now()->endOfMonth()->toDateString()]))
+            ->assertInertia(fn (Assert $page) => $page->has('deals', 1)->where('deals.0.title', 'Won'));
+        $this->get(route('deals.index', ['stage' => 'lost', 'lost_from' => now()->startOfMonth()->toDateString(), 'lost_to' => now()->endOfMonth()->toDateString()]))
+            ->assertInertia(fn (Assert $page) => $page->has('deals', 0));
+        $this->get(route('customers.index', ['customer_id' => $customer->id]))
+            ->assertInertia(fn (Assert $page) => $page->has('customers', 1)->where('customers.0.id', $customer->id));
+    }
+
+    public function test_sales_followups_require_current_record_ownership(): void
+    {
+        $sales = User::factory()->create();
+        $other = User::factory()->create(['org_id' => $sales->org_id]);
+        $this->attachRole($sales, 'sales', ['sales.dashboard.view', 'deals.view']);
+        $customer = Customer::create(['org_id' => $sales->org_id, 'customer_code' => 'SCOPE001', 'company_name' => 'Scope', 'owner_id' => $sales->id]);
+        $own = Deal::create(['org_id' => $sales->org_id, 'title' => 'Own', 'customer_id' => $customer->id, 'stage' => 'new', 'owner_id' => $sales->id]);
+        $moved = Deal::create(['org_id' => $sales->org_id, 'title' => 'Moved', 'customer_id' => $customer->id, 'stage' => 'new', 'owner_id' => $other->id]);
+        foreach ([$own, $moved] as $deal) {
+            Activity::create(['org_id' => $sales->org_id, 'entity_type' => 'deal', 'entity_id' => $deal->id, 'activity_type' => 'call', 'subject' => $deal->title, 'activity_at' => now(), 'follow_up_at' => now(), 'owner_id' => $sales->id]);
+        }
+
+        $this->actingAsOrgUser($sales)->get(route('sales.dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('summary.follow_ups_today', 1)
+                ->has('followUps', 1)
+                ->where('followUps.0.subject', 'Own'));
+    }
+
     private function attachRole(User $user, string $code, array $permissions): Role
     {
         $role = Role::create([

@@ -5,7 +5,7 @@ import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import RolePermissionsDialog, { RoleItem } from './RolePermissionsDialog';
 
@@ -21,10 +21,12 @@ export default function Roles({
     roles,
     permissions,
     canManage,
+    filters,
 }: {
     canManage: boolean;
     roles: RoleItem[];
     permissions: Permission[];
+    filters?: { role_id?: string };
 }) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
@@ -43,6 +45,17 @@ export default function Roles({
                     title="Roles & Permissions"
                     description="Role catalog and permission assignment matrix"
                 />
+                {filters?.role_id && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Dashboard filter active.{' '}
+                        <Link
+                            href={route('roles.index')}
+                            className="font-semibold text-indigo-700 underline dark:text-indigo-300"
+                        >
+                            Clear filter
+                        </Link>
+                    </p>
+                )}
 
                 <Card
                     title="Roles"

@@ -29,7 +29,13 @@ class PurchaseOrderController extends Controller
         $user = $request->user();
 
         return Inertia::render('Finance/PurchaseOrders', [
-            'purchaseOrders' => PurchaseOrder::where('org_id', $user->org_id)->with(['supplier:id,name,supplier_code', 'project:id,project_code,name', 'items'])->latest()->get(),
+            'purchaseOrders' => PurchaseOrder::where('org_id', $user->org_id)
+                ->when($request->filled('po_id'), fn ($query) => $query->where('id', $request->query('po_id')))
+                ->when($request->filled('status'), fn ($query) => $query->where('status', $request->query('status')))
+                ->when($request->filled('supplier_id'), fn ($query) => $query->where('supplier_id', $request->query('supplier_id')))
+                ->when($request->filled('currency'), fn ($query) => $query->where('currency', $request->query('currency')))
+                ->when($request->boolean('committed'), fn ($query) => $query->whereNotIn('status', ['draft', 'cancelled']))
+                ->with(['supplier:id,name,supplier_code', 'project:id,project_code,name', 'items'])->latest()->get(),
             'suppliers' => Supplier::where('org_id', $user->org_id)->where('status', 'active')->orderBy('name')->get(['id', 'supplier_code', 'name']),
             'projects' => Project::where('org_id', $user->org_id)->orderBy('name')->get(['id', 'project_code', 'name']),
             'products' => Product::where('org_id', $user->org_id)->where('is_active', true)->orderBy('name')->get(['id', 'sku', 'name', 'unit', 'price']),

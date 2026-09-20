@@ -74,10 +74,10 @@ class Phase4FinanceProjectLinkTest extends TestCase
             ->assertSessionHasErrors('project_id');
     }
 
-    public function test_project_actual_cost_is_dynamic_from_approved_and_paid_expenses_only(): void
+    public function test_project_actual_cost_and_budget_remaining_use_approved_and_paid_expenses_only(): void
     {
         $manager = User::factory()->create();
-        $this->attachRole($manager, 'project_manager', ['projects.view']);
+        $this->attachRole($manager, 'project_manager', ['projects.view', 'expenses.view']);
         $customer = $this->customer($manager, '000001', 'Cost Customer');
         $project = $this->project($manager, $customer, '000001', 'Cost Project', ['budget_amount' => '5000.00']);
         $this->expense($manager, $project, 'approved', '1200.00', '000001');
@@ -90,7 +90,8 @@ class Phase4FinanceProjectLinkTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Delivery/Projects')
                 ->where('projects.0.actual_cost', '2000.00')
-                ->where('projects.0.gross_margin', '3000.00')
+                ->where('projects.0.budget_remaining', '3000.00')
+                ->missing('projects.0.gross_margin')
             );
     }
 

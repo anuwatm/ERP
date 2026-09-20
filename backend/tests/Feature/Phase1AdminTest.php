@@ -9,6 +9,7 @@ use App\Models\Division;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\DashboardLanding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -107,7 +108,7 @@ class Phase1AdminTest extends TestCase
         $this->patch(route('invites.accept.update', ['user' => $invited->id, 'token' => $token]), [
             'password' => 'password',
             'password_confirmation' => 'password',
-        ])->assertRedirect(route('dashboard', absolute: false));
+        ])->assertRedirect(DashboardLanding::routeFor($invited));
 
         $this->assertAuthenticatedAs($invited->refresh());
         $this->assertSame('active', $invited->status);
@@ -368,10 +369,10 @@ class Phase1AdminTest extends TestCase
             );
     }
 
-    public function test_dashboard_includes_security_alerts(): void
+    public function test_dashboard_does_not_mislabel_operational_states_as_security_alerts(): void
     {
         $owner = User::factory()->create();
-        $this->attachRole($owner, 'owner', ['dashboard.view']);
+        $this->attachRole($owner, 'owner', ['dashboard.view', 'users.view', 'roles.view', 'audit.view']);
         User::factory()->inactive()->create([
             'org_id' => $owner->org_id,
             'branch_id' => $owner->branch_id,
@@ -396,11 +397,9 @@ class Phase1AdminTest extends TestCase
         $this->actingAsOrgUser($owner)->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
-                ->where('securityAlerts.inactive_users', 1)
-                ->where('securityAlerts.pending_invites', 1)
-                ->where('securityAlerts.expired_invites', 1)
-                ->where('securityAlerts.sensitive_audit_events_24h', 1)
-                ->where('securityAlerts.total', 3)
+                ->where('securityAlerts', null)
+                ->where('dashboardWidgets.admin.users.expired_invites', 1)
+                ->where('dashboardWidgets.admin.audit.sensitive_24h', 1)
             );
     }
 

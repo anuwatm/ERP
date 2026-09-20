@@ -14,9 +14,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class VendorPaymentController extends Controller
 {
+    public function index(Request $request): Response
+    {
+        $filters = $request->only(['from', 'to']);
+        $payments = VendorPayment::where('org_id', $request->user()->org_id)
+            ->with('expense:id,expense_no,title')
+            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('payment_date', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('payment_date', '<=', $to))
+            ->latest('payment_date')->latest()->paginate(25)->withQueryString();
+
+        return Inertia::render('Finance/VendorPayments', ['payments' => $payments, 'filters' => $filters]);
+    }
+
     public function store(Request $request, Expense $expense, FinancialJournalService $journals, FxRateService $rates): RedirectResponse
     {
         abort_unless($expense->org_id === $request->user()->org_id, 404);

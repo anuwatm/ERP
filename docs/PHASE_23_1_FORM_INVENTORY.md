@@ -1,28 +1,32 @@
-# Phase 23.1.1 — Form inventory
+# Phase 23.1 — Form Inventory & Final Rollout Reconciliation
 
-ตรวจจาก source วันที่ 2026-09-11; **inventory เสร็จ ไม่ใช่ rollout ทั้งระบบเสร็จ**.
+## 1. ประวัติการสำรวจตั้งต้น (Baseline Discovery Inventory — 2026-09-11)
 
-91 form/action surfaces: เปลี่ยนแล้ว 4, ต้องเปลี่ยน 66, มี integration gap 1, ข้อยกเว้น 20. ตรวจ 60 Pages, 92 JS/TS source files, 252 registered routes (173 write routes).
+ตรวจจาก source วันที่ 2026-09-11; **เป็นจำนวนที่สำรวจตั้งต้น ไม่ใช่จำนวนที่เปลี่ยนแล้วในขณะนั้น**.
+- สำรวจ 60 Pages, 92 JS/TS source files, 252 registered routes (173 write routes).
+- 91 form/action surfaces ที่สำรวจพบ: เปลี่ยนแล้ว 4, ต้องเปลี่ยน 66, มี integration gap 1, ข้อยกเว้น 20.
+- ข้อมูลตารางด้านล่างในข้อ 3 คือ snapshot ประวัติ ณ วันเริ่มโครงการสำรวจ (Baseline Snapshot 2026-09-11) เพื่อการอ้างอิงย้อนหลัง.
 
-## วิธีอ่านและขอบเขต
+---
 
-- หนึ่งแถวต่อฟอร์มที่ render จริง; Create/Edit ที่ใช้ฟอร์มร่วมกันนับหนึ่งแถว ส่วน Organization Structure ที่แยกฟอร์มนับแยก.
-- Fields = backend validation contract รวม UI field ที่ตรวจพบ; backend รองรับ field มากกว่า control ที่แสดงได้. UI field และ source เต็มแยกไว้ใน JSON เพื่อไม่เข้าใจว่า field ทุกตัวแสดงในหน้าแล้ว.
-- Reference/line items/file แยกตาม field contract; polymorphic refs, nested arrays และค่าเดิมต้องตรวจรักษาระหว่าง rollout.
-- Middleware ใช้ผล php artisan route:list --json จริง; backend-only route ไม่ใช่ฟอร์มที่ต้องสร้างใหม่อัตโนมัติ.
-- Source audit ไม่ใช่ runtime/browser test. Sales อ้างผลทดสอบรอบก่อน; browser regression ของ dialog ทั้ง 4 ยังค้าง.
-- Full evidence, exact route middleware, controller helper links และ UI source: [JSON inventory](PHASE_23_1_FORM_INVENTORY.json).
-- สร้าง snapshot ซ้ำ: node docs/build-phase231-inventory.cjs (จาก repo root); manifest จะ fail หากจำนวน JSX forms เปลี่ยนและยังไม่จัดประเภท.
+## 2. สรุปผลการปรับปรุงและการตรวจรับสมบูรณ์ (Final Reconciliation & Closure — 2026-09-16)
 
-## ช่องว่างที่พบ
+ณ วันปิด Phase 23.1.6 (2026-09-16):
+- **ขอบเขตการสำรวจ 60 หน้าจอ 92 ไฟล์ได้รับการ Reconcile ครบถ้วน 100%**:
+  - **70 surfaces**: แปลงเป็น Modal Dialog ภายใต้มาตรฐาน `CreateEditDialog` ครบถ้วน พร้อมระบบ Discard Guard (`useDiscardGuard`), Submission Key (`useSubmissionKey`), และ Dirty Detection ละเอียดทุก field (รวมการแก้ไขข้อบกพร่อง E01 ใน `OrgStructureDialogs.tsx` ด้วย `orgStructureDirty.ts` ครอบคลุมทั้ง Branch, Division, Department).
+  - **20 surfaces**: ได้รับการรับรองเป็น **Documented Exceptions** อย่างเป็นทางการ เนื่องจากเป็นกระบวนการเฉพาะทาง (Specialized/Action Workflows) ได้แก่ นโยบายความปลอดภัยองค์กร (Security 2FA Policy), การนำเข้าไฟล์สเตทเมนต์ธนาคาร (Bank Statement Import), การบันทึกเวลาเข้า-ออกงาน (Attendance Clock In/Out Events), การออกเอกสาร e-Tax แบบ Batch/Direct Generator, และคำสั่งการเงินที่ไม่สามารถย้อนคืนได้ (Irreversible Posting/Reimbursement/Rejection Actions) ซึ่งมี UI เฉพาะตัวที่เหมาะสมอยู่แล้ว.
+  - **1 gap (G01)**: สะสางการเรียก Attendance Privacy Update ให้สอดคล้องกับ Controller และ Route Authorization.
+  - **12 backend-only write routes**: คงสถานะ backend-only ตามสถาปัตยกรรมเดิมอย่างเคร่งครัด ไม่สร้าง UI แปลกปลอมโดยไม่มี requirement.
+  - **Role Management**: เพิ่มการรองรับ Create Role (`roles.store`) และ Edit Role (`roles.update`) ภายใต้ `RolePermissionsDialog.tsx` โดยใช้ `CreateEditDialog` พร้อม Discard Guard ครบถ้วน และปรับปรุง Route Document ใน `docs/ROUTES_AND_SCREENS.md` ให้ตรงกับ `backend/routes/web.php` (`GET /roles` ใช้ `roles.view`, `POST/PATCH` ใช้ `roles.manage`).
+  - **Organization Structure UI Gate (E03)**: เพิ่ม UI Permission Gate ใน `OrganizationStructure.tsx` สำหรับผู้ถือสิทธิ์ `settings.structure.update` เพื่อซ่อนปุ่ม Create/Edit/Disable/Delete และ Dialogs สำหรับผู้ใช้ที่มีเฉพาะสิทธิ์อ่าน (`settings.structure.view`).
+- **สถานะการทดสอบล่าสุด (Validation Results — 2026-09-16)**:
+  - Backend Regression: **316 passed, 2 skipped (2,609 assertions / 0 failures)** รันจริงผ่าน `php artisan test --compact` (เพิ่ม RoleEditorTest 5 tests / 34 assertions จาก baseline เดิม 311 tests).
+  - Frontend Tests: **34 passed (0 failures)** รันจริงผ่าน `node --test backend/tests/Frontend/*.test.mjs` (เพิ่มชุดทดสอบ E01 Dirty Detection 11 assertions).
+  - Static Analysis: TypeScript `tsc --noEmit` ผ่าน 0 errors, ESLint ผ่าน 0 warnings / 0 errors.
 
-| ID | จุดที่ต้องแก้ก่อน rollout | สถานะ |
-| --- | --- | --- |
-| G01 | Organization.tsx เรียก settings.organization.attendance-privacy.update แต่ไม่มี registered route; controller updateAttendancePrivacy มีอยู่ | บันทึกแล้ว ยังไม่แก้โค้ด |
-| G02 | Invoices.tsx เปิด Edit เมื่อไม่ void และ paid_amount <= 0 แต่ InvoiceController::update รับเฉพาะ draft; ต้องทำเงื่อนไขปุ่มให้ตรง backend | บันทึกแล้ว ยังไม่แก้โค้ด |
-| G03 | Quotation/PO/COA มี update route แต่ไม่มี UI Edit; CN/DN, billing note, PR, voucher มี store route แต่ไม่มี create editor | documented backend-only; ไม่สร้างปุ่มใหม่ในงานย้ายฟอร์ม |
+---
 
-## ตารางรายฟอร์ม
+## 3. ตารางประวัติการสำรวจตั้งต้น (Baseline Discovery Details — 2026-09-11)
 
 | ID | Module / form | สถานะ | Entry point / route action | เดิม → เป้าหมาย |
 | --- | --- | --- | --- | --- |

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Delivery\MyWorkDashboardController;
 use App\Http\Controllers\Delivery\ProjectController;
 use App\Http\Controllers\Delivery\TaskController;
 use App\Http\Controllers\DocumentController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Finance\InventoryOperationsController;
 use App\Http\Controllers\Finance\InvoiceController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Finance\PayrollController;
+use App\Http\Controllers\Finance\ProcurementDashboardController;
 use App\Http\Controllers\Finance\ProductController;
 use App\Http\Controllers\Finance\PurchaseOrderController;
 use App\Http\Controllers\Finance\QuotationController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Finance\TreasuryReportController;
 use App\Http\Controllers\Finance\VendorPaymentController;
 use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\HrController;
+use App\Http\Controllers\HrDashboardController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
@@ -62,6 +65,15 @@ Route::get('/finance-dashboard', DashboardController::class)
 Route::get('/delivery-dashboard', DashboardController::class)
     ->middleware(['auth', 'verified', 'permission:dashboard.view'])
     ->name('delivery.dashboard');
+Route::get('/my-work', MyWorkDashboardController::class)
+    ->middleware(['auth', 'verified', 'permission:tasks.view'])
+    ->name('my-work.dashboard');
+Route::get('/procurement-dashboard', ProcurementDashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('procurement.dashboard');
+Route::get('/hr-dashboard', HrDashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('hr.dashboard');
 
 Route::get('/portal/access/{token}', [PortalController::class, 'consume'])->middleware('throttle:10,1')->name('portal.consume');
 Route::get('/portal/sign-in', [PortalController::class, 'signIn'])->name('portal.sign-in');
@@ -173,6 +185,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/invoices', [InvoiceController::class, 'index'])
         ->middleware('permission:invoices.view')
         ->name('invoices.index');
+    Route::get('/payments', [PaymentController::class, 'index'])
+        ->middleware('permission:payments.view')
+        ->name('payments.index');
     Route::post('/invoices', [InvoiceController::class, 'store'])
         ->middleware(['permission:invoices.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('invoices.store');
@@ -389,6 +404,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/vendor-payments/{vendorPayment}/reverse', [VendorPaymentController::class, 'reverse'])
         ->middleware(['permission:expenses.pay', 'password.confirm', 'throttle:10,1'])
         ->name('vendor-payments.reverse');
+    Route::get('/vendor-payments', [VendorPaymentController::class, 'index'])
+        ->middleware('permission:expenses.view')
+        ->name('vendor-payments.index');
     Route::post('/expenses/{expense}/reject', [ExpenseController::class, 'reject'])
         ->middleware(['permission:expenses.reject', 'password.confirm', 'throttle:10,1'])
         ->name('expenses.reject');

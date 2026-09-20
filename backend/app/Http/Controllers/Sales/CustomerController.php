@@ -19,7 +19,7 @@ class CustomerController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $filters = $request->only(['search', 'status', 'owner_id']);
+        $filters = $request->only(['search', 'status', 'owner_id', 'customer_id']);
         $customers = SalesAccess::scopeCustomers(Customer::query(), $user)
             ->with(['owner:id,name,email', 'contacts' => fn ($query) => $query->select('id', 'customer_id', 'name', 'position', 'phone', 'email', 'line_id', 'is_primary', 'note')->orderByDesc('is_primary')->orderBy('name')])
             ->withCount(['contacts', 'deals'])
@@ -31,6 +31,7 @@ class CustomerController extends Controller
             }))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when(($filters['owner_id'] ?? null) && SalesAccess::canSeeAll($user), fn ($query) => $query->where('owner_id', $filters['owner_id']))
+            ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->whereKey($customerId))
             ->latest()
             ->get();
 

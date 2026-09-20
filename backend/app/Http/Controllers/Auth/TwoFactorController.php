@@ -8,6 +8,7 @@ use App\Models\TwoFactorTrustedDevice;
 use App\Models\User;
 use App\Services\TotpService;
 use App\Services\TwoFactorPolicyService;
+use App\Support\DashboardLanding;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,7 +70,7 @@ class TwoFactorController extends Controller
         $request->session()->regenerate();
         $user->forceFill(['last_login_at' => now()])->save();
         $this->audit($request, $user, 'two_factor.challenge_passed');
-        $response = redirect()->intended(route('dashboard', absolute: false));
+        $response = redirect()->intended(DashboardLanding::routeFor($user));
         if ($request->boolean('trust_device') && $policy->allowsTrustedDevices($user)) {
             $days = $policy->trustedDeviceDays($user);
             $token = Str::random(80);
@@ -103,7 +104,7 @@ class TwoFactorController extends Controller
             }
         }
 
-return false;
+        return false;
     }
 
     private function audit(Request $request, User $user, string $action): void

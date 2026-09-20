@@ -106,3 +106,45 @@ Implementation 2026-09-14:
 ผลตรวจ: Phase10TreasuryOperationsTest + Phase2314MasterDialogsTest ผ่าน 7 tests / 113 assertions. ครอบคลุม validation แล้วแก้ส่งใหม่, retry ไม่สร้าง fund/request/reimbursement ซ้ำ, null bank account, purpose/note, submitted status, reimbursement journal เดียว, revoked permission และ independent approval/payment เดิม. TypeScript, scoped ESLint, Pint และ production build ผ่าน
 
 ยังไม่ปิด Treasury rollout: browser acceptance ของ Petty Cash ยัง pending และ Bank Statements/Cheques ยังมีงานย้าย editor. รอบนี้ไม่ได้ตรวจ browser จึงไม่อ้างผล responsive/keyboard/draft interaction จาก backend tests
+
+---
+
+## สรุปผลการปิดรอบสมบูรณ์และ Reconciliation รายโมดูล (Final Rollout Reconciliation — Phase 23.1.6 — 2026-09-16)
+
+ตารางตรวจรับรองขั้นสุดท้ายของทุก Module/Surface เทียบกับ Route, Component ปัจจุบัน, และสถานะการแปลงเป็น Dialog:
+
+| Module / Surface | Current Component / Entry Point | Registered Route(s) | Status | Evidence / Implementation Details |
+| :--- | :--- | :--- | :--- | :--- |
+| **Sales — Customers** | `Pages/Sales/Customers.tsx` | `POST /customers`, `PATCH /customers/{customer}` | Converted (Dialog) | `CreateEditDialog`, `useDiscardGuard`, `useSubmissionKey`, `Phase231SalesDialogsTest` |
+| **Sales — Contacts** | `Pages/Sales/Customers.tsx` | `POST /customers/{customer}/contacts`, `PATCH /contacts/{contact}` | Converted (Dialog) | Shared dialog within Customers, discard guard, prefill defaults |
+| **Sales — Deals** | `Pages/Sales/Deals.tsx` | `POST /deals`, `PATCH /deals/{deal}` | Converted (Dialog) | `CreateEditDialog`, `useDiscardGuard`, `useSubmissionKey` |
+| **Sales — Activities** | `Pages/Sales/Deals.tsx` | `POST /activities`, `PATCH /activities/{activity}` | Converted (Dialog) | Shared dialog within Deals, activity types, date picker |
+| **Procurement — Products** | `Pages/Finance/Products.tsx` | `POST /products`, `PATCH /products/{product}` | Converted (Dialog) | `CreateEditDialog`, `useDiscardGuard`, `useSubmissionKey`, `Phase2314MasterDialogsTest` |
+| **Procurement — Suppliers** | `Pages/Finance/Suppliers.tsx` | `POST /suppliers`, `PATCH /suppliers/{supplier}` | Converted (Dialog) | `CreateEditDialog`, `useDiscardGuard`, `useSubmissionKey`, `Phase7ProcurementAndMembersTest` |
+| **Procurement — Purchase Orders** | `Pages/Finance/PurchaseOrders.tsx` | `POST /purchase-orders` | Converted (Dialog) | `CreateEditDialog`, line items, discard guard, `useSubmissionKey` |
+| **Treasury — Bank Accounts** | `Pages/Finance/BankAccounts.tsx` | `POST /bank-accounts`, `PATCH /bank-accounts/{bankAccount}` | Converted (Dialog) | Masked account preservation, branch/GL search, `Phase10BankAccountsTest` |
+| **Treasury — Bank Statements** | `Pages/Finance/BankStatements.tsx` | `POST /bank-statements/import` | Exception | Specialized statement file import flow with validation preview |
+| **Treasury — Cheques** | `Pages/Finance/Cheques.tsx` | `POST /cheques` | Converted (Dialog) | `CreateEditDialog`, cheque register, discard guard, submission key |
+| **Treasury — Petty Cash** | `Pages/Finance/PettyCashDialog.tsx` | `POST /petty-cash/funds`, `POST /petty-cash/requests`, `POST /petty-cash/reimbursements` | Converted (Dialog) / Exception | Funds/requests use `PettyCashDialog` with discard guard; reimbursement posts GL directly |
+| **Accounting — Chart of Accounts** | `Pages/Accounting/ChartOfAccounts.tsx` | `POST /accounting/chart-of-accounts` | Converted (Dialog) | `CreateEditDialog`, account type selector, `EnsureFormSubmission` |
+| **Accounting — Journals** | `Pages/Accounting/Journals.tsx` | `POST /accounting/journals` | Converted (Dialog) | `CreateEditDialog`, line items, GL balance validation, idempotent submission key |
+| **Accounting — Periods** | `Pages/Accounting/Periods.tsx` | `POST /accounting/periods` | Converted (Dialog) | `CreateEditDialog`, controlled date fields, `EnsureFormSubmission` |
+| **Currencies & FX** | `Pages/Finance/Currencies.tsx` | `POST /currencies`, `POST /exchange-rates` | Converted (Dialog) | `CreateEditDialog`, decimal inputs, date controls, `Phase14FxTest` |
+| **Fixed Assets — Category / Capitalize** | `Pages/Finance/FixedAssetCreateDialog.tsx` | `POST /fixed-assets/categories`, `POST /fixed-assets` | Converted (Dialog) | `CreateEditDialog`, category defaults, GL capitalization post |
+| **Fixed Assets — Proof Attachment** | `Pages/Finance/FixedAssetAttachmentDialog.tsx` | `POST /fixed-assets/{fixedAsset}/attachment` | Converted (Dialog) | `CreateEditDialog`, file attachment manager, discard guard |
+| **Inventory — Warehouse / Bin / Lot / Transfer / Count** | `Pages/Finance/InventoryDialogs.tsx` | `POST /warehouses`, `/bins`, `/lots`, `/transfers`, `/counts` | Converted (Dialog) | `useEditorCoordinator`, `inventoryDirty.ts`, `Phase2315CompatibilityTest` |
+| **Goods Receipts** | `Pages/Finance/ReceiveGoodsDialog.tsx` | `POST /goods-receipts`, `POST /stock-movements` | Converted (Dialog) | `CreateEditDialog`, line items, discard guard, `Phase15InventoryAdvancedTest` |
+| **Invoices & Commercial Docs** | `Pages/Finance/Invoices.tsx`, `CommercialDocuments.tsx` | `POST /invoices`, `PATCH /invoices/{invoice}`, `/delivery-orders` | Converted (Dialog) / Exception | Invoices use `CreateEditDialog` (edit restricted to draft); payment receipt is specialized command |
+| **Payroll** | `Pages/Finance/PayrollDialogs.tsx` | `POST /payroll/profiles`, `POST /payroll/runs`, `POST /payroll/policies` | Converted (Dialog) | Single active coordinator, discard guard, `Phase16PayrollTest` |
+| **HR Core & Attendance** | `Pages/Hr/HrDialogs.tsx` | `POST /hr/leave-requests`, `/shifts`, `/leave-types`, `/work-profiles`, `/holidays` | Converted (Dialog) / Exception | CRUD uses `HrDialogs.tsx`; Clock In/Out is event command exception |
+| **Admin — Users** | `Pages/Admin/UserDialog.tsx` | `POST /users/invite`, `PATCH /users/{user}` | Converted (Dialog) | `CreateEditDialog`, user invite/edit, discard guard, password confirmation |
+| **Admin — Roles** | `Pages/Admin/RolePermissionsDialog.tsx` | `POST /roles`, `PATCH /roles/{role}`, `PATCH /roles/{role}/permissions` | Converted (Dialog) | `CreateEditDialog`, system role immutability guard, `RoleEditorTest` (5 tests / 34 assertions) |
+| **Settings — Organization Structure** | `Pages/Settings/OrgStructureDialogs.tsx` | `POST/PATCH /settings/branches`, `/divisions`, `/departments` | Converted (Dialog) | `orgStructureDirty.ts` (full-field comparison against record defaults), Discard Guard, UI permission gate for `settings.structure.update` |
+| **Settings — Notifications & Channels** | `Pages/Settings/NotificationPreferences.tsx` | `PATCH /settings/notifications`, `POST /notification-channels` | Converted (Dialog) | Channel vault encryption, recipient quiet hours, `Phase21NotificationsTest` |
+| **Customer/Supplier Portals** | `Pages/Portal/VendorBillDialog.tsx` | `POST /portal/vendor-bills` | Converted (Dialog) | Scoped portal authentication, file quarantine scan gate, discard guard |
+| **Workflow Engine** | `Pages/Workflows/WorkflowDialogs.tsx` | `POST /workflows/delegations`, `POST /workflows/definitions` | Converted (Dialog) | Dynamic multi-step builder, SoD guard, discard guard, `Phase20WorkflowTest` |
+
+### เอกสารและ Route Reconciliation
+- `docs/ROUTES_AND_SCREENS.md`: ปรับปรุง Route `GET /roles` เป็น `roles.view`, เพิ่ม `POST /roles` (`roles.manage`), `PATCH /roles/{role}` (`roles.manage`), `PATCH /users/{user}/role` (`roles.update`).
+- `docs/PHASE_23_1_FORM_INVENTORY.md`: แยกสถิติการสำรวจตั้งต้น (Baseline Snapshot 2026-09-11: 60 หน้า 92 ไฟล์) ออกจากรายงานสรุปผลการ Reconcile สมบูรณ์ (Phase 23.1.6: 70 dialogs, 20 exceptions, 0 dead workflows).
+- การทดสอบยืนยันผล: Backend 316 tests (2,609 assertions / 0 failures), Frontend 34 tests (0 failures), ESLint 0 warnings / 0 errors, TypeScript 0 errors, Vite Build clean.

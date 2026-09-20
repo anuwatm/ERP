@@ -8,7 +8,7 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 
 ## 1. สถานะโครงการปัจจุบัน (Current Status)
 
-**สถานะล่าสุด (2026-09-16): Phase 23.1 Complete & Closed.** ตรวจรับ Exit Criteria 23.1.6 ผ่านครบถ้วนบน Verified Scope: Rollout Modal Dialog และระบบ Single Active Editor Coordinator พร้อม Discard Guard ครบ 60 หน้า 92 ไฟล์, Idempotent submission key, ขอบเขต Browser/Network matrix ภาพรวมได้รับการบันทึกและ deferred ตาม `docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md` (B01–B08). ดูรายละเอียดใน `gpt.md` และ `checklist.md`.
+**สถานะล่าสุด (2026-09-16): Phase 23.1 Complete & Closed (Verified Scope & Audit Resolution Complete).** ตรวจรับ Exit Criteria 23.1.6 ผ่านครบถ้วนบน Verified Scope: Rollout Modal Dialog และระบบ Single Active Editor Coordinator พร้อม Discard Guard ครบ 60 หน้า 92 ไฟล์, Idempotent submission key, ขอบเขต Browser/Network matrix ภาพรวมได้รับการบันทึกและ deferred ตาม `docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md` (B01–B08). ดำเนินการแก้ไขข้อตรวจรับและข้อเสนอแนะ P2 — E01 (dirty detection ละเอียดทุก field เทียบ baseline defaults ผ่าน `orgStructureDirty.ts`), P2 — E02 (แยก baseline inventory ออกจาก final reconciliation และปรับปรุง route documentation), และ E03 (UI permission gate `settings.structure.update` ใน `OrganizationStructure.tsx`) เรียบร้อยสมบูรณ์ ดูรายละเอียดใน `gpt.md` และ `checklist.md`.
 
 - **Phase 1 - 23.1 (รวม Phase 18.1): เสร็จสมบูรณ์และผ่านการตรวจรับรอง 100% (Complete & Closed)**
   - Core MVP, CRM/Sales, Finance, Delivery, Multi-role Dashboards, VAT/Number Sequences, Suppliers & POs (Phase 1 - 7)
@@ -25,15 +25,14 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
   - Operational Notifications & Outbox Engine, Encrypted Channel Vault (LINE OA / Slack / Telegram), Transactional Outbox, Exponential Backoff & Dead-Letter Log, User Quiet Hours & Urgency Filtering, Safe Daily Operations Digest (Phase 21)
   - Customer & Supplier Self-Service Portals, External Identity Isolation, Passwordless Magic Link, Scoped Portal Sessions, Quotation Acceptance Audit, Vendor Bill Submission Intake & Scanner Quarantine Gate (Phase 22)
   - PromptPay Thai QR & Payment Gateway Settlement, Exact Satang (Tag 29/30), Opn API Checkout & Event Verification, HMAC-SHA256 Signed Settlement Bridge, Replay/Duplicate Guard, Atomic Payment & Double-Entry GL (Phase 23 - Live Bridge Deferred)
-  - System-wide Master Dialog & Single Active Editor Standard (Phase 23.1 - Complete & Closed): มาตรฐาน Modal Dialog 60 หน้า 92 ไฟล์, `useEditorCoordinator`, dirty detection ครบทุก field, idempotent submission keys, discard guard, และ full regression 311 tests / 23 frontend tests ผ่าน 100%
-- **สถานะการทดสอบระบบ (Validation Snapshot):**
-  - Full Backend Regression Tests: **311 Tests Passed / 2 Skipped (2,575 Assertions / 0 Failures)** (รวมชุดทดสอบ `Phase2315CompatibilityTest` 6 tests / 51 assertions)
-  - Frontend Unit & Switch Guard Tests: **23 Tests Passed (0 Failures)** (`tests/Frontend/*.test.mjs`)
-  - Live Browser Acceptance Suite (Partial Verification): ผ่านการทดสอบ 3 กรณีหลักเชิงประจักษ์ บันทึกหลักฐานใน `browser_evidence/`
+  - System-wide Master Dialog & Single Active Editor Standard (Phase 23.1 - Complete & Closed): มาตรฐาน Modal Dialog 60 หน้า 92 ไฟล์, `useEditorCoordinator`, dirty detection ครบทุก field (รวม `orgStructureDirty.ts` สำหรับ Org Structure), idempotent submission keys, discard guard, และ full regression 316 tests / 34 frontend tests ผ่าน 100%
+- **สถานะการทดสอบระบบ (Validation Snapshot — 2026-09-17 หลังแก้ P1):**
+  - Full Backend Regression Tests: **321 Tests Passed / 2 Skipped (2,649 Assertions / 0 Failures)** (รวม `Phase1AdminTest` 17 tests, `Phase5EndToEndTest` 7 tests, และ `DashboardAccessTest` 5 tests ผ่าน 100%)
+  - Frontend Unit Tests: **38 Tests Passed (0 Failures)** (`tests/Frontend/*.test.mjs`, รวม `dashboardComponents.test.mjs` 4 tests, `orgStructureDirty.test.mjs` 11 tests)
   - Code Style & Formatting: **Prettier Clean (`npm run check-format` exit 0)**, **Laravel Pint Clean (0 issues)**
   - Static Code Analysis: **ESLint Clean (0 warnings / 0 errors)**, **TypeScript `tsc` Clean (0 errors)**
-  - Frontend Build: **Vite Production Build Clean (1,095 modules transformed / 0 errors)**
-- **ประตูสู่ Phase ถัดไป (Next Gate):** **Phase 23.2: System-wide Dashboard Redesign** / **Phase 24: Direct E-Tax Invoice & RD API Gateway**
+  - Frontend Build: **Vite Production Build Clean (1,105 modules transformed / 0 errors)**
+- **สถานะงานปัจจุบัน:** **Phase 23.2: System-wide Dashboard Redesign อยู่ระหว่างดำเนินการ (In Progress)** — 23.2.1 Scope Inventory, 23.2.2 Metric Dictionary, 23.2.3 Shared UI Foundation และ 23.2.4 Authorization Architecture ผ่านการตรวจรับครบถ้วน; 23.2.5 อยู่ระหว่างดำเนินการ Rollout รายแดชบอร์ด (เริ่มเฉพาะ Finance drill-down destination และ Sales partial layout).
 - **Closed Phase Governance:** งานที่เป็น Security Vulnerability, Data Integrity Bug, Regression Fix หรือ Production Blocker ใน Phase ที่ปิดแล้ว สามารถแก้ไขได้โดยต้องมี Feature Test ครอบคลุมและบันทึกเหตุผลชัดเจน ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase 1-23.1 โดยไม่มี Decision/Checklist ใหม่
 
 ---
@@ -119,7 +118,9 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
        ↓
 [Phase 22: Customer & Supplier Self-Service Portals] (Closed)
        ↓
-[Phase 23: Closed; Phase 23.1.5: Closed verified scope with deferred acceptance; Phase 23.1.6: Pending]
+[Phase 23: Complete & Closed; Phase 23.1: Complete & Closed (23.1.6 Verified Scope & Audit Resolution)]
+       ↓
+[Phase 23.2: System-wide Dashboard Redesign] (In progress — 23.2.1–23.2.4 complete; rollout pending)
        ↓
 [Phase 24: Direct E-Tax Invoice & RD API Gateway] (Next Gate)
        ↓
@@ -132,16 +133,20 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 
 ### ข้อกำหนดและ Guardrails สำหรับ Phase ถัดไป:
 
-1. **Phase 24: Direct E-Tax Invoice & RD API Gateway (Next Gate):**
+1. **Phase 23.2: System-wide Dashboard Redesign (In progress):**
+   - ปรับปรุง Dashboard ทุกโมดูลตาม `erp-dashboard-design-concept.md` พร้อม metric definitions, charts และ filtered drill-down ที่เคารพสิทธิ์ของผู้ใช้งาน
+   - บังคับใช้ Permission Scoping ในทุก widget และห้ามแสดง raw cash balance โดยไม่มี bank-reconciliation boundary
+   - Inventory และ Metric Dictionary ผ่านแล้ว; งานที่เหลือคือ rollout, widget-level authorization/query isolation, drill-down และ verification ตาม `checklist.md`
+2. **Phase 24: Direct E-Tax Invoice & RD API Gateway:**
    - เชื่อมต่อผ่าน Certified Provider หรือ RD API พร้อมระบบจัดการ Private Key ผ่าน HSM / Cloud Key Vault (ห้ามเก็บ Private Key ใน Database)
    - มี Outbox & Reconciliation State Machine, XML/PDF Sign Engine และจัดเก็บ CAdES-BES / XAdES Signature
    - Dedicated `etax` queue worker พร้อม retry, backoff และ failover monitoring
-2. **Phase 25: Cash Flow Forecasting & Financial Health:**
+3. **Phase 25: Cash Flow Forecasting & Financial Health:**
    - แสดงการประมาณการกระแสเงินสดล่วงหน้า 30-90 วัน โดยต้องมี Scenario/Assumption Snapshot และไม่เผยแพร่ยอด Raw Cash Balance
-3. **Phase 26: AI OCR Document Ingestion:**
+4. **Phase 26: AI OCR Document Ingestion:**
    - ทำหน้าที่เป็น Assisted Draft พร้อมคะแนนความเชื่อมั่น (Confidence Score) และแนบไฟล์ต้นฉบับใน DMS
    - บังคับให้ต้องผ่านการตรวจสอบจากมนุษย์ (Human Review) ก่อนแปลงเป็น Expense หรือ Purchase Order จริง ห้าม Auto-post เด็ดขาด
-4. **Phase 27 - 28 (Optional Verticals): Manufacturing BOM & Point of Sale (POS):**
+5. **Phase 27 - 28 (Optional Verticals): Manufacturing BOM & Point of Sale (POS):**
    - พัฒนาเมื่อมีความต้องการทางธุรกิจจริง
    - POS Shift Reconciliation จำกัดอยู่เฉพาะในขอบเขต POS ประจำวัน และห้ามรั่วไหลเป็น Organization-wide Cash Balance
 
@@ -159,3 +164,94 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
    - Frontend Build: `npm run build` (Clean 100%)
    - TypeScript Compilation: `npm run tsc` (Clean 0 errors)
    - Static Code Analysis: `npm run lint` (ESLint 0 warnings / 0 errors), `npm run check-format` (Prettier Clean), `php vendor/bin/pint --test` (Pint Clean 0 issues)
+
+---
+
+## 7. ผลการตรวจรับและข้อเสนอแนะ Phase 23.2.1–23.2.5 (Comprehensive Audit Findings & Recommendations)
+
+บันทึกผลการตรวจรับละเอียดรายข้อย่อย Phase 23.2.1 – 23.2.5 ณ วันที่ 2026-09-17:
+
+### 1. Phase 23.2.1: Scope & Dashboard Inventory
+- **สถานะ:** **PASS / Approved**
+- **หลักฐาน:** เอกสาร `docs/PHASE_23_2_1_DASHBOARD_INVENTORY.md`
+- **สรุปผล:**
+  - สำรวจและทำ Inventory ครบทั้ง 8 Internal Domains (Executive, Sales, Finance, Delivery, Procurement/Inventory, HR/Payroll, Admin/Security, My Work) และ 2 External Portals (Customer, Supplier).
+  - ระบุ Route, Controller, Permission, Scope, Date Basis, Currency, Drill-down Destinations และ Gap ความพร้อมของข้อมูลจริงอย่างละเอียด.
+  - แยก Portal session และ payload ออกจากระบบภายใน ป้องกัน internal aggregate หลุดไปยังบุคคลภายนอก 100%.
+- **ข้อเสนอแนะ:** โมดูลที่ระบุว่ายังไม่มี Dashboard เฉพาะ (Procurement/Inventory, HR/Payroll, My Work) ต้องพัฒนาทั้ง Backend Data Providers และ UI ใน Phase 23.2.5 ตามที่วางแผนไว้ ห้ามละเลยหรือตัดทิ้งโดยไม่มี approval.
+
+---
+
+### 2. Phase 23.2.2: Metric Dictionary & Data Correctness
+- **สถานะ:** **PASS (Specification Approved) / CONDITIONAL (Incomplete Backend Alignment)**
+- **หลักฐาน:** เอกสาร `docs/PHASE_23_2_2_METRIC_DICTIONARY.md`
+- **สรุปผล:**
+  - กำหนดนิยาม Business Meaning, Sources, Formulas, Allowlist Statuses, Timezones, และ Previous Period Comparisons รัดกุม.
+  - บังคับใช้หลักการแยก Period Flow ออกจาก Current Snapshot และแยก Unreconciled figures ออกจาก Accounting facts.
+  - ล็อกสถานะ Unavailable สำหรับเมทริกซ์ที่ยังไม่มี canonical data หรือ policy ชัดเจน (เช่น Low Stock, Security Alert threshold).
+- **ปัญหาที่ตรวจพบ (Defect / Discrepancy):**
+  - ในโค้ดปัจจุบัน `DashboardController.php` (lines 264, 322, 323) และ `Dashboard.tsx` (lines 50, 72, 73) ยังคงส่งและแสดงผล Metric ชื่อเก่าที่ไม่ตรงกับ Metric Dictionary:
+    1. ส่ง `'gross_profit' => round($invoicedRevenue - $recognizedExpense, 2)` ขัดแย้งกับข้อกำหนดที่ห้ามเรียก Invoiced Revenue ลบ Expense ว่า Gross Profit (ต้องใช้ `Billed-minus-expense estimate`).
+    2. ส่ง `'project_profit' => round($totalBudget - $actualCost, 2)` ขัดแย้งกับข้อกำหนดที่ห้ามนำ Budget ลบ Actual Cost แล้วเรียกว่ากำไรโครงการ (ต้องใช้ `Budget Remaining`).
+    3. ส่ง `'net_cash_flow' => round($cashIn - $cashOut, 2)` โดยที่ cashOut มาจาก Vendor Expense เท่านั้น ไม่ครอบคลุมทั้งองค์กร.
+- **ข้อเสนอแนะ:** ในการ Rollout Phase 23.2.5 ต้อง Refactor ชื่อคีย์และ Label บน UI ให้ตรงกับ Metric Dictionary อย่างเคร่งครัด.
+
+---
+
+### 3. Phase 23.2.3: Shared Dashboard UI & Interaction
+- **สถานะ:** **PASS / Component Foundation Approved (Resolved Quality Gates)**
+- **หลักฐาน:** `backend/resources/js/Components/Dashboard/`, `backend/tests/Frontend/dashboardComponents.test.mjs` (4 passed), ESLint clean (0 errors), Prettier clean
+- **สรุปผลเชิงบวก:**
+  - สถาปัตยกรรม Native SVG สำหรับ Charts/Breakdown ทำงานได้ดี ไม่มี Runtime Dependency ภายนอก รองรับ Accessible Data Table Fallback ครบถ้วน.
+  - Unit tests Frontend ผ่าน 4/4 tests ครอบคลุม filter URL state, widget state distinction, chart accessibility, และ layout vocabulary.
+- **การแก้ไขและยืนยันผล (Resolved Defects):**
+  1. **ESLint Clean (0 Errors):** ลบ sync `setState` ภายใน `useEffect` ของ `DashboardFilterBar.tsx` สำเร็จ และลบ unused imports `PageHeader`, `StatCard` ใน `Sales/Dashboard.tsx` เรียบร้อย.
+  2. **Prettier Clean:** รันจัดรูปแบบโค้ดใน `DashboardBreakdown.tsx`, `DashboardChart.tsx`, `DashboardFilterBar.tsx` ครบถ้วน (`npm run check-format` ผ่าน 100%).
+- **ประเด็นคงค้างสำหรับ Phase 23.2.5 (P2):**
+  - ซิงค์ Period Filter Semantics ระหว่าง Shared FilterBar (`today`, `this_week`, `this_month`) กับ Backend Controllers.
+  - ปรับ KPI Card ในแต่ละแดชบอร์ดให้ตั้งคำถามตรงคำถามทางธุรกิจ พร้อมหน่วยและบริบทเปรียบเทียบ.
+
+---
+
+### 4. Phase 23.2.4: Authorization & Query Architecture
+- **สถานะ:** **PASS / Access Foundation Approved (Resolved Regressions)**
+- **หลักฐาน:** `backend/app/Support/DashboardAccess.php`, `backend/tests/Feature/DashboardAccessTest.php` (5 passed), `Phase1AdminTest` (17 passed), `Phase5EndToEndTest` (7 passed)
+- **สรุปผลเชิงบวก:**
+  - `DashboardAccess` ควบคุมสิทธิ์ด้วย Effective Permissions สำเร็จ ตัดสิทธิ์ bypass ด้วย role name ออก 100%.
+  - เพิ่ม `dashboardWidgets` query/serialize เฉพาะ source ที่มีสิทธิ์ ป้องกันข้อมูลรั่วไหล.
+  - Full backend test suite **321 passed / 0 failures**.
+- **การแก้ไขและยืนยันผล (Resolved Defects):**
+  1. **Phase 1 Regression Solved:** ใน `Phase1AdminTest::test_dashboard_includes_security_alerts` ได้เพิ่มสิทธิ์ `users.view`, `roles.view`, `audit.view` ให้แก่ fixture owner เพื่อให้สอดคล้องกับสถาปัตยกรรมสิทธิ์ใหม่ ทำให้การทดสอบผ่านสมบูรณ์.
+  2. **Phase 5 Assertion Restored:** ใน `Phase5EndToEndTest::test_e2e_payment_reversal_updates_invoice_and_dashboard_metrics` ได้เพิ่มสิทธิ์ `payments.view` และปรับ assertion ให้ตรวจยอดจริง `receipts=400` และ `reversals=400` บน `dashboardWidgets.finance.cash_in` ช่วยให้ระบบยังคงยืนยันความถูกต้องของตัวเลขหลัง reversal จริง.
+- **ประเด็นคงค้างสำหรับ Phase 23.2.5 (P2):**
+  - ทยอยแยก Monolithic Composite Queries ใน `DashboardController` ให้เป็น Granular Data Providers ตาม Widget Scope เมื่อเริ่ม Rollout แต่ละแดชบอร์ด.
+
+---
+
+### 5. Phase 23.2.5: Dashboard Rollout
+- **สถานะ:** **IN PROGRESS (Early Stage — Only Finance Drill-down Route & Sales Partial Layout)**
+- **หลักฐาน:** `backend/resources/js/Pages/Finance/Payments.tsx`, `backend/app/Http/Controllers/Finance/PaymentController.php`, `backend/resources/js/Pages/Sales/Dashboard.tsx`
+- **สรุปสถานะปัจจุบัน:**
+  - สร้าง Read-only Drill-down Destination `GET /payments` (`Payments.tsx` + `PaymentController@index`) รองรับการฟิลเตอร์ `entry_type`, `from`, `to` เรียบร้อย.
+  - `InvoiceController` และ `ExpenseController` รองรับการรับพารามิเตอร์ `from`, `to` สำหรับ drill-down.
+  - หน้า `Sales/Dashboard.tsx` เริ่มนำ `DashboardLayout` และ `DashboardKpiCard` มาครอบ แต่ยังไม่มี `DashboardFilterBar` และยังไม่ได้เชื่อม Drill-down ที่สมบูรณ์.
+  - Dashboard อื่นๆ (Finance, Executive, Delivery, Admin, Inventory/Procurement, HR/Payroll, My Work, External Portals) ยังไม่ได้เริ่ม Rollout เข้าสู่สถาปัตยกรรมใหม่.
+- **รายการที่ต้องทำใน Phase 23.2.5 (Action Plan):**
+  1. Rollout ทีละ Dashboard ตามลำดับ: Finance -> Sales -> Delivery -> Executive -> Admin -> Portals -> New Modules (Inventory, HR, My Work).
+  2. เชื่อมโยง Drill-down links จากทุก Widget/Table ไปยังหน้ารายการจริง พร้อมส่ง Query Parameters (`period`, `from`, `to`, `status`, `owner`, `warehouse`).
+  3. จัดการ Error / Empty / Loading state ให้สอดคล้องกับสิทธิ์ของผู้ใช้งานในแต่ละหน้าจอ.
+  4. เพิ่ม Scoped Feature Test และ Browser Acceptance Matrix ก่อนปิดแต่ละ Dashboard.
+
+---
+
+### 6. สรุปภาพรวมและขั้นตอนถัดไป (Next Actions Checklist)
+
+| ลำดับ | รายการ | สถานะ | หมายเหตุ |
+| :---: | :--- | :---: | :--- |
+| **P1** | แก้ไข Regression `Phase1AdminTest::test_dashboard_includes_security_alerts` | **RESOLVED** | ปรับ fixture ให้มีสิทธิ์ครบถ้วนตาม access model ใหม่ (17 passed) |
+| **P1** | คืนค่า Assertions ใน `Phase5EndToEndTest` ด้วยสิทธิ์ `payments.view` | **RESOLVED** | ตรวจสอบยอดจริง `receipts=400` และ `reversals=400` เรียบร้อย (7 passed) |
+| **P1** | แก้ไข ESLint 3 จุด (FilterBar setState in effect + unused vars) | **RESOLVED** | ESLint ผ่าน 0 warnings / 0 errors |
+| **P1** | รัน Prettier format ให้ผ่าน 100% | **RESOLVED** | Prettier check ผ่าน 100% |
+| **P2** | ซิงค์ Period Filter Semantics ระหว่าง Shared FilterBar กับ Backend Controllers | **PENDING (23.2.5)** | รองรับ `today`, `this_week`, `this_month` ใน backend controllers |
+| **P2** | ปรับปรุง Label/Metric naming ให้ตรงกับ Metric Dictionary (แทนที่ Gross Profit/Project Profit) | **PENDING (23.2.5)** | ใช้ `Billed-minus-expense estimate` และ `Budget Remaining` |
+| **P2** | ดำเนินการ Rollout Phase 23.2.5 ต่อตามลำดับความสำคัญ | **IN PROGRESS** | Finance -> Sales -> Delivery -> Executive -> Admin -> Portals -> New Modules |

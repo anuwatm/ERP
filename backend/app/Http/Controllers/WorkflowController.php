@@ -28,6 +28,8 @@ class WorkflowController extends Controller
             ->get(['delegator_user_id', 'subject_type']);
         $delegatorIds = $activeDelegations->pluck('delegator_user_id');
         $inbox = WorkflowApproval::where('status', 'pending')
+            ->whereHas('instance', fn ($query) => $query->where('org_id', $user->org_id)->where('status', 'pending'))
+            ->when($request->filled('approval_id'), fn ($query) => $query->where('id', $request->query('approval_id')))
             ->where(function ($query) use ($user, $activeDelegations) {
                 $query->where('assigned_user_id', $user->id);
                 foreach ($activeDelegations as $delegation) {
@@ -48,7 +50,7 @@ class WorkflowController extends Controller
             }
         });
 
-        return Inertia::render('Workflows/Index', ['definitions' => WorkflowDefinition::where('org_id', $user->org_id)->with('steps')->latest()->get(), 'inbox' => $inbox, 'history' => WorkflowApproval::where(fn ($query) => $query->where('assigned_user_id', $user->id)->orWhere('acted_by_user_id', $user->id))->with(['instance', 'assignedUser:id,name', 'delegatedFromUser:id,name'])->latest()->limit(100)->get(), 'users' => User::where('org_id', $user->org_id)->where('status', 'active')->orderBy('name')->get(['id', 'name', 'email']), 'delegations' => WorkflowDelegation::where('org_id', $user->org_id)->where('delegator_user_id', $user->id)->with('delegateUser:id,name')->latest()->get(), 'can' => ['manage' => $user->hasPermissionCode('workflows.manage'), 'approve' => $user->hasPermissionCode('workflows.approve')]]);
+        return Inertia::render('Workflows/Index', ['definitions' => WorkflowDefinition::where('org_id', $user->org_id)->with('steps')->latest()->get(), 'inbox' => $inbox, 'history' => WorkflowApproval::where(fn ($query) => $query->where('assigned_user_id', $user->id)->orWhere('acted_by_user_id', $user->id))->whereHas('instance', fn ($query) => $query->where('org_id', $user->org_id))->with(['instance', 'assignedUser:id,name', 'delegatedFromUser:id,name'])->latest()->limit(100)->get(), 'users' => User::where('org_id', $user->org_id)->where('status', 'active')->orderBy('name')->get(['id', 'name', 'email']), 'delegations' => WorkflowDelegation::where('org_id', $user->org_id)->where('delegator_user_id', $user->id)->with('delegateUser:id,name')->latest()->get(), 'can' => ['manage' => $user->hasPermissionCode('workflows.manage'), 'approve' => $user->hasPermissionCode('workflows.approve')]]);
     }
 
     public function storeDefinition(Request $request): RedirectResponse

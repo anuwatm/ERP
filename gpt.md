@@ -1,14 +1,44 @@
 # GPT Decision Log
 
-## สถานะและงานค้าง
+## สถานะ Phase 23.2 — 2026-09-20
 
-- **Phase 23.1: Complete & Closed (2026-09-16)** — ตรวจรับ Exit Criteria 23.1.6 ผ่านครบถ้วนบน Verified Scope:
-  - Inventory 91 surfaces บน 60 หน้าจอ 92 ไฟล์ได้รับการปรับปรุงสู่ `CreateEditDialog` หรือมี Documented Exceptions ครบถ้วน
-  - ไร้ duplicate forms หรือ dead imports/components, ESLint/Prettier/Vite build 100% clean
-  - Backend regression 311 tests (2,575 assertions), Frontend unit 23 tests ผ่าน 100%
-  - สรุปขอบเขตและอัปเดต `README.md`, `docs/CURRENT_IMPLEMENTATION.md`, `docs/ROUTES_AND_SCREENS.md`, `checklist.md` ครบถ้วน
-- **Deferred B01–B08:** งาน browser/network/performance matrix ที่เหลือคงเป็น deferred ตามข้อตกลงผู้ใช้อนุมัติ 2026-09-15 (ดูขั้นตอนและเกณฑ์ใน `docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md`)
-- **Phase ถัดไป:** Phase 23.2 System-wide Dashboard Redesign (ตาม `erp-dashboard-design-concept.md`) หรือ Phase 24 Direct e-Tax Foundation
+**Phase 23.2 Complete & Done (2026-09-20).** ตรวจรับและปิด Phase 23.2 สมบูรณ์ทุกข้อย่อย 23.2.1–23.2.7 ตามเกณฑ์ Exit Criteria โดยรายการที่ไม่พร้อมบันทึกส่งมอบต่อใน Phase 23.3 (HR/Attendance) และ Phase 25 (Advanced Analytics) ตาม `docs/PHASE_23_2_5_DEFERRED.md`.
+
+- **Backend Full Regression:** **344 passed / 3,558 assertions, 2 skipped** (ต้องใช้ isolated MySQL Phase 23/24). 0 failed.
+- **Frontend Node Tests:** **38 passed / 0 failed** ครอบคลุม dashboard filters, widgets, keyboard charts, line-item errors, discard guards, org dirty checks และ Today/This Week filters.
+- **Code Quality & Builds:** TypeScript `node_modules/.bin/tsc.cmd --noEmit` 0 errors, ESLint `node_modules/.bin/eslint.cmd resources/js --max-warnings=0` 0 errors 0 warnings, Laravel Pint passed, Production Vite build passed, `git diff --check` passed.
+- **Edge-Case Metrics (`DashboardMetricsEdgeCasesTest`):** 6 passed / 158 assertions ครอบคลุม date/timezone boundaries (ช่วงต้น/สิ้นเดือน Aug 1 vs Jul 31 และ Aug 31 vs Sep 1), zero values & empty organization handling, partial payments, negative reversals net cash, void/cancelled/draft/rejected document exclusions, และ FX multi-currency base conversions.
+- **Performance Budget (`DashboardPerformanceTest`):** ทดสอบ isolated fixture 1,000 records ต่อแหล่งข้อมูลหลัก ทุก dashboard อยู่ในงบ query <= 50 และ response < 1 วินาที: My Work 13/67ms, HR 13/50ms, Portal 14-15/47-60ms, Procurement 22/67ms, Finance 25/52ms, Delivery 35/336ms, Sales 41/85ms, Executive 41/178ms, Admin 48/278ms.
+- **Browser Acceptance Matrix (`temp/phase232-browser/results.json`):** ครบ 60 checks: 8 dashboards ที่ Desktop 1440px และ Mobile 390px ใน Dark และ Light themes, ไม่มีการล้นจอ (`scrollWidth <= innerWidth`), ตรวจ Role variants (Owner, Readonly Finance, Payroll User, Denied 403, Portal Customer/Supplier magic-link isolation), keyboard chart data-table disclosure (`Enter`), filter validation alert (`From > To`) และ URL reload persistence โดยมี 0 runtime errors.
+- **Menu Reorganization:** ปรับโครงสร้างเมนูหลักใน `AuthenticatedLayout.tsx` เป็น 7 กลุ่มมาตรฐาน (Overview, Sales & CRM, Procurement & Inventory, Finance & Accounting, HR & People, Delivery & Projects, Administration & Settings).
+- **Next Phase:** Phase 23.3 (HR Employee Master, Shift Scheduling & Attendance Import) ต่อไป.
+
+## สถานะ Phase 23.2.2 — 2026-09-17
+
+**Complete.** Metric contract อยู่ที่ `docs/PHASE_23_2_2_METRIC_DICTIONARY.md`: ใช้ base-currency snapshots, แยก flow จาก as-of snapshot, กำหนด period/timezone/previous-period และห้ามใช้ metric ที่ historical reconstruction หรือ policy ยังไม่รองรับ.
+
+- `Outstanding AR`, aging, open pipeline และ overdue task เป็น current snapshot เท่านั้น.
+- `Cash In` และ AP Cash Out แยก receipt/payment ออกจาก reversal; ยังไม่อ้างเป็น company-wide cash flow.
+- Gross Profit, Project Margin, Low Stock, HR active/attendance และ Security Alerts ที่ยังไม่มี source/policy ตรงนิยาม ถูกล็อกเป็น Unavailable จนกว่าจะเพิ่ม source/test.
+
+## สถานะ Phase 23.2.1 — 2026-09-17
+
+**Complete.** จัดทำ inventory ที่ตรวจ source จริงแล้วใน `docs/PHASE_23_2_1_DASHBOARD_INVENTORY.md` ครอบคลุม internal 8 domain และ Customer/Supplier Portal พร้อม route/controller/page/navigation, source, permission/row scope, date/currency basis, drill-down และ readiness gap.
+
+- Dashboard ปัจจุบันมี Admin, Executive, Finance, Delivery, Sales และ Portal; Procurement/Inventory, HR/Payroll และ My Work ยังไม่มี dashboard เฉพาะ.
+- Metric ที่เป็น historical/as-of, currency, security alert, delivery margin และ HR attendance ถูกระบุเป็น decision ของ Phase 23.2.2 ก่อน implementation.
+- Portal คงใช้ portal identity/grant แยกจาก staff dashboard และห้ามส่ง internal aggregate ไป client portal.
+
+## สถานะตรวจรับ Phase 23.1.6 — 2026-09-16
+
+**Approved / Complete & Closed บน Verified Scope.**
+
+- E01 dirty detection, E02 เอกสาร rollout/routes, E03 read-only UI gate และ E04 Prettier แก้แล้ว.
+- Full backend: **316 passed, 2 skipped, 2,609 assertions**.
+- Frontend unit: **34 passed, 0 failed**.
+- `tsc --noEmit`, ESLint และ Prettier ผ่าน.
+
+ประวัติข้อที่ปิดแล้วเก็บไว้ที่ `temp/phase2316-gemini-closure-before-review.md`.
 
 
 ## ข้อตกลงและงาน deferred ที่ยังมีผล
