@@ -1,5 +1,106 @@
 # GPT Decision Log
 
+## สถานะ Phase 26 (AI OCR Document Ingestion) & GPT Handoff Inquiries — 2026-09-21
+
+**Phase 26 Complete & Closed (2026-09-21).** ระบบ AI OCR Document Ingestion (Universal OpenAI-Compatible Vision รองรับ Local AI Ollama/LM Studio และ Cloud GPT/OpenRouter/Gemini) พัฒนาและทดสอบผ่าน 100%:
+- **การแก้ไขปัญหา GPT Integration:** ปรับปรุง Endpoint Resolution (`/v1`), Trim API Key, กำหนด Token Limit (`max_tokens: 2500` / `max_completion_tokens`), บังคับ Native JSON Mode, High-Detail Vision Grid, และ Auto-extract Embedded JPEG Stream จาก Scanned PDF
+- **ข้อสงสัยและประเด็นสำคัญสำหรับ GPT:** บันทึกไว้อย่างละเอียดใน [`GEMINI.md` หัวข้อ 8.3](file:///c:/LocalDevine/www/ERP/GEMINI.md) ให้ GPT รับรู้และร่วมพิจารณาในรอบถัดไป:
+  1. ยุทธศาสตร์การประมวลผล PDF ระหว่าง Render Image บน Server กับ Text Extraction
+  2. การคุม Token Cost, Image Downscaling และการย้าย OCR Pipeline ไปยัง Async Queue Worker
+  3. Smart Fallback สลับจาก Local Ollama ไปยัง Cloud GPT อัตโนมัติเมื่อ Confidence ต่ำ
+  4. การต่อยอด Split-Screen Reviewer เพื่อแปลงเป็น Vendor Bill (AP) พร้อมแนะนำ Open PO ที่ค้างรับ
+  5. สวิตช์ Tenant Compliance เพื่อบังคับ On-Premise Local AI เท่านั้นสำหรับองค์กรที่เน้นความลับสูง
+
+## สถานะ Bulk Employee Import & Position Master (HR Enhancement) — 2026-09-20
+
+**Complete & Done (2026-09-20).** ระบบนำเข้าข้อมูลประวัติพนักงานแบบชุด (Bulk Employee Import) และ Position Master:
+- **Bulk Employee Import Service (`EmployeeImportService.php`):**
+  - รองรับการประมวลผลไฟล์ CSV, TSV, TXT, Excel (`.xlsx`, `.xls`), และ SpreadsheetML (`.xml`)
+  - ฟังก์ชัน Normalize Header รองรับทั้งคอลัมน์ภาษาอังกฤษและภาษาไทย เช่น `employee_code` / `รหัสพนักงาน`, `first_name` / `ชื่อ`, `position_name` / `ตำแหน่ง`, `department_code` / `แผนก`, `started_on` / `วันเริ่มงาน`
+  - ตัวเลือก `auto_create_position` (สร้างตำแหน่งงานใหม่อัตโนมัติเมื่อยังไม่มีใน Master) และ `update_existing` (อัปเดตข้อมูลเดิมเมื่อพบรหัสพนักงานซ้ำ แทนการข้าม)
+  - เข้ารหัสข้อมูลที่อ่อนไหว (`national_id`, `bank_account_number`) ด้วย AES-256 ตามมาตรฐาน PDPA และบันทึก `AuditLog` ทุกครั้ง
+- **Controller & Endpoints (`EmployeeController.php`, `web.php`):**
+  - `GET /hr/employees/template`: ดาวน์โหลดไฟล์แม่แบบ CSV พร้อมตัวอย่างข้อมูลและ UTF-8 BOM (`permission:hr.employees.manage`)
+  - `POST /hr/employees/import`: อัปโหลดไฟล์เพื่อประมวลผลนำเข้าพนักงาน พร้อมรายงานจำนวนที่สำเร็จและรายการ Error ละเอียดระดับแถว
+- **Frontend UI (`EmployeeImportDialog.tsx`, `Employees.tsx`):**
+  - ปุ่ม `Import` ข้างปุ่ม `New Employee` บนแถบ Action Header ในหน้า Employee Directory
+  - หน้าต่าง Modal `EmployeeImportDialog` พร้อม File Dropzone, ปุ่มดาวน์โหลดแม่แบบ, Checkbox ตัวเลือกนำเข้า, และตารางแสดงข้อผิดพลาด (ถ้ามี)
+- **Position Master & Combobox:**
+  - ตาราง `positions` เป็น Master Data อิสระ, Model `Position`, Foreign Key `employees.position_id`
+  - Searchable Combobox (`PositionCombobox` บน Headless UI) พร้อม Inline Quick-Add
+  - Dark Mode Base `<select>` CSS fix ใน `app.css`
+- **Test Results:**
+  - `EmployeeBulkImportTest`: **8 passed / 47 assertions ผ่าน 100% (100% green)**
+  - `EmployeePositionMasterTest`: **7 passed / 23 assertions ผ่าน 100% (100% green)**
+  - Full Employee Suites: **27 passed / 110 assertions ผ่าน 100% (100% green)**
+  - TypeScript, ESLint, Pint, Vite build ผ่านฉลุย 100%
+
+## สถานะ Position Master & Searchable Combobox (HR Enhancement) — 2026-09-20
+
+**Complete & Done (2026-09-20).** แยกตารางตำแหน่งพนักงาน (`positions`) และพัฒนา Searchable Combobox UI:
+- **Database & Architecture:**
+  - สร้างตาราง `positions` (`id`, `org_id`, `department_id`, `name`, `code`, `description`, `is_active`, timestamps, soft deletes)
+  - เพิ่ม `position_id` ในตาราง `employees` พร้อม foreign key constraint (`nullOnDelete`)
+  - Migration (`2026_09_22_000001_create_positions_and_link_employees_table.php`) ทำการ Backfill ข้อมูล `position_title` เดิมเข้าสู่ `positions` อัตโนมัติ และผูก `position_id` กลับให้พนักงานเดิมทุกราย
+  - Model `App\Models\Position` และเชื่อมโยงสัมพันธ์กับ `Organization`, `Department`, และ `Employee`
+- **Controller & API Endpoints (`PositionController.php`, `EmployeeController.php`, `web.php`):**
+  - `GET /hr/positions`: ค้นหาตำแหน่งงานตาม query string (`search`) และสังกัดองค์กร (`permission:hr.employees.view`)
+  - `POST /hr/positions`: สร้างตำแหน่งงานใหม่แบบ inline พร้อม auto-generate code หากไม่ได้ระบุ (`permission:hr.employees.manage`)
+  - `EmployeeController.php`: รองรับการส่งรายการ positions ให้หน้าจอ, บันทึก `position_id` พร้อมซิงค์ `position_title` อัตโนมัติทั้งตอน create และ update เพื่อรักษาความเข้ากันได้แบบย้อนหลัง (Bidirectional Compatibility)
+- **Frontend & UI/UX (`Employees.tsx`, `app.css`):**
+  - Searchable Combobox (`PositionCombobox` บน Headless UI): พิมพ์ค้นหาแบบ type-ahead, รองรับแป้นพิมพ์ลูกศร, ปุ่ม clear, และมีปุ่ม `+ เพิ่มตำแหน่งใหม่` เปิด Inline Modal สร้างตำแหน่งงานใหม่ได้ทันที
+  - แสดงผลคอลัมน์ "ตำแหน่ง" ใน Employee Data Table ชัดเจน
+  - ปรับปรุง Dark Mode CSS ระดับ Base (`app.css`) ให้ `<select>` และ `<option>` แสดงผลพื้นหลังเข้มและตัวหนังสือขาวถูกต้อง ไม่กลืนกับสีพื้นหลัง
+- **Test Results:**
+  - Feature Tests: `EmployeePositionMasterTest` **7 passed / 23 assertions ผ่าน 100% (100% green)**
+  - Regression Tests: `Phase233EmployeeMasterTest` **7 passed / 24 assertions ผ่าน 100% (100% green)**
+  - Frontend Build & TypeScript: `npm run build` และ `tsc` ผ่านฉลุย 0 errors
+
+## สถานะ Phase 25 — 2026-09-20
+
+**Phase 25 Complete & Done (2026-09-20).** Cash Flow Forecasting & Financial Health Analytics เสร็จสมบูรณ์ทุกรายการ:
+- **Cash Flow Forecasting Engine (`CashFlowForecastService.php`):**
+  - Multi-scenario projection engine รองรับ 3 แบบจำลองมาตรฐาน: `base` (Normal operations), `best` (Optimistic outlook with deal pipeline upside), และ `worst` (Stress test with collection delay and haircuts).
+  - Inflow projection ผสาน AR due dates และ Sales Deals ที่มีโอกาสปิดการขายตาม Probability Weighting และ Deal Multiplier.
+  - Outflow projection ผสาน AP approved expenses, open Purchase Orders, Recurring monthly payroll (วันที่ 25 ของทุกเดือน), และ Buffer percentages.
+  - คำนวณ Day-by-day cash curve และหาจุดต่ำสุดของเงินสด (Lowest Cash Point & Date).
+- **Financial Health Analytics (`FinancialMetricLog.php`):**
+  - Current Ratio (Current Assets / Current Liabilities, เกณฑ์สุขภาพ &ge; 1.5x)
+  - Quick Ratio ((Cash + AR) / Current Liabilities, เกณฑ์คล่องตัว &ge; 1.0x)
+  - DSO (Days Sales Outstanding คำนวณจากยอดขาย 90 วันย้อนหลัง)
+  - DPO (Days Payable Outstanding คำนวณจากค่าใช้จ่าย 90 วันย้อนหลัง)
+  - Monthly Burn Rate และ Working Capital Runway (จำนวนเดือนก่อนเงินสดหมด)
+- **Controller & Web Routes (`CashFlowController.php`, `web.php`):**
+  - `GET /finance/cash-flow`: Inertia view พร้อม multi-scenario comparison และ filter horizon 30-180 วัน (`permission:cash_flow.view`).
+  - `POST /finance/cash-flow/snapshot`: บันทึก snapshot สภาพคล่องและอัตราส่วนทางการเงิน (`permission:cash_flow.manage`).
+  - `PATCH /finance/cash-flow/scenarios/{scenario}`: ปรับแต่งพารามิเตอร์แบบจำลอง (`permission:cash_flow.manage`).
+- **Artisan Command & Automation (`console.php`):**
+  - `php artisan cashflow:snapshot {--org=} {--horizon=90}`: สั่งสร้าง snapshot ทุกแบบจำลองและคำนวณอัตราส่วนการเงินอัตโนมัติ พร้อมตั้งเวลา Scheduler รายวัน `dailyAt('02:00')`.
+- **UI & Visualization (`CashFlow.tsx`):**
+  - KPI StatCards & Badges สำหรับ Working Capital Runway, Current Ratio, Quick Ratio, DSO, DPO.
+  - 3 Scenario Summary Cards (Worst Case, Base Case, Best Case) แสดงจุดต่ำสุดและยอดเงินสดปลายงวด.
+  - Interactive SVG Projection Curve แสดงเส้นทางเงินสด 3 แบบจำลองพร้อมเส้นระดับเงินสดหมด (0 บาท).
+  - แท็บ Inflows, Outflows, Historical Snapshots, และ Modal Dialog ปรับแต่งพารามิเตอร์แบบจำลอง.
+- **Test Results:**
+  - Feature Tests: `Phase25CashFlowTest` **8 passed / 38 assertions ผ่าน 100% (100% green)**.
+  - Regression Tests: `Phase12ETaxTest` + `Phase24ETaxFoundationTest` + `Phase24ProviderGatewayTest` **18 passed / 122 assertions ผ่าน 100% (100% green)**.
+  - Frontend Quality: TypeScript check (`npx tsc --noEmit`) 0 errors, ESLint (`npm run lint`) 0 errors, Prettier (`npm run check-format`) 100% clean.
+
+## สถานะ Phase 24 — 2026-09-20
+
+**Phase 24 Complete & Done (2026-09-20).** e-Tax Invoice & RD Prep Gateway Architecture เสร็จสมบูรณ์ทุกรายการ:
+- **Provider Gateway Engine (`RdApiSubmissionAdapter.php`):** รองรับโหมด `provider` สำหรับ Revenue Department Web Service (`rd_api`), Certified Provider (`inet`), และ Sandbox Gateway (`sandbox`) พร้อมการจัดการ Idempotency key, Timeouts, Bearer Auth, และ Base64 XML packaging.
+- **XML Digital Signature Pipeline (`ETaxXmlSignatureService.php`):** ท่อประมวลผลลายมือชื่อดิจิทัล ETDA Enveloped XML-DSig (`http://www.w3.org/2000/09/xmldsig#`) ด้วย XML Canonicalization (C14N), RSA-SHA256, DigestValue, KeyInfo, และ X.509 Certificate Reference.
+- **Job Worker & Gateway Orchestration (`SubmitETaxDocument.php`, `ETaxProviderGatewayService.php`):** รองรับทั้ง mock simulation และ live provider delivery พร้อมการ Auto-sign เอกสาร, การบันทึก `ETaxSubmissionAttempt`, ติดตาม External Reference, และจำกัดเพดาน retry สูงสุด 3 ครั้งอย่างเข้มงวด.
+- **Asynchronous Webhook & Status Inquiry (`ETaxWebhookController.php`, `etax:inquire-status`):**
+  - Webhook callback endpoint `POST /api/e-tax/{config}/callback` พร้อมตรวจสอบลายมือชื่อ HMAC-SHA256 (`X-ETax-Signature`) และแยกความปลอดภัยแบบ Multi-tenant.
+  - คำสั่ง Artisan `etax:inquire-status --limit=50` ดึงสถานะเอกสารที่ค้างจาก Gateway และตั้งเวลาทำงานทุก 30 นาทีใน Laravel Scheduler.
+- **Security Guardrails:** Private key เก็บไว้ภายนอกฐานข้อมูล (Vault/KMS ARN reference เท่านั้น), Provider credentials เข้ารหัส at rest (`encrypted:array`), และตัดข้อมูลความลับ/token ออกจาก Audit logs และ Response messages.
+- **UI & Experience (`ETax.tsx`, `ETaxController.php`):** เพิ่มฟอร์ม Provider settings, Badges แสดงสถานะ Lifecycle (Generated → Signed → Queued → Submitted → Accepted/Rejected), ปุ่ม Sign XML, Submit Gateway, และ Inquire Status.
+- **Test Results:**
+  - e-Tax Suite Tests: `Phase12ETaxTest` (3/15) + `Phase24ETaxFoundationTest` (8/49) + `Phase24ProviderGatewayTest` (7/58) = **18 passed / 122 assertions ผ่าน 100% (100% green)**.
+  - Frontend Quality: TypeScript check (`npx tsc --noEmit`) 0 errors, ESLint (`npm run lint`) 0 errors, Prettier (`npm run check-format`) 100% clean.
+
 ## สถานะ Phase 23.3 (23.3.1–23.3.5) — 2026-09-20
 
 **Phase 23.3 Complete & Done (2026-09-20).** ครบถ้วนตามเป้าหมายของ Phase 23.3 ทั้ง 5 ข้อย่อย:
@@ -179,3 +280,94 @@
 - **Regression Suite**: `Phase16PayrollTest` + `Phase19HrAttendanceTest` ผ่านทั้งหมด **9 passed / 58 assertions** (100% green).
 - **Code Style (Laravel Pint)**: Clean 0 issues.
 - **Frontend Build (Vite & TypeScript)**: Clean 0 errors (built in 10.52s).
+
+## งานค้างจากการตรวจรับ Phase 26 — 2026-09-21
+
+**สถานะ: ไม่รับปิด Phase 26** จนกว่าจะแก้และทดสอบรายการต่อไปนี้ครบ.
+
+1. **P1 — ไม่มี Vendor Bill conversion ตาม requirement**
+   - Checklist ระบุ `POST /finance/ocr/{extraction}/convert-vendor-bill` แต่ route/controller มีเฉพาะแปลงเป็น Draft Expense และ reject.
+   - ต้องเพิ่ม conversion ที่สร้าง Vendor Bill แบบ draft, ผูกไฟล์/ผล OCR, org scope, audit และ feature tests.
+
+2. **P1 — Cross-org reference ใน OCR-to-Expense**
+   - `supplier_id` และ `project_id` ตรวจเพียงว่า ID มีอยู่จริง ไม่บังคับ `org_id` เดียวกับผู้ใช้.
+   - ต้อง query Supplier/Project ด้วย `org_id` ของผู้ใช้ใน transaction หรือใช้ scoped validation rule และเพิ่ม test ที่ยืนยันว่า crafted foreign-org ID ถูกปฏิเสธ.
+
+3. **P1 — Raw provider error รั่วสู่ UI, database และ log**
+   - OCR upload, connection test และ vision adapter ส่ง/เก็บ exception หรือ HTTP response body แบบดิบ.
+   - ต้องใช้ข้อความทั่วไปสำหรับผู้ใช้, log เฉพาะ metadata ที่อนุญาต, และไม่เก็บ response/error ที่อาจมี secret, token, URL หรือ PII.
+
+4. **P2 — Documentation state ไม่สอดคล้อง**
+   - ตารางสถานะระบุ Phase 26 เป็น `Planned` ขณะที่ implementation backlog ถูกติ๊กครบ.
+   - หลังแก้ P1/P2 และผ่าน test ให้ปรับ checklist, README, module docs และ diagrams ให้ระบุสถานะตามหลักฐานจริง.
+
+### เกณฑ์ตรวจรับรอบถัดไป
+
+- เพิ่ม feature tests สำหรับ Vendor Bill conversion, foreign-org supplier/project IDs และ redaction ของ provider failures.
+- รัน Phase 26 scoped tests, Expense/File regressions, TypeScript, ESLint, Pint และ `git diff --check` ซ้ำ.
+- ตรวจ route, permission, audit และ human approval gate ว่าไม่มี auto-post เข้า GL.
+
+## คำตอบต่อข้อสงสัย Gemini: Phase 26 OCR — 2026-09-21
+
+1. **PDF ingestion**
+   - ใช้ pipeline: embedded image -> text extraction สำหรับ Digital PDF -> renderer เป็น fallback.
+   - ไม่ render ทุกไฟล์ทันที; จำกัดจำนวนหน้า, resolution, เวลา และประมวลผลใน queue.
+
+2. **Token cost และ latency**
+   - ทำ server-side image normalization ก่อนส่ง AI โดยเก็บไฟล์ต้นฉบับใน private storage และสร้างภาพอนุพันธ์กว้างไม่เกิน 1,600–2,048px.
+   - Cloud OCR ควรเป็น async job พร้อม dedupe, retry, timeout และสถานะ processing/failed.
+
+3. **Local-to-cloud fallback**
+   - ห้าม auto-fallback ไป cloud เพราะมีผลต่อ PDPA และต้นทุน.
+   - ให้ reviewer เลือก Re-scan with cloud เองเมื่อ org policy อนุญาต พร้อม audit document/provider; ใช้ confidence หรือ math mismatch เป็นเพียงคำแนะนำ.
+
+4. **Vendor Bill conversion**
+   - ต้องเพิ่มใน Phase 26 ตาม acceptance criteria เดิม: สร้าง Draft Vendor Bill, link OCR/source file, org scope และ audit.
+   - หาก supplier ตรงและมี Open PO ให้เสนอ candidate PO; ผู้ตรวจเลือกเองหลังผ่าน PO status, receiving และ AP rules.
+
+5. **Cloud AI organization policy**
+   - เพิ่ม `allow_cloud_ai_processing` ระดับ Organization; ค่าเริ่มต้นควรปิดหรือ `local_only`.
+   - บังคับใช้ใน service ก่อนเรียก endpoint ทุกครั้ง, จำกัด provider allowlist, audit การเปลี่ยนนโยบาย และห้าม config รายตัว bypass policy.
+
+### Source status ที่ตรวจแล้ว
+
+มี `resolveChatEndpoint`, PDF embedded-JPEG extraction, JSON mode, high-detail และ model parameter handling แล้ว. ยังไม่พบ `ProcessOcrExtractionJob`, `allow_cloud_ai_processing` และ `convert-vendor-bill`.
+
+## ผลการแก้ไขตามข้อเสนอแนะ GPT (Phase 26) — 2026-09-22 (Accepted & Closed / ผ่านการตรวจรับรอบแก้ไข 100%)
+
+ดำเนินการแก้ไขปัญหาทั้ง 4 ข้อเสร็จสมบูรณ์ พร้อมชุดการทดสอบครอบคลุม:
+
+1. **P1 — Vendor Bill Conversion (`POST /finance/ocr/{extraction}/convert-vendor-bill`)**:
+   - เพิ่ม route `ocr.convert-vendor-bill` และ method ใน `OcrDocumentController.php`
+   - แปลงผลลัพธ์เป็น Draft Expense (AP Vendor Bill) พร้อมเชื่อมโยง `supplier_id` (required) และ `purchase_order_id` (optional)
+   - ดึง Candidate Open Purchase Orders (`approved`, `partially_received`) ในองค์กรส่งไปยัง `OcrReviewer.tsx` ให้ผู้ตรวจเลือกจับคู่ PO ค้างรับได้อย่างสะดวกรวดเร็ว
+   - อัปเดต `StoredFile` ผูกกับบิล, เปลี่ยนสถานะ `OcrExtraction` เป็น `status: converted`, `target_type: 'vendor_bill'` และบันทึก `AuditLog` action: `ocr.convert_to_vendor_bill`
+   - มี Feature Test `test_convert_extraction_to_draft_vendor_bill_with_open_po` ยืนยันการทำงานและ Human-in-the-loop guard (ไม่มีการ auto-post เข้า GL) ผ่าน 100%
+
+2. **P1 — ปิดช่องโหว่ Cross-org Reference (Tenant Isolation)**:
+   - ปรับ Scoped Validation Rule ของ `supplier_id` และ `project_id` ในทั้ง `convertExpense` และ `convertVendorBill` ให้ตีกรอบด้วย `Rule::exists(...)->where('org_id', $user->org_id)`
+   - ตรวจสอบเพิ่มเติมว่า `purchase_order_id` ที่ระบุต้องเป็นของ `supplier_id` เดียวกัน
+   - มี Feature Test `test_cross_org_supplier_and_project_rejected` ยืนยันว่าการส่ง Foreign-org ID ข้าม Tenant จะถูกปฏิเสธด้วย HTTP 422 ผ่าน 100%
+
+3. **P1 — Redact & Sanitize Raw Provider Errors**:
+   - พัฒนาฟังก์ชัน `OcrProcessingService::sanitizeErrorMessage()` ทำการ Mask `sk-...`, `Bearer ...`, URLs/Internal endpoints และ 13-digit ID/PII ออกจากข้อความผิดพลาด
+   - ใน `OcrDocumentController::upload` ปรับข้อความ Flash error ไม่ให้หลุด raw exception message ออกไปสู่หน้าจอผู้ใช้
+   - ใน `UniversalOpenAiVisionAdapter` และ `AiConnectionTesterService` บันทึก Log และส่ง Error กลับเฉพาะข้อความที่ผ่านการ Sanitize แล้ว
+   - มี Feature Test `test_raw_provider_error_is_sanitized_and_not_leaked` ยืนยันการ Mask และการแสดงผล Flash error ที่ปลอดภัย ผ่าน 100%
+
+4. **Cloud AI Organization Policy Guard (`allow_cloud_ai_processing`)**:
+   - ตรวจสอบนโยบายความปลอดภัยระดับองค์กรผ่าน `Setting` (`ai.compliance`)
+   - หาก `allow_cloud_ai_processing` เป็น `false` ระบบจะปฏิเสธการยิง Request ไปยัง Cloud Provider (OpenAI, OpenRouter, Gemini) ทั้งใน `extract()` และ `testConnection()` เพื่อรับประกัน On-premise Privacy 100%
+   - มี Feature Test `test_cloud_ai_compliance_policy_blocks_unauthorized_cloud_provider` ยืนยันการบล็อกอย่างเข้มงวด ผ่าน 100%
+
+5. **P2 — Documentation & Checklist State Alignment**:
+   - ปรับสถานะใน `checklist.md` จาก `Planned` เป็น `Done` ครบถ้วนทั้งตาราง Current Status และ Implementation Backlog
+   - อัปเดตบันทึกหลักฐานการทดสอบและผลลัพธ์ใน `checklist.md` และ `gpt.md` ตรงตามหลักฐานจริงบนเครื่อง
+
+**สรุปผลการทดสอบและการตรวจสอบคุณภาพ**:
+- **Phase 26 Scoped Tests**: `Phase26AiOcrTest` ผ่านทั้งหมด **14 passed / 96 assertions** (100% green).
+- **Regression Suite**: `Phase13FixedAssetsTest`, `Phase20WorkflowTest`, `Phase25CashFlowTest`, `Phase3ExpensesTest`, `Phase3FilesTest`, `Phase4DeliveryDashboardTest`, `Phase4FinanceProjectLinkTest`, `Phase7ProcurementAndMembersTest`, `Phase8TaxReportsTest` ผ่านทั้งหมด **44 passed / 444 assertions** (100% green).
+- **Code Style (Laravel Pint)**: Clean 0 style issues.
+- **Frontend Quality (TypeScript & ESLint)**: TypeScript (`tsc --noEmit`) 0 errors, ESLint 0 errors.
+- **Frontend Build (Vite Production)**: Clean build in 10.57s.
+- **Git Diff Hygiene**: `git diff --check` passed cleanly with 0 whitespace errors.

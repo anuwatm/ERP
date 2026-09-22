@@ -9,7 +9,7 @@ import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { thbMoney } from '@/Utils/format';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 import ExpenseEditorDialog from './ExpenseEditorDialog';
 
@@ -139,14 +139,22 @@ export default function Expenses({
                     title="Expenses"
                     description="Draft, approve, reject, and mark company costs paid."
                     actions={
-                        canCreateExpenses && (
-                            <PrimaryButton
-                                type="button"
-                                onClick={() => setIsCreateOpen(true)}
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={route('ocr.index')}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300"
                             >
-                                + New Expense
-                            </PrimaryButton>
-                        )
+                                ✨ Scan with AI OCR
+                            </Link>
+                            {canCreateExpenses && (
+                                <PrimaryButton
+                                    type="button"
+                                    onClick={() => setIsCreateOpen(true)}
+                                >
+                                    + New Expense
+                                </PrimaryButton>
+                            )}
+                        </div>
                     }
                 />
 

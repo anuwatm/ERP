@@ -6,6 +6,9 @@
     RewriteEngine On
     RewriteBase /ERP/
 
+    # Setup credentials and implementation are never web-accessible.
+    RewriteRule ^backend/setup(?:/|$) - [F,L]
+
     # Direct static asset requests to backend/public
     RewriteRule ^build/(.*)$ backend/public/build/$1 [L]
     RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]

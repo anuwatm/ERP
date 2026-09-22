@@ -1,0 +1,5 @@
+<?php
+
+// Copy this file to enable.php and replace the value with a random token of at least 32 characters.
+// The installer deletes enable.php after a successful installation.
+return 'replace-with-a-random-setup-token-before-opening-setup';

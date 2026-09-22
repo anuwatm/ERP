@@ -6,11 +6,15 @@ use App\Models\Document;
 use App\Models\ETaxConfig;
 use App\Models\ETaxDocument;
 use App\Models\Invoice;
+use App\Models\Organization;
 use App\Models\User;
+use App\Services\ETax\ETaxProviderGatewayService;
+use App\Services\Finance\CashFlowForecastService;
 use App\Services\NotificationOutboxService;
 use App\Services\NotificationService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -178,3 +182,63 @@ if (! function_exists('notifyFinanceUsers')) {
         return $count;
     }
 }
+
+Artisan::command('etax:inquire-status {--limit=50}', function () {
+    $limit = max(1, min(200, (int) $this->option('limit')));
+    $gateway = app(ETaxProviderGatewayService::class);
+    $count = 0;
+
+    ETaxDocument::query()
+        ->whereIn('status', ['submitted', 'queued'])
+        ->whereHas('attempts')
+        ->whereExists(function ($query) {
+            $query->select(DB::raw(1))
+                ->from('e_tax_configs')
+                ->whereColumn('e_tax_configs.org_id', 'e_tax_documents.org_id')
+                ->where('e_tax_configs.mode', 'provider');
+        })
+        ->take($limit)
+        ->each(function (ETaxDocument $document) use ($gateway, &$count) {
+            try {
+                $gateway->inquire($document);
+                $count++;
+            } catch (Throwable $e) {
+                // Keep polling others
+            }
+        });
+
+    $this->info("Inquired {$count} e-Tax document(s).");
+
+    return self::SUCCESS;
+})->purpose('Inquire status of pending submitted e-Tax documents from provider gateway.');
+
+Schedule::command('etax:inquire-status --limit=50')->everyThirtyMinutes()->withoutOverlapping();
+
+Artisan::command('cashflow:snapshot {--org=} {--horizon=90}', function () {
+    $horizon = max(14, min(180, (int) $this->option('horizon')));
+    $orgId = $this->option('org');
+
+    $orgQuery = Organization::query();
+    if ($orgId) {
+        $orgQuery->where('id', $orgId);
+    }
+
+    $orgs = $orgQuery->get();
+    $service = app(CashFlowForecastService::class);
+    $snapshotCount = 0;
+
+    foreach ($orgs as $org) {
+        $scenarios = $service->getOrCreateDefaultScenarios($org);
+        foreach ($scenarios as $scenario) {
+            $service->generateForecast($org, $scenario->scenario_key, $horizon);
+            $snapshotCount++;
+        }
+        $service->calculateFinancialHealth($org);
+    }
+
+    $this->info("Generated {$snapshotCount} cash flow forecast snapshot(s) across {$orgs->count()} organization(s).");
+
+    return self::SUCCESS;
+})->purpose('Generate scheduled cash flow forecast snapshots and financial health metrics.');
+
+Schedule::command('cashflow:snapshot --horizon=90')->dailyAt('02:00');

@@ -3,12 +3,7 @@ import { router } from '@inertiajs/react';
 import { FormEvent, useId, useState } from 'react';
 
 export type DashboardPeriod =
-    | 'all_time'
-    | 'today'
-    | 'this_week'
-    | 'month'
-    | 'year'
-    | 'custom';
+    'all_time' | 'today' | 'this_week' | 'month' | 'year' | 'custom';
 
 export type DashboardFilter = {
     period: DashboardPeriod;

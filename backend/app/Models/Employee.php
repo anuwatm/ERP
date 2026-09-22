@@ -12,7 +12,7 @@ class Employee extends Model
     use UsesOrderedUuid;
 
     protected $fillable = [
-        'org_id', 'user_id', 'branch_id', 'division_id', 'department_id', 'manager_id', 'employee_code',
+        'org_id', 'user_id', 'branch_id', 'division_id', 'department_id', 'position_id', 'manager_id', 'employee_code',
         'title', 'first_name', 'last_name', 'nickname', 'national_id', 'tax_id', 'date_of_birth', 'gender',
         'email', 'phone', 'position_title', 'employment_type', 'employment_status', 'started_on',
         'probation_ends_on', 'resigned_on', 'payment_method', 'bank_name', 'bank_account_number',
@@ -48,6 +48,11 @@ class Employee extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
     }
 
     public function manager(): BelongsTo

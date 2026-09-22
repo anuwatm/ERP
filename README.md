@@ -32,6 +32,8 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
 
+**การติดตั้งระบบ:** รองรับทั้ง **[การติดตั้งผ่าน Web Setup Wizard](#1-การติดตั้งผ่าน-web-setup-wizard-web-based-installer)** บน Web Server และ **[การติดตั้งผ่าน Command Line](#2-การติดตั้งผ่าน-command-line-local-development)** สำหรับ Local Development (ดูรายละเอียดข้อกำหนดเพิ่มเติมใน [`docs/SETUP_WIZARD.md`](docs/SETUP_WIZARD.md))
+
 ---
 
 ## 🗺️ System Diagrams & Architecture Documentation
@@ -385,7 +387,83 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 ---
 
-## Setup & Running Locally
+## การติดตั้งและเริ่มต้นใช้งานระบบ (Installation & Getting Started)
+
+ระบบรองรับการติดตั้ง 2 รูปแบบ:
+1. **[การติดตั้งผ่าน Web Setup Wizard (สำหรับ Web Server / Production)](#1-การติดตั้งผ่าน-web-setup-wizard-web-based-installer)** — ติดตั้งสะดวกผ่านเบราว์เซอร์ ไม่จำเป็นต้องมี Composer หรือ Node.js บน Server
+2. **[การติดตั้งผ่าน Command Line (สำหรับ Local Development)](#2-การติดตั้งผ่าน-command-line-local-development)** — สำหรับนักพัฒนาที่ต้องการรันผ่าน CLI, migrate seed ข้อมูลทดสอบ และรัน Dev Server
+
+---
+
+### 1. การติดตั้งผ่าน Web Setup Wizard (Web-based Installer)
+
+เหมาะสำหรับการ Deploy ขึ้น Web Server จริงจาก Release Bundle (ที่มี `backend/vendor/` และ `backend/public/build/` มาแล้ว)
+
+#### 📋 สิ่งที่ต้องเตรียม (Server Requirements)
+- **PHP 8.3 ขึ้นไป** พร้อมส่วนขยาย: `pdo_mysql`, `openssl`, `mbstring`, `fileinfo`
+- **Database**: MySQL 8.0+ หรือ MariaDB 10.5+ (สร้าง Database เปล่าไว้ล่วงหน้า)
+- **สิทธิ์การเขียนไฟล์ (Writable Permissions)**: โฟลเดอร์ `backend/storage/`, `backend/bootstrap/cache/`, และไดเรกทอรีรากของ Backend เพื่อสร้างไฟล์ `.env`
+- **Web Document Root**:
+  - แนะนำ: ชี้ Document Root ไปที่ `backend/public`
+  - หรือ: ชี้ที่ไดเรกทอรีรากของโปรเจกต์ (มี `setup/index.php` รองรับ)
+
+#### 🚀 ขั้นตอนการติดตั้งทีละสเต็ป (Step-by-Step)
+
+##### ขั้นตอนที่ 1: เปิดใช้งานตัวติดตั้ง (Activate Installer)
+เพื่อความปลอดภัย ตัวติดตั้งจะถูกปิดใช้งานเป็นค่าเริ่มต้น ให้เลือกทำอย่างใดอย่างหนึ่ง:
+- **วิธีที่ 1 (แนะนำและสะดวกที่สุด)**:
+  1. ไปที่โฟลเดอร์ `backend/setup/`
+  2. คัดลอกไฟล์ `enable.php.example` แล้วเปลี่ยนชื่อเป็น `enable.php` (พาธเต็ม: `backend/setup/enable.php`)
+  3. เปิดไฟล์ `backend/setup/enable.php` แล้วแก้ค่า Token สุ่มความยาว**อย่างน้อย 32 ตัวอักษร**:
+     ```php
+     <?php
+     return 'your-random-secret-token-32-chars-long-here';
+     ```
+- **วิธีที่ 2 (ตั้งค่าผ่าน Server Environment)**:
+  - ตั้งค่า Environment Variable ของ Web Server ชื่อ `SETUP_TOKEN` ให้มีค่าเป็น Random Token ความยาวอย่างน้อย 32 ตัวอักษร
+
+##### ขั้นตอนที่ 2: เข้าสู่หน้า Setup Wizard บนเบราว์เซอร์
+- เปิดเบราว์เซอร์ไปที่: `http://your-domain/setup` (หรือ `http://localhost/ERP/setup`)
+- **Step 1 (Security & Preflight)**:
+  - ระบบจะตรวจสอบความพร้อมของเซิร์ฟเวอร์ (PHP version, extensions, writable folders)
+  - นำ Token ความยาว $\ge 32$ ตัวอักษรที่ตั้งไว้ในขั้นตอนที่ 1 มากรอกในช่อง **"Setup token"**
+  - กดปุ่ม **"Continue"**
+
+##### ขั้นตอนที่ 3: กำหนดค่าแอปพลิเคชันและฐานข้อมูล
+- **Step 2 (Server & DB)**:
+  - **Application Name**: ชื่อระบบ (เช่น `ERP Company`)
+  - **Application URL**: URL เต็มของระบบ เช่น `https://erp.yourdomain.com` (ต้องขึ้นต้นด้วย `http://` หรือ `https://`)
+  - **Database Host & Port**: โฮสต์และพอร์ตฐานข้อมูล (เช่น `127.0.0.1`, พอร์ต `3306`)
+  - **Database Name**: ชื่อฐานข้อมูลที่เตรียมไว้ (ต้องเป็น Database เปล่าที่ยังไม่มีตาราง `migrations`)
+  - **Username & Password**: บัญชีผู้ใช้ฐานข้อมูล
+  - กดปุ่ม **"Test connection and continue"** เพื่อทดสอบการเชื่อมต่อจริง
+
+##### ขั้นตอนที่ 4: ข้อมูลองค์กรและผู้ดูแลระบบสูงสุด (Owner)
+- **Step 3 (Organization & Owner)**:
+  - **Organization Name**: ชื่อบริษัท/องค์กร
+  - **Legal Name / Tax ID**: ชื่อนิติบุคคลและเลขประจำตัวผู้เสียภาษี 13 หลัก (ใส่หรือไม่ก็ได้)
+  - **Owner Name & Email**: ชื่อและอีเมลของผู้ดูแลระบบสูงสุด (Owner)
+  - **Owner Password**: รหัสผ่านสำหรับเข้าสู่ระบบของ Owner (บังคับความยาว**อย่างน้อย 12 ตัวอักษร**)
+  - กดปุ่ม **"Review installation"**
+
+##### ขั้นตอนที่ 5: ยืนยันการติดตั้งจริง
+- **Step 4 (Install)**:
+  - ตรวจสอบสรุปข้อมูลปลายทาง
+  - พิมพ์คำว่า **`INSTALL`** ในช่องยืนยัน
+  - กดปุ่ม **"Install ERP"**
+  - ระบบจะดำเนินการเบื้องหลังโดยอัตโนมัติ:
+    1. สร้างไฟล์ `.env` ที่ปลอดภัย พร้อมสุ่ม `APP_KEY` และล็อกสิทธิ์ `chmod 0600`
+    2. รัน Database Migrations โครงสร้างตารางทั้งหมด
+    3. สร้างบทบาท (Roles), สิทธิ์ (Permissions Catalog), โครงสร้างสาขา/แผนก และบัญชี Owner
+    4. บันทึกไฟล์ล็อกการติดตั้งที่ `backend/storage/app/installer/installed.json`
+    5. ลบไฟล์ `backend/setup/enable.php` ทิ้งอัตโนมัติเพื่อความปลอดภัย
+  - เมื่อเสร็จสิ้น ระบบจะ Redirect ไปที่หน้า Login (`/login?installed=1`) สามารถเข้าสู่ระบบด้วยอีเมลและรหัสผ่านของ Owner ได้ทันที
+
+> 🔒 **ความปลอดภัยหลังติดตั้ง**: หลังติดตั้งสำเร็จ หน้า `/setup` จะตอบกลับด้วย **HTTP 404** เสมอเพื่อปิดกั้นการรันซ้ำผ่านเว็บอย่างสมบูรณ์
+
+---
+
+### 2. การติดตั้งผ่าน Command Line (Local Development)
 
 ### 1. เข้าสู่ไดเรกทอรี Backend
 ```powershell

@@ -354,7 +354,9 @@ export default function Dashboard({
                 return;
             }
             if (filters.from > filters.to) {
-                setFilterError('The start date must be on or before the end date.');
+                setFilterError(
+                    'The start date must be on or before the end date.',
+                );
                 return;
             }
         }
@@ -461,7 +463,11 @@ export default function Dashboard({
                                     type="date"
                                     value={filters.from}
                                     aria-invalid={Boolean(filterError)}
-                                    aria-describedby={filterError ? 'dashboard-filter-error' : undefined}
+                                    aria-describedby={
+                                        filterError
+                                            ? 'dashboard-filter-error'
+                                            : undefined
+                                    }
                                     disabled={filters.period !== 'custom'}
                                     onChange={(event) =>
                                         setFilters((current) => ({
@@ -479,7 +485,11 @@ export default function Dashboard({
                                     type="date"
                                     value={filters.to}
                                     aria-invalid={Boolean(filterError)}
-                                    aria-describedby={filterError ? 'dashboard-filter-error' : undefined}
+                                    aria-describedby={
+                                        filterError
+                                            ? 'dashboard-filter-error'
+                                            : undefined
+                                    }
                                     disabled={filters.period !== 'custom'}
                                     onChange={(event) =>
                                         setFilters((current) => ({
@@ -508,7 +518,15 @@ export default function Dashboard({
                         <div className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                             Dashboard range: {filterLabel}
                         </div>
-                        {filterError && <p id="dashboard-filter-error" role="alert" className="mt-2 text-sm text-rose-700 dark:text-rose-300">{filterError}</p>}
+                        {filterError && (
+                            <p
+                                id="dashboard-filter-error"
+                                role="alert"
+                                className="mt-2 text-sm text-rose-700 dark:text-rose-300"
+                            >
+                                {filterError}
+                            </p>
+                        )}
                     </Card>
                 )}
                 {/* KPI Metrics Grid */}

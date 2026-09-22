@@ -12,6 +12,7 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\Finance\BankAccountController;
 use App\Http\Controllers\Finance\BankStatementController;
 use App\Http\Controllers\Finance\BankTransferController;
+use App\Http\Controllers\Finance\CashFlowController;
 use App\Http\Controllers\Finance\CommercialDocumentController;
 use App\Http\Controllers\Finance\CurrencyController;
 use App\Http\Controllers\Finance\ETaxController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Finance\GeneralLedgerController;
 use App\Http\Controllers\Finance\GoodsReceiptController;
 use App\Http\Controllers\Finance\InventoryOperationsController;
 use App\Http\Controllers\Finance\InvoiceController;
+use App\Http\Controllers\Finance\OcrDocumentController;
 use App\Http\Controllers\Finance\PaymentController;
 use App\Http\Controllers\Finance\PayrollController;
 use App\Http\Controllers\Finance\ProcurementDashboardController;
@@ -35,6 +37,7 @@ use App\Http\Controllers\Finance\VendorPaymentController;
 use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\Hr\AttendanceImportController;
 use App\Http\Controllers\Hr\EmployeeController;
+use App\Http\Controllers\Hr\PositionController;
 use App\Http\Controllers\Hr\RosterController;
 use App\Http\Controllers\HrController;
 use App\Http\Controllers\HrDashboardController;
@@ -45,6 +48,7 @@ use App\Http\Controllers\Sales\ContactController;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\DealController;
 use App\Http\Controllers\Sales\SalesDashboardController;
+use App\Http\Controllers\Settings\AiConfigurationController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\OrganizationSettingsController;
 use App\Http\Controllers\Settings\OrganizationStructureController;
@@ -286,9 +290,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/payroll', [PayrollController::class, 'index'])->middleware('permission:payroll.view')->name('payroll.index');
     Route::get('/hr', [HrController::class, 'index'])->middleware('permission:hr.self.view')->name('hr.index');
     Route::get('/hr/employees', [EmployeeController::class, 'index'])->middleware('permission:hr.employees.view')->name('hr.employees.index');
+    Route::get('/hr/employees/template', [EmployeeController::class, 'template'])->middleware('permission:hr.employees.manage')->name('hr.employees.template');
+    Route::post('/hr/employees/import', [EmployeeController::class, 'import'])->middleware(['permission:hr.employees.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.employees.import');
     Route::post('/hr/employees', [EmployeeController::class, 'store'])->middleware(['permission:hr.employees.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.employees.store');
     Route::patch('/hr/employees/{employee}', [EmployeeController::class, 'update'])->middleware(['permission:hr.employees.manage', 'password.confirm', 'throttle:10,1'])->name('hr.employees.update');
     Route::patch('/hr/employees/account/{employee}', [EmployeeController::class, 'linkAccount'])->middleware(['permission:hr.employees.manage', 'password.confirm', 'throttle:10,1'])->name('hr.employees.account.link');
+    Route::get('/hr/positions', [PositionController::class, 'index'])->middleware('permission:hr.employees.view')->name('hr.positions.index');
+    Route::post('/hr/positions', [PositionController::class, 'store'])->middleware(['permission:hr.employees.manage', 'throttle:30,1'])->name('hr.positions.store');
     Route::get('/hr/roster', [RosterController::class, 'index'])->middleware('permission:hr.shifts.manage')->name('hr.roster.index');
     Route::post('/hr/roster/schedules', [RosterController::class, 'storeSchedule'])->middleware(['permission:hr.shifts.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])->name('hr.roster.schedules.store');
     Route::post('/hr/roster/batch', [RosterController::class, 'batchAssign'])->middleware(['permission:hr.shifts.manage', 'password.confirm', 'throttle:5,1', EnsureFormSubmission::class])->name('hr.roster.batch.store');
@@ -381,8 +389,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/e-tax/config', [ETaxController::class, 'updateConfig'])->middleware(['permission:e_tax.manage', 'password.confirm'])->name('e-tax.config.update');
     Route::post('/e-tax/documents', [ETaxController::class, 'generate'])->middleware(['permission:e_tax.manage', 'password.confirm', 'throttle:10,1'])->name('e-tax.documents.generate');
     Route::get('/e-tax/documents/{document}/download', [ETaxController::class, 'download'])->middleware('permission:e_tax.view')->name('e-tax.documents.download');
+    Route::post('/e-tax/documents/{document}/sign', [ETaxController::class, 'sign'])->middleware(['permission:e_tax.manage', 'password.confirm', 'throttle:10,1'])->name('e-tax.documents.sign');
     Route::post('/e-tax/documents/{document}/submit', [ETaxController::class, 'submit'])->middleware(['permission:e_tax.submit', 'password.confirm', 'throttle:5,1'])->name('e-tax.documents.submit');
+    Route::post('/e-tax/documents/{document}/inquire', [ETaxController::class, 'inquire'])->middleware(['permission:e_tax.submit', 'throttle:10,1'])->name('e-tax.documents.inquire');
     Route::get('/e-tax/rd-prep', [ETaxController::class, 'rdPrep'])->middleware('permission:e_tax.view')->name('e-tax.rd-prep');
+    Route::get('/finance/cash-flow', [CashFlowController::class, 'index'])->middleware('permission:cash_flow.view')->name('finance.cash-flow.index');
+    Route::post('/finance/cash-flow/snapshot', [CashFlowController::class, 'snapshot'])->middleware(['permission:cash_flow.manage', 'throttle:10,1'])->name('finance.cash-flow.snapshot');
+    Route::patch('/finance/cash-flow/scenarios/{scenario}', [CashFlowController::class, 'updateScenario'])->middleware(['permission:cash_flow.manage', 'throttle:10,1'])->name('finance.cash-flow.scenarios.update');
     Route::get('/goods-receipts', [GoodsReceiptController::class, 'index'])
         ->middleware('permission:inventory.view')
         ->name('goods-receipts.index');
@@ -467,6 +480,40 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('tasks.comments.store');
     Route::get('/files/{file}/download', [FileController::class, 'download'])
         ->name('files.download');
+    Route::get('/files/{file}/preview', [FileController::class, 'preview'])
+        ->name('files.preview');
+
+    // Phase 26: AI Configuration Routes
+    Route::get('/settings/ai-configuration', [AiConfigurationController::class, 'index'])
+        ->middleware('permission:ai_settings.manage')
+        ->name('settings.ai-configuration.index');
+    Route::post('/settings/ai-configuration', [AiConfigurationController::class, 'store'])
+        ->middleware(['permission:ai_settings.manage', 'throttle:10,1'])
+        ->name('settings.ai-configuration.store');
+    Route::post('/settings/ai-configuration/test', [AiConfigurationController::class, 'testConnection'])
+        ->middleware(['permission:ai_settings.manage', 'throttle:10,1'])
+        ->name('settings.ai-configuration.test');
+
+    // Phase 26: AI OCR Document Ingestion Routes
+    Route::get('/finance/ocr', [OcrDocumentController::class, 'index'])
+        ->middleware('permission:ocr.view')
+        ->name('ocr.index');
+    Route::post('/finance/ocr/upload', [OcrDocumentController::class, 'upload'])
+        ->middleware(['permission:ocr.upload', 'throttle:20,1'])
+        ->name('ocr.upload');
+    Route::get('/finance/ocr/{extraction}', [OcrDocumentController::class, 'show'])
+        ->middleware('permission:ocr.view')
+        ->name('ocr.show');
+    Route::post('/finance/ocr/{extraction}/convert-expense', [OcrDocumentController::class, 'convertExpense'])
+        ->middleware(['permission:ocr.convert', 'throttle:15,1'])
+        ->name('ocr.convert-expense');
+    Route::post('/finance/ocr/{extraction}/convert-vendor-bill', [OcrDocumentController::class, 'convertVendorBill'])
+        ->middleware(['permission:ocr.convert', 'throttle:15,1'])
+        ->name('ocr.convert-vendor-bill');
+    Route::post('/finance/ocr/{extraction}/reject', [OcrDocumentController::class, 'reject'])
+        ->middleware(['permission:ocr.convert', 'throttle:15,1'])
+        ->name('ocr.reject');
+
     Route::get('/settings/organization', [OrganizationSettingsController::class, 'edit'])
         ->middleware('permission:settings.organization.view')
         ->name('settings.organization.edit');

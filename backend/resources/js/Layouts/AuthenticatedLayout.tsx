@@ -425,6 +425,27 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'AI Document OCR',
+                    href: route('ocr.index'),
+                    active: route().current('ocr.*'),
+                    permission: 'ocr.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Bank Accounts',
                     href: route('bank-accounts.index'),
                     active: route().current('bank-accounts.*'),
@@ -567,6 +588,27 @@ export default function AuthenticatedLayout({
                                 strokeLinejoin="round"
                                 strokeWidth="2"
                                 d="M7 3h7l3 3v15H7V3zm3 7h4m-4 4h4m-4 4h4"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    name: 'Cash Flow Forecast',
+                    href: route('finance.cash-flow.index'),
+                    active: route().current('finance.cash-flow.*'),
+                    permission: 'cash_flow.view',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                             />
                         </svg>
                     ),
@@ -729,7 +771,19 @@ export default function AuthenticatedLayout({
                     active: route().current('hr.employees.*'),
                     permission: 'hr.employees.view',
                     icon: (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m18 0v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
+                        <svg
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            className="h-5 w-5"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m18 0v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
+                            />
+                        </svg>
                     ),
                 },
                 {
@@ -738,7 +792,19 @@ export default function AuthenticatedLayout({
                     active: route().current('hr.roster.*'),
                     permission: 'hr.shifts.manage',
                     icon: (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <svg
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            className="h-5 w-5"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                        </svg>
                     ),
                 },
                 {
@@ -747,7 +813,19 @@ export default function AuthenticatedLayout({
                     active: route().current('hr.attendance-import.*'),
                     permission: 'hr.attendance.import',
                     icon: (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        <svg
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            className="h-5 w-5"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                            />
+                        </svg>
                     ),
                 },
                 {
@@ -908,6 +986,27 @@ export default function AuthenticatedLayout({
                     ),
                 },
                 {
+                    name: 'AI Configuration',
+                    href: route('settings.ai-configuration.index'),
+                    active: route().current('settings.ai-configuration.*'),
+                    permission: 'ai_settings.manage',
+                    icon: (
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                        </svg>
+                    ),
+                },
+                {
                     name: 'Audit Logs',
                     href: route('audit-logs.index'),
                     active: route().current('audit-logs.*'),
@@ -1007,11 +1106,16 @@ export default function AuthenticatedLayout({
             ...section,
             items: section.items.filter((item) => {
                 if (item.href === route('hr.dashboard')) {
-                    return permissions.includes('payroll.view') ||
-                        (permissions.includes('hr.manage') && permissions.includes('hr.self.view'));
+                    return (
+                        permissions.includes('payroll.view') ||
+                        (permissions.includes('hr.manage') &&
+                            permissions.includes('hr.self.view'))
+                    );
                 }
                 return Array.isArray(item.permission)
-                    ? item.permission.some((permission) => permissions.includes(permission))
+                    ? item.permission.some((permission) =>
+                          permissions.includes(permission),
+                      )
                     : permissions.includes(item.permission);
             }),
         }))

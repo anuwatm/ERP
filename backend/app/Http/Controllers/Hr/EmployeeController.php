@@ -8,7 +8,9 @@ use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Division;
 use App\Models\Employee;
+use App\Models\Position;
 use App\Models\User;
+use App\Services\Hr\EmployeeImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +19,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmployeeController extends Controller
 {
@@ -38,7 +41,7 @@ class EmployeeController extends Controller
             ->when(($filters['account_status'] ?? null) === 'linked', fn ($q) => $q->whereNotNull('user_id'))
             ->when(($filters['account_status'] ?? null) === 'unlinked', fn ($q) => $q->whereNull('user_id'))
             ->when(in_array($filters['account_status'] ?? null, ['active', 'inactive', 'invited'], true), fn ($q) => $q->whereHas('user', fn ($user) => $user->where('status', $filters['account_status'])))
-            ->with(['branch:id,code,name', 'division:id,code,name', 'department:id,code,name', 'manager:id,employee_code,first_name,last_name', 'user:id,name,email,status'])
+            ->with(['branch:id,code,name', 'division:id,code,name', 'department:id,code,name', 'position:id,code,name', 'manager:id,employee_code,first_name,last_name', 'user:id,name,email,status'])
             ->orderBy('employee_code')->get()
             ->map(fn (Employee $employee) => [
                 'id' => $employee->id, 'user_id' => $employee->user_id, 'employee_code' => $employee->employee_code,
@@ -46,7 +49,8 @@ class EmployeeController extends Controller
                 'national_id' => $canManage ? $employee->national_id : null, 'tax_id' => $canManage ? $employee->tax_id : null,
                 'date_of_birth' => $canManage ? $employee->date_of_birth?->toDateString() : null, 'gender' => $canManage ? $employee->gender : null, 'last_name' => $employee->last_name,
                 'nickname' => $employee->nickname, 'email' => $employee->email, 'phone' => $employee->phone,
-                'position_title' => $employee->position_title, 'branch_id' => $employee->branch_id,
+                'position_id' => $employee->position_id, 'position_title' => $employee->position?->name ?? $employee->position_title,
+                'position' => $employee->position, 'branch_id' => $employee->branch_id,
                 'division_id' => $employee->division_id, 'department_id' => $employee->department_id, 'manager_id' => $employee->manager_id,
                 'employment_type' => $employee->employment_type, 'employment_status' => $employee->employment_status,
                 'started_on' => $employee->started_on?->toDateString(), 'probation_ends_on' => $employee->probation_ends_on?->toDateString(),
@@ -60,6 +64,7 @@ class EmployeeController extends Controller
             'branches' => Branch::where('org_id', $actor->org_id)->where('status', 'active')->orderBy('code')->get(['id', 'code', 'name']),
             'divisions' => Division::where('org_id', $actor->org_id)->where('status', 'active')->orderBy('code')->get(['id', 'branch_id', 'code', 'name']),
             'departments' => Department::where('org_id', $actor->org_id)->where('status', 'active')->orderBy('code')->get(['id', 'branch_id', 'division_id', 'code', 'name']),
+            'positions' => Position::where('org_id', $actor->org_id)->where('status', 'active')->orderBy('name')->get(['id', 'code', 'name', 'department_id']),
             'accounts' => User::where('org_id', $actor->org_id)->whereDoesntHave('employee')->orderBy('name')->get(['id', 'name', 'email', 'status']),
             'canManage' => $canManage,
         ]);
@@ -95,6 +100,124 @@ class EmployeeController extends Controller
         return back()->with('success', 'User account linked.');
     }
 
+    public function template(): StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, [
+                'employee_code',
+                'title',
+                'first_name',
+                'last_name',
+                'nickname',
+                'position_name',
+                'department_code',
+                'branch_code',
+                'employment_type',
+                'employment_status',
+                'started_on',
+                'national_id',
+                'email',
+                'phone',
+                'bank_name',
+                'bank_account_number',
+                'payment_method',
+                'manager_code',
+            ]);
+            fputcsv($out, [
+                'EMP-001',
+                'นาย',
+                'สมชาย',
+                'ใจดี',
+                'ชาย',
+                'Senior Software Engineer',
+                'IT',
+                'HQ',
+                'monthly',
+                'active',
+                '2026-01-01',
+                '1100501234567',
+                'somchai@example.com',
+                '0812345678',
+                'SCB',
+                '1234567890',
+                'bank_transfer',
+                '',
+            ]);
+            fputcsv($out, [
+                'EMP-002',
+                'นางสาว',
+                'สมหญิง',
+                'รักสงบ',
+                'หญิง',
+                'HR Specialist',
+                'HR',
+                'HQ',
+                'monthly',
+                'active',
+                '2026-02-01',
+                '1100507654321',
+                'somying@example.com',
+                '0898765432',
+                'KBANK',
+                '0987654321',
+                'bank_transfer',
+                'EMP-001',
+            ]);
+            fclose($out);
+        }, 'employee_import_template.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function import(Request $request, EmployeeImportService $service): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'max:20480'],
+            'auto_create_position' => ['nullable', 'boolean'],
+            'update_existing' => ['nullable', 'boolean'],
+        ]);
+
+        $file = $request->file('file');
+        $ext = strtolower($file->getClientOriginalExtension() ?: pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
+        $allowed = ['csv', 'txt', 'tsv', 'xlsx', 'xls', 'xml'];
+        abort_unless(in_array($ext, $allowed, true), 422, 'The file must be a file of type: csv, txt, tsv, xlsx, xls, xml.');
+
+        $rows = $service->parseUploadedFile($file);
+        abort_if(empty($rows), 422, 'Uploaded file is empty or missing valid headers (employee_code, first_name).');
+
+        $result = $service->importEmployees(
+            orgId: $request->user()->org_id,
+            actorUserId: $request->user()->id,
+            rows: $rows,
+            options: [
+                'auto_create_position' => $request->boolean('auto_create_position', true),
+                'update_existing' => $request->boolean('update_existing', false),
+            ]
+        );
+
+        $msg = "Imported {$result['created']} new employees".($result['updated'] > 0 ? ", updated {$result['updated']} existing." : '.');
+        if (! empty($result['errors'])) {
+            return back()
+                ->with('success', $msg)
+                ->withErrors(['import_errors' => array_slice($result['errors'], 0, 15)])
+                ->with('import_summary', [
+                    'total' => $result['total'],
+                    'created' => $result['created'],
+                    'updated' => $result['updated'],
+                    'errors' => $result['errors'],
+                ]);
+        }
+
+        return back()->with('success', $msg)->with('import_summary', [
+            'total' => $result['total'],
+            'created' => $result['created'],
+            'updated' => $result['updated'],
+            'errors' => [],
+        ]);
+    }
+
     private function validated(Request $request, ?Employee $employee = null): array
     {
         $orgId = $request->user()->org_id;
@@ -102,7 +225,9 @@ class EmployeeController extends Controller
             'employee_code' => ['required', 'string', 'max:50', Rule::unique('employees', 'employee_code')->where('org_id', $orgId)->ignore($employee?->id)],
             'title' => ['nullable', 'string', 'max:30'], 'first_name' => ['required', 'string', 'max:100'], 'last_name' => ['nullable', 'string', 'max:100'], 'nickname' => ['nullable', 'string', 'max:100'],
             'national_id' => ['nullable', 'string', 'max:50'], 'tax_id' => ['nullable', 'string', 'max:20'], 'date_of_birth' => ['nullable', 'date'], 'gender' => ['nullable', Rule::in(['female', 'male', 'non_binary', 'unspecified'])],
-            'email' => ['nullable', 'email', 'max:255'], 'phone' => ['nullable', 'string', 'max:50'], 'position_title' => ['nullable', 'string', 'max:150'],
+            'email' => ['nullable', 'email', 'max:255'], 'phone' => ['nullable', 'string', 'max:50'],
+            'position_id' => ['nullable', Rule::exists('positions', 'id')->where('org_id', $orgId)->where('status', 'active')],
+            'position_title' => ['nullable', 'string', 'max:150'],
             'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('org_id', $orgId)->where('status', 'active')],
             'division_id' => ['nullable', Rule::exists('divisions', 'id')->where('org_id', $orgId)->where('status', 'active')],
             'department_id' => ['nullable', Rule::exists('departments', 'id')->where('org_id', $orgId)->where('status', 'active')],
@@ -112,6 +237,17 @@ class EmployeeController extends Controller
             'started_on' => ['nullable', 'date'], 'probation_ends_on' => ['nullable', 'date', 'after_or_equal:started_on'], 'resigned_on' => ['nullable', 'date', 'after_or_equal:started_on'],
             'payment_method' => ['required', Rule::in(['bank_transfer', 'cash'])], 'bank_name' => ['nullable', 'string', 'max:100'], 'bank_account_number' => ['nullable', 'string', 'max:100'],
         ]);
+        if (! empty($data['position_id'])) {
+            $position = Position::where('org_id', $orgId)->find($data['position_id']);
+            if ($position) {
+                $data['position_title'] = $position->name;
+            }
+        } elseif (! empty($data['position_title']) && empty($data['position_id'])) {
+            $position = Position::where('org_id', $orgId)->where('name', trim($data['position_title']))->first();
+            if ($position) {
+                $data['position_id'] = $position->id;
+            }
+        }
         abort_if(($data['manager_id'] ?? null) !== null && ($data['manager_id'] ?? null) === $employee?->id, 422, 'An employee cannot manage themselves.');
         $this->validateHierarchy($data, $orgId);
 

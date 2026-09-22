@@ -110,6 +110,8 @@ class PermissionCatalog
             ['code' => 'e_tax.view', 'module' => 'e_tax', 'action' => 'view', 'description' => 'View e-Tax documents and RD Prep exports'],
             ['code' => 'e_tax.manage', 'module' => 'e_tax', 'action' => 'manage', 'description' => 'Configure and generate e-Tax documents'],
             ['code' => 'e_tax.submit', 'module' => 'e_tax', 'action' => 'submit', 'description' => 'Queue e-Tax provider submissions'],
+            ['code' => 'cash_flow.view', 'module' => 'cash_flow', 'action' => 'view', 'description' => 'View cash flow forecasts and financial health analytics'],
+            ['code' => 'cash_flow.manage', 'module' => 'cash_flow', 'action' => 'manage', 'description' => 'Manage forecast scenarios and generate snapshots'],
             ['code' => 'expenses.view', 'module' => 'expenses', 'action' => 'view', 'description' => 'View expenses'],
             ['code' => 'expenses.create', 'module' => 'expenses', 'action' => 'create', 'description' => 'Create expense drafts'],
             ['code' => 'expenses.update', 'module' => 'expenses', 'action' => 'update', 'description' => 'Update expense drafts'],
@@ -138,6 +140,10 @@ class PermissionCatalog
             ['code' => 'tasks.comment', 'module' => 'tasks', 'action' => 'comment', 'description' => 'Comment on delivery tasks'],
             ['code' => 'audit.view', 'module' => 'audit', 'action' => 'view', 'description' => 'View audit logs'],
             ['code' => 'person_id.view_full', 'module' => 'users', 'action' => 'view_full', 'description' => 'View full person_id'],
+            ['code' => 'ocr.view', 'module' => 'ocr', 'action' => 'view', 'description' => 'View OCR scanned documents and history'],
+            ['code' => 'ocr.upload', 'module' => 'ocr', 'action' => 'upload', 'description' => 'Upload documents for AI OCR processing'],
+            ['code' => 'ocr.convert', 'module' => 'ocr', 'action' => 'convert', 'description' => 'Convert OCR extractions to expenses or bills'],
+            ['code' => 'ai_settings.manage', 'module' => 'settings', 'action' => 'manage', 'description' => 'Manage organization AI configuration and models'],
         ];
     }
 
@@ -166,7 +172,7 @@ class PermissionCatalog
         $fixedAssets = ['fixed_assets.view', 'fixed_assets.manage', 'fixed_assets.depreciate', 'fixed_assets.dispose'];
         $payroll = ['payroll.view', 'payroll.manage', 'payroll.approve', 'payroll.pay', 'payroll.export'];
         $documents = ['documents.view', 'documents.manage', 'documents.download', 'documents.retention.manage'];
-        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, ...$fixedAssets, ...$payroll, ...$documents, 'fx.view', 'fx.manage', 'fx.revalue', 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'e_tax.view', 'e_tax.manage', 'e_tax.submit', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', ...$procurement];
+        $finance = ['dashboard.view', 'products.view', 'products.manage', 'invoices.view', 'invoices.create', 'invoices.update', 'invoices.void', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert', ...$phase9Finance, ...$treasury, ...$accounting, ...$fixedAssets, ...$payroll, ...$documents, 'fx.view', 'fx.manage', 'fx.revalue', 'payments.view', 'payments.create', 'payments.reverse', 'tax_reports.view', 'e_tax.view', 'e_tax.manage', 'e_tax.submit', 'expenses.view', 'expenses.create', 'expenses.update', 'expenses.approve', 'expenses.pay', 'expenses.reject', 'ocr.view', 'ocr.upload', 'ocr.convert', ...$procurement];
         $sales = array_values(array_unique(array_merge($sales, ['products.view', 'invoices.view'])));
 
         return [

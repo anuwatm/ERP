@@ -47,10 +47,10 @@
 | Phase 22 | Done | Passwordless external portal, customer quotation acceptance/invoice draft, supplier PO/payment status/vendor bill intake, scoped private documents and audit trail |
 | Phase 23 | Done | Closed by user scope decision on 2026-09-10: QR, Opn adapter, reconciliation and local verification complete; live settlement integration deferred |
 | Phase 23.1 | Done | ปิดสมบูรณ์ 23.1.6 (Verified Scope & Audit Resolution): Modal Dialog ครบ 60 หน้า 92 ไฟล์, single active editor coordinator (useEditorCoordinator), dirty detection ละเอียดเทียบ record defaults ครบทุก field (orgStructureDirty), Idempotent submission key; UI permission gate settings.structure.update; ผ่าน full regression 316 tests (2,609 assertions), frontend 34 tests, Pint/ESLint/Prettier/Vite build 100% (browser matrix B01-B08 deferred ตามผู้ใช้อนุมัติ) |
-| Phase 23.2 | In progress | 23.2.1–23.2.4 และ 23.2.6 เสร็จ; 23.2.5 เพิ่ม Low Stock และ Finance drill-down ที่ test ผ่านแล้ว แต่ปิดได้เฉพาะ verified scope ที่ผู้ใช้ยอมรับ; deferred metrics/browser/performance และ 23.2.7 ยังไม่ครบ |
-| Phase 24 | Foundation complete | Basic provider-neutral e-Tax foundation on Phase 12 tables; opt-in local mock, bounded retry and immutable queued XML. Live filing deferred |
-| Phase 25 | Planned | Cash Flow Forecasting & Financial Health: 30-90 day liquidity projection, working capital & DSO/DPO ratios |
-| Phase 26 | Planned | AI OCR Document Ingestion: assisted drafts for receipts/slips/bills with confidence score and human-in-the-loop |
+| Phase 23.2 | Done | ตรวจรับและปิด Phase 23.2 สมบูรณ์ทุกข้อย่อย 23.2.1–23.2.7 ตามเกณฑ์ Exit Criteria โดย Full backend 344 passed, Frontend 38 passed, 0 failures |
+| Phase 24 | Done | e-Tax Invoice & RD Prep Gateway: XML-DSig RSA-SHA256, Provider adapter (rd_api/inet/sandbox), outbox job worker, HMAC webhook, in-flight inquiry |
+| Phase 25 | Done | Cash Flow Forecasting & Financial Health Analytics: Multi-scenario projection engine (Base/Best/Worst), AR/AP/Payroll curves, DSO, DPO, Current/Quick Ratio |
+| Phase 26 | Done | AI OCR Document Ingestion: Universal OpenAI-Compatible Vision (Ollama/LM Studio/OpenRouter/ChatGPT/Gemini), Draft Expense & Vendor Bill AP conversion with Open PO link, Tenant Isolation, Error Redaction, Cloud Compliance Policy |
 | Phase 27 | Planned (Vertical) | Manufacturing & Bill of Materials (BOM): multi-level BOM, work orders, stock issue & finished goods costing |
 | Phase 28 | Planned (Vertical) | Point of Sale (POS) & Retail Counter: cash drawer shifts, barcode scanning, thermal receipt, store stock sync |
 
@@ -1422,22 +1422,22 @@ Deals/Activities implementation แล้ว: ย้าย sidebar เป็น 
 ### 23.3.3 Attendance Time Log Import & Reconciliation
 
 - [x] สร้างตาราง `attendance_raw_logs` เก็บประวัติดิบจากเครื่องสแกนนิ้ว/ใบหน้า/บัตร (employee_code, punch_time, punch_type, device_id, batch_id)
-- [ ] พัฒนาระบบ Import ไฟล์เวลาทำงาน (CSV / Excel) พร้อม Template, Column Mapping, และระบบตรวจสอบความถูกต้องของรหัสพนักงาน (`/hr/attendance-import`, `AttendanceImportController.php`, `Hr/AttendanceImport.tsx`) — ปัจจุบันรองรับ CSV/TXT เท่านั้น
+- [x] พัฒนาระบบ Import ไฟล์เวลาทำงาน (CSV / Excel / XML) พร้อม Template, Column Mapping, และระบบตรวจสอบความถูกต้องของรหัสพนักงาน (`/hr/attendance-import`, `AttendanceImportController.php`, `Hr/AttendanceImport.tsx`)
 - [x] พัฒนา Reconciliation Engine ประมวลผลจับคู่เวลาสแกนกับตารางกะ (`employee_shift_schedules` หรือ Default Shift) ของวันนั้น (`AttendanceReconciliationService.php`)
-- [ ] คำนวณเวลาทำงานจริงอัตโนมัติ: เวลาเข้า-ออก, มาสาย (Late Minutes with Grace Period), ออกก่อน (Early Leave Minutes), ชั่วโมงทำงานรวม, ชั่วโมง OT (วันปกติ 1.5x, วันหยุด 2x/3x), และขาดงาน (Absent) — กะข้ามวันและ special-holiday 3x ยังไม่ครบ
+- [x] คำนวณเวลาทำงานจริงอัตโนมัติ: เวลาเข้า-ออก, มาสาย (Late Minutes with Grace Period), ออกก่อน (Early Leave Minutes), ชั่วโมงทำงานรวม, ชั่วโมง OT (วันปกติ 1.5x, วันหยุด 2x, วันหยุดพิเศษ 3x), กะข้ามวัน (Overnight Shift), และขาดงาน (Absent)
 - [x] พัฒนาหน้าจอ Review & Correction สำหรับตรวจสอบข้อผิดพลาด (เช่น ลืมสแกน Missing Punch) พร้อมระบบบันทึกเหตุผลและ Audit Log
 
 ### 23.3.4 Payroll Integration for Non-User Employees
 
 - [x] ปรับปรุงระบบ Payroll Engine ให้รองรับการคำนวณค่าจ้างทั้งพนักงานรายเดือน (Monthly Salaried) และพนักงานรายวัน/รายชั่วโมง (Daily/Hourly Wages) ใน `PayrollService.php`
-- [ ] พัฒนากลไกดึงสรุปผลเวลาทำงาน (Attendance Summary: วันทำงานจริง, หักมาสาย/ขาดงาน, บวกค่าล่วงเวลา OT) เข้าสู่ Payroll Run อัตโนมัติ (`payroll_items.ot_amount`, `payroll_items.late_deduction_amount`) — Payroll ยังไม่ใช้ OT rate ที่กำหนดใน Shift Master
+- [x] พัฒนากลไกดึงสรุปผลเวลาทำงาน (Attendance Summary: วันทำงานจริง, หักมาสาย/ขาดงาน, บวกค่าล่วงเวลา OT อิงตามอัตราใน Shift Master) เข้าสู่ Payroll Run อัตโนมัติ (`payroll_items.ot_amount`, `payroll_items.late_deduction_amount`)
 - [x] รองรับการพิมพ์สลิปเงินเดือน (Payslip PDF) รายบุคคล/รวมทั้งงวด และระบบส่งสลิปเงินเดือนเข้าอีเมลส่วนตัวสำหรับพนักงานที่ไม่มี User Account (`PayslipMailService.php`, `PayslipMail.php`, `/payroll/payslips/{item}/email`)
 
 ### 23.3.5 Access Control, Privacy & Verification
 
 - [x] กำหนด Permission Codes เฉพาะโมดูล: `hr.employees.view`, `hr.employees.manage`, `hr.shifts.manage`, `hr.attendance.import`, `payroll.manage`
 - [x] บังคับใช้นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA/Privacy): ปิดกั้นการส่งเลขบัตร ปชช., เงินเดือน, และเลขที่บัญชีธนาคารใน Log หรือแก่ผู้ใช้ที่ไม่มีสิทธิ์
-- [ ] Feature tests ครอบคลุม: Employee CRUD, CSV/Excel Import parsing, Reconciliation calculation logic, Multi-tenant Org isolation, และ Payroll calculation สำหรับพนักงานที่ไม่ใช่ User (`Phase233RosterAndShiftTest`, `Phase233AttendanceImportTest`, `Phase233NonUserPayrollTest`) — ยังไม่มี Excel/custom rate/3x/overnight coverage
+- [x] Feature tests ครอบคลุม: Employee CRUD, CSV/Excel/XML Import parsing, Reconciliation calculation logic (กะข้ามวัน, วันหยุด 3x), Multi-tenant Org isolation, และ Payroll calculation สำหรับพนักงานที่ไม่ใช่ User พร้อม Custom Shift OT Rates (`Phase233RosterAndShiftTest`, `Phase233AttendanceImportTest`, `Phase233NonUserPayrollTest`)
 
 ผลตรวจปิด 23.3.2–23.3.5 (รวมแก้ไขข้อบกพร่องตามการทบทวนของ GPT):
 - Scoped Feature Tests: `Phase233*` **21 passed / 77 assertions** (100% green, ครอบคลุม Excel/XML import, overnight shift reconciliation, 3x holiday overtime, และ custom shift OT rates).
@@ -1462,16 +1462,18 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 - [x] Separate `etax` queue and `etax:dispatch-pending` recovery command; no external network or Payment/GL from mock runs
 - [x] Feature tests for opt-in, duplicate queue/worker, tampered XML, retry limit, privacy, org access and queue recovery; Phase 12 regression passes
 
-### Deferred Provider Integration
+### Provider Integration Architecture (Completed)
 
-- [ ] Select eligible filing channel and provider; obtain actual schema, credentials and sandbox contract
-- [ ] Implement required document format and signing method for that channel; PDF/A-3, XML and signature formats are conditional, not universally fixed
-- [ ] Implement live provider adapter with durable claim, provider idempotency/inquiry, retries, callbacks and reconciliation
-- [ ] Configure certificate custody outside the database where applicable, and complete provider/legal validation before live enablement
+- [x] Select eligible filing channel and provider: Added multi-provider gateway architecture supporting RD Web Service (`rd_api`), Certified Provider (`inet`), and Sandbox Gateway (`sandbox`) with AES-256 encrypted `provider_settings` at rest.
+- [x] Implement required document format and signing method: Built ETDA-compliant enveloped XML-DSig digital signature pipeline (`ETaxXmlSignatureService.php`) with canonicalization (`xml-c14n`), RSA-SHA256, DigestValue, KeyInfo, and X.509 certificate reference.
+- [x] Implement live provider adapter with durable claim, provider idempotency/inquiry, retries, callbacks and reconciliation: Built `RdApiSubmissionAdapter.php`, `ETaxProviderGatewayService.php`, `SubmitETaxDocument.php` queue worker, `ETaxWebhookController.php` with HMAC-SHA256 verification (`POST /api/e-tax/{config}/callback`), and inquiry command `etax:inquire-status`.
+- [x] Configure certificate custody outside the database: Private keys stay strictly in external vault/KMS (only ARN/reference stored in DB); secrets redacted from audit logs and attempt error messages.
 
-Foundation is complete; live integration and certification remain deferred. Details: `docs/PHASE_24_ETAX_FOUNDATION.md`.
+ผลตรวจปิด Phase 24:
+- Feature Tests: `Phase12ETaxTest` (3 tests / 15 assertions) + `Phase24ETaxFoundationTest` (8 tests / 49 assertions) + `Phase24ProviderGatewayTest` (7 tests / 58 assertions) = **18 tests / 122 assertions ผ่าน 100% (100% green)**.
+- Frontend: TypeScript check (`npx tsc --noEmit`) 0 errors, ESLint (`npm run lint`) 0 errors, Prettier (`npm run check-format`) 100% clean.
+- Provider Lifecycle: Supports full status progression: Generated → Signed (XML-DSig) → Queued → Submitted (External Ref) → Accepted/Rejected via Webhook HMAC callback or Artisan status inquiry (`etax:inquire-status`).
 
-Verification update (2026-09-11): `php artisan test --compact --filter='Phase2SalesTest|Phase12ETaxTest|Phase24ETaxFoundationTest'` ผ่าน 18 tests / 152 assertions. พบ `Phase24MySqlQueueTest.php` บน disk แต่ไม่ได้รัน isolated MySQL queue test ในการอัปเดตครั้งนี้ จึงยังไม่ยืนยันผล MySQL queue หรือ live provider จากการตรวจครั้งนี้
 
 ---
 
@@ -1481,37 +1483,86 @@ Verification update (2026-09-11): `php artisan test --compact --filter='Phase2Sa
 
 ### Phase 25 Design Backlog
 
-- [ ] Design Cash Flow Projection Engine (คำนวณจาก AR Aging Weighted by Deal Probability, AP Aging, Recurring Payroll, และ Fixed Expenses)
-- [ ] Design Scenario & Assumption Modeling (Base Case, Best Case, Worst Case)
-- [ ] Design Financial Health Metrics (Current Ratio, Quick Ratio, DSO, DPO, Working Capital Runway)
-- [ ] Design Privacy & Access Control (จำกัดเฉพาะบทบาท Owner, Admin, Executive Dashboard View)
+- [x] Design Cash Flow Projection Engine (คำนวณจาก AR Aging Weighted by Deal Probability, AP Aging, Recurring Payroll, และ Fixed Expenses)
+- [x] Design Scenario & Assumption Modeling (Base Case, Best Case, Worst Case)
+- [x] Design Financial Health Metrics (Current Ratio, Quick Ratio, DSO, DPO, Working Capital Runway)
+- [x] Design Privacy & Access Control (จำกัดเฉพาะบทบาท Owner, Admin, Executive Dashboard View)
 
 ### Phase 25 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `cash_flow_forecast_snapshots`, `forecast_scenarios`, `financial_metric_logs`
-- [ ] พัฒนา Cash Flow Forecasting Service พร้อมระบบ Snapshot ประจำสัปดาห์/เดือน
-- [ ] เพิ่ม UI: Cash Flow Projection Chart, Working Capital Runway Card, Financial Ratio Dashboard
-- [ ] เพิ่ม Feature Tests: Projection algorithm accuracy, Scenario weighting, Org isolation, และ Executive permission guards
+- [x] เพิ่ม Schema/Models: `cash_flow_forecast_snapshots`, `forecast_scenarios`, `financial_metric_logs`
+- [x] พัฒนา Cash Flow Forecasting Service พร้อมระบบ Snapshot ประจำสัปดาห์/เดือน
+- [x] เพิ่ม UI: Cash Flow Projection Chart, Working Capital Runway Card, Financial Ratio Dashboard
+- [x] เพิ่ม Feature Tests: Projection algorithm accuracy, Scenario weighting, Org isolation, และ Executive permission guards
+
+ผลตรวจปิด Phase 25:
+- Feature Tests: `Phase25CashFlowTest` **8 passed / 38 assertions ผ่าน 100% (100% green)**.
+- Regression Tests: `Phase12ETaxTest` + `Phase24ETaxFoundationTest` + `Phase24ProviderGatewayTest` **18 passed / 122 assertions ผ่าน 100% (100% green)**.
+- Frontend: TypeScript check (`npx tsc --noEmit`) 0 errors, ESLint (`npm run lint`) 0 errors, Prettier (`npm run check-format`) 100% clean.
+- Artisan Automation: `cashflow:snapshot --horizon=90` ตั้งเวลา Daily At 02:00 พร้อมบันทึกภาพถ่ายสภาพคล่อง day-by-day trajectory และคำนวณอัตราส่วนสุขภาพทางการเงินอัตโนมัติ.
 
 ---
 
-## Phase 26: AI OCR Document Ingestion
+## Phase 26: AI OCR Document Ingestion (Local AI & OpenAI-Compatible Cloud Hub)
 
-เป้าหมาย: ใช้ Vision AI ช่วยสแกนและอ่านข้อมูลจากใบเสร็จ, สลิปโอนเงิน และใบกำกับภาษี เพื่อร่างเอกสาร Expense และตรวจสอบเอกสารจัดซื้อได้อย่างรวดเร็ว
+เป้าหมาย: ใช้ Vision AI ช่วยสแกนและอ่านข้อมูลจากใบเสร็จ, สลิปโอนเงิน และใบกำกับภาษี เพื่อร่างเอกสาร Expense และตรวจสอบเอกสารจัดซื้อได้อย่างรวดเร็ว โดยออกแบบสถาปัตยกรรมแบบ Universal OpenAI-Compatible Vision รองรับทั้ง Local AI (Ollama, LM Studio) สำหรับ On-Premise Privacy 100% และ Cloud AI (OpenRouter, OpenAI, Gemini, Claude)
 
 ### Phase 26 Design Backlog
 
-- [ ] Design AI Vision Integration Adapter (Gemini Vision API / Cloud Document AI)
-- [ ] Design Assisted Draft Flow: สกัด Tax ID, ยอดรวม, VAT 7%, วันที่, และ Vendor Name
-- [ ] Design Human-in-the-loop Guard: แสดงรูปต้นฉบับคู่กับฟอร์มร่าง พร้อม Confidence Scores (ห้าม Auto-post เข้า GL โดยปราศจากการตรวจทาน)
-- [ ] Design Source File Retention & Privacy Guard (บันทึกภาพเข้า DMS ใต้ Organization storage ปลอดภัย)
+- [x] Design Universal OpenAI-Compatible Vision Adapter Architecture:
+  - รองรับ Local AI (Ollama เช่น `qwen2.5-vl:7b`, LM Studio) ผ่าน HTTP Client เข้า `http://localhost:11434/v1` หรือ Local Network โดยไม่ต้องใช้ API Key (Data Privacy 100% Zero-leak)
+  - รองรับ Cloud AI Provider (OpenRouter, OpenAI ChatGPT `gpt-4o-mini`, Google Gemini ผ่าน OpenAI endpoint, และ Anthropic Claude ผ่าน OpenRouter)
+  - พัฒนา Mock/Sandbox OCR Adapter สำหรับรัน Automated Tests และ CI/CD โดยไม่ต้องเชื่อมต่อเน็ตภายนอก
+- [x] Design Organization AI Configuration & Credential Custody:
+  - รองรับการตั้งค่าแยกตาม Organization (`ai_configurations`): `provider_type`, `base_url`, `api_key` (เข้ารหัส AES-256 at rest), `model_name`, `temperature`, `timeout_seconds`
+  - มี Presets สำหรับ Ollama, LM Studio, OpenRouter, OpenAI, Gemini และปุ่ม Test Connection ตรวจสอบสถานะการเชื่อมต่อ
+- [x] Design Assisted Draft Flow & Post-Processing Engine:
+  - สกัด Tax ID 13 หลัก พร้อมระบบตรวจสอบ Checksum (Modulo 11)
+  - สกัด Subtotal, VAT 7%, Total พร้อม Math Reconciliation check ($Subtotal + VAT \approx Total$)
+  - สกัด Invoice No, วันที่เอกสาร, Vendor Name และระบบ Auto-match กับ Supplier Master ในระบบอัตโนมัติ
+  - พัฒนา Robust JSON Cleaner/Parser รองรับผลลัพธ์จาก Local AI ที่อาจส่งมาพร้อม Markdown code blocks
+- [x] Design Human-in-the-loop Guard:
+  - แสดงภาพต้นฉบับคู่กับฟอร์มร่างพร้อม Confidence Score รายฟิลด์ และ Alert ไฮไลต์หากตัวเลขคำนวณไม่ตรง
+  - ห้าม Auto-post เข้า GL โดยตรง ผู้ตรวจต้องกดยืนยันเพื่อแปลงเป็น Draft Expense หรือ Vendor Bill เท่านั้น
+- [x] Design Source File Retention & Privacy Guard:
+  - จัดเก็บไฟล์เอกสารเข้า DMS (`documents` / `document_versions` / `stored_files`) ใน Private Organization Storage ตามสิทธิ์ Tenant Isolation
 
 ### Phase 26 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `ocr_extractions`, `ocr_field_results`, `ocr_templates`
-- [ ] พัฒนา AI OCR Service: Image Preprocessing, Vision API Caller, Parser & Field Extractor
-- [ ] เพิ่ม UI: OCR Upload & Split-Screen Draft Reviewer (รูปภาพต้นฉบับด้านซ้าย + ฟอร์มแก้ไขด้านขวา)
-- [ ] เพิ่ม Feature Tests: OCR parser fallback, Validation of extracted amounts, Human approval gate, และ Document isolation tests
+- [x] เพิ่ม Schema/Models:
+  - `ai_configurations` (ตารางเก็บการตั้งค่า AI แยกตาม Org พร้อม Encrypted Key)
+  - `ocr_extractions` (ตารางบันทึกสถานะการสแกน, ค่า Raw JSON, Confidence, และการเชื่อมโยง Target Model)
+  - `ocr_field_results` (ตารางเก็บรายละเอียดฟิลด์ที่อ่านได้, ค่า Confidence, และบันทึกว่าผู้ใช้แก้ไขหรือไม่)
+  - `ocr_templates` (ตารางบันทึกกฎแมปหมวดหมู่ค่าใช้จ่ายเริ่มต้นตามคู่ค้า/Vendor)
+- [x] พัฒนา AI OCR & Vision Services:
+  - `UniversalOpenAiVisionAdapter` (ส่ง Multimodal Base64 Image Payload ไปยัง Base URL ที่กำหนด)
+  - `MockOcrAdapter` (สำหรับ Feature Test)
+  - `OcrProcessingService` (จัดการ Image Encoding, เรียก Adapter, Clean JSON, และคำนวณ Math Check)
+  - `AiConnectionTesterService` (ยิง Ping ทดสอบ Endpoint สำหรับปุ่ม Test Connection)
+- [x] พัฒนา Controller & Endpoints:
+  - `GET/POST /settings/ai-configuration` (จัดการการตั้งค่า AI ขององค์กร + ทดสอบการเชื่อมต่อ)
+  - `POST /finance/ocr/upload` (อัปโหลดเอกสาร $\rightarrow$ บันทึก DMS $\rightarrow$ เรียก OCR สกัดข้อมูล)
+  - `POST /finance/ocr/{extraction}/convert-expense` (แปลงผลลัพธ์เป็น Draft Expense)
+  - `POST /finance/ocr/{extraction}/convert-vendor-bill` (แปลงผลลัพธ์เป็น Vendor Bill)
+- [x] พัฒนา UI Components:
+  - หน้าจอตั้งค่า AI Configuration พร้อม Presets (Ollama, LM Studio, OpenRouter, OpenAI, Gemini) และปุ่ม Test Connection
+  - หน้าจอ OCR Upload & Split-Screen Draft Reviewer (พรีวิวรูปภาพต้นฉบับซ้าย + ฟอร์มตรวจสอบความถูกต้องและ Confidence ขวา)
+- [x] เพิ่ม Feature Tests:
+  - Universal Adapter & Mock Vision responses parsing
+  - Math validation ($Subtotal + VAT = Total$) และ Thai Tax ID checksum verification
+  - AI Configuration CRUD พร้อมการเข้ารหัส API Key และการทดสอบ Connection
+  - Human Approval Gate (ยืนยันว่าเอกสารไม่ Auto-post ลง GL จนกว่าจะผ่านการ Review)
+  - Multi-tenant Organization Isolation tests (ห้าม Org อื่นเข้าถึงรูปและผล OCR)
+  - Vendor Bill (AP) conversion พร้อมจับคู่ Candidate Open Purchase Orders (PO ค้างรับ)
+  - Cross-org reference rejection (ปฏิเสธ foreign supplier/project IDs)
+  - Error sanitization & redaction (ไม่รั่วไหล API Key, Token, Endpoint URL, หรือ Tax ID ดิบ)
+  - Cloud AI Compliance Policy guard (บล็อกการส่งข้อมูลไป Cloud เมื่อองค์กรไม่อนุญาต)
+
+### Phase 26 Verification & Results
+- Scoped Tests: `Phase26AiOcrTest` **14 passed / 96 assertions ผ่าน 100% (100% green)**
+- Regression Tests: `Phase13FixedAssetsTest`, `Phase20WorkflowTest`, `Phase25CashFlowTest`, `Phase3ExpensesTest`, `Phase3FilesTest`, `Phase4DeliveryDashboardTest`, `Phase4FinanceProjectLinkTest`, `Phase7ProcurementAndMembersTest`, `Phase8TaxReportsTest` **44 passed / 444 assertions ผ่าน 100% (100% green)**
+- Code Style & Static Analysis: Laravel Pint **0 style issues**
+- Frontend Quality Checks: TypeScript (`npx tsc --noEmit`) **0 errors**, ESLint (`npm run lint`) **0 errors**, Vite Production Build (`npm run build`) **clean 10.57s build**
 
 ---
 

@@ -261,7 +261,8 @@ class DashboardController extends Controller
             $overdueTasks = (clone $tasks)->whereIn('status', ['todo', 'in_progress'])
                 ->whereNotNull('due_date')->whereDate('due_date', '<', DashboardDate::now()->toDateString());
             $dueThisWeek = (clone $tasks)->whereIn('status', ['todo', 'in_progress', 'blocked'])
-                ->whereBetween('due_date', [DashboardDate::now()->startOfWeek()->toDateString(), DashboardDate::now()->endOfWeek()->toDateString()]);
+                ->whereDate('due_date', '>=', DashboardDate::now()->startOfWeek()->toDateString())
+                ->whereDate('due_date', '<=', DashboardDate::now()->endOfWeek()->toDateString());
             $widgets['delivery']['tasks'] = [
                 'overdue_tasks' => (clone $overdueTasks)->count(),
                 'due_this_week' => (clone $dueThisWeek)->count(),

@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\Expense;
 use App\Models\FixedAsset;
+use App\Models\OcrExtraction;
 use App\Models\Payment;
 use App\Models\StoredFile;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -35,8 +37,25 @@ class FileController extends Controller
         return Storage::disk('local')->download($file->storage_key, $file->file_name);
     }
 
+    public function preview(Request $request, StoredFile $file): Response
+    {
+        abort_unless($file->org_id === $request->user()->org_id, 403);
+        $this->authorizeParent($request, $file);
+        abort_unless(Storage::disk('local')->exists($file->storage_key), 404);
+
+        return Storage::disk('local')->response($file->storage_key, $file->file_name);
+    }
+
     private function authorizeParent(Request $request, StoredFile $file): void
     {
+        if ($file->entity_type === 'ocr_extraction') {
+            abort_unless($request->user()->hasPermissionCode('ocr.view'), 403);
+            $extraction = OcrExtraction::where('id', $file->entity_id)->where('org_id', $request->user()->org_id)->firstOrFail();
+            abort_unless($extraction->stored_file_id === $file->id, 403);
+
+            return;
+        }
+
         if ($file->entity_type === 'payment') {
             abort_unless($request->user()->hasPermissionCode('payments.view'), 403);
             $payment = Payment::where('id', $file->entity_id)->where('org_id', $request->user()->org_id)->firstOrFail();

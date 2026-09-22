@@ -249,16 +249,16 @@ export default function CustomerDialog({
                                                     }
                                                 />
                                                 <ComboboxButton
-                                                    className="absolute inset-y-0 right-0 w-10"
+                                                    className="absolute inset-y-0 right-0 w-10 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                                                     aria-label="Choose owner"
                                                 >
                                                     ⌄
                                                 </ComboboxButton>
                                             </div>
-                                            <ComboboxOptions className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-gray-300 bg-white p-1 shadow-lg empty:invisible dark:border-gray-600 dark:bg-gray-800">
+                                            <ComboboxOptions className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-slate-300 bg-white p-1 shadow-lg empty:invisible dark:border-slate-700 dark:bg-slate-800">
                                                 <ComboboxOption
                                                     value=""
-                                                    className="cursor-pointer rounded px-3 py-2 text-sm data-[focus]:bg-indigo-100 dark:data-[focus]:bg-gray-700"
+                                                    className="cursor-pointer rounded px-3 py-2 text-sm text-slate-900 dark:text-slate-100 data-[focus]:bg-indigo-100 dark:data-[focus]:bg-slate-700"
                                                 >
                                                     {editing
                                                         ? 'Keep current owner'
@@ -268,16 +268,16 @@ export default function CustomerDialog({
                                                     <ComboboxOption
                                                         key={owner.id}
                                                         value={owner.id}
-                                                        className="cursor-pointer break-words rounded px-3 py-2 text-sm data-[focus]:bg-indigo-100 data-[selected]:font-semibold dark:data-[focus]:bg-gray-700"
+                                                        className="cursor-pointer break-words rounded px-3 py-2 text-sm text-slate-900 dark:text-slate-100 data-[focus]:bg-indigo-100 data-[selected]:font-semibold dark:data-[focus]:bg-slate-700"
                                                     >
                                                         {owner.name}
-                                                        <span className="block text-xs text-gray-600 dark:text-gray-300">
+                                                        <span className="block text-xs text-slate-500 dark:text-slate-400">
                                                             {owner.email}
                                                         </span>
                                                     </ComboboxOption>
                                                 ))}
                                                 {!filteredOwners.length && (
-                                                    <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300">
+                                                    <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
                                                         No matching owners
                                                     </div>
                                                 )}

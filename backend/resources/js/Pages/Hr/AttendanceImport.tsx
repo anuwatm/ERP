@@ -71,7 +71,7 @@ export default function AttendanceImport({
         router.get(
             route('hr.attendance-import.index'),
             { ...filters, [key]: value || undefined },
-            { preserveState: true, replace: true }
+            { preserveState: true, replace: true },
         );
     };
 
@@ -136,10 +136,13 @@ export default function AttendanceImport({
         e.preventDefault();
         if (!correcting) return;
 
-        correctionForm.post(route('hr.attendance-import.correct', correcting.id), {
-            preserveScroll: true,
-            onSuccess: () => setCorrecting(null),
-        });
+        correctionForm.post(
+            route('hr.attendance-import.correct', correcting.id),
+            {
+                preserveScroll: true,
+                onSuccess: () => setCorrecting(null),
+            },
+        );
     };
 
     return (
@@ -153,13 +156,26 @@ export default function AttendanceImport({
                     actions={
                         canManage ? (
                             <div className="flex items-center gap-2">
-                                <SecondaryButton onClick={() => window.open(route('hr.attendance-import.template'), '_blank')}>
+                                <SecondaryButton
+                                    onClick={() =>
+                                        window.open(
+                                            route(
+                                                'hr.attendance-import.template',
+                                            ),
+                                            '_blank',
+                                        )
+                                    }
+                                >
                                     Download Template
                                 </SecondaryButton>
-                                <SecondaryButton onClick={() => setImportOpen(true)}>
+                                <SecondaryButton
+                                    onClick={() => setImportOpen(true)}
+                                >
                                     Import CSV
                                 </SecondaryButton>
-                                <PrimaryButton onClick={() => setReconcileOpen(true)}>
+                                <PrimaryButton
+                                    onClick={() => setReconcileOpen(true)}
+                                >
                                     Run Reconciliation
                                 </PrimaryButton>
                             </div>
@@ -171,24 +187,37 @@ export default function AttendanceImport({
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                     <div className="flex flex-wrap items-center gap-3">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Date</label>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                Date
+                            </label>
                             <input
                                 type="date"
                                 value={filters.date}
-                                onChange={(e) => updateFilter('date', e.target.value)}
+                                onChange={(e) =>
+                                    updateFilter('date', e.target.value)
+                                }
                                 className="mt-1 rounded-md border-slate-300 text-sm dark:border-slate-600 dark:bg-slate-900"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Department</label>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                Department
+                            </label>
                             <select
                                 value={filters.department_id ?? ''}
-                                onChange={(e) => updateFilter('department_id', e.target.value)}
+                                onChange={(e) =>
+                                    updateFilter(
+                                        'department_id',
+                                        e.target.value,
+                                    )
+                                }
                                 className="mt-1 rounded-md border-slate-300 text-sm dark:border-slate-600 dark:bg-slate-900"
                             >
                                 <option value="">All departments</option>
                                 {departments.map((d) => (
-                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                    <option key={d.id} value={d.id}>
+                                        {d.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -228,58 +257,115 @@ export default function AttendanceImport({
                                 accessor: (x: AttendanceRecord) => (
                                     <div>
                                         <div className="font-semibold text-slate-900 dark:text-slate-100">
-                                            {x.employee ? `${x.employee.first_name} ${x.employee.last_name ?? ''}` : 'Unknown'}
+                                            {x.employee
+                                                ? `${x.employee.first_name} ${x.employee.last_name ?? ''}`
+                                                : 'Unknown'}
                                         </div>
                                         <div className="text-xs text-slate-500">
-                                            {x.employee?.employee_code} • {x.employee?.department?.name ?? 'No dept'}
+                                            {x.employee?.employee_code} •{' '}
+                                            {x.employee?.department?.name ??
+                                                'No dept'}
                                         </div>
                                     </div>
                                 ),
                             },
                             {
                                 header: 'Shift',
-                                accessor: (x: AttendanceRecord) => x.shift ? `${x.shift.code} (${x.shift.name})` : '—',
+                                accessor: (x: AttendanceRecord) =>
+                                    x.shift
+                                        ? `${x.shift.code} (${x.shift.name})`
+                                        : '—',
                             },
                             {
                                 header: 'Clock In',
-                                accessor: (x: AttendanceRecord) => (
-                                    x.clock_in_at ? new Date(x.clock_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (
-                                        x.is_absent ? <span className="font-semibold text-rose-600">Absent</span> : <span className="text-amber-500">Missing</span>
-                                    )
-                                ),
+                                accessor: (x: AttendanceRecord) =>
+                                    x.clock_in_at ? (
+                                        new Date(
+                                            x.clock_in_at,
+                                        ).toLocaleTimeString([], {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })
+                                    ) : x.is_absent ? (
+                                        <span className="font-semibold text-rose-600">
+                                            Absent
+                                        </span>
+                                    ) : (
+                                        <span className="text-amber-500">
+                                            Missing
+                                        </span>
+                                    ),
                             },
                             {
                                 header: 'Clock Out',
-                                accessor: (x: AttendanceRecord) => (
-                                    x.clock_out_at ? new Date(x.clock_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (
-                                        x.is_absent ? '—' : <span className="text-amber-500">Missing</span>
-                                    )
-                                ),
+                                accessor: (x: AttendanceRecord) =>
+                                    x.clock_out_at ? (
+                                        new Date(
+                                            x.clock_out_at,
+                                        ).toLocaleTimeString([], {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })
+                                    ) : x.is_absent ? (
+                                        '—'
+                                    ) : (
+                                        <span className="text-amber-500">
+                                            Missing
+                                        </span>
+                                    ),
                             },
                             {
                                 header: 'Late / Early',
                                 accessor: (x: AttendanceRecord) => (
                                     <div className="text-xs">
-                                        {x.late_minutes > 0 && <span className="text-rose-600 font-medium">Late: {x.late_minutes}m </span>}
-                                        {x.early_leave_minutes > 0 && <span className="text-amber-600 font-medium">Early: {x.early_leave_minutes}m</span>}
-                                        {x.late_minutes === 0 && x.early_leave_minutes === 0 && <span className="text-slate-400">On time</span>}
+                                        {x.late_minutes > 0 && (
+                                            <span className="text-rose-600 font-medium">
+                                                Late: {x.late_minutes}m{' '}
+                                            </span>
+                                        )}
+                                        {x.early_leave_minutes > 0 && (
+                                            <span className="text-amber-600 font-medium">
+                                                Early: {x.early_leave_minutes}m
+                                            </span>
+                                        )}
+                                        {x.late_minutes === 0 &&
+                                            x.early_leave_minutes === 0 && (
+                                                <span className="text-slate-400">
+                                                    On time
+                                                </span>
+                                            )}
                                     </div>
                                 ),
                             },
                             {
                                 header: 'Worked Hours',
-                                accessor: (x: AttendanceRecord) => `${(x.worked_minutes / 60).toFixed(1)} hrs`,
+                                accessor: (x: AttendanceRecord) =>
+                                    `${(x.worked_minutes / 60).toFixed(1)} hrs`,
                             },
                             {
                                 header: 'OT Hours',
                                 accessor: (x: AttendanceRecord) => {
-                                    const totalOtMins = x.ot_normal_minutes + x.ot_holiday_minutes + (x.ot_special_minutes ?? 0);
+                                    const totalOtMins =
+                                        x.ot_normal_minutes +
+                                        x.ot_holiday_minutes +
+                                        (x.ot_special_minutes ?? 0);
                                     if (totalOtMins === 0) return '—';
                                     return (
                                         <span className="font-semibold text-indigo-600 dark:text-indigo-400">
                                             {(totalOtMins / 60).toFixed(1)} hrs
-                                            {x.ot_holiday_minutes > 0 && <span className="text-[10px] text-purple-600"> (Hol)</span>}
-                                            {(x.ot_special_minutes ?? 0) > 0 && <span className="text-[10px] text-rose-600"> (Hol 3x)</span>}
+                                            {x.ot_holiday_minutes > 0 && (
+                                                <span className="text-[10px] text-purple-600">
+                                                    {' '}
+                                                    (Hol)
+                                                </span>
+                                            )}
+                                            {(x.ot_special_minutes ?? 0) >
+                                                0 && (
+                                                <span className="text-[10px] text-rose-600">
+                                                    {' '}
+                                                    (Hol 3x)
+                                                </span>
+                                            )}
                                         </span>
                                     );
                                 },
@@ -288,29 +374,51 @@ export default function AttendanceImport({
                                 header: 'Status',
                                 accessor: (x: AttendanceRecord) => {
                                     if (x.is_absent) {
-                                        return <span className="rounded bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300">Absent</span>;
+                                        return (
+                                            <span className="rounded bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                                                Absent
+                                            </span>
+                                        );
                                     }
                                     if (!x.clock_out_at) {
-                                        return <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">Missing Punch</span>;
+                                        return (
+                                            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                                Missing Punch
+                                            </span>
+                                        );
                                     }
                                     if (x.late_minutes > 0) {
-                                        return <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300">Late</span>;
+                                        return (
+                                            <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300">
+                                                Late
+                                            </span>
+                                        );
                                     }
-                                    return <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Normal</span>;
+                                    return (
+                                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                            Normal
+                                        </span>
+                                    );
                                 },
                             },
-                            ...(canManage ? [{
-                                header: 'Actions',
-                                accessor: (x: AttendanceRecord) => (
-                                    <button
-                                        type="button"
-                                        onClick={() => openCorrection(x)}
-                                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
-                                    >
-                                        Correct
-                                    </button>
-                                ),
-                            }] : []),
+                            ...(canManage
+                                ? [
+                                      {
+                                          header: 'Actions',
+                                          accessor: (x: AttendanceRecord) => (
+                                              <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                      openCorrection(x)
+                                                  }
+                                                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+                                              >
+                                                  Correct
+                                              </button>
+                                          ),
+                                      },
+                                  ]
+                                : []),
                         ]}
                         data={attendances}
                         keyExtractor={(x) => x.id}
@@ -336,16 +444,33 @@ export default function AttendanceImport({
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                                 {recentLogs.length === 0 ? (
-                                    <tr><td colSpan={5} className="p-4 text-center text-slate-400">No raw punch logs imported yet.</td></tr>
+                                    <tr>
+                                        <td
+                                            colSpan={5}
+                                            className="p-4 text-center text-slate-400"
+                                        >
+                                            No raw punch logs imported yet.
+                                        </td>
+                                    </tr>
                                 ) : (
                                     recentLogs.map((log) => (
                                         <tr key={log.id}>
-                                            <td className="p-2 font-mono">{log.punch_time}</td>
-                                            <td className="p-2 font-semibold text-slate-900 dark:text-slate-100">{log.employee_code}</td>
-                                            <td className="p-2 uppercase font-medium">{log.punch_type}</td>
-                                            <td className="p-2">{log.device_id ?? '—'}</td>
+                                            <td className="p-2 font-mono">
+                                                {log.punch_time}
+                                            </td>
+                                            <td className="p-2 font-semibold text-slate-900 dark:text-slate-100">
+                                                {log.employee_code}
+                                            </td>
+                                            <td className="p-2 uppercase font-medium">
+                                                {log.punch_type}
+                                            </td>
                                             <td className="p-2">
-                                                <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${log.status === 'reconciled' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'}`}>
+                                                {log.device_id ?? '—'}
+                                            </td>
+                                            <td className="p-2">
+                                                <span
+                                                    className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${log.status === 'reconciled' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'}`}
+                                                >
                                                     {log.status}
                                                 </span>
                                             </td>
@@ -379,17 +504,35 @@ export default function AttendanceImport({
                         {() => (
                             <div className="space-y-4 p-5">
                                 <p className="text-sm text-slate-600 dark:text-slate-300">
-                                    Upload a CSV or Excel (.xlsx, .xls, .xml) file containing employee punch times from your biometric device.
-                                    Required columns: <code className="rounded bg-slate-100 px-1 py-0.5 text-xs dark:bg-slate-800">employee_code</code>, <code className="rounded bg-slate-100 px-1 py-0.5 text-xs dark:bg-slate-800">punch_time</code>.
+                                    Upload a CSV or Excel (.xlsx, .xls, .xml)
+                                    file containing employee punch times from
+                                    your biometric device. Required columns:{' '}
+                                    <code className="rounded bg-slate-100 px-1 py-0.5 text-xs dark:bg-slate-800">
+                                        employee_code
+                                    </code>
+                                    ,{' '}
+                                    <code className="rounded bg-slate-100 px-1 py-0.5 text-xs dark:bg-slate-800">
+                                        punch_time
+                                    </code>
+                                    .
                                 </p>
                                 <div>
                                     <input
                                         type="file"
                                         accept=".csv,.tsv,.txt,.xlsx,.xls,.xml"
-                                        onChange={(e) => importForm.setData('file', e.target.files?.[0] ?? null)}
+                                        onChange={(e) =>
+                                            importForm.setData(
+                                                'file',
+                                                e.target.files?.[0] ?? null,
+                                            )
+                                        }
                                         className="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-950 dark:file:text-indigo-300"
                                     />
-                                    {importForm.errors.file && <span className="text-xs text-rose-600">{importForm.errors.file}</span>}
+                                    {importForm.errors.file && (
+                                        <span className="text-xs text-rose-600">
+                                            {importForm.errors.file}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -418,33 +561,58 @@ export default function AttendanceImport({
                         {() => (
                             <div className="grid gap-4 p-5 sm:grid-cols-2">
                                 <div>
-                                    <label className="block text-sm font-medium">Start Date</label>
+                                    <label className="block text-sm font-medium">
+                                        Start Date
+                                    </label>
                                     <input
                                         type="date"
                                         value={reconcileForm.data.start_date}
-                                        onChange={(e) => reconcileForm.setData('start_date', e.target.value)}
+                                        onChange={(e) =>
+                                            reconcileForm.setData(
+                                                'start_date',
+                                                e.target.value,
+                                            )
+                                        }
                                         className="mt-1 w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">End Date</label>
+                                    <label className="block text-sm font-medium">
+                                        End Date
+                                    </label>
                                     <input
                                         type="date"
                                         value={reconcileForm.data.end_date}
-                                        onChange={(e) => reconcileForm.setData('end_date', e.target.value)}
+                                        onChange={(e) =>
+                                            reconcileForm.setData(
+                                                'end_date',
+                                                e.target.value,
+                                            )
+                                        }
                                         className="mt-1 w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800"
                                     />
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium">Department (Optional)</label>
+                                    <label className="block text-sm font-medium">
+                                        Department (Optional)
+                                    </label>
                                     <select
                                         value={reconcileForm.data.department_id}
-                                        onChange={(e) => reconcileForm.setData('department_id', e.target.value)}
+                                        onChange={(e) =>
+                                            reconcileForm.setData(
+                                                'department_id',
+                                                e.target.value,
+                                            )
+                                        }
                                         className="mt-1 w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800"
                                     >
-                                        <option value="">All departments</option>
+                                        <option value="">
+                                            All departments
+                                        </option>
                                         {departments.map((d) => (
-                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                            <option key={d.id} value={d.id}>
+                                                {d.name}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
@@ -475,15 +643,24 @@ export default function AttendanceImport({
                         {() => (
                             <div className="space-y-4 p-5">
                                 <div>
-                                    <span className="text-xs font-semibold uppercase text-slate-500">Date</span>
-                                    <div className="font-semibold text-slate-900 dark:text-slate-100">{correcting.work_date}</div>
+                                    <span className="text-xs font-semibold uppercase text-slate-500">
+                                        Date
+                                    </span>
+                                    <div className="font-semibold text-slate-900 dark:text-slate-100">
+                                        {correcting.work_date}
+                                    </div>
                                 </div>
 
                                 <label className="flex items-center gap-2 text-sm font-medium">
                                     <input
                                         type="checkbox"
                                         checked={correctionForm.data.is_absent}
-                                        onChange={(e) => correctionForm.setData('is_absent', e.target.checked)}
+                                        onChange={(e) =>
+                                            correctionForm.setData(
+                                                'is_absent',
+                                                e.target.checked,
+                                            )
+                                        }
                                         className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                                     />
                                     Mark as Absent
@@ -492,20 +669,40 @@ export default function AttendanceImport({
                                 {!correctionForm.data.is_absent && (
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         <div>
-                                            <label className="block text-sm font-medium">Clock In Time</label>
+                                            <label className="block text-sm font-medium">
+                                                Clock In Time
+                                            </label>
                                             <input
                                                 type="datetime-local"
-                                                value={correctionForm.data.clock_in_at}
-                                                onChange={(e) => correctionForm.setData('clock_in_at', e.target.value)}
+                                                value={
+                                                    correctionForm.data
+                                                        .clock_in_at
+                                                }
+                                                onChange={(e) =>
+                                                    correctionForm.setData(
+                                                        'clock_in_at',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 className="mt-1 w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium">Clock Out Time</label>
+                                            <label className="block text-sm font-medium">
+                                                Clock Out Time
+                                            </label>
                                             <input
                                                 type="datetime-local"
-                                                value={correctionForm.data.clock_out_at}
-                                                onChange={(e) => correctionForm.setData('clock_out_at', e.target.value)}
+                                                value={
+                                                    correctionForm.data
+                                                        .clock_out_at
+                                                }
+                                                onChange={(e) =>
+                                                    correctionForm.setData(
+                                                        'clock_out_at',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 className="mt-1 w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800"
                                             />
                                         </div>
@@ -514,18 +711,33 @@ export default function AttendanceImport({
 
                                 <div>
                                     <label className="block text-sm font-medium">
-                                        Reason for Correction <span className="text-rose-500">*</span>
+                                        Reason for Correction{' '}
+                                        <span className="text-rose-500">*</span>
                                     </label>
                                     <textarea
                                         required
-                                        value={correctionForm.data.correction_reason}
-                                        onChange={(e) => correctionForm.setData('correction_reason', e.target.value)}
+                                        value={
+                                            correctionForm.data
+                                                .correction_reason
+                                        }
+                                        onChange={(e) =>
+                                            correctionForm.setData(
+                                                'correction_reason',
+                                                e.target.value,
+                                            )
+                                        }
                                         placeholder="e.g. Employee forgot biometric badge at gate; verified with supervisor log."
                                         className="mt-1 w-full rounded-md border-slate-300 text-sm dark:border-slate-600 dark:bg-slate-800"
                                         rows={3}
                                     />
-                                    {correctionForm.errors.correction_reason && (
-                                        <span className="text-xs text-rose-600">{correctionForm.errors.correction_reason}</span>
+                                    {correctionForm.errors
+                                        .correction_reason && (
+                                        <span className="text-xs text-rose-600">
+                                            {
+                                                correctionForm.errors
+                                                    .correction_reason
+                                            }
+                                        </span>
                                     )}
                                 </div>
                             </div>

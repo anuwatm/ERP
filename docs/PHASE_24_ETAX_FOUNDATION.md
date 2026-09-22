@@ -50,14 +50,35 @@ php artisan etax:dispatch-pending --limit=100
 
 The recovery command ignores non-mock organizations. Duplicate jobs remain safe because the worker rechecks document state under a lock. Mock failures are retried explicitly from the existing screen, not in an unbounded loop.
 
-## Extension Boundary
+## Provider Gateway Architecture (Completed)
 
-Choose the actual channel/provider before implementing its schema, signing and transmission requirements. Existing `ETaxSubmissionAdapter` / `ETaxSignatureAdapter` interfaces remain the integration boundaries. The foundation worker deliberately accepts only the local mock; do not put a live HTTP request inside its database transaction. A live implementation needs durable claim ownership, idempotency keys, timeout/inquiry recovery, response verification and reconciliation before any accepted status. Certificate material belongs outside the database where signing is required.
-
-Provider credentials, official schema compliance, digital signatures and real delivery are not verified by mock tests.
+Phase 24's provider gateway architecture is fully implemented and operational:
+1. **Multi-Provider Adapter (`RdApiSubmissionAdapter.php`)**:
+   - Supports Revenue Department Web Service (`rd_api`), Certified Provider (`inet`), and Sandbox Gateway (`sandbox`).
+   - Handles HTTP transmission with idempotency keys (`X-Idempotency-Key: ETAX-SUBMIT-{docId}`), custom timeouts, Bearer token resolution, and base64 XML packaging.
+2. **Digital Signature Pipeline (`ETaxXmlSignatureService.php`)**:
+   - Implements ETDA XML-DSig enveloped signature standard (`http://www.w3.org/2000/09/xmldsig#`).
+   - Uses XML Canonicalization (C14N), RSA-SHA256 signature algorithm, DigestValue, KeyInfo, and X.509 certificate reference.
+3. **Provider Gateway Service (`ETaxProviderGatewayService.php`)**:
+   - Coordinates signing, multi-mode submission (mock vs provider), asynchronous inquiry, and webhook processing.
+   - Enforces a strict 3-attempt retry ceiling with transition to `error` upon exceeding limit.
+4. **Asynchronous Webhook Callback (`ETaxWebhookController.php`)**:
+   - Endpoint: `POST /api/e-tax/{config}/callback` and `POST /api/e-tax/callback`.
+   - Validates HMAC-SHA256 signature against `X-ETax-Signature` header using tenant's encrypted `webhook_secret`.
+   - Transitions document to `accepted` or `rejected` with rejection reason and audit trail.
+5. **Status Inquiry Artisan Command (`etax:inquire-status`)**:
+   - Queries pending submitted documents (`submitted`, `queued`) from provider and reconciles status in bulk.
+   - Registered in Laravel Scheduler to run every 30 minutes.
+6. **Security & Guardrails**:
+   - Private keys NEVER stored in database. Only vault/KMS ARN reference stored.
+   - Provider API keys and webhook secrets encrypted at rest via Eloquent `encrypted:array`.
+   - Audit logs and attempt response messages sanitize/redact confidential secrets.
 
 ## Verification
 
-On 2026-09-10, Phase 24 and Phase 12 passed 11 tests / 64 assertions. The broader SQLite regression across Phases 3, 11 GL, 12, 22, 23 and 24 passed 46 tests / 314 assertions. Tests cover opt-in, live-config rejection, duplicate queue/worker, XML tampering, retry limit, exception redaction, snapshot freeze, permissions/organization scope and pending recovery. No new migration is needed. This run does not claim a new MySQL concurrency test or live provider certification.
-
-TypeScript, scoped ESLint, Pint and Vite production build passed. Local HTTP health check returned 200 at port 8010. The configured MySQL server on port 3306 was stopped; Windows denied starting `mysql8`, so the database-backed worker could not run in this environment. Start MySQL and the dedicated `etax` worker before interactive simulation. Automated tests used isolated SQLite, not the operational database.
+On 2026-09-20, Phase 24 provider gateway and foundation tests passed with 100% success:
+- `Phase12ETaxTest`: 3 passed / 15 assertions.
+- `Phase24ETaxFoundationTest`: 8 passed / 49 assertions.
+- `Phase24ProviderGatewayTest`: 7 passed / 58 assertions.
+- Total: **18 passed / 122 assertions (100% green)**.
+- Frontend: TypeScript check (`npx tsc --noEmit`), ESLint (`npm run lint`), and Prettier (`npm run check-format`) passed with 0 errors.

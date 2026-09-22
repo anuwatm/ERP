@@ -1,0 +1,28 @@
+# Setup Wizard สำหรับติดตั้งบน Web Server
+
+Wizard อยู่ที่ `backend/setup/` และ public entry อยู่ที่ `backend/public/setup/index.php`. หลัง deploy ให้เปิด `/setup`.
+
+## Deployment bundle
+
+ต้อง copy ทั้ง `backend/vendor/`, `backend/public/build/`, `backend/setup/`, `backend/public/setup/` และ `setup/` พร้อม source/migrations. Server ไม่ต้องมี Composer หรือ Node แต่ต้องมี PHP 8.3+, PDO MySQL, OpenSSL, mbstring, fileinfo และสิทธิ์เขียน `backend/.env`, `backend/storage/`, `backend/bootstrap/cache/`.
+
+## เปิด installer
+
+เลือกอย่างใดอย่างหนึ่ง:
+
+1. แนะนำ: ตั้ง `SETUP_TOKEN` ที่ web-server environment เป็น random token อย่างน้อย 32 ตัวอักษร
+2. สำหรับ host ที่ตั้ง environment ไม่ได้: copy `backend/setup/enable.php.example` เป็น `backend/setup/enable.php` แล้วเปลี่ยน token
+
+`enable.php` ถูกลบหลังติดตั้งสำเร็จ. ทั้ง `enable.php` และ `backend/setup/` ถูกปิดจาก direct web access ใน Apache; ห้าม commit ไฟล์นี้.
+
+## การทำงานของ wizard
+
+ก่อนติดตั้ง เปิด `/setup/system-requirements.php` เพื่อตรวจ PHP version, extensions, memory/upload limits, directory permissions และ build assets ได้ หน้านี้ต้องใช้ `SETUP_TOKEN`, ไม่แสดงค่าลับหรือ `phpinfo()` และตรวจ database credential ในขั้นตอนที่ 3 ของ wizard.
+
+1. ตรวจ PHP, extensions, writable directories, `vendor/` และ `public/build/`
+2. ตรวจ setup token
+3. รับและทดสอบ database connection
+4. รับ Organization และ Owner
+5. สร้าง `.env`/`APP_KEY`, clear config cache, migrate เฉพาะ database ที่ยังไม่มี migration, provision roles/permissions/Owner และเขียน install lock
+
+หลังสำเร็จ lock อยู่ที่ `storage/app/installer/installed.json`; `/setup` จะตอบ 404 และไม่สามารถ run migration ซ้ำจาก web ได้. Wizard ไม่ seed demo data และไม่อนุญาตใช้ database ที่มีตาราง `migrations` อยู่แล้ว. Wizard ปฏิเสธ release directory ที่มี `.env` อยู่แล้ว เพื่อไม่เขียนทับระบบเดิม; การ upgrade ใช้ deployment runbook/CLI แยกต่างหากหลัง backup.

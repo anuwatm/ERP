@@ -59,7 +59,7 @@ class Phase24ETaxFoundationTest extends TestCase
         [$user, $invoice, $document, $config] = $this->scenario();
         $config->update(['mode' => 'disabled']);
         $this->post(route('e-tax.documents.submit', $document))->assertUnprocessable();
-        $this->patch(route('e-tax.config.update'), ['mode' => 'provider', 'provider_code' => 'arbitrary', 'signature_mode' => 'external'])->assertSessionHasErrors('mode');
+        $this->patch(route('e-tax.config.update'), ['mode' => 'invalid_mode', 'provider_code' => 'arbitrary', 'signature_mode' => 'external'])->assertSessionHasErrors('mode');
         $this->assertSame('disabled', $config->fresh()->mode);
         $this->patch(route('e-tax.config.update'), ['mode' => 'mock', 'signature_mode' => 'external'])->assertSessionHasNoErrors();
         $this->assertSame('mock', $config->fresh()->mode);

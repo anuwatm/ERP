@@ -73,7 +73,16 @@ export default function PortalDashboard({
     documents: PortalDocument[];
     purchaseOrders: PurchaseOrder[];
     payables?: Payable[];
-    pages: Record<string, { total: number; current: number; last: number; previous: string | null; next: string | null }>;
+    pages: Record<
+        string,
+        {
+            total: number;
+            current: number;
+            last: number;
+            previous: string | null;
+            next: string | null;
+        }
+    >;
     openInvoiceCount: number;
 }) {
     const [vendorBillDialogOpen, setVendorBillDialogOpen] = useState(false);
@@ -136,17 +145,55 @@ export default function PortalDashboard({
                             Sign out
                         </button>
                     </header>
-                    <nav aria-label="Document pagination" className="flex flex-wrap gap-4 text-sm">
-                        {Object.entries(pages).filter(([, page]) => page.last > 1).map(([key, page]) => {
-                            const label = ({ quotations: 'Quotations', invoices: 'Invoices', submissions: 'Submitted bills', purchaseOrders: 'Purchase orders', payables: 'Payables', documents: 'Documents' } as Record<string, string>)[key];
-                            return <div key={key} className="rounded-lg border border-slate-200 bg-white p-3">
-                                <p>{label}: page {page.current} of {page.last} · {page.total} records</p>
-                                <div className="mt-2 flex gap-4">
-                                    {page.previous && <Link href={page.previous} aria-label={`Previous ${label} page`} className="text-indigo-700 underline">Previous</Link>}
-                                    {page.next && <Link href={page.next} aria-label={`Next ${label} page`} className="text-indigo-700 underline">Next</Link>}
-                                </div>
-                            </div>;
-                        })}
+                    <nav
+                        aria-label="Document pagination"
+                        className="flex flex-wrap gap-4 text-sm"
+                    >
+                        {Object.entries(pages)
+                            .filter(([, page]) => page.last > 1)
+                            .map(([key, page]) => {
+                                const label = (
+                                    {
+                                        quotations: 'Quotations',
+                                        invoices: 'Invoices',
+                                        submissions: 'Submitted bills',
+                                        purchaseOrders: 'Purchase orders',
+                                        payables: 'Payables',
+                                        documents: 'Documents',
+                                    } as Record<string, string>
+                                )[key];
+                                return (
+                                    <div
+                                        key={key}
+                                        className="rounded-lg border border-slate-200 bg-white p-3"
+                                    >
+                                        <p>
+                                            {label}: page {page.current} of{' '}
+                                            {page.last} · {page.total} records
+                                        </p>
+                                        <div className="mt-2 flex gap-4">
+                                            {page.previous && (
+                                                <Link
+                                                    href={page.previous}
+                                                    aria-label={`Previous ${label} page`}
+                                                    className="text-indigo-700 underline"
+                                                >
+                                                    Previous
+                                                </Link>
+                                            )}
+                                            {page.next && (
+                                                <Link
+                                                    href={page.next}
+                                                    aria-label={`Next ${label} page`}
+                                                    className="text-indigo-700 underline"
+                                                >
+                                                    Next
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                     </nav>
                     <nav
                         aria-label="Portal summary"
