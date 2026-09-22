@@ -26,8 +26,13 @@
 | **14** | [Approval Workflow Instance Lifecycle](#14-approval-workflow-instance-lifecycle) | Lifecycle | [`14_approval_workflow_engine.html`](./14_approval_workflow_engine.html) | [`specs/14_approval_workflow_engine.json`](./specs/14_approval_workflow_engine.json) |
 | **15** | [PromptPay Thai QR & Payment Gateway Settlement Flow](#15-promptpay-thai-qr--payment-gateway-settlement-flow) | Sequence | [`15_payment_gateway_settlement.html`](./15_payment_gateway_settlement.html) | [`specs/15_payment_gateway_settlement.json`](./specs/15_payment_gateway_settlement.json) |
 | **16** | [Master Dialog Standard & Editor Lifecycle](#16-master-dialog-standard--editor-lifecycle) | Lifecycle | [`16_master_dialog_editor_lifecycle.html`](./16_master_dialog_editor_lifecycle.html) | [`specs/16_master_dialog_editor_lifecycle.json`](./specs/16_master_dialog_editor_lifecycle.json) |
-| **17** | [HR Employee, Attendance & Payroll Integration](./17_hr_employee_attendance_payroll.md) | Workflow / dataflow | [`17_hr_employee_attendance_payroll.md`](./17_hr_employee_attendance_payroll.md) | — |
-| **All** | [Full Database ER Diagram (61+ Tables)](#17-full-database-er-diagram-61-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
+| **17** | [HR Employee, Attendance & Payroll Integration](#17-hr-employee-attendance--payroll-integration) | Workflow / Dataflow | [`17_hr_employee_attendance_payroll.md`](./17_hr_employee_attendance_payroll.md) | — |
+| **18** | [e-Tax Invoice & RD Prep Gateway Architecture](#18-e-tax-invoice--rd-prep-gateway-architecture) | Sequence / Architecture | [`18_etax_gateway_pipeline.md`](./18_etax_gateway_pipeline.md) | — |
+| **19** | [Cash Flow Forecasting & Financial Health Analytics](#19-cash-flow-forecasting--financial-health-analytics) | Workflow / Analytics | [`19_cash_flow_forecasting_engine.md`](./19_cash_flow_forecasting_engine.md) | — |
+| **20** | [AI OCR Document Ingestion](#20-ai-ocr-document-ingestion) | Sequence / Architecture | [`20_ai_ocr_document_ingestion.md`](./20_ai_ocr_document_ingestion.md) | — |
+| **21** | [Web Setup Wizard Architecture & Installer Lifecycle](#21-web-setup-wizard-architecture--installer-lifecycle) | Lifecycle / Security | [`21_setup_wizard_installer_lifecycle.md`](./21_setup_wizard_installer_lifecycle.md) | — |
+| **All** | [Full Database ER Diagram (70+ Tables)](#22-full-database-er-diagram-70-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
+| **Groups** | [6 Domain Group Workflows (31 Modules)](#23-6-domain-group-workflows-31-modules) | Group Workflows | [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md) | — |
 
 ---
 
@@ -486,9 +491,238 @@ stateDiagram-v2
 
 ---
 
-### 17. Full Database ER Diagram (61+ Tables)
+### 17. HR Employee, Attendance & Payroll Integration
+- **ไฟล์เอกสาร:** [`17_hr_employee_attendance_payroll.md`](./17_hr_employee_attendance_payroll.md)
+- **วัตถุประสงค์:** สถาปัตยกรรม HR บุคลากร, ระบบตารางกะ (Shift Roster), นำเข้าเวลาทำงาน (Excel / CSV / Self-Punch), และการคำนวณเงินเดือนสำหรับพนักงานทั้งที่มีและไม่มีบัญชีผู้ใช้ระบบ (Non-User Employees) พร้อมจัดส่ง Payslip PDF ทางอีเมลส่วนตัว
+- **Mermaid Preview:**
+
+```mermaid
+flowchart LR
+    subgraph MasterData["Master Data & Personnel"]
+        Position["Position Master\npositions table"] --> Employee["Employee Master\nDecoupled from User (AES-256)"]
+        BulkImport["Bulk Employee Import\nExcel/CSV/TSV Service"] --> Employee
+        BulkImport -. Auto-create .-> Position
+    end
+
+    subgraph ShiftRoster["Shift Scheduling"]
+        Shift["Shift Master\nGrace / 1.5x, 2x, 3x OT Rates"] --> Roster["Shift Roster Matrix\nDaily / Monthly Schedules"]
+        Employee --> Roster
+    end
+
+    subgraph TimeTracking["Time Tracking & Intake"]
+        CSVLog["CSV / TSV Import"] --> RawLogs[("attendance_raw_logs")]
+        ExcelLog["Excel Import\n.xlsx / .xls / .xml"] --> RawLogs
+        SelfPunch["Self-service Clock-in\nSHA-256 IP / Opt-in GPS"] --> RawLogs
+    end
+
+    subgraph ReconEngine["Reconciliation Engine"]
+        RawLogs --> Recon["Attendance Reconciliation\nOvernight Shifts & Late Deduction"]
+        Roster --> Recon
+        Recon --> Attendances["attendances\nWorked / Late / OT Hours"]
+    end
+
+    subgraph PayrollSettlement["Payroll & Settlement Bridge"]
+        Attendances --> Summary["Locked Attendance Summary"]
+        Summary --> PayrollItems["payroll_items\nDaily / Hourly / Monthly"]
+        Shift -. Multi-rate OT .-> PayrollItems
+        PayrollItems --> PayrollRun["Payroll Run Approval"]
+        PayrollRun --> Payslip["Payslip PDF & PayslipMail\nDirect Email for Non-User"]
+        PayrollRun --> GL["Double-Entry GL Posting\n2140 Payroll Payable"]
+    end
+```
+
+---
+
+### 18. e-Tax Invoice & RD Prep Gateway Architecture
+- **ไฟล์เอกสาร:** [`18_etax_gateway_pipeline.md`](./18_etax_gateway_pipeline.md)
+- **วัตถุประสงค์:** ไปป์ไลน์จัดเตรียมและนำส่งใบกำกับภาษีอิเล็กทรอนิกส์ e-Tax Invoice / Credit Note ตามมาตรฐาน ETDA พร้อม Enveloped XML-DSig Signature (RSA-SHA256), Queue Worker อัตโนมัติ, Webhook Callback (HMAC-SHA256) และ Cron Inquire Status ทุก 30 นาที
+- **Mermaid Preview:**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Staff as Finance Staff
+    participant System as ERP Invoicing Module
+    participant ETaxAdapter as RdApiSubmissionAdapter
+    participant SignEngine as ETaxXmlSignatureService
+    participant Queue as Queue Worker (SubmitETaxDocument)
+    participant Gateway as Certified Gateway / RD API
+    participant Webhook as ETaxWebhookController
+    participant Artisan as artisan etax:inquire-status
+
+    Staff->>System: สั่งสร้าง e-Tax (Tax Invoice / Credit Note)
+    System->>System: ตรวจสอบข้อมูลผู้ซื้อ/ผู้ขาย & Tax ID 13 หลัก
+    System->>SignEngine: สร้าง ETDA XML มาตรฐาน & ส่งข้อมูล Sign
+    Note over SignEngine: XML Canonicalization (C14N)<br/>RSA-SHA256 DigestValue<br/>X.509 KeyInfo Reference
+    SignEngine-->>System: คืนค่า Enveloped XML-DSig Signed XML
+    System->>System: บันทึก etax_documents (สถานะ: signed)
+    
+    alt โหมด Mock / Manual Export
+        System-->>Staff: ดาวน์โหลด Signed XML / PDF e-Tax ทันที
+    else โหมด Live Provider Gateway
+        System->>Queue: Push Job SubmitETaxDocument (Queue: etax)
+        Queue->>ETaxAdapter: ประมวลผลส่งผ่าน Gateway Adapter
+        ETaxAdapter->>Gateway: POST /api/v1/etax/submit (Base64 Encoded XML)
+        Gateway-->>ETaxAdapter: ตอบกลับ HTTP 202 Accepted + Submission UID
+        ETaxAdapter->>System: อัปเดตสถานะ etax_documents เป็น submitted
+        
+        par Webhook Callback
+            Gateway->>Webhook: POST /api/e-tax/{config}/callback (HMAC-SHA256)
+            Webhook->>Webhook: ตรวจสอบ X-ETax-Signature & Multi-tenant Scope
+            Webhook->>System: อัปเดตสถานะเอกสารเป็น accepted หรือ rejected
+        and Async Scheduled Inquiry
+            Artisan->>Gateway: GET /api/v1/etax/status/{uid} (ทุก 30 นาที)
+            Gateway-->>Artisan: คืนสถานะเอกสารทางการจากกรมสรรพากร
+            Artisan->>System: ซิงค์สถานะและเลขรับเอกสารทางการ RD Code
+        end
+    end
+```
+
+---
+
+### 19. Cash Flow Forecasting & Financial Health Analytics
+- **ไฟล์เอกสาร:** [`19_cash_flow_forecasting_engine.md`](./19_cash_flow_forecasting_engine.md)
+- **วัตถุประสงค์:** เอนจินวิเคราะห์กระแสเงินสดล่วงหน้า 30-180 วัน จำลอง 3 สถานการณ์ (Base, Best, Worst Scenario) พร้อมการวิเคราะห์อัตราส่วนสภาพคล่อง (CR, QR, DSO, DPO, Runway) และบันทึก Snapshot รายวันอัตโนมัติ
+- **Mermaid Preview:**
+
+```mermaid
+flowchart TD
+    subgraph DataSources["Financial Inflow & Outflow Sources"]
+        AR["AR Due Dates\nCustomer Invoices"]
+        Deals["Sales Pipeline\nWeighted by Deal Probability"]
+        AP["AP Approved Expenses\nVendor Invoices"]
+        PO["Open Purchase Orders\nCommitted Costs"]
+        Payroll["Recurring Monthly Payroll\nDay 25 Scheduled Run"]
+    end
+
+    subgraph ForecastEngine["CashFlowForecastService (30 - 180 Days Horizon)"]
+        InflowCalc["Inflow Calculation Engine\nAR Cash + Deal Upside Factor"]
+        OutflowCalc["Outflow Calculation Engine\nCommitted AP + PO + Payroll Buffer"]
+        
+        Scenarios["3 Simulation Scenarios\nforecast_scenarios"]
+        Base["Base Scenario\nNormal Business Operations"]
+        Best["Best Scenario\nHigh Deal Win Rate + Faster AR"]
+        Worst["Worst Scenario\nCollection Delays + Cost Overruns"]
+        
+        Scenarios --> Base & Best & Worst
+        AR & Deals --> InflowCalc
+        AP & PO & Payroll --> OutflowCalc
+        
+        InflowCalc & OutflowCalc --> SimulationEngine["Trajectory Projection Engine\nDay-by-Day Balance Simulation"]
+        Base & Best & Worst --> SimulationEngine
+    end
+
+    subgraph HealthAnalytics["Financial Health & Liquidity Ratios"]
+        CR["Current Ratio\nCurrent Assets / Liabilities (>= 1.5x)"]
+        QR["Quick Ratio\n(Cash + AR) / Liabilities (>= 1.0x)"]
+        DSO["Days Sales Outstanding\n90 Days Sales Velocity"]
+        DPO["Days Payable Outstanding\n90 Days Expense Velocity"]
+        Runway["Working Capital Runway\nMonths before Zero Cash"]
+    end
+
+    subgraph Outputs["Visualization & Daily Automation"]
+        SVGChart["Interactive SVG Trajectory Curve\nLowest Cash Point & Zero-line Alarm"]
+        KPIBadge["Executive StatCards & Badges\nHealth Scores & Comparison Cards"]
+        ArtisanCron["Artisan Scheduler\nphp artisan cashflow:snapshot (Daily 02:00)"]
+        SnapshotDB[("cash_flow_forecast_snapshots\nfinancial_metric_logs")]
+    end
+```
+
+---
+
+### 20. AI OCR Document Ingestion
+- **ไฟล์เอกสาร:** [`20_ai_ocr_document_ingestion.md`](./20_ai_ocr_document_ingestion.md)
+- **วัตถุประสงค์:** สถาปัตยกรรมสกัดข้อมูลใบเสร็จและใบแจ้งหนี้ด้วย Universal Vision Hub (Local Ollama / Cloud GPT), PDF JPEG extraction, ตรวจสอบเลขประจำตัวผู้เสียภาษี 13 หลักตามสูตร Modulo 11, และหน้าจอ Split-Screen Human Reviewer ยืนยันก่อนแปลงเป็น Draft Expense (ห้าม Auto-GL)
+- **Mermaid Preview:**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Accounting Staff
+    participant UI as OcrReviewer.tsx (Split-Screen)
+    participant Ctrl as OcrDocumentController
+    participant Preprocess as Image & PDF Pre-processor
+    participant AIHub as Universal OpenAI-Compatible Vision Hub
+    participant Validator as ExtractionValidator & MathReconciler
+    participant DMS as Central DMS Repository
+    participant Expense as Expense/Bill Module (Draft Only)
+
+    User->>UI: อัปโหลดรูปภาพใบเสร็จ / PDF สแกน
+    UI->>Ctrl: POST /finance/ocr/upload (Multipart file)
+    Ctrl->>Preprocess: ตรวจสอบ MIME & Format
+    
+    alt เป็นไฟล์ Scanned PDF
+        Preprocess->>Preprocess: สกัด JPEG Stream ด้วย extractJpegFromPdf()
+    else เป็นไฟล์ภาพ (JPEG, PNG, WEBP)
+        Preprocess->>Preprocess: จัดเตรียม High-Detail Tile Buffer
+    end
+    
+    Ctrl->>AIHub: ส่ง Vision Request พร้อม Base64 Payload
+    Note over AIHub: รองรับทั้ง Local AI (Ollama qwen2.5-vl)<br/>และ Cloud Hubs (GPT-4o, Gemini, OpenRouter)<br/>บังคับ Native JSON Mode & max_tokens
+    AIHub-->>Ctrl: ส่งคืน Structured JSON Object
+    
+    Ctrl->>Validator: ตรวจสอบความถูกต้องและกระทบยอดตัวเลข
+    Note over Validator: 1. Thai Tax ID 13 หลัก (Modulo 11 Check)<br/>2. Math: Subtotal + VAT - WHT == Total Amount<br/>3. คำนวณค่า Confidence Score
+    Validator-->>Ctrl: ผลการตรวจสอบและ Flag (math_mismatch, tax_id_valid)
+    
+    Ctrl->>DMS: จัดเก็บไฟล์เอกสารต้นฉบับลง DMS (Protected Tenant Path)
+    Ctrl-->>UI: ส่งข้อมูลกลับแสดงผลในหน้า Split-Screen Reviewer
+    
+    User->>UI: ตรวจสอบเปรียบเทียบภาพต้นฉบับทางซ้าย กับฟอร์มแก้ไขทางขวา
+    User->>UI: กดยืนยัน "Convert to Expense"
+    UI->>Ctrl: POST /finance/ocr/{id}/convert
+    Ctrl->>Expense: สร้าง Draft Expense ในระบบ (Assisted Draft Flow)
+    Note over Expense: 🔒 Human-in-the-Loop Guard:<br/>ห้าม Auto-post ลงบัญชีแยกประเภท (GL)<br/>ต้องผ่านการอนุมัติก่อนเสมอ
+    Expense-->>UI: Redirect ไปยังหน้ารายละเอียด Expense
+```
+
+---
+
+### 21. Web Setup Wizard Architecture & Installer Lifecycle
+- **ไฟล์เอกสาร:** [`21_setup_wizard_installer_lifecycle.md`](./21_setup_wizard_installer_lifecycle.md)
+- **วัตถุประสงค์:** วงจรการติดตั้งระบบผ่านเว็บวิซาร์ด (Setup Wizard 4 ขั้นตอน), การตรวจสอบความปลอดภัยล่วงหน้า (Preflight Check & Clean Release), การเขียน `.env` แบบ Atomic ด้วย File Lock (`install.lock`), การรัน Migration 58 ไฟล์, การสร้าง Owner Account พร้อม Master Data และการล็อกการเข้าถึงถาวรด้วย `installed.json`
+- **Mermaid Preview:**
+
+```mermaid
+flowchart TD
+    subgraph AccessGuard["1. Security Gate & Entry Points"]
+        Req["Request: GET /setup"] --> CheckInstalled{"Is Installed?\nstorage/app/installer/installed.json"}
+        CheckInstalled -- "Yes (Locked)" --> Resp404["HTTP 404 Not Found\nInstallation Closed"]
+        CheckInstalled -- "No" --> CheckToken{"Is Enabled?\nactivationToken() !== null"}
+        CheckToken -- "No" --> Resp403["HTTP 403 Forbidden\nInstaller is disabled"]
+        CheckToken -- "Yes" --> WizardUI["Setup Wizard Steps (1-4)"]
+        
+        TokenSource["Activation Token (>= 32 chars)\n1. Server Env: SETUP_TOKEN\n2. File: backend/setup/enable.php"] -.-> CheckToken
+    end
+
+    subgraph StepFlow["2. Multi-Step Wizard Flow"]
+        WizardUI --> Step1["Step 1: Security & Preflight\n• PHP 8.3+, PDO MySQL, OpenSSL, mbstring\n• Writable: storage/, bootstrap/cache/, root\n• Clean Release: ! is_file(.env)\n• Verify Setup Token (hash_equals)"]
+        Step1 --> Step2["Step 2: Server & Database\n• App Name & App URL (http/https)\n• Host, Port (1-65535), DB Name, Username\n• Test Connection: PDO SELECT 1"]
+        Step2 --> Step3["Step 3: Organization & Owner\n• Org Name, Legal Name, Tax ID\n• Owner Name, Email\n• Owner Password (>= 12 chars)"]
+        Step3 --> Step4["Step 4: Install Confirmation\n• Type 'INSTALL' to confirm execution"]
+    end
+
+    subgraph InstallEngine["3. Installer Execution Engine (Flock Lock)"]
+        Step4 --> Lock["Acquire File Lock (install.lock)\nPrevent Concurrent Execution"]
+        Lock --> EmptyCheck{"Check Target Database\nSHOW TABLES LIKE 'migrations'"}
+        EmptyCheck -- "Migrations Found" --> AbortDB["Abort: Refusing to overwrite DB"]
+        EmptyCheck -- "Empty DB" --> WriteEnv["Write .env Atomically\n• Clone .env.example\n• Generate random 32-byte APP_KEY\n• Set chmod 0600\n• Clear config/services cache"]
+        
+        WriteEnv --> RunMigrate["Run Database Migrations\nArtisan migrate --force"]
+        RunMigrate --> Provision["Provision Owner & Master Data\n• OrganizationProvisioner::registerOwner()\n• Seed 7 System Roles & Permissions Catalog\n• Branch, Division, Department, Sequences"]
+        
+        Provision --> WriteLock["Write Install Lock\nstorage/app/installer/installed.json"]
+        WriteLock --> Cleanup["Cleanup Activation File\n@unlink(backend/setup/enable.php)"]
+        Cleanup --> Unlock["Release File Lock (install.lock)"]
+        Unlock --> SuccessRedirect["Redirect: /login?installed=1\nRegenerate Session"]
+    end
+```
+
+---
+
+### 22. Full Database ER Diagram (70+ Tables)
 - **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
-- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ทั้ง 61+ ตาราง ครอบคลุม 17 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, กฎ Multi-Tenancy Scoping (`org_id`), และระบบป้องกันส่งซ้ำ `form_submissions`
+- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ 70+ ตาราง ครอบคลุม 21 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, กฎ Multi-Tenancy Scoping (`org_id`), และระบบป้องกันส่งซ้ำ `form_submissions`
 - **Mermaid Preview (Master Cross-Domain):**
 
 ```mermaid
@@ -508,6 +742,12 @@ erDiagram
     SUPPLIERS ||--o{ PURCHASE_ORDERS : "1:N"
     WAREHOUSES ||--o{ WAREHOUSE_BINS : "1:N"
     WAREHOUSES ||--o{ STOCK_MOVEMENTS : "1:N"
+    ORGANIZATIONS ||--o{ POSITIONS : "1:N (Phase 23.3)"
+    ORGANIZATIONS ||--o{ EMPLOYEES : "1:N (Phase 23.3)"
+    POSITIONS ||--o{ EMPLOYEES : "1:N"
+    EMPLOYEES ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "1:N"
+    SHIFT_TEMPLATES ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "1:N"
+    EMPLOYEES ||--o{ ATTENDANCES : "1:N"
     USERS ||--o| EMPLOYEE_PAYROLL_PROFILES : "0..1:1"
     PAYROLL_RUNS ||--o{ PAYROLL_ITEMS : "1:N"
     ORGANIZATIONS ||--o{ DOCUMENTS : "1:N"
@@ -526,13 +766,22 @@ erDiagram
     ORGANIZATIONS ||--o| PAYMENT_GATEWAY_CONFIGS : "1:1"
     PAYMENT_GATEWAY_CONFIGS ||--o{ GATEWAY_TRANSACTIONS : "1:N"
     PAYMENT_GATEWAY_CONFIGS ||--o{ WEBHOOK_EVENTS : "1:N"
+    ORGANIZATIONS ||--o| ETAX_CONFIGURATIONS : "1:1 (Phase 24)"
+    ETAX_CONFIGURATIONS ||--o{ ETAX_DOCUMENTS : "1:N"
+    ETAX_DOCUMENTS ||--o{ ETAX_SUBMISSION_ATTEMPTS : "1:N"
+    ORGANIZATIONS ||--o{ FORECAST_SCENARIOS : "1:N (Phase 25)"
+    ORGANIZATIONS ||--o{ CASH_FLOW_FORECAST_SNAPSHOTS : "1:N"
+    ORGANIZATIONS ||--o{ FINANCIAL_METRIC_LOGS : "1:N"
+    ORGANIZATIONS ||--o| AI_CONFIGURATIONS : "1:1 (Phase 26)"
+    ORGANIZATIONS ||--o{ OCR_EXTRACTIONS : "1:N"
+    OCR_EXTRACTIONS ||--o{ OCR_FIELD_RESULTS : "1:N"
 ```
 
 ---
 
-### 18. 6 Domain Group Workflows (31 Modules)
+### 23. 6 Domain Group Workflows (31 Modules)
 - **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
-- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล (รวม 24 Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
+- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล พร้อมส่วนต่อขยาย Phase 23.2-26 และ Setup Wizard (รวม 25+ Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
 - **Mermaid Preview (Inter-Group Interaction):**
 
 ```mermaid

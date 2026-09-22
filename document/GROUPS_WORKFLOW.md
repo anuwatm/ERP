@@ -1,6 +1,6 @@
-# คู่มือและผังการทำงาน 6 กลุ่มโมดูลหลัก (Domain Group Workflows — 31 Modules)
+# คู่มือและผังการทำงาน 7 กลุ่มโมดูลหลัก (Domain Group Workflows — 35 Modules)
 
-เอกสารนี้รวบรวม **Diagram ผังการทำงาน, วงจรสถานะ (Lifecycle), และลำดับการทำงาน (Sequence)** ของทั้ง **6 กลุ่มงานหลัก ครอบคลุม 31 โมดูลทั้งหมด** ของระบบ Company OS / Lightweight ERP พร้อมคำอธิบายภาษาไทยอย่างละเอียดในทุกขั้นตอน
+เอกสารนี้รวบรวม **Diagram ผังการทำงาน, วงจรสถานะ (Lifecycle), และลำดับการทำงาน (Sequence)** ของทั้ง **7 กลุ่มงานหลัก ครอบคลุม 35 โมดูลทั้งหมด** ของระบบ Company OS / Lightweight ERP พร้อมคำอธิบายภาษาไทยอย่างละเอียดในทุกขั้นตอน ครอบคลุมทั้ง Position Master, Bulk Import, Overnight Shifts, 1.5x/2x/3x OT Rates, e-Tax Gateway, Cash Flow Forecasting, AI OCR Ingestion และ Setup Wizard
 
 ---
 
@@ -13,7 +13,8 @@
 | **Group 3** | [Project Delivery & Execution](#group-3-project-delivery--execution-โมดูล-09-11) | `09-11` (Projects, Tasks, Milestones) | 3 | แปลง Deal สู่ Project &rarr; จ่ายงาน Tasks &rarr; ตรวจรับ Milestones |
 | **Group 4** | [Finance, Billing & Cost Control](#group-4-finance-billing--cost-control-โมดูล-12-16) | `12-16` (Products, Suppliers, Invoices, Payments, Expenses, Assets, FX, E-Tax) | 5 | ออกบิล &rarr; รับเงิน (Anti-Overpay) &rarr; รายจ่าย &rarr; Treasury/GL &rarr; สินทรัพย์, FX, e-Tax |
 | **Group 5** | [Insights, Platform & Automation](#group-5-insights-platform--automation-โมดูล-17-23) | `17-23` (Dashboard, Reports, Files, Notifications, Automation, DMS, Outbox) | 5 | Event Trigger, Dashboard, ระบบไฟล์แนบ, DMS Lifecycle และ Notification Outbox |
-| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-23) | `24-31` (PO, Inventory/Lots, Payroll, Accounting, Workflows, Portal, Gateway, Dialog Standard) | 7 | จัดซื้อ, สต็อก/Lot, เงินเดือน, Central Workflow, Customer/Supplier Portal, Gateway Settlement, และ Master Dialog Standard |
+| **Group 6** | [Operations & Advanced Extensions](#group-6-operations--advanced-extensions-phase-7-23) | `24-31` (PO, Inventory/Lots, Payroll, Accounting, Workflows, Portal, Gateway, Dialog Standard) | 7 | จัดซื้อ, สต็อก/Lot, ทะเบียนพนักงาน/ตำแหน่งงาน, บันทึกเวลาข้ามวัน/OT 3 อัตรา, เงินเดือน, Central Workflow, Customer/Supplier Portal, Gateway Settlement, และ Master Dialog Standard |
+| **Group 7** | [Intelligent Automation, Compliance & Deployment](#group-7-intelligent-automation-compliance--system-deployment-phase-24-26--setup-wizard) | `32-35` (e-Tax Gateway, Cash Flow Forecasting, AI OCR Ingestion, Web Setup Wizard) | 4 | นำส่งภาษีอิเล็กทรอนิกส์ ETDA/RD, คาดการณ์กระแสเงินสด 3 สถานการณ์, สกัดข้อมูลใบเสร็จ AI Vision (No Auto-GL), และตัวติดตั้งระบบ Web Setup Wizard |
 
 ---
 
@@ -50,13 +51,25 @@ flowchart LR
         Auto["Automation & Notify"]
     end
 
-    subgraph G6 ["Group 6: Operations & Extensions (Phase 7-18)"]
+    subgraph G6 ["Group 6: Operations & Extensions"]
         Stock["PO & Inventory"]
-        HR["HR & Payroll"]
+        HR["HR & Payroll (Decoupled)"]
         Ext["External Accounting"]
     end
 
+    subgraph G7 ["Group 7: Intelligence, Compliance & Setup"]
+        ETax["e-Tax Gateway (XML-DSig)"]
+        CashFlow["Cash Flow Forecasting"]
+        OCR["AI OCR Document Ingestion"]
+        Installer["Web Setup Wizard"]
+    end
+
     %% Flow connections
+    Installer -. Initial Provision .-> Org
+    Invoice -. Generate & Submit .-> ETax
+    Payment -. Cash Inflow .-> CashFlow
+    Expense -. Cash Outflow .-> CashFlow
+    OCR -. Human-Verified Draft .-> Expense
     Org --> Customer
     RBAC --> Customer
     Customer --> Deal --> Quote
@@ -992,6 +1005,177 @@ sequenceDiagram
     Dialog->>Page: 15. Trigger refreshData() รีเฟรชตารางข้อมูล
     Coord->>Dialog: 16. ปิด Dialog (close())
     Dialog-->>User: แสดง Toast แจ้งเตือน "บันทึกข้อมูลเรียบร้อย"
+```
+
+---
+
+## Group 7: Intelligent Automation, Compliance & System Deployment (Phase 24-26 & Setup Wizard)
+**โมดูลที่เกี่ยวข้อง:** `32-etax-gateway`, `33-cash-flow-forecasting`, `34-ai-ocr-document-ingestion`, `35-web-setup-wizard`
+
+### 7.1 Diagram: e-Tax Invoice & RD Prep Gateway Pipeline (Phase 24)
+กระบวนการจัดเตรียมและนำส่งใบกำกับภาษีอิเล็กทรอนิกส์ e-Tax Invoice / Credit Note ตามมาตรฐาน ETDA พร้อมการลงลายมือชื่อดิจิทัล Enveloped XML-DSig Signature (RSA-SHA256), คิวประมวลผลแบ็กกราวด์, เว็บบุ๊กรับผลยืนยันจาก Certified Provider/RD API (HMAC-SHA256) และ Cron Inquire Status ทุก 30 นาที
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Staff as เจ้าหน้าที่การเงิน
+    participant System as โมดูลใบแจ้งหนี้ / ใบกำกับภาษี
+    participant SignEngine as บริการ XML Signature (ETDA C14N)
+    participant Queue as คิวประมวลผล (SubmitETaxDocument)
+    participant Gateway as Certified Gateway / กรมสรรพากร
+    participant Webhook as Webhook Controller (HMAC)
+    participant Artisan as ระบบตรวจสอบสถานะตามรอบเวลา
+
+    Staff->>System: สั่งออก e-Tax Invoice / Credit Note
+    System->>System: ตรวจสอบความถูกต้องของข้อมูล & เลขผู้เสียภาษี 13 หลัก
+    System->>SignEngine: ร้องขอสร้าง XML ตามมาตรฐาน ETDA และลงลายมือชื่อดิจิทัล
+    Note over SignEngine: XML Canonicalization (C14N)<br/>RSA-SHA256 DigestValue<br/>X.509 KeyInfo Reference
+    SignEngine-->>System: คืนค่า Enveloped XML-DSig Signed XML
+    System->>System: บันทึกลงตาราง etax_documents (สถานะ: signed)
+
+    alt โหมด Mock / ดาวน์โหลดนำส่งเอง
+        System-->>Staff: ดาวน์โหลด Signed XML / PDF ทันที
+    else โหมด Live Gateway Provider
+        System->>Queue: นำเข้าคิวส่งเอกสาร (Queue: etax)
+        Queue->>Gateway: POST /api/v1/etax/submit (Base64 XML)
+        Gateway-->>Queue: ตอบรับ 202 Accepted + Submission UID
+        Queue->>System: อัปเดตสถานะเป็น submitted
+
+        par รับผลผ่าน Webhook Callback
+            Gateway->>Webhook: POST /api/e-tax/{config}/callback (HMAC-SHA256)
+            Webhook->>Webhook: ยืนยัน X-ETax-Signature & Multi-tenant Scope
+            Webhook->>System: อัปเดตสถานะเป็น accepted หรือ rejected
+        and ตรวจสอบสถานะรอบอัตโนมัติ (Polling)
+            Artisan->>Gateway: GET /api/v1/etax/status/{uid}
+            Gateway-->>Artisan: รายงานสถานะจากกรมสรรพากร
+            Artisan->>System: บันทึกเลขรับเอกสารทางการ (RD Code)
+        end
+    end
+```
+
+---
+
+### 7.2 Diagram: Cash Flow Forecasting & Financial Health Analytics (Phase 25)
+เอนจินจำลองกระแสเงินสดรับและจ่ายล่วงหน้า 30-180 วัน ใน 3 สถานการณ์ (Base, Best, Worst Scenario), คำนวณ Trajectory Curve รายวันพร้อมแจ้งเตือนจุดเงินสดต่ำสุด (Lowest Cash Dip) และประเมินอัตราส่วนสภาพคล่อง (Current Ratio, Quick Ratio, DSO, DPO, Runway) อัตโนมัติทุกคืน
+
+```mermaid
+flowchart TD
+    subgraph Inflows ["แหล่งกระแสเงินสดรับ (Cash Inflow)"]
+        AR["ลูกหนี้การค้าค้างรับ (AR)<br>คำนวณตาม Due Date"]
+        Deals["ไปป์ไลน์การขาย (Deals Pipeline)<br>ถ่วงน้ำหนักตาม Win Probability"]
+    end
+
+    subgraph Outflows ["แหล่งกระแสเงินสดจ่าย (Cash Outflow)"]
+        AP["เจ้าหนี้การค้าค้างจ่าย (AP)<br>รายจ่ายที่อนุมัติแล้ว"]
+        PO["ใบสั่งซื้อค้างส่ง (Open POs)<br>ภาระผูกพันต้นทุนสินค้า"]
+        Payroll["เงินเดือนและค่าจ้างประจำ (Payroll)<br>รอบจ่ายวันที่ 25 ของทุกเดือน"]
+    end
+
+    subgraph Engine ["CashFlowForecastService (30-180 Days Horizon)"]
+        Scenarios["3 สถานการณ์จำลอง<br>• Base: การดำเนินงานปกติ<br>• Best: ยอดขายเข้าเป้า & เก็บเงินเร็ว<br>• Worst: หนี้ล่าช้า & ค่าใช้จ่ายเพิ่ม"]
+        Calc["Trajectory Projection Engine<br>คำนวณยอดคงเหลือเงินสดรายวัน (Day-by-Day)"]
+        Scenarios --> Calc
+        Inflows & Outflows --> Calc
+    end
+
+    subgraph Ratios ["วิเคราะห์ดัชนีสุขภาพทางการเงิน"]
+        CR["Current Ratio (>= 1.5x)"]
+        QR["Quick Ratio (>= 1.0x)"]
+        DSO["Days Sales Outstanding"]
+        DPO["Days Payable Outstanding"]
+        Runway["Working Capital Runway (Months)"]
+        Calc --> CR & QR & DSO & DPO & Runway
+    end
+
+    subgraph Delivery ["การแสดงผลและระบบอัตโนมัติ"]
+        Chart["Interactive SVG Trajectory Chart<br>แสดงเส้นเตือนสภาพคล่อง & จุดต่ำสุด"]
+        Cron["Artisan Scheduler (cashflow:snapshot)<br>สแนปช็อตข้อมูลทุกตีสอง (Daily 02:00)"]
+        CR & QR & DSO & DPO & Runway --> Chart
+        Calc --> Cron
+    end
+```
+
+---
+
+### 7.3 Diagram: AI OCR Document Ingestion & Human Verification (Phase 26)
+สถาปัตยกรรมนำเข้าและสกัดข้อมูลใบเสร็จ/ใบแจ้งหนี้ด้วย Universal OpenAI-Compatible Vision Hub (รองรับ Local Ollama และ Cloud GPT/Gemini), สกัด JPEG จาก Scanned PDF, ตรวจสอบเลขประจำตัวผู้เสียภาษี 13 หลักด้วย Modulo 11, และหน้าจอ Split-Screen Reviewer ให้พนักงานตรวจรับก่อนแปลงเป็น Draft Expense (ห้าม Auto-GL เด็ดขาด)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Staff as เจ้าหน้าที่บัญชี
+    participant UI as หน้าจอ Split-Screen Reviewer
+    participant Ctrl as OcrDocumentController
+    participant Pre as Image & PDF Pre-processor
+    participant Vision as Universal Vision Hub (Ollama / OpenAI)
+    participant Val as ExtractionValidator & MathReconciler
+    participant DMS as ศูนย์จัดเก็บเอกสาร DMS
+    participant Exp as โมดูลบันทึกรายจ่าย (Draft Expense)
+
+    Staff->>UI: อัปโหลดรูปภาพใบเสร็จ หรือ Scanned PDF
+    UI->>Ctrl: POST /finance/ocr/upload (Multipart)
+    Ctrl->>Pre: ตรวจสอบ MIME Type & จัดเตรียมภาพ
+    alt เป็นไฟล์ Scanned PDF
+        Pre->>Pre: สกัด JPEG Stream ภายในด้วย extractJpegFromPdf()
+    else เป็นไฟล์ภาพปกติ
+        Pre->>Pre: ปรับขนาดและเตรียม High-Detail Tile Buffer
+    end
+
+    Ctrl->>Vision: ส่งคำขอ Vision พร้อมภาพ Base64
+    Note over Vision: รองรับ Local (Ollama qwen2.5-vl)<br/>และ Cloud (GPT-4o, Gemini)<br/>บังคับใช้ JSON Mode & max_tokens
+    Vision-->>Ctrl: ส่งคืนผลลัพธ์ Structured JSON
+
+    Ctrl->>Val: ตรวจสอบความถูกต้องและกระทบยอดตัวเลข
+    Note over Val: 1. ตรวจสอบ Tax ID 13 หลักตามสูตร Modulo 11<br/>2. ตรวจยอด: Subtotal + VAT - WHT == Total<br/>3. คำนวณคะแนนความมั่นใจ (Confidence Score)
+    Val-->>Ctrl: ผลการตรวจและ Flag เตือน (math_mismatch, tax_id_valid)
+
+    Ctrl->>DMS: จัดเก็บไฟล์ต้นฉบับลงที่จัดเก็บที่ปลอดภัย (DMS)
+    Ctrl-->>UI: แสดงผลข้อมูลในหน้าจอ Split-Screen Reviewer
+
+    Staff->>UI: เปรียบเทียบภาพต้นฉบับ (ซ้าย) กับฟอร์มแก้ไข (ขวา)
+    Staff->>UI: กดยืนยัน "Convert to Expense"
+    UI->>Ctrl: POST /finance/ocr/{id}/convert
+    Ctrl->>Exp: สร้างรายการ Draft Expense (Assisted Draft)
+    Note over Exp: 🔒 Human-in-the-Loop Rule:<br/>ห้าม Auto-post ลงสมุดบัญชีแยกประเภท (GL)<br/>ต้องผ่านขั้นตอนอนุมัติตามปกติเสมอ
+    Exp-->>UI: นำทางไปยังหน้ารายการค่าใช้จ่ายฉบับร่าง
+```
+
+---
+
+### 7.4 Diagram: Web Setup Wizard Architecture & Installer Lifecycle
+วงจรชีวิตการติดตั้งระบบ Company OS / Lightweight ERP ผ่านเบราว์เซอร์ 4 ขั้นตอน ควบคุมความปลอดภัยด้วย Setup Token, ตรวจสอบสภาพแวดล้อม (Preflight Check & Clean Release), ล็อกไฟล์ป้องกันติดตั้งซ้อน (`install.lock`), เขียนไฟล์ `.env` แบบ Atomic พร้อมตั้งค่า `chmod 0600`, รันการสร้างฐานข้อมูล (58 Migrations), สร้างบัญชีผู้ดูแลระบบและ Master Data และล็อกการเข้าถึงถาวรด้วย `installed.json`
+
+```mermaid
+flowchart TD
+    subgraph Guard ["1. ความปลอดภัยและการเข้าถึง"]
+        Req["Request: GET /setup"] --> CheckLock{"ติดตั้งแล้วหรือยัง?<br>installed.json"}
+        CheckLock -- "ติดตั้งแล้ว" --> HTTP404["HTTP 404 Not Found<br>ปิดการเข้าถึงถาวร"]
+        CheckLock -- "ยังไม่ได้ติดตั้ง" --> CheckToken{"เปิดใช้งานแล้วหรือยัง?<br>SETUP_TOKEN / enable.php"}
+        CheckToken -- "ยังไม่เปิด" --> HTTP403["HTTP 403 Forbidden<br>Installer is disabled"]
+        CheckToken -- "ยืนยัน Token ผ่าน" --> Wizard["เข้าสู่หน้าต่างตัวติดตั้ง 4 ขั้นตอน"]
+    end
+
+    subgraph Steps ["2. ขั้นตอนการติดตั้ง (Setup Wizard Steps)"]
+        Wizard --> S1["Step 1: Security & Preflight<br>• PHP 8.3+, PDO MySQL, OpenSSL, mbstring<br>• สิทธิ์เขียนโฟลเดอร์ storage/, bootstrap/cache/<br>• ตรวจสอบ Clean Release (! is_file(.env))"]
+        S1 --> S2["Step 2: Server & Database<br>• App Name & App URL (http/https)<br>• ฐานข้อมูล MySQL (Host, Port, DB, User, Pass)<br>• ทดสอบการเชื่อมต่อจริง (PDO SELECT 1)"]
+        S2 --> S3["Step 3: Organization & Owner<br>• ข้อมูลบริษัท (ชื่อ, เลขผู้เสียภาษี)<br>• ข้อมูลผู้ดูแลระบบ (ชื่อ, อีเมล, รหัสผ่าน >= 12 ตัว)"]
+        S3 --> S4["Step 4: Confirmation<br>• ยืนยันการสั่งติดตั้งโดยพิมพ์ 'INSTALL'"]
+    end
+
+    subgraph Engine ["3. เอนจินการติดตั้งระบบ (Execution Engine)"]
+        S4 --> AcquireLock["ถือครอง File Lock (install.lock)<br>ป้องกันการรันติดตั้งซ้อน"]
+        AcquireLock --> CheckEmptyDB{"ตรวจฐานข้อมูลเป้าหมาย<br>SHOW TABLES LIKE 'migrations'"}
+        CheckEmptyDB -- "มีตารางเดิมอยู่" --> AbortDB["ยกเลิกทันที: ปฏิเสธการเขียนทับ DB เดิม"]
+        CheckEmptyDB -- "ฐานข้อมูลว่าง" --> WriteEnv["สร้างและเขียนไฟล์ .env แบบ Atomic<br>• โคลนจาก .env.example<br>• สร้าง APP_KEY สุ่ม 32 ไบต์<br>• กำหนดสิทธิ์ chmod 0600"]
+        
+        WriteEnv --> RunMigrate["รัน Migration ฐานข้อมูลทั้งหมด<br>Artisan migrate --force"]
+        RunMigrate --> Seed["สร้างข้อมูลเริ่มต้นและบัญชี Owner<br>• OrganizationProvisioner::registerOwner()<br>• ติดตั้ง 7 System Roles และ Permissions Catalog<br>• สร้างสาขา ฝ่าย แผนก และ Number Sequences"]
+        
+        Seed --> LockFile["เขียนไฟล์ล็อกการติดตั้งสำเร็จ<br>storage/app/installer/installed.json"]
+        LockFile --> DelEnable["ลบไฟล์เปิดใช้งานชั่วคราว<br>@unlink(backend/setup/enable.php)"]
+        DelEnable --> ReleaseLock["ปลดล็อก File Lock (install.lock)"]
+        ReleaseLock --> DoneRedirect["นำทางไปยัง /login?installed=1<br>พร้อมใช้งานทันที"]
+    end
 ```
 
 ---

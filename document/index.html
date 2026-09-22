@@ -320,17 +320,102 @@
           <span class="type-tag type-workflow">Workflow</span>
           <h2 class="card-title">17. HR Employee, Attendance &amp; Payroll Integration</h2>
           <p class="card-desc">
-            สถานะ Phase 23.3: Employee Master แยก User, roster, CSV/TXT import, reconciliation และ non-user payroll มีแล้ว; Excel import, configured OT rate, OT 3x และกะข้ามวันยังเปิดอยู่ จึงยังไม่ปิด Phase
+            สถาปัตยกรรมบุคลากรครบวงจร: ทะเบียนตำแหน่งงาน (Position Master), นำเข้าพนักงานแบบชุด (Bulk Import), จัดกะ Roster, นำเข้าเวลาสแกนนิ้ว (.xlsx, .csv), คำนวณกะข้ามวัน, OT 3 อัตรา (1.5x/2x/3x) และคำนวณเงินเดือนพร้อมส่ง Payslip ทางอีเมลส่วนตัว
           </p>
           <div class="card-meta">
-            <span class="meta-chip">In progress</span>
-            <span class="meta-chip">Employee Master</span>
-            <span class="meta-chip">Attendance</span>
-            <span class="meta-chip">Payroll</span>
+            <span class="meta-chip" style="color: var(--success); border-color: rgba(52, 211, 153, 0.4);">Phase 23.3 Complete</span>
+            <span class="meta-chip">Position Master</span>
+            <span class="meta-chip">Overnight Roster</span>
+            <span class="meta-chip">OT 1.5x/2x/3x</span>
+            <span class="meta-chip">Non-User Payslip</span>
           </div>
         </div>
         <div class="card-actions">
           <a href="17_hr_employee_attendance_payroll.md" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+        </div>
+      </div>
+
+      <!-- 18 e-Tax Gateway Pipeline -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-sequence">Sequence</span>
+          <h2 class="card-title">18. e-Tax Invoice &amp; RD Prep Gateway Architecture</h2>
+          <p class="card-desc">
+            ไปป์ไลน์จัดเตรียมและนำส่งใบกำกับภาษีอิเล็กทรอนิกส์ e-Tax ตามมาตรฐาน ETDA: Enveloped XML-DSig (RSA-SHA256), Queue Worker แบ็กกราวด์, Webhook Callback (HMAC-SHA256) และ Cron Inquire Status ทุก 30 นาที
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip" style="color: var(--success); border-color: rgba(52, 211, 153, 0.4);">Phase 24 Complete</span>
+            <span class="meta-chip">ETDA XML-DSig</span>
+            <span class="meta-chip">RD API / INET</span>
+            <span class="meta-chip">HMAC Webhook</span>
+            <span class="meta-chip">Auto Inquire Status</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="18_etax_gateway_pipeline.md" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+        </div>
+      </div>
+
+      <!-- 19 Cash Flow Forecasting Engine -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-dataflow">Dataflow / Analytics</span>
+          <h2 class="card-title">19. Cash Flow Forecasting &amp; Financial Health Analytics</h2>
+          <p class="card-desc">
+            เอนจินจำลองกระแสเงินสดรับ-จ่ายล่วงหน้า 30-180 วัน: 3 สถานการณ์จำลอง (Base, Best, Worst), Interactive SVG Trajectory Curve พร้อมเตือนจุดเงินสดต่ำสุด และการคำนวณอัตราส่วนสภาพคล่อง (CR, QR, DSO, DPO, Runway)
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip" style="color: var(--success); border-color: rgba(52, 211, 153, 0.4);">Phase 25 Complete</span>
+            <span class="meta-chip">3 Scenarios</span>
+            <span class="meta-chip">SVG Trajectory</span>
+            <span class="meta-chip">CR &amp; QR Ratios</span>
+            <span class="meta-chip">Daily Snapshot Cron</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="19_cash_flow_forecasting_engine.md" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+        </div>
+      </div>
+
+      <!-- 20 AI OCR Document Ingestion -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-sequence">Sequence</span>
+          <h2 class="card-title">20. AI OCR Document Ingestion &amp; Human Verification</h2>
+          <p class="card-desc">
+            สกัดข้อมูลใบเสร็จ/ใบแจ้งหนี้ด้วย Universal Vision Hub (Local Ollama qwen2.5-vl / Cloud GPT-4o), ตรวจสอบ Tax ID 13 หลักตามสูตร Modulo 11, และหน้าจอ Split-Screen Reviewer ให้เจ้าหน้าที่ตรวจสอบก่อนแปลงเป็น Draft Expense (ห้าม Auto-GL)
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip" style="color: var(--success); border-color: rgba(52, 211, 153, 0.4);">Phase 26 Complete</span>
+            <span class="meta-chip">Universal OpenAI Hub</span>
+            <span class="meta-chip">Modulo 11 Tax ID</span>
+            <span class="meta-chip">Split-Screen Reviewer</span>
+            <span class="meta-chip">No Auto-GL Guard</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="20_ai_ocr_document_ingestion.md" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
+        </div>
+      </div>
+
+      <!-- 21 Web Setup Wizard Installer Lifecycle -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-lifecycle">Lifecycle / Security</span>
+          <h2 class="card-title">21. Web Setup Wizard Architecture &amp; Installer Lifecycle</h2>
+          <p class="card-desc">
+            วงจรชีวิตการติดตั้งระบบผ่านเบราว์เซอร์ 4 ขั้นตอน: ควบคุมความปลอดภัยด้วย Setup Token (>= 32 chars), Preflight Checks, Atomic .env Generation (chmod 0600), รัน Migration 58 ไฟล์, สร้าง Owner Account พร้อม Master Data และปิดกั้นถาวรด้วย installed.json
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip" style="color: var(--success); border-color: rgba(52, 211, 153, 0.4);">Installer Ready</span>
+            <span class="meta-chip">Security Token Guard</span>
+            <span class="meta-chip">Atomic .env Write</span>
+            <span class="meta-chip">Owner Provisioning</span>
+            <span class="meta-chip">Permanent Lockout</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="21_setup_wizard_installer_lifecycle.md" target="_blank" class="btn-open">เปิดดู Diagram &rarr;</a>
         </div>
       </div>
 
@@ -627,10 +712,10 @@
 
     </div>
 
-    <!-- 6 Domain Groups (31 Modules) Section -->
-    <div class="section-title">ผังการทำงาน 6 กลุ่มงานหลัก (31 Modules Domain Workflows)</div>
+    <!-- 7 Domain Groups (35 Modules) Section -->
+    <div class="section-title">ผังการทำงาน 7 กลุ่มงานหลัก (35 Modules Domain Workflows)</div>
     <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
-      เจาะลึกกระบวนการทำงานและวงจรสถานะของแต่ละฝ่าย ครอบคลุมทั้ง 31 โมดูลในระบบ พร้อม Mermaid Diagrams และคำอธิบายภาษาไทยฉบับสมบูรณ์
+      เจาะลึกกระบวนการทำงานและวงจรสถานะของแต่ละฝ่าย ครอบคลุมทั้ง 35 โมดูลในระบบ พร้อม Mermaid Diagrams และคำอธิบายภาษาไทยฉบับสมบูรณ์
     </p>
 
     <div class="categories">
@@ -744,20 +829,41 @@
       <div class="diagram-card">
         <div class="card-top">
           <span class="type-tag type-architecture">Group 6 &bull; Modules 24-31</span>
-          <h2 class="card-title">Operations & Extensions (Phase 7-18)</h2>
+          <h2 class="card-title">Operations &amp; Extensions (Phase 7-23)</h2>
           <p class="card-desc">
-            การสั่งซื้อสินค้า (PO), คลังสินค้า (Inventory), Payroll policy/payslip/GL, ผู้ช่วย AI, การเชื่อมโปรแกรมบัญชี และ Customer Portal
+            การสั่งซื้อสินค้า (PO), คลังสินค้า/Lot (Inventory), ทะเบียนพนักงาน &amp; ตำแหน่งงาน, บันทึกเวลากะข้ามวัน, OT 3 อัตรา, เงินเดือน Payroll, พอร์ทัลลูกค้า และ Master Dialog Standard
           </p>
           <div class="card-meta">
-            <span class="meta-chip">PO & Inventory</span>
-            <span class="meta-chip">Payroll & GL</span>
-            <span class="meta-chip">AI Assistant</span>
-            <span class="meta-chip">Accounting & Portal</span>
+            <span class="meta-chip">PO &amp; Inventory</span>
+            <span class="meta-chip">HR &amp; Payroll</span>
+            <span class="meta-chip">Overnight Roster</span>
+            <span class="meta-chip">Dialog Standard</span>
           </div>
         </div>
         <div class="card-actions">
-          <a href="GROUPS_WORKFLOW.md#group-6-operations--advanced-extensions-phase-7-18" target="_blank" class="btn-open">ดูผัง Group 6 &rarr;</a>
+          <a href="GROUPS_WORKFLOW.md#group-6-operations--advanced-extensions-phase-7-23" target="_blank" class="btn-open">ดูผัง Group 6 &rarr;</a>
           <span class="btn-json">7 Diagrams</span>
+        </div>
+      </div>
+
+      <!-- Group 7 -->
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-dataflow" style="background: rgba(52, 211, 153, 0.15); color: var(--success); border-color: rgba(52, 211, 153, 0.3);">Group 7 &bull; Modules 32-35</span>
+          <h2 class="card-title">Intelligent Automation, Compliance &amp; Setup (Phase 24-26 &amp; Setup)</h2>
+          <p class="card-desc">
+            ระบบส่งใบกำกับภาษีอิเล็กทรอนิกส์ e-Tax Gateway (XML-DSig), พยากรณ์กระแสเงินสด 3 รูปแบบ (Cash Flow Forecasting), สกัดข้อมูลใบเสร็จด้วย AI OCR (No Auto-GL), และตัวติดตั้งระบบ Web Setup Wizard
+          </p>
+          <div class="card-meta">
+            <span class="meta-chip">e-Tax Gateway</span>
+            <span class="meta-chip">Cash Flow Engine</span>
+            <span class="meta-chip">AI OCR Ingestion</span>
+            <span class="meta-chip">Web Setup Wizard</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="GROUPS_WORKFLOW.md#group-7-intelligent-automation-compliance--system-deployment-phase-24-26--setup-wizard" target="_blank" class="btn-open">ดูผัง Group 7 &rarr;</a>
+          <span class="btn-json">4 Diagrams</span>
         </div>
       </div>
 

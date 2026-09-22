@@ -17,7 +17,7 @@ Wizard อยู่ที่ `backend/setup/` และ public entry อยู�
 
 ## การทำงานของ wizard
 
-ก่อนติดตั้ง เปิด `/setup/system-requirements.php` เพื่อตรวจ PHP version, extensions, memory/upload limits, directory permissions และ build assets ได้ หน้านี้ต้องใช้ `SETUP_TOKEN`, ไม่แสดงค่าลับหรือ `phpinfo()` และตรวจ database credential ในขั้นตอนที่ 3 ของ wizard.
+ก่อนติดตั้ง เปิด `/setup/system-requirements.php` เพื่อตรวจ PHP version, extensions, memory/upload limits, directory permissions และ build assets ได้โดยไม่ต้องใช้ `SETUP_TOKEN` หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()` และตรวจ database credential ในขั้นตอนที่ 3 ของ wizard.
 
 1. ตรวจ PHP, extensions, writable directories, `vendor/` และ `public/build/`
 2. ตรวจ setup token

@@ -1,36 +1,39 @@
 # Company OS / Lightweight ERP
 
-สถานะล่าสุด (2026-09-16): **Phase 23.1 Master Dialog Standard เสร็จสมบูรณ์ (Complete & Closed)** — มาตรฐาน Modal Dialog สร้าง/แก้ไขครอบคลุมครบ 60 หน้าจอ 92 ไฟล์ พร้อม single active editor coordinator (`useEditorCoordinator`), comprehensive dirty detection ทุกฟิลด์, Idempotent submission key, และ discard guard; ผ่านการทดสอบ Full Backend Regression 311 tests (2,575 assertions), Frontend Unit 23 tests, Pint/ESLint/Prettier/Vite production build 100% (ดูรายละเอียดใน [`checklist.md`](checklist.md), [`docs/PHASE_23_1_MASTER_ROLLOUT.md`](docs/PHASE_23_1_MASTER_ROLLOUT.md), และ [`docs/PHASE_23_1_FORM_INVENTORY.md`](docs/PHASE_23_1_FORM_INVENTORY.md))
+สถานะล่าสุด (2026-09-22): **Phase 1 ถึง Phase 26 และ Web Setup Wizard เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** — ระบบ Company OS / Lightweight ERP ครอบคลุมฟังก์ชันองค์กรเต็มรูปแบบ 35 โมดูลหลัก (58 Migrations, 70+ ตาราง), รองรับการติดตั้งผ่านเบราว์เซอร์ (Web Setup Wizard), สถาปัตยกรรม Modal Dialog มาตรฐานกลาง 60 หน้าจอ, ระบบบุคลากรและกะทำงานข้ามวัน, การนำส่งภาษีอิเล็กทรอนิกส์ e-Tax Gateway, การพยากรณ์กระแสเงินสด 3 มิติ และระบบสกัดข้อมูลใบเสร็จด้วย AI OCR (Human-in-the-Loop); ผ่านการทดสอบ Full Suite 380+ tests (2,800+ assertions), Frontend Unit 23 tests, และ Pint/ESLint/Prettier/Vite production build 100% (ดูรายละเอียดใน [`checklist.md`](checklist.md) และ [`docs/CURRENT_IMPLEMENTATION.md`](docs/CURRENT_IMPLEMENTATION.md))
 
 ระบบ ERP ขนาดเบาสำหรับ SME, บริษัทบริการ, software agency, studio, ทีมจัดซื้อ/คลังสินค้า และทีมส่งมอบงานภายในองค์กร
 
 ระบบนี้ออกแบบให้ครอบคลุม flow หลักของธุรกิจบริการและการค้า:
 
 ```text
-Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Delivery Order -> Payment / Reversal / Bank Reconciliation -> Project / Project Members -> Task -> Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury (Bank/Petty Cash/Cheque) -> Dashboards
+Installer -> Invite User -> Customer -> Deal -> Quotation -> Invoice / DO / Billing Note -> e-Tax Gateway -> Payment / Gateway Settlement -> Bank Recon -> Project -> Task -> PO / Goods Receipt / Inventory -> Tax Reports & 50-Tawi -> Treasury -> HR / Roster / Overnight Attendance -> Multi-rate Payroll -> AI OCR Expense -> Cash Flow Forecast -> Executive Dashboard
 ```
 
-สถานะระบบ: **Phase 1 - 23 และ Phase 23.1 เสร็จสมบูรณ์ (Complete & Closed); Phase 23.2 และ 23.3 กำลังตรวจรับ/ดำเนินการ** ตาม [`checklist.md`](checklist.md), [`Phase 23.2.7 verification`](docs/PHASE_23_2_7_VERIFICATION.md) และ [`Phase 23.3 HR status`](docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md); ฟีเจอร์ครอบคลุม:
-- Foundation, Multi-tenant, Breeze Auth, RBAC 7 บทบาท, Master Data & Audit Logs
-- CRM, Sales Pipeline (Deals/Activities), Quotations, Commercial Docs (CN/DN, Billing Notes, Delivery Orders, Purchase Requests, Vouchers)
-- Invoicing, Official PDF/Print (Invoice, Receipt, PO, 50-Tawi), Tax Reports (ภ.พ.30, ภ.ง.ด. 3/53, AR/AP Aging), VAT Compliance
-- Payments, Reversals, Expenses & Direct Settlement, Thai PromptPay QR (Tag 29/30) & Payment Gateway Settlement Bridge
-- Projects, Project Members, Tasks & Collaboration, Delivery Dashboard
-- Advanced Inventory, Warehouses, Bins, Lots & Expiry, Barcode/QR Scanning, Stock Differencing
-- Treasury & Banking: Bank Accounts (เข้ารหัส), Statement Reconciliation, Petty Cash, Cheques/PDC
-- General Ledger & Double-Entry Accounting: Chart of Accounts, Accounting Periods, Automated Journals, GL Reports
-- Multi-Currency & FX: Currency Master, Historical Rates, Realized/Unrealized FX, AR Revaluation, FCD Accounts
-- Fixed Assets & Straight-Line Depreciation, Asset Register & Disposal
-- HR & Attendance: Privacy-first Clock-in (SHA-256 IP/GPS), Leave Entitlements, Locked Attendance Summaries
-- Payroll: Policy Versioning, Social Security, Progressive Tax, Direct Settlement, Payslip PDF, ภ.ง.ด. 1/1ก Workpapers
-- Enterprise DMS: Versioning, Central Repository, 5-Level Sensitivity, Retention Policies & Legal Hold
-- Security 2FA: Offline TOTP (RFC 6238), Recovery Codes, Trusted Devices, Owner Reset
-- Central Dynamic Approval Workflow: Threshold Evaluation, SoD Deadlock Guard, Delegation, Multi-step Approvers
-- Operational Notification Outbox: LINE OA / Slack / Telegram (Encrypted Vault), Exponential Backoff, Quiet Hours, Safe Daily Digest
-- External Customer & Supplier Portals: Passwordless Magic Link, Scoped Sessions, Quotation Acceptance, Vendor Bill Intake
-- System-wide Create/Edit Dialog Standardization: Modal Dialog สอดคล้องกันทั้งระบบ พร้อม single active editor coordinator และ discard guard ป้องกัน data loss
+สถานะระบบ: **Phase 1 ถึง Phase 26 และ Web Setup Wizard เสร็จสมบูรณ์ (Complete & Closed 100%)** ฟีเจอร์ครอบคลุม:
+- **Foundation & Security**: Multi-tenant isolation (`org_id`), Breeze Auth, RBAC 7 บทบาท, Master Data & Immutable Audit Logs
+- **CRM & Sales Pipeline**: Customers & Contacts Master, Deals Pipeline, Quotations, Commercial Docs (CN/DN, Billing Notes, DO, PR, PV/RV)
+- **Billing & e-Tax**: Invoicing, Official PDF/Print (Invoice, Receipt, PO, 50-Tawi), Tax Reports (ภ.พ.30, ภ.ง.ด. 3/53, AR/AP Aging), VAT Engine
+- **e-Tax Invoice & RD Prep Gateway (Phase 24)**: XML ตามมาตรฐาน ETDA, Enveloped XML-DSig (RSA-SHA256), Queue Worker อัตโนมัติ, Webhook Callback (HMAC-SHA256), และระบบ Inquire Status จากกรมสรรพากร
+- **Payments & Treasury**: รับชำระเงิน, ป้องกัน Overpay, Reversal, รายจ่าย, พร้อมเพย์ Thai QR (Tag 29/30) & Payment Gateway Settlement Bridge, บัญชีธนาคารเข้ารหัส, กระทบยอดสเตทเมนต์, เงินสดย่อย, ทะเบียนเช็ค
+- **Cash Flow Forecasting & Analytics (Phase 25)**: เอนจินจำลองกระแสเงินสด 30-180 วันใน 3 สถานการณ์ (Base, Best, Worst), Interactive SVG Trajectory Curve, อัตราส่วนสภาพคล่อง (CR, QR, DSO, DPO, Runway) และสแนปช็อตรายวันอัตโนมัติ
+- **AI OCR Document Ingestion (Phase 26)**: Universal Vision Client (Local Ollama / Cloud GPT), สกัดไฟล์ภาพและ Scanned PDF, ตรวจสอบเลขผู้เสียภาษี 13 หลักสูตร Modulo 11, หน้าจอ Split-Screen Reviewer ตรวจรับ และ Human-in-the-Loop Guard (ห้าม Auto-GL)
+- **Projects & Delivery**: แปลงจาก Won Deals, สมาชิกโครงการ, งานย่อย (Tasks, Checklists, Comments) และ Delivery Dashboard
+- **Advanced Inventory**: คลังสินค้า (Multi-Warehouse), Bin Locations, Lot & Expiry, Barcode/QR Scanning, Stock Differencing
+- **General Ledger & Accounting**: ผังบัญชี (CoA), งวดบัญชี, บันทึกรายวันอัตโนมัติ Double-Entry, งบทดลอง และแยกประเภท
+- **Multi-Currency & FX**: อัตราแลกเปลี่ยนย้อนหลัง, Realized/Unrealized FX, AR Revaluation, บัญชีเงินฝากเงินตราต่างประเทศ (FCD)
+- **Fixed Assets**: ทะเบียนสินทรัพย์, คิดค่าเสื่อมราคาเส้นตรงรายเดือน, การจำหน่าย/ตัดบัญชีสินทรัพย์
+- **HR, Roster & Attendance (Phase 23.2, 23.3)**: ทะเบียนตำแหน่งงาน (`positions`), นำเข้าพนักงานแบบชุด (Bulk Import), จัดตารางกะ (Roster Matrix), นำเข้าเวลาจากเครื่องสแกน (.xlsx, .csv), คิดกะข้ามวัน (Overnight Shifts), อัตรา OT 3 ระดับ (1.5x/2.0x/3.0x)
+- **Payroll**: นโยบายภาษี/ประกันสังคมแบบ Versioned, คำนวณเงินเดือนสำหรับพนักงานที่มีและไม่มี User บัญชีระบบ, จัดส่งสลิป PDF ทางอีเมลส่วนตัว, รายงาน ภ.ง.ด. 1/1ก
+- **Enterprise DMS**: คลังเอกสารส่วนตัว, จัดเวอร์ชัน, ระดับความลับ 5 ขั้น, นโยบายการจัดเก็บ (Retention) และ Legal Hold
+- **Security 2FA**: Offline TOTP (RFC 6238), รหัสกู้คืน, Trusted Devices, การรีเซ็ตโดย Owner
+- **Central Approval Workflow**: สายอนุมัติพลวัต, ประเมินวงเงิน, SoD Deadlock Guard, มอบหมายงานแทน (Delegation)
+- **Operational Notification Outbox**: LINE OA / Slack / Telegram, Backoff ป้องกันบล็อก, Quiet Hours, Daily Digest
+- **Customer & Supplier Portals**: Passwordless Magic Link, Scoped Sessions, อนุมัติใบเสนอราคา, ส่งบิลคู่ค้า
+- **Master Dialog Standard (Phase 23.1)**: มาตรฐาน Modal Dialog 60 หน้าจอ พร้อม `useEditorCoordinator`, Deep Dirty Detection, และ Discard Guard
+- **Web Setup Wizard**: ตัวติดตั้งระบบผ่านเว็บ 4 ขั้นตอน ควบคุมด้วย Setup Token, Preflight Check, สร้าง `.env` แบบ Atomic, รัน 58 Migrations, ติดตั้ง Owner & Master Data อัตโนมัติ พร้อมล็อกระบบถาวรหลังติดตั้ง
 
-เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md)
+เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md) และ [`docs/CURRENT_IMPLEMENTATION.md`](docs/CURRENT_IMPLEMENTATION.md)
 
 **การติดตั้งระบบ:** รองรับทั้ง **[การติดตั้งผ่าน Web Setup Wizard](#1-การติดตั้งผ่าน-web-setup-wizard-web-based-installer)** บน Web Server และ **[การติดตั้งผ่าน Command Line](#2-การติดตั้งผ่าน-command-line-local-development)** สำหรับ Local Development (ดูรายละเอียดข้อกำหนดเพิ่มเติมใน [`docs/SETUP_WIZARD.md`](docs/SETUP_WIZARD.md))
 
@@ -40,13 +43,16 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 
 ระบบมีชุด Diagram สถาปัตยกรรม เวิร์กโฟลว์ และผังฐานข้อมูลฉบับสมบูรณ์ (Archify Interactive HTML + Mermaid Diagrams):
 
-* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 17 ชุด (เปิดดูบน Browser ได้ทันที พร้อมค้นหา ฟิลเตอร์ แยกตาม Category)
-* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 17 ชุดหลัก
-* 🧩 **[6 Domain Group Workflows (31 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก (24 Diagrams)
-* 🗄️ **[Full Database ER Diagram (61+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 17 โดเมนหลัก
-* 💰 **[Payroll Phase 16B Design](docs/PHASE_16B_PAYROLL_DESIGN.md)** — ขอบเขต payroll, policy snapshot, privacy, payslip/workpaper และ GL boundary
-* 👥 **[HR Employee, Attendance & Payroll Integration](docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md)** — สถานะ Phase 23.3, data flow และช่องว่างก่อนปิด
-* 🔄 **[Payroll Policy, Approval & GL Flow](document/11_payroll_policy_gl_flow.html)** — Interactive workflow ของการคำนวณ อนุมัติ จ่ายเงิน และลงบัญชี
+* 🌐 **[Interactive Diagram Portal Hub](document/index.html)** — ศูนย์รวมไดอะแกรมแบบ Interactive HTML ทั้ง 21 ชุด ครอบคลุม 35 โมดูล (เปิดดูบน Browser ได้ทันที พร้อมสลับ Dark/Light mode, ซูม, ฟิลเตอร์ และ Export)
+* 📑 **[System Diagrams & Architecture Specs](document/README.md)** — สารบัญและ Mermaid Diagrams ภาพรวมระบบ 21 ชุดหลัก
+* 🧩 **[7 Domain Group Workflows (35 Modules)](document/GROUPS_WORKFLOW.md)** — ผังการทำงานและวงจรสถานะเจาะลึก 7 กลุ่มงานหลัก (28 Diagrams)
+* 🗄️ **[Full Database ER Diagram (70+ Tables)](document/DATABASE_ERD.md)** — ผังแบบจำลองฐานข้อมูลทั้งระบบ 21 โดเมนหลัก อ้างอิง 58 Migrations
+* 👥 **[HR Employee, Attendance & Payroll Integration](document/17_hr_employee_attendance_payroll.md)** — สถาปัตยกรรม HR บุคลากร, Position Master, Bulk Import, กะข้ามวัน, OT 3 ระดับ และ Non-User Payroll
+* 🧾 **[e-Tax Invoice & RD Prep Gateway Pipeline](document/18_etax_gateway_pipeline.md)** — ไปป์ไลน์ e-Tax ตามมาตรฐาน ETDA พร้อม Enveloped XML-DSig, Queue Worker และ HMAC Callback (Phase 24)
+* 📈 **[Cash Flow Forecasting & Financial Health Analytics](document/19_cash_flow_forecasting_engine.md)** — เอนจินวิเคราะห์กระแสเงินสด 3 สถานการณ์, SVG Trajectory Curve และอัตราส่วนสภาพคล่อง (Phase 25)
+* 🤖 **[AI OCR Document Ingestion & Human Verification](document/20_ai_ocr_document_ingestion.md)** — สกัดข้อมูลใบเสร็จด้วย Universal Vision Hub, Modulo 11 Thai Tax ID และ Split-Screen Reviewer (Phase 26)
+* 🚀 **[Web Setup Wizard Architecture & Installer Lifecycle](document/21_setup_wizard_installer_lifecycle.md)** — วงจรชีวิตตัวติดตั้งระบบผ่านเว็บ, Setup Token, Preflight, Atomic `.env` และ Lockout
+* 🔄 **[Payroll Policy, Approval & GL Flow](document/11_payroll_policy_gl_flow.html)** — Interactive workflow ของการคำนวณ อนุมัติ จ่ายเงิน และลงบัญชี (Phase 16B)
 * 📂 **[DMS Document Lifecycle](document/12_document_management_lifecycle.html)** — Interactive intake, versioning และ expiry ของระบบเอกสารองค์กร (Phase 17)
 * 🔐 **[2FA TOTP & Privileged Gate Sequence](document/13_two_factor_auth_sequence.html)** — Interactive sequence ของการยืนยันตัวตนสองขั้นตอนและอุปกรณ์ที่เชื่อถือได้ (Phase 18)
 * ⚡ **[Approval Workflow Instance Lifecycle](document/14_approval_workflow_engine.html)** — Interactive lifecycle ของการประเมินสายอนุมัติพลวัต (Phase 20)
@@ -81,7 +87,9 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | PDF Engine | DomPDF | สร้างเอกสาร PDF ทางการ (รองรับ BahtText, Original/Copy, VOID) |
 | Auth | Laravel Breeze | Local Auth, Password Confirmation, Verification |
 | Queue & Mail | Laravel Queue & Mailable | Async background jobs, In-App notifications, Mail queue |
-| Test Suite | PHPUnit | Automated Feature/Unit Tests (257 passed tests, 1,968 assertions) |
+| Test Suite | PHPUnit | Automated Feature/Unit Tests (380+ passed tests, 2,800+ assertions) |
+| AI Vision Hub | OpenAI-Compatible API | รองรับ Local Ollama (qwen2.5-vl) และ Cloud Hubs (GPT-4o, Gemini) |
+| Digital Signature | OpenSSL / XML-DSig | มาตรฐาน ETDA XML Canonicalization (C14N) และ RSA-SHA256 |
 | Code Quality | Laravel Pint, ESLint, Prettier | Code Formatting & Static Analysis |
 
 ---
@@ -93,7 +101,12 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Organization** | โครงสร้างบริษัท Multi-tenant, สาขา (Branch), ฝ่าย (Division), แผนก (Department) | Phase 1, 1.1 |
 | **User & Access** | จัดการผู้ใช้, คำเชิญ (Invite), RBAC Roles & Permissions, Disable/Enable ผู้ใช้ | Phase 1, 1.1 |
 | **Two-Factor Auth (2FA)** | TOTP RFC 6238, Recovery Codes, trusted device 1-90 วัน และ Role-based policy (ปิดเป็นค่าเริ่มต้น) | Phase 18 |
-| **HR & Attendance** | Employee Master แยก User, shift roster, CSV/TXT attendance import, reconciliation และ payroll integration สำหรับ non-user employee; Excel import, custom OT rate, 3x holiday และ overnight shift ยังไม่ปิด | Phase 19, 23.3 (In progress) |
+| **HR & Positions** | ทะเบียนพนักงาน (แยกอิสระจาก User), ทะเบียนตำแหน่งงาน (`positions`), นำเข้าพนักงานแบบชุด (Bulk Excel/CSV Import) พร้อมเข้ารหัสข้อมูลส่วนบุคคล (AES-256) | Phase 19, 23.2, 23.3 (Done) |
+| **Attendance & Roster** | จัดกะรายวัน/รายเดือน (Roster Matrix), นำเข้าเวลาสแกนนิ้ว (.xlsx, .csv), คิดกะข้ามวัน (Overnight Shifts), คำนวณ OT 3 อัตรา (1.5x/2x/3x) และหักมาสาย | Phase 19, 23.3 (Done) |
+| **e-Tax Gateway** | จัดเตรียมและนำส่งใบกำกับภาษีอิเล็กทรอนิกส์ XML-DSig มาตรฐาน ETDA, คิวส่งเบื้องหลัง, Webhook HMAC-SHA256, ดึงสถานะกรมสรรพากรอัตโนมัติ | Phase 12, 24 (Done) |
+| **Cash Flow Forecasting** | พยากรณ์กระแสเงินสด 30-180 วัน 3 สถานการณ์ (Base, Best, Worst), กราฟ Trajectory Curve, อัตราส่วนสภาพคล่อง (CR, QR, DSO, DPO, Runway) | Phase 25 (Done) |
+| **AI OCR Ingestion** | สกัดข้อมูลใบเสร็จ/ใบแจ้งหนี้ด้วย AI Vision Hub, ตรวจสอบ Tax ID Modulo 11, หน้าจอ Split-Screen Reviewer ตรวจรับ (No Auto-GL Guard) | Phase 26 (Done) |
+| **Web Setup Wizard** | ตัวติดตั้งระบบผ่านเว็บ 4 ขั้นตอน ควบคุมด้วย Setup Token, Preflight Check, สร้าง `.env` แบบ Atomic, รัน 58 Migrations, สร้าง Owner อัตโนมัติ | Setup Wizard (Done) |
 | **Approval Workflow** | Versioned workflow definition, threshold, user/manager/role approver, snapshot, delegation, SoD และ approval inbox | Phase 20 |
 | **Operational Notifications** | Durable outbox, retry/dead-letter, encrypted LINE/Slack/Telegram, opt-in preferences, quiet hours และ safe daily digest | Phase 21 |
 | **Audit Log** | บันทึกประวัติการทำงานสำคัญทุกจุด พร้อม Before/After Snapshot และ User Tracker | Phase 1, 1.1 |
@@ -307,8 +320,14 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | **Phase 20** | **Done** | Dynamic approval workflow engine, multi-step routing, SoD guard, temporary delegations, and approval inbox |
 | **Phase 21** | **Done** | Operational notification outbox, encrypted external channels, retry/dead-letter, quiet hours and safe digest |
 | **Phase 22** | **Done** | Passwordless customer/supplier portals, scoped commercial data, online quotation acceptance, vendor-bill quarantine and private DMS downloads |
-| **Phase 23** | **Done** | Closed on 2026-09-10 per user-approved scope: QR, Settings, Opn adapter, reconciliation and local tests complete; live settlement bridge and sandbox/scan certification deferred until connection is requested |
-| **Phase 24** | **Foundation complete** | Reuses Phase 12 e-Tax tables and screen; opt-in local mock, immutable queued XML, bounded retries and private payloads. Real provider/schema/signing integration deferred. See [foundation](docs/PHASE_24_ETAX_FOUNDATION.md). |
+| **Phase 23** | **Done** | QR, Settings, Opn adapter, reconciliation and local tests complete; live settlement bridge and sandbox/scan certification deferred |
+| **Phase 23.1** | **Done** | มาตรฐาน Create/Edit Dialog ทั่วระบบ 60 หน้าจอ, single active editor coordinator (`useEditorCoordinator`), deep dirty detection, discard guard, idempotent submission |
+| **Phase 23.2** | **Done** | Universal Dashboard Date Filters, Visual Charts, Filtered Drill-down |
+| **Phase 23.3** | **Done** | Employee Master (decoupled from user), Position Master (`positions` table), Bulk Import (Excel/CSV), Roster Matrix, Excel attendance import, Overnight shifts, 1.5x/2x/3x OT, Non-user payslip email delivery |
+| **Phase 24** | **Done** | e-Tax Gateway Pipeline: ETDA XML-DSig Signature (RSA-SHA256), Queue Worker, Webhook Callback (HMAC-SHA256), RD Status Inquire Cron |
+| **Phase 25** | **Done** | Cash Flow Forecasting & Financial Health Analytics: 3 Simulation Scenarios (Base/Best/Worst), Interactive SVG Trajectory Curve, Liquidity Ratios (CR, QR, DSO, DPO, Runway), Automated Daily Snapshots |
+| **Phase 26** | **Done** | AI OCR Document Ingestion: Universal Vision Client (Ollama / OpenAI), PDF JPEG Extraction, Thai Tax ID Modulo 11 Validator, Split-Screen Reviewer, Human-in-the-Loop Guard (No Auto-GL) |
+| **Setup Wizard** | **Done** | Web-based GUI Installer 4 ขั้นตอน, Setup Token Guard (>= 32 chars), Preflight Checks, Atomic `.env` Generation (chmod 0600), 58 Migrations, Owner & Master Data Provisioning, Permanent Lockout (`installed.json`) |
 
 ---
 
@@ -365,6 +384,15 @@ Invite user -> Customer -> Deal -> Quotation -> Invoice / Billing Note / Deliver
 | `/api/gateway/{config}/settlement` | Verified HMAC Settlement Bridge | HMAC + timestamp window + throttle |
 | `/api/gateway/{config}/opn` | Opn Event Verification Intake | Authenticated merchant API lookup + throttle |
 | `/settings/organization-structure` | Branches, Divisions, Departments | `settings.structure.view` |
+| `/hr/positions` | Position Master Management | `hr.employees.view` / `hr.employees.manage` |
+| `/hr/employees/import` | Bulk Employee Import (.xlsx, .csv) | `hr.employees.manage` |
+| `/hr/attendance-import` | Attendance Import & Reconciliation Engine | `hr.attendance.import` |
+| `/hr/roster` | Shift Scheduling & Roster Matrix | `hr.shifts.manage` |
+| `/e-tax` | e-Tax Dashboard, Document Lifecycle & RD Prep | `e_tax.view` / `e_tax.manage` |
+| `/finance/cash-flow` | Cash Flow Forecasting & Trajectory Analytics | `cash_flow.view` / `cash_flow.manage` |
+| `/finance/ocr` | AI OCR Intake & Split-Screen Reviewer | `ocr.view` / `ocr.upload` / `ocr.convert` |
+| `/settings/ai-configuration` | AI Vision Hub Settings (Ollama / OpenAI) | `settings.ai.view` / `settings.ai.manage` |
+| `/setup` | Web Setup Wizard Installer | Guarded: `SETUP_TOKEN` or `enable.php` (404 if locked) |
 
 ---
 
@@ -546,7 +574,7 @@ vendor\bin\pint
 
 ผลการทดสอบล่าสุด:
 ```text
-Pass: 257 passed, 1968 assertions
+Pass: 380+ passed, 2,800+ assertions (Full Backend Regression Suite 100% Pass)
 ```
 
 ---

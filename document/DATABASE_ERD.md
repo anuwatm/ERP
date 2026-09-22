@@ -1,6 +1,6 @@
-# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 61+ Tables)
+# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 70+ Tables)
 
-เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 61+ ตาราง** อ้างอิง migration runtime เป็นหลัก. ครอบคลุม Phase 0 ถึง 23.1 และมีส่วนขยาย Phase 23.3 ที่สถานะ **In progress**; รายละเอียด acceptance อยู่ใน [`../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md).
+เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 70+ ตาราง** อ้างอิง migration runtime (58 migration files) เป็นหลัก. ครอบคลุม Phase 0 ถึง Phase 26 และ Setup Wizard สถานะ **เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** ครอบคลุมทั้ง Position Master, Bulk Import, Overnight Shifts, 1.5x/2x/3x OT Rates, e-Tax Gateway, Cash Flow Forecasting, AI OCR Ingestion และ Setup Wizard Lifecycle.
 
 ---
 
@@ -24,8 +24,10 @@
 16. [Domain 15: พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า (Customer & Supplier Self-Service Portal - Phase 22)](#16-domain-15-พอร์ทัลบริการตนเองสำหรับลูกค้าและคู่ค้า-customer--supplier-self-service-portal---phase-22)
 17. [Domain 16: การรับชำระเงินเกตเวย์และพร้อมเพย์ (PromptPay & Payment Gateway Settlement - Phase 23)](#17-domain-16-การรับชำระเงินเกตเวย์และพร้อมเพย์-promptpay--payment-gateway-settlement---phase-23)
 18. [Domain 17: ระบบควบคุมความปลอดภัยและการส่งแบบฟอร์มซ้ำ (Idempotent Form Submissions - Phase 23.1)](#18-domain-17-ระบบควบคุมความปลอดภัยและการส่งแบบฟอร์มซ้ำ-idempotent-form-submissions---phase-231)
-19. [Domain 18: HR Employee, Roster & Raw Attendance (Phase 23.3 In progress)](#19-domain-18-hr-employee-roster--raw-attendance-phase-233-in-progress)
-20. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#20-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
+19. [Domain 18: บุคลากร กะทำงาน บันทึกเวลา และตำแหน่งงาน (HR Employees, Positions, Shifts & Attendance - Phase 23.2, 23.3)](#19-domain-18-บุคลากร-กะทำงาน-บันทึกเวลา-และตำแหน่งงาน-hr-employees-positions-shifts--attendance)
+20. [Domain 19: แบบจำลองการคาดการณ์กระแสเงินสดและดัชนีสุขภาพทางการเงิน (Cash Flow Forecasting & Liquidity Health Analytics - Phase 25)](#20-domain-19-แบบจำลองการคาดการณ์กระแสเงินสดและดัชนีสุขภาพทางการเงิน-cash-flow-forecasting)
+21. [Domain 20: ระบบสกัดข้อมูลเอกสารอัจฉริยะและการตรวจสอบ (AI OCR Document Ingestion & Verification - Phase 26)](#21-domain-20-ระบบสกัดข้อมูลเอกสารอัจฉริยะและการตรวจสอบ-ai-ocr-document-ingestion)
+22. [มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)](#22-มาตรฐานและกฎข้อบังคับของฐานข้อมูล-database-conventions--strict-rules)
 
 ---
 
@@ -1378,79 +1380,254 @@ erDiagram
 
 ---
 
-## 19. Domain 18: HR Employee, Roster & Raw Attendance (Phase 23.3 In progress)
+## 19. Domain 18: บุคลากร กะทำงาน บันทึกเวลา และตำแหน่งงาน (HR Employees, Positions, Shifts & Attendance)
 
-Phase 23.3 เพิ่ม schema ต่อไปนี้แล้ว แต่ยังไม่ใช่ Phase ที่ปิด: Excel import, rate propagation เข้า payroll, special-holiday 3x และ overnight shift ยังค้าง. รายละเอียดอยู่ใน [`../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](../docs/PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md).
+ครอบคลุมโครงสร้าง Master Data พนักงานที่แยกเป็นอิสระจาก User (`employees`), ทะเบียนตำแหน่งงาน (`positions`), กฎและอัตราล่วงหน้าตามกะ (`employee_shifts` พร้อม OT 1.5x/2.0x/3.0x), การจัดตารางเวร (`employee_shift_schedules`), บันทึกเวลารูดบัตร/สแกนนิ้วดิบ (`attendance_raw_logs`), และผลการกระทบยอดเวลาทำงานจริงข้ามวัน (`attendances`)
 
 ```mermaid
 erDiagram
+    POSITIONS {
+        uuid id PK
+        uuid org_id FK
+        uuid department_id FK "nullable อ้างอิงแผนก"
+        varchar code "รหัสตำแหน่งงาน (Format POS-0001)"
+        varchar name "ชื่อตำแหน่งงาน"
+        text description "คำอธิบายหน้าที่ความรับผิดชอบ"
+        varchar status "active, inactive"
+        datetime deleted_at "Soft Delete"
+    }
+
     EMPLOYEES {
         uuid id PK
         uuid org_id FK
         uuid user_id FK "nullable, unique per org"
-        varchar employee_code
-        varchar employment_type
-        varchar employment_status
+        uuid position_id FK "อ้างอิงตำแหน่งงาน"
+        uuid department_id FK "อ้างอิงแผนก"
+        uuid branch_id FK "อ้างอิงสาขา"
+        varchar employee_code "รหัสพนักงาน (EMP-0001)"
+        varchar first_name "ชื่อจริง"
+        varchar last_name "นามสกุล"
+        varchar position_title "ชื่อตำแหน่ง (Sync กับ positions.name)"
+        varchar employment_type "full_time, part_time, contract, daily"
+        varchar employment_status "active, on_leave, suspended, terminated, resigned"
+        varchar personal_email "อีเมลส่วนตัวสำหรับส่ง Payslip"
+        text citizen_id_encrypted "เลขบัตร ปชช. เข้ารหัส (AES-256)"
+        text bank_account_number_encrypted "เลขบัญชีธนาคารเข้ารหัส (AES-256)"
+        date join_date "วันที่เริ่มงาน"
+        date probation_end_date "วันสิ้นสุดทดลองงาน"
     }
+
     EMPLOYEE_SHIFTS {
         uuid id PK
         uuid org_id FK
-        decimal ot_rate_normal
-        decimal ot_rate_holiday
-        decimal ot_rate_special_holiday
+        varchar name "ชื่อกะ เช่น กะเช้า, กะดึกข้ามวัน"
+        time start_time "เวลาเข้างาน (เช่น 22:00:00)"
+        time end_time "เวลาออกงาน (เช่น 06:00:00)"
+        int work_minutes_per_day "นาทีทำงานปกติ"
+        decimal ot_rate_normal "อัตรา OT วันทำงานปกติ (Default 1.50x)"
+        decimal ot_rate_holiday "อัตรา OT วันหยุดประจำสัปดาห์ (Default 2.00x)"
+        decimal ot_rate_special_holiday "อัตรา OT วันหยุดตามประเพณี (Default 3.00x)"
+        int grace_period_minutes "ผ่อนผันมาสายได้ (นาที)"
+        int overtime_starts_after_minutes "OT เริ่มคิดหลังเลิกงานกี่นาที"
     }
+
     EMPLOYEE_SHIFT_SCHEDULES {
         uuid id PK
         uuid org_id FK
-        uuid employee_id FK
-        uuid employee_shift_id FK
-        date schedule_date
-        boolean is_day_off
+        uuid employee_id FK "อ้างอิงพนักงาน"
+        uuid employee_shift_id FK "อ้างอิงกะงาน"
+        date schedule_date "วันที่จัดตาราง"
+        boolean is_day_off "วันหยุดประจำสัปดาห์หรือไม่"
+        varchar note "หมายเหตุ"
     }
+
     ATTENDANCE_RAW_LOGS {
         uuid id PK
         uuid org_id FK
-        uuid employee_id FK
-        uuid batch_id
-        datetime punch_time
-        varchar punch_type
-        varchar status
+        uuid batch_id "รหัสแบทช์การนำเข้า (Excel / CSV)"
+        string employee_code "รหัสพนักงานจากเครื่องสแกน"
+        uuid employee_id FK "nullable จับคู่พนักงาน"
+        datetime punch_time "เวลาสแกนนิ้ว/บัตร"
+        varchar punch_type "auto, in, out"
+        varchar device_id "รหัสเครื่องสแกน"
+        varchar status "raw, matched, error"
+        varchar error_reason "สาเหตุข้อผิดพลาด (ถ้ามี)"
     }
+
     ATTENDANCES {
         uuid id PK
         uuid org_id FK
-        uuid employee_id FK
-        uuid employee_shift_id FK
-        date work_date
-        int worked_minutes
-        int ot_normal_minutes
-        int ot_holiday_minutes
-        int ot_special_minutes
-    }
-    EMPLOYEE_PAYROLL_PROFILES {
-        uuid employee_id FK "nullable during legacy bridge"
-        varchar wage_type
-        decimal daily_rate
-        decimal hourly_rate
-    }
-    PAYROLL_ITEMS {
-        uuid employee_id FK
-        decimal ot_amount
-        decimal late_deduction_amount
+        uuid user_id FK "nullable"
+        uuid employee_id FK "อ้างอิงพนักงาน"
+        uuid employee_shift_id FK "อ้างอิงกะที่ทำงาน"
+        date work_date "วันที่เข้าทำงาน"
+        datetime clock_in_at "เวลาเข้างานจริง"
+        datetime clock_out_at "เวลาออกงานจริง (รองรับ Overnight)"
+        int late_minutes "จำนวนนาทีที่มาสาย (หัก Grace Period)"
+        int early_leave_minutes "จำนวนนาทีที่กลับก่อนเวลา"
+        int worked_minutes "นาทีทำงานจริงสุทธิ"
+        int ot_normal_minutes "นาทีทำงานล่วงเวลา 1.5x"
+        int ot_holiday_minutes "นาทีทำงานล่วงเวลา 2.0x"
+        int ot_special_minutes "นาทีทำงานล่วงเวลาพิเศษ 3.0x"
+        boolean is_reconciled "กระทบยอดเวลาแล้วเสร็จ"
     }
 
-    USERS o|--o| EMPLOYEES : "optional account"
-    EMPLOYEES ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "scheduled"
-    EMPLOYEE_SHIFTS ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "assigned"
-    EMPLOYEES o|--o{ ATTENDANCE_RAW_LOGS : "matched punches"
-    EMPLOYEES ||--o{ ATTENDANCES : "daily records"
-    EMPLOYEES o|--o| EMPLOYEE_PAYROLL_PROFILES : "pay profile"
-    EMPLOYEES o|--o{ PAYROLL_ITEMS : "payroll result"
+    EMPLOYEE_PAYROLL_PROFILES {
+        uuid id PK
+        uuid org_id FK
+        uuid employee_id FK "อ้างอิงพนักงาน"
+        uuid user_id FK "nullable"
+        varchar wage_type "monthly, daily, hourly"
+        decimal base_salary "เงินเดือนฐาน"
+        decimal daily_rate "อัตราค่าจ้างรายวัน"
+        decimal hourly_rate "อัตราค่าจ้างรายชั่วโมง"
+    }
+
+    PAYROLL_ITEMS {
+        uuid id PK
+        uuid payroll_run_id FK
+        uuid employee_id FK "อ้างอิงพนักงาน"
+        decimal base_pay "ค่าจ้างฐาน"
+        decimal ot_amount "ยอดรวมค่าล่วงเวลา (1.5x + 2x + 3x)"
+        decimal late_deduction_amount "ยอดหักเงินมาสาย"
+        decimal net_pay "ยอดรับสุทธิ"
+    }
+
+    ORGANIZATIONS ||--o{ POSITIONS : "1:N"
+    POSITIONS ||--o{ EMPLOYEES : "1:N"
+    ORGANIZATIONS ||--o{ EMPLOYEES : "1:N"
+    EMPLOYEES ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "1:N"
+    EMPLOYEE_SHIFTS ||--o{ EMPLOYEE_SHIFT_SCHEDULES : "1:N"
+    EMPLOYEES o|--o{ ATTENDANCE_RAW_LOGS : "punches"
+    EMPLOYEES ||--o{ ATTENDANCES : "daily attendance"
+    EMPLOYEES o|--o| EMPLOYEE_PAYROLL_PROFILES : "compensation profile"
+    EMPLOYEES ||--o{ PAYROLL_ITEMS : "payroll settlement"
 ```
 
 ---
 
-## 20. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
+## 20. Domain 19: แบบจำลองการคาดการณ์กระแสเงินสดและดัชนีสุขภาพทางการเงิน (Cash Flow Forecasting & Liquidity Health Analytics - Phase 25)
+
+ครอบคลุมสมมติฐานและการจำลองสถานการณ์กระแสเงินสด 3 รูปแบบ (`forecast_scenarios`), การคำนวณเงินสดรับ-จ่ายและจุดต่ำสุดรายวัน (`cash_flow_forecast_snapshots`), และบันทึกประวัติดัชนีสภาพคล่องรายวัน เช่น Current Ratio, Quick Ratio, DSO, DPO, และ Working Capital Runway (`financial_metric_logs`)
+
+```mermaid
+erDiagram
+    FORECAST_SCENARIOS {
+        uuid id PK
+        uuid org_id FK
+        varchar name "ชื่อแบบจำลอง (Base, Best, Worst)"
+        varchar scenario_key "base, best, worst"
+        boolean is_default "แบบจำลองเริ่มต้น"
+        boolean deal_probability_weighting "ถ่วงน้ำหนัก Deal Win Rate"
+        decimal deal_multiplier "ตัวคูณยอดขายไปป์ไลน์ (0.50 - 2.00)"
+        decimal ar_collection_rate "อัตราจัดเก็บหนี้ (0.00 - 1.00)"
+        int ar_delay_days "จำนวนวันหนี้ค้างชำระเฉลี่ยเพิ่ม"
+        decimal ap_payment_rate "อัตราจ่ายชำระเจ้าหนี้ (0.00 - 1.00)"
+        decimal expense_buffer_percent "บัฟเฟอร์ค่าใช้จ่ายฉุกเฉิน %"
+        decimal payroll_buffer_percent "บัฟเฟอร์เงินเดือนและค่าจ้าง %"
+        json assumptions_json "สมมติฐานเพิ่มเติม"
+    }
+
+    CASH_FLOW_FORECAST_SNAPSHOTS {
+        uuid id PK
+        uuid org_id FK
+        uuid forecast_scenario_id FK "อ้างอิงสถานการณ์จำลอง"
+        varchar scenario_key "base, best, worst"
+        date as_of_date "วันที่ทำการคำนวณสแนปช็อต"
+        int horizon_days "กรอบเวลาคาดการณ์ (30, 60, 90 วัน)"
+        decimal starting_cash "เงินสดคงเหลือต้นงวด"
+        decimal projected_inflow "กระแสเงินสดรับรวมที่คาดการณ์"
+        decimal projected_outflow "กระแสเงินสดจ่ายรวมที่คาดการณ์"
+        decimal net_cash_flow "กระแสเงินสดสุทธิ (Inflow - Outflow)"
+        decimal projected_ending_cash "เงินสดคงเหลือปลายงวด"
+        decimal lowest_cash_point "จุดต่ำสุดของเงินสด (Lowest Cash Dip)"
+        date lowest_cash_date "วันที่เงินสดลดลงต่ำสุด"
+        json breakdown_json "รายละเอียด Trajectory รายวัน"
+    }
+
+    FINANCIAL_METRIC_LOGS {
+        uuid id PK
+        uuid org_id FK
+        date as_of_date "วันที่บันทึกดัชนี"
+        decimal current_ratio "อัตราส่วนสภาพคล่องหมุนเวียน (Assets / Liabilities)"
+        decimal quick_ratio "อัตราส่วนสภาพคล่องเร็ว ((Cash + AR) / Liabilities)"
+        decimal dso_days "ระยะเวลาจัดเก็บหนี้เฉลี่ย (Days Sales Outstanding)"
+        decimal dpo_days "ระยะเวลาชำระหนี้เฉลี่ย (Days Payable Outstanding)"
+        decimal working_capital "เงินทุนหมุนเวียนสุทธิ"
+        decimal working_capital_runway_months "รันเวย์สภาพคล่อง (จำนวนเดือนก่อนเงินสดหมด)"
+        decimal monthly_burn_rate "อัตราเผาผลาญเงินสดต่อเดือน"
+        decimal current_cash "ยอดเงินสดในบัญชีปัจจุบัน"
+        decimal current_ar "ยอดลูกหนี้การค้าคงค้าง (AR)"
+        decimal current_ap "ยอดเจ้าหนี้การค้าคงค้าง (AP)"
+        decimal inventory_value "มูลค่าสินค้าคงคลังปัจจุบัน"
+        json metadata_json "ข้อมูลประกอบเพิ่มเติม"
+    }
+
+    ORGANIZATIONS ||--o{ FORECAST_SCENARIOS : "1:N"
+    FORECAST_SCENARIOS ||--o{ CASH_FLOW_FORECAST_SNAPSHOTS : "1:N"
+    ORGANIZATIONS ||--o{ FINANCIAL_METRIC_LOGS : "1:N"
+```
+
+---
+
+## 21. Domain 20: ระบบสกัดข้อมูลเอกสารอัจฉริยะและการตรวจสอบ (AI OCR Document Ingestion & Verification - Phase 26)
+
+ครอบคลุมการตั้งค่าการเชื่อมต่อ AI Vision Hub (`ai_configurations`), การสกัดข้อมูลเอกสารใบเสร็จ/ใบแจ้งหนี้ (`ocr_extractions`), ผลการสกัดค่าและความเชื่อมั่นรายฟิลด์พร้อมสถานะแก้ไขโดยผู้ใช้ (`ocr_field_results`), และกลไก Human-in-the-Loop ก่อนสร้าง Draft Expense
+
+```mermaid
+erDiagram
+    AI_CONFIGURATIONS {
+        uuid id PK
+        uuid org_id FK "1:1 ต่อองค์กร"
+        varchar provider_type "ollama, lm_studio, openrouter, openai, gemini, custom"
+        varchar base_url "Endpoint Base URL (e.g. http://localhost:11434/v1)"
+        text api_key "API Key เข้ารหัส (AES-256)"
+        varchar model_name "ชื่อแบบจำลอง (e.g. qwen2.5-vl:7b, gpt-4o)"
+        decimal temperature "ความสร้างสรรค์ (Default 0.10)"
+        int timeout_seconds "Timeout คำขอ (Default 60s)"
+        boolean is_active "เปิดใช้งานเกตเวย์ AI"
+        timestamp last_tested_at "เวลาทดสอบการเชื่อมต่อล่าสุด"
+        varchar last_test_status "success, failed"
+        text last_test_message "ข้อความผลลัพธ์การทดสอบ"
+    }
+
+    OCR_EXTRACTIONS {
+        uuid id PK
+        uuid org_id FK
+        uuid stored_file_id FK "อ้างอิงไฟล์ในตาราง files"
+        varchar status "pending, processing, extracted, converted, rejected, failed"
+        varchar provider_code "universal_openai"
+        varchar document_type "receipt, tax_invoice, bank_slip, unknown"
+        decimal confidence_score "คะแนนความเชื่อมั่นรวม (0.000 - 1.000)"
+        longtext raw_response_text "ผลลัพธ์ข้อความดิบจาก AI"
+        json parsed_data_json "Structured JSON Object"
+        varchar target_type "expense, vendor_bill"
+        uuid target_id "ID เอกสารค่าใช้จ่ายปลายทาง"
+        boolean math_mismatch "ผลรวมตัวเลขไม่ตรงกัน (Subtotal + VAT - WHT != Total)"
+        boolean tax_id_valid "ความถูกต้องของเลขประจำตัวผู้เสียภาษี (Modulo 11)"
+        text error_message "ข้อความผิดพลาด (ถ้ามี)"
+        uuid reviewed_by FK "ผู้ตรวจรับเอกสาร"
+        timestamp reviewed_at "เวลายืนยันตรวจรับ"
+    }
+
+    OCR_FIELD_RESULTS {
+        uuid id PK
+        uuid org_id FK
+        uuid ocr_extraction_id FK "อ้างอิงใบสกัด OCR"
+        varchar field_key "tax_id, subtotal, vat_rate, vat_amount, total_amount, invoice_no, document_date, vendor_name"
+        text extracted_value "ค่าที่สกัดได้"
+        decimal confidence "คะแนนความมั่นใจรายฟิลด์"
+        boolean is_corrected_by_user "แก้ไขโดยผู้ใช้หรือไม่"
+    }
+
+    ORGANIZATIONS ||--o| AI_CONFIGURATIONS : "1:1"
+    ORGANIZATIONS ||--o{ OCR_EXTRACTIONS : "1:N"
+    OCR_EXTRACTIONS ||--o{ OCR_FIELD_RESULTS : "1:N"
+```
+
+---
+
+## 22. มาตรฐานและกฎข้อบังคับของฐานข้อมูล (Database Conventions & Strict Rules)
 
 1. **ระบบคีย์หลัก (Primary Keys):**  
    - ทุกตารางใช้ Primary Key ชื่อ `id` เป็นชนิด **Time-Ordered UUID (UUIDv7)** เพื่อประสิทธิภาพในการทำ Indexing และป้องกันการคาดเดา ID ข้อมูล

@@ -227,20 +227,66 @@ Create/Edit entry points ทั้งหมด 60 หน้า 92 ไฟล์�
   - `BankStatements.import` และ `ETax.generate` คง specialized action dialog flow
 - **Form Inventory & Map:** ดูรายละเอียดรายฟอร์ม 91 รายการได้ใน `docs/PHASE_23_1_FORM_INVENTORY.md`
 
-## Phase 23.3: HR Employee, Roster & Attendance Import (In progress)
+## Phase 23.3: HR Employee, Roster & Attendance Import (Complete & Closed)
 
 | Screen / Action | Route | Permission |
 | --- | --- | --- |
 | Employee Directory | `GET /hr/employees` | `hr.employees.view` |
 | Create / update Employee | `POST/PATCH /hr/employees...` | `hr.employees.manage` + password confirm |
 | Link Employee account | `PATCH /hr/employees/account/{employee}` | `hr.employees.manage` + password confirm |
-| Roster | `GET /hr/roster` | `hr.shifts.manage` |
+| Position Master List | `GET /hr/positions` | `hr.employees.view` |
+| Create / update Position | `POST /hr/positions` | `hr.employees.manage` |
+| Bulk Employee Import | `POST /hr/employees/import` | `hr.employees.manage` |
+| Roster Matrix Calendar | `GET /hr/roster` | `hr.shifts.manage` |
 | Schedule / batch roster | `POST /hr/roster/schedules`, `POST /hr/roster/batch` | `hr.shifts.manage` + password confirm |
-| Attendance import/template | `GET /hr/attendance-import`, `/template` | `hr.attendance.import` |
-| Import / reconcile / correction | `POST /hr/attendance-import`, `/reconcile`, `/{attendance}/correct` | `hr.attendance.import` + password confirm |
-| Email payslip | `POST /payroll/payslips/{payrollItem}/email` | `payroll.manage` + password confirm |
+| Attendance import / template | `GET /hr/attendance-import`, `/template` | `hr.attendance.import` |
+| Import (.xlsx, .xls, .xml, .csv) | `POST /hr/attendance-import` | `hr.attendance.import` + password confirm |
+| Reconcile (Overnight + 1.5x/2x/3x OT) | `POST /hr/attendance-import/reconcile` | `hr.attendance.import` + password confirm |
+| Attendance Correction | `POST /hr/attendance-import/{attendance}/correct` | `hr.attendance.import` + password confirm |
+| Email payslip (Non-User direct) | `POST /payroll/payslips/{payrollItem}/email` | `payroll.manage` + password confirm |
 
-> Import ปัจจุบันรับ CSV/TXT เท่านั้น; Phase 23.3 ยังไม่ปิด. ดู `PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`.
+## Phase 24: e-Tax Invoice & RD Prep Gateway (Complete & Closed)
+
+| Screen / Action | Route | Permission |
+| --- | --- | --- |
+| e-Tax Dashboard & Documents | `GET /e-tax` | `e_tax.view` |
+| Update e-Tax Configuration | `PATCH /e-tax/config` | `e_tax.manage` + password confirm |
+| Generate e-Tax Document | `POST /e-tax/documents` | `e_tax.generate` |
+| Sign XML-DSig | `POST /e-tax/documents/{document}/sign` | `e_tax.sign` |
+| Submit to Gateway / RD | `POST /e-tax/documents/{document}/submit` | `e_tax.submit` |
+| Download Signed XML / PDF | `GET /e-tax/documents/{document}/download` | `e_tax.view` |
+| Inquire RD Status | `POST /e-tax/documents/{document}/inquire` | `e_tax.view` |
+| Export RD Prep Archive | `GET /e-tax/rd-prep` | `e_tax.view` |
+| Inbound Webhook Callback | `POST /api/e-tax/{config}/callback` | Public (HMAC-SHA256 signature verified) |
+
+## Phase 25: Cash Flow Forecasting & Financial Health Analytics (Complete & Closed)
+
+| Screen / Action | Route | Permission |
+| --- | --- | --- |
+| Cash Flow Dashboard & Trajectory | `GET /finance/cash-flow` | `cash_flow.view` |
+| Update Simulation Scenario (Base/Best/Worst) | `PATCH /finance/cash-flow/scenarios/{scenario}` | `cash_flow.manage` |
+| Manual Snapshot Generation | `POST /finance/cash-flow/snapshot` | `cash_flow.manage` |
+
+## Phase 26: AI OCR Document Ingestion & Verification (Complete & Closed)
+
+| Screen / Action | Route | Permission |
+| --- | --- | --- |
+| OCR Queue & Processing Center | `GET /finance/ocr` | `ocr.view` |
+| Upload Receipt / Invoice (Image or PDF) | `POST /finance/ocr/upload` | `ocr.upload` |
+| Split-Screen Reviewer | `GET /finance/ocr/{extraction}` | `ocr.view` |
+| Convert to Draft Expense | `POST /finance/ocr/{extraction}/convert-expense` | `ocr.convert` (Human-in-the-Loop, No Auto-GL) |
+| Convert to Draft Vendor Bill | `POST /finance/ocr/{extraction}/convert-vendor-bill` | `ocr.convert` (Human-in-the-Loop, No Auto-GL) |
+| Reject Extraction | `POST /finance/ocr/{extraction}/reject` | `ocr.convert` |
+| AI Configuration Center | `GET /settings/ai-configuration` | `settings.ai.view` |
+| Save AI Settings (Ollama / OpenAI) | `POST /settings/ai-configuration` | `settings.ai.manage` + password confirm |
+| Test AI Connectivity | `POST /settings/ai-configuration/test` | `settings.ai.manage` |
+
+## Web Setup Wizard & Installer Lifecycle
+
+| Screen / Action | Route | Access Control |
+| --- | --- | --- |
+| Web Setup Wizard (Steps 1-4) | `GET /setup` | Guarded: `SETUP_TOKEN` or `enable.php`; HTTP 404 if `installed.json` exists |
+| Submit Setup Step / Execute Install | `POST /setup` | Guarded: Setup Session Token, File Lock `install.lock` |
 
 
 - ไม่มี user invited: แสดงปุ่ม invite.

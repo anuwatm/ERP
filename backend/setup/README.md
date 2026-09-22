@@ -2,7 +2,7 @@
 
 เปิด wizard ได้ที่ `/setup` หลัง copy release folder ขึ้น server แล้ว. รองรับทั้ง Document Root ที่ `backend/public` และ repository root (ผ่าน `setup/index.php`).
 
-หลังเปิด installer แล้ว เปิด `/setup/system-requirements.php` เพื่อตรวจ requirement แบบละเอียดด้วย token เดียวกัน หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()`; การตรวจ database credential อยู่ใน wizard.
+เปิด `/setup/system-requirements.php` เพื่อตรวจ requirement แบบละเอียดได้โดยไม่ต้องใช้ token หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()`; การตรวจ database credential อยู่ใน wizard.
 
 ## เปิด installer อย่างปลอดภัย
 
