@@ -371,3 +371,25 @@
 - **Frontend Quality (TypeScript & ESLint)**: TypeScript (`tsc --noEmit`) 0 errors, ESLint 0 errors.
 - **Frontend Build (Vite Production)**: Clean build in 10.57s.
 - **Git Diff Hygiene**: `git diff --check` passed cleanly with 0 whitespace errors.
+
+## Cleanup audit — 2026-09-23
+
+ย้ายไฟล์ที่ตรวจแล้วว่าไม่ถูกใช้งานจาก project root ไปเก็บที่ `temp/cleanup-2026-09-23/` เพื่อให้ตรวจสอบย้อนหลังได้:
+
+- `backend/tests/Unit/ExampleTest.php` → `temp/cleanup-2026-09-23/ExampleTest.php` — Laravel scaffold test ที่ตรวจเพียง `assertTrue(true)` จึงไม่มี coverage ที่มีความหมาย
+- `graphify-out/` → `temp/cleanup-2026-09-23/graphify-out/` — generated graph output ที่ไม่พบ source, test, documentation หรือ deployment path อ้างอิง
+
+สร้าง `temp/cleanup-2026-09-23/README.md` เป็น manifest ของ archive แล้ว
+
+Validation: `php artisan test --compact tests/Unit` ผ่าน 2 tests / 6 assertions หลังย้าย
+
+## Pending for Gemini — Setup Wizard & System Requirements review (2026-09-24)
+
+โปรดแก้และทดสอบรายการต่อไปนี้:
+
+1. **[High] จำกัดสิทธิ์ Safe Fix:** `setup/system-requirements.php` เปิด GET แบบ public ตาม requirement ได้ แต่ POST `repair_directory` ใช้เพียง CSRF ซึ่งไม่ใช่ authorization เพราะผู้เข้าชมสร้าง session/token ของตนเองได้. คง GET public ไว้ แต่บังคับยืนยัน `SETUP_TOKEN` สำหรับ POST repair และเพิ่ม feature test ของกรณีไม่มี/มี token.
+2. **[Medium] XLSX dependency:** `backend/app/Services/Hr/EmployeeImportService.php` และ `backend/app/Services/AttendanceReconciliationService.php` ใช้ `ZipArchive`; fallback เรียก `tar` ผ่าน `exec()` ซึ่งอาจใช้ไม่ได้บน shared hosting. กำหนด `zip` เป็น required requirement สำหรับ deployment ที่รองรับ XLSX หรือแสดง Failed เมื่อไม่มีทั้ง `ZipArchive` และ fallback ที่ใช้งานได้. อัปเดต Installer preflight, System Requirements และเอกสารให้ตรงกัน.
+3. **[Medium] Web-flow coverage:** ปัจจุบัน `backend/tests/Unit/Setup/InstallerTest.php` มี 2 tests / 9 assertions เท่านั้น. เพิ่ม feature/integration coverage สำหรับ setup lock 404, installer disabled 403, wizard CSRF/token flow, public System Requirements GET และ Safe Fix authorization/CSRF.
+4. **[Low] Session hardening:** `setup/system-requirements.php` ใช้ default PHP session. ตั้งชื่อ session แยกและ cookie params ให้สอดคล้อง Wizard: `HttpOnly`, `SameSite=Strict`, `Secure` เฉพาะ HTTPS และ path ที่ถูกต้อง.
+
+หมายเหตุ: แก้เอกสาร `docs/SETUP_WIZARD.md` ให้ระบุ database credential อยู่ **Step 2** แล้ว. หลังแก้ให้รัน targeted tests, Pint และอัปเดต README/docs/diagrams หาก contract เปลี่ยน.

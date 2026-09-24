@@ -287,6 +287,8 @@ Create/Edit entry points ทั้งหมด 60 หน้า 92 ไฟล์�
 | --- | --- | --- |
 | Web Setup Wizard (Steps 1-4) | `GET /setup` | Guarded: `SETUP_TOKEN` or `enable.php`; HTTP 404 if `installed.json` exists |
 | Submit Setup Step / Execute Install | `POST /setup` | Guarded: Setup Session Token, File Lock `install.lock` |
+| System Requirements report | `GET /setup/system-requirements.php` | Public before installation; HTTP 404 if `installed.json` exists; never exposes secrets or `phpinfo()` |
+| Safe directory repair | `POST /setup/system-requirements.php` | CSRF-protected; only creates missing `storage/` or `bootstrap/cache/` when the parent is writable |
 
 
 - ไม่มี user invited: แสดงปุ่ม invite.

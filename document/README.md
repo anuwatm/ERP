@@ -680,7 +680,7 @@ sequenceDiagram
 
 ### 21. Web Setup Wizard Architecture & Installer Lifecycle
 - **ไฟล์เอกสาร:** [`21_setup_wizard_installer_lifecycle.md`](./21_setup_wizard_installer_lifecycle.md)
-- **วัตถุประสงค์:** วงจรการติดตั้งระบบผ่านเว็บวิซาร์ด (Setup Wizard 4 ขั้นตอน), การตรวจสอบความปลอดภัยล่วงหน้า (Preflight Check & Clean Release), การเขียน `.env` แบบ Atomic ด้วย File Lock (`install.lock`), การรัน Migration 58 ไฟล์, การสร้าง Owner Account พร้อม Master Data และการล็อกการเข้าถึงถาวรด้วย `installed.json`
+- **วัตถุประสงค์:** วงจรการติดตั้งระบบผ่านเว็บวิซาร์ด (Setup Wizard 4 ขั้นตอน) และหน้า System Requirements แบบไม่ใช้ token, การตรวจสอบความปลอดภัยล่วงหน้า (Preflight Check & Clean Release), การเขียน `.env` แบบ Atomic ด้วย File Lock (`install.lock`), การรัน Migration 58 ไฟล์, การสร้าง Owner Account พร้อม Master Data และการล็อกการเข้าถึงถาวรด้วย `installed.json`
 - **Mermaid Preview:**
 
 ```mermaid
@@ -693,10 +693,16 @@ flowchart TD
         CheckToken -- "Yes" --> WizardUI["Setup Wizard Steps (1-4)"]
         
         TokenSource["Activation Token (>= 32 chars)\n1. Server Env: SETUP_TOKEN\n2. File: backend/setup/enable.php"] -.-> CheckToken
+
+        RequirementsReq["GET /setup/system-requirements.php\nNo Setup Token"] --> RequirementsLock{"Is Installed?\ninstalled.json"}
+        RequirementsLock -- "Yes" --> Requirements404["HTTP 404 Not Found"]
+        RequirementsLock -- "No" --> RequirementsReport["Public server requirements\nNo secrets / phpinfo()"]
+        RequirementsReport --> Guidance["Failed/Warning guidance"]
+        Guidance --> SafeFix["CSRF Safe Fix\nCreate only missing storage/ or bootstrap/cache/"]
     end
 
     subgraph StepFlow["2. Multi-Step Wizard Flow"]
-        WizardUI --> Step1["Step 1: Security & Preflight\n• PHP 8.3+, PDO MySQL, OpenSSL, mbstring\n• Writable: storage/, bootstrap/cache/, root\n• Clean Release: ! is_file(.env)\n• Verify Setup Token (hash_equals)"]
+        WizardUI --> Step1["Step 1: Security & Preflight\n• PHP 8.3+, PDO MySQL, OpenSSL, mbstring, fileinfo\n• DOM, SimpleXML, cURL\n• Writable: storage/, bootstrap/cache/, root\n• Clean Release: ! is_file(.env)\n• Verify Setup Token (hash_equals)"]
         Step1 --> Step2["Step 2: Server & Database\n• App Name & App URL (http/https)\n• Host, Port (1-65535), DB Name, Username\n• Test Connection: PDO SELECT 1"]
         Step2 --> Step3["Step 3: Organization & Owner\n• Org Name, Legal Name, Tax ID\n• Owner Name, Email\n• Owner Password (>= 12 chars)"]
         Step3 --> Step4["Step 4: Install Confirmation\n• Type 'INSTALL' to confirm execution"]

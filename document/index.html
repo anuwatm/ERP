@@ -404,11 +404,12 @@
           <span class="type-tag type-lifecycle">Lifecycle / Security</span>
           <h2 class="card-title">21. Web Setup Wizard Architecture &amp; Installer Lifecycle</h2>
           <p class="card-desc">
-            วงจรชีวิตการติดตั้งระบบผ่านเบราว์เซอร์ 4 ขั้นตอน: ควบคุมความปลอดภัยด้วย Setup Token (>= 32 chars), Preflight Checks, Atomic .env Generation (chmod 0600), รัน Migration 58 ไฟล์, สร้าง Owner Account พร้อม Master Data และปิดกั้นถาวรด้วย installed.json
+            วงจรชีวิตการติดตั้งระบบผ่านเบราว์เซอร์ 4 ขั้นตอน พร้อมหน้า System Requirements แบบไม่ใช้ token สำหรับตรวจ PHP/extensions, คำแนะนำแก้ไข และ Safe Fix โฟลเดอร์ที่ขาด; Wizard ใช้ Setup Token, Atomic .env และ permanent lockout
           </p>
           <div class="card-meta">
             <span class="meta-chip" style="color: var(--success); border-color: rgba(52, 211, 153, 0.4);">Installer Ready</span>
             <span class="meta-chip">Security Token Guard</span>
+            <span class="meta-chip">Public Requirements Check</span>
             <span class="meta-chip">Atomic .env Write</span>
             <span class="meta-chip">Owner Provisioning</span>
             <span class="meta-chip">Permanent Lockout</span>

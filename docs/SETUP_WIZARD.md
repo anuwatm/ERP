@@ -4,7 +4,7 @@ Wizard อยู่ที่ `backend/setup/` และ public entry อยู�
 
 ## Deployment bundle
 
-ต้อง copy ทั้ง `backend/vendor/`, `backend/public/build/`, `backend/setup/`, `backend/public/setup/` และ `setup/` พร้อม source/migrations. Server ไม่ต้องมี Composer หรือ Node แต่ต้องมี PHP 8.3+, PDO MySQL, OpenSSL, mbstring, fileinfo และสิทธิ์เขียน `backend/.env`, `backend/storage/`, `backend/bootstrap/cache/`.
+ต้อง copy ทั้ง `backend/vendor/`, `backend/public/build/`, `backend/setup/`, `backend/public/setup/` และ `setup/` พร้อม source/migrations. Server ไม่ต้องมี Composer หรือ Node แต่ต้องมี PHP 8.3+, PDO MySQL, OpenSSL, mbstring, fileinfo, DOM, SimpleXML, cURL และสิทธิ์เขียน `backend/.env`, `backend/storage/`, `backend/bootstrap/cache/`.
 
 ## เปิด installer
 
@@ -17,7 +17,7 @@ Wizard อยู่ที่ `backend/setup/` และ public entry อยู�
 
 ## การทำงานของ wizard
 
-ก่อนติดตั้ง เปิด `/setup/system-requirements.php` เพื่อตรวจ PHP version, extensions, memory/upload limits, directory permissions และ build assets ได้โดยไม่ต้องใช้ `SETUP_TOKEN` หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()` และตรวจ database credential ในขั้นตอนที่ 3 ของ wizard.
+ก่อนติดตั้ง เปิด `/setup/system-requirements.php` เพื่อตรวจ PHP version, required extensions (`pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `dom`, `simplexml`, `curl`), memory/upload limits, directory permissions และ build assets ได้โดยไม่ต้องใช้ `SETUP_TOKEN` หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()` และตรวจ database credential ใน Step 2 ของ wizard. ทุก Failed/Warning มีคำแนะนำเฉพาะสาเหตุ; ปุ่ม Fix สร้างได้เฉพาะ `storage/` หรือ `bootstrap/cache/` ที่ยังไม่มีและ parent directory เขียนได้ โดยใช้ CSRF token และไม่เปลี่ยน permission หรือ PHP/server configuration.
 
 1. ตรวจ PHP, extensions, writable directories, `vendor/` และ `public/build/`
 2. ตรวจ setup token

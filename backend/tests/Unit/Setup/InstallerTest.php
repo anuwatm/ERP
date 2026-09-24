@@ -45,6 +45,9 @@ class InstallerTest extends TestCase
         $installer = new Installer(base_path());
         $checks = collect($installer->preflight())->keyBy('label');
 
+        $this->assertArrayHasKey('DOM extension', $checks);
+        $this->assertArrayHasKey('SimpleXML extension', $checks);
+        $this->assertArrayHasKey('cURL extension', $checks);
         $this->assertArrayHasKey('Clean release directory', $checks);
         $this->assertFalse($checks['Clean release directory']['ok']);
         $this->assertSame('.env already exists', $checks['Clean release directory']['detail']);

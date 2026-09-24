@@ -1,6 +1,6 @@
 # Current Implementation Reference
 
-สถานะล่าสุด (2026-09-22): **Phase 1 - 26 (รวม Phase 18.1, 23.1, 23.2, 23.3, 24, 25, 26) และ Setup Wizard เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** — ครอบคลุม Core MVP, Commercial Docs, Tax Reports, Treasury, GL, Multi-Currency, Inventory, Payroll, DMS, 2FA, Workflows, Notifications, Self-Service Portals, Payment Gateway, System-wide Dialog Standard, Dashboard Redesign, HR Employee Master & Shifts & Reconciliation, e-Tax Gateway XML-DSig, Cash Flow Forecasting, AI OCR Document Ingestion (Local AI & Cloud Hubs), และ Web Setup Wizard. ผ่านการทดสอบ Full Backend Regression 380+ tests (3,680+ assertions ผ่าน 100%), Frontend Unit 23 tests, Pint/ESLint/Prettier/Vite production build 100% สะอาดสมบูรณ์.
+สถานะล่าสุด (2026-09-24): **Phase 1 - 26 (รวม Phase 18.1, 23.1, 23.2, 23.3, 24, 25, 26) และ Setup Wizard เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** — ครอบคลุม Core MVP, Commercial Docs, Tax Reports, Treasury, GL, Multi-Currency, Inventory, Payroll, DMS, 2FA, Workflows, Notifications, Self-Service Portals, Payment Gateway, System-wide Dialog Standard, Dashboard Redesign, HR Employee Master & Shifts & Reconciliation, e-Tax Gateway XML-DSig, Cash Flow Forecasting, AI OCR Document Ingestion (Local AI & Cloud Hubs), และ Web Setup Wizard. ผ่านการทดสอบ Full Backend Regression 380+ tests (3,680+ assertions ผ่าน 100%), Frontend Unit 23 tests, Pint/ESLint/Prettier/Vite production build 100% สะอาดสมบูรณ์.
 
 เอกสารนี้เป็นภาพรวม implementation ปัจจุบัน ใช้สำหรับอ่านระบบร่วมกับ source code; โดย migration, route และ feature tests เป็น source of truth ของ runtime.
 
@@ -14,7 +14,7 @@
 | Runtime drivers | database session/cache/queue, log mailer in local |
 | Locale / timezone | `th` locale; Laravel application timezone `UTC` (Organization timezone `Asia/Bangkok`) |
 | Auth | Laravel Breeze local auth, email verification, RBAC 7 บทบาท, optional organization 2FA TOTP (RFC 6238) |
-| Setup Engine | Web-based Setup Wizard (`/setup`) พร้อม Security Activation Token, Preflight Server Check, Clean Release Guard, Atomic `.env` Generator, และ Install Lock |
+| Setup Engine | Web-based Setup Wizard (`/setup`) พร้อม Security Activation Token, Preflight Server Check, Clean Release Guard, Atomic `.env` Generator และ Install Lock; มี public System Requirements report (`/setup/system-requirements.php`) พร้อมคำแนะนำและ Safe Fix สำหรับโฟลเดอร์ที่ขาด |
 
 ## Implemented Domains
 
@@ -41,7 +41,7 @@
 | HR+ | Employee Position Master & Bulk Import | ตารางตำแหน่งงานเป็น Master Data อิสระ (`positions`), เชื่อมโยงกับ `employees.position_id` พร้อม backward-compatible sync, Searchable & Filterable Combobox (`PositionCombobox`) พร้อมปุ่มสร้างตำแหน่งใหม่แบบ Inline Quick-Add, ปรับ Dark Mode Base CSS, และระบบนำเข้าประวัติพนักงานแบบชุด (`EmployeeImportService`) รองรับ Excel/CSV/TSV พร้อม Auto-create Position และเข้ารหัสข้อมูลตาม PDPA |
 | 25 | Cash flow forecasting & health analytics | ระบบพยากรณ์กระแสเงินสดล่วงหน้า 30-180 วัน ด้วย 3 สถานการณ์ (Base, Best, Worst), Engine คำนวณ Inflow (AR Aging + Deal Pipeline Probability) และ Outflow (AP Approved Expenses + Open POs + Scheduled Payroll), คำนวณอัตราส่วนสภาพคล่อง Current Ratio, Quick Ratio, DSO, DPO, และ Working Capital Runway, กราฟ Interactive SVG Trajectory Curve, ปรับแต่งพารามิเตอร์จำลอง, และคำสั่งบันทึก Snapshot รายวัน `cashflow:snapshot` |
 | 26 | AI OCR document ingestion | สถาปัตยกรรมสกัดข้อมูลเอกสารใบเสร็จ/ใบกำกับภาษีด้วย Universal OpenAI-Compatible Vision (รองรับทั้ง Local AI Ollama/LM Studio และ Cloud Hubs GPT-4o/OpenRouter/Gemini), สกัด JPEG stream จาก Scanned PDF อัตโนมัติ, บังคับ Native JSON Mode, ตรวจสอบเลขผู้เสียภาษี 13 หลักด้วย Modulo 11 และตรวจสอบความถูกต้องทางคณิตศาสตร์ (Math Reconciliation), หน้าจอ Split-Screen Reviewer ตรวจเทียบเอกสารต้นฉบับกับข้อมูลสกัด, แปลงเป็น Assisted Draft Expense/Bill โดยมี Human-in-the-Loop ควบคุม (ห้าม Auto-post GL เด็ดขาด) |
-| Setup | Web-based setup wizard | ติดตั้งระบบบน Web Server ผ่านเบราว์เซอร์ (`/setup`), ควบคุมความปลอดภัยด้วย Setup Token (ผ่าน Server Environment หรือไฟล์ `backend/setup/enable.php`), Preflight ตรวจสอบ PHP 8.3+, Extensions, Writable Folders และ Clean Release (ปฏิเสธ `.env` เดิม), ทดสอบการเชื่อมต่อ PDO MySQL, ปฏิเสธฐานข้อมูลที่มีตาราง `migrations` เดิม, สร้าง `.env` แบบ Atomic + `chmod 0600`, รัน Database Migrations, Provision เจ้าของระบบ (Owner), ปิดหน้า `/setup` ด้วย Install Lock (`installed.json`), และลบไฟล์ `enable.php` อัตโนมัติ |
+| Setup | Web-based setup wizard | ติดตั้งระบบบน Web Server ผ่านเบราว์เซอร์ (`/setup`), ควบคุมความปลอดภัยด้วย Setup Token (ผ่าน Server Environment หรือไฟล์ `backend/setup/enable.php`), Preflight ตรวจ PHP 8.3+, `pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `dom`, `simplexml`, `curl`, writable folders และ Clean Release (ปฏิเสธ `.env` เดิม), ทดสอบการเชื่อมต่อ PDO MySQL, ปฏิเสธฐานข้อมูลที่มีตาราง `migrations` เดิม, สร้าง `.env` แบบ Atomic + `chmod 0600`, รัน Database Migrations, Provision เจ้าของระบบ (Owner), ปิดหน้า `/setup` ด้วย Install Lock (`installed.json`) และลบไฟล์ `enable.php` อัตโนมัติ; `/setup/system-requirements.php` เปิดได้ก่อนติดตั้งโดยไม่ใช้ token พร้อมคำแนะนำและ Safe Fix เฉพาะโฟลเดอร์ที่ขาด |
 
 ## Current Boundaries & Policies
 
@@ -72,5 +72,5 @@
 - `php artisan route:list --except-vendor`: 250+ routes
 - 58 database migrations
 - Full Backend Regression Suite: **380+ tests passed (3,680+ assertions / 0 failures)**
-- Setup Wizard Suite: `InstallerTest` **2 passed (6 assertions / 0 failures)**
+- Setup Wizard Suite: `InstallerTest` **2 passed (9 assertions / 0 failures)**
 - Code Quality: Laravel Pint Clean, ESLint Clean (0 errors / 0 warnings), Prettier Clean, TypeScript `tsc` Clean (0 errors), Vite Production Build Clean (0 errors)

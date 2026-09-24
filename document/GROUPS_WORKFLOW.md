@@ -1143,7 +1143,7 @@ sequenceDiagram
 ---
 
 ### 7.4 Diagram: Web Setup Wizard Architecture & Installer Lifecycle
-วงจรชีวิตการติดตั้งระบบ Company OS / Lightweight ERP ผ่านเบราว์เซอร์ 4 ขั้นตอน ควบคุมความปลอดภัยด้วย Setup Token, ตรวจสอบสภาพแวดล้อม (Preflight Check & Clean Release), ล็อกไฟล์ป้องกันติดตั้งซ้อน (`install.lock`), เขียนไฟล์ `.env` แบบ Atomic พร้อมตั้งค่า `chmod 0600`, รันการสร้างฐานข้อมูล (58 Migrations), สร้างบัญชีผู้ดูแลระบบและ Master Data และล็อกการเข้าถึงถาวรด้วย `installed.json`
+วงจรชีวิตการติดตั้งระบบ Company OS / Lightweight ERP ผ่านเบราว์เซอร์ 4 ขั้นตอน และหน้า `/setup/system-requirements.php` สำหรับตรวจ server ก่อนเปิด installer โดยไม่ใช้ token. Wizard ควบคุมด้วย Setup Token, ตรวจสอบสภาพแวดล้อม (Preflight Check & Clean Release), ล็อกไฟล์ป้องกันติดตั้งซ้อน (`install.lock`), เขียนไฟล์ `.env` แบบ Atomic พร้อมตั้งค่า `chmod 0600`, รันการสร้างฐานข้อมูล (58 Migrations), สร้างบัญชีผู้ดูแลระบบและ Master Data และล็อกการเข้าถึงถาวรด้วย `installed.json`
 
 ```mermaid
 flowchart TD
@@ -1153,10 +1153,15 @@ flowchart TD
         CheckLock -- "ยังไม่ได้ติดตั้ง" --> CheckToken{"เปิดใช้งานแล้วหรือยัง?<br>SETUP_TOKEN / enable.php"}
         CheckToken -- "ยังไม่เปิด" --> HTTP403["HTTP 403 Forbidden<br>Installer is disabled"]
         CheckToken -- "ยืนยัน Token ผ่าน" --> Wizard["เข้าสู่หน้าต่างตัวติดตั้ง 4 ขั้นตอน"]
+        Requirements["GET /setup/system-requirements.php<br>ไม่ใช้ Setup Token"] --> CheckRequirementsLock{"installed.json มีอยู่หรือไม่?"}
+        CheckRequirementsLock -- "มี" --> Requirements404["HTTP 404 Not Found"]
+        CheckRequirementsLock -- "ไม่มี" --> RequirementsReport["รายงาน PHP, extensions, runtime,<br>release และ permission<br>ไม่แสดง secret/phpinfo()"]
+        RequirementsReport --> Guidance["Failed/Warning: คำแนะนำแก้ไข"]
+        Guidance --> SafeFix["Safe Fix + CSRF<br>สร้างเฉพาะ storage/ หรือ bootstrap/cache/<br>ที่ยังไม่มีและ parent เขียนได้"]
     end
 
     subgraph Steps ["2. ขั้นตอนการติดตั้ง (Setup Wizard Steps)"]
-        Wizard --> S1["Step 1: Security & Preflight<br>• PHP 8.3+, PDO MySQL, OpenSSL, mbstring<br>• สิทธิ์เขียนโฟลเดอร์ storage/, bootstrap/cache/<br>• ตรวจสอบ Clean Release (! is_file(.env))"]
+        Wizard --> S1["Step 1: Security & Preflight<br>• PHP 8.3+, PDO MySQL, OpenSSL, mbstring, fileinfo<br>• DOM, SimpleXML, cURL<br>• สิทธิ์เขียนโฟลเดอร์ storage/, bootstrap/cache/<br>• ตรวจสอบ Clean Release (! is_file(.env))"]
         S1 --> S2["Step 2: Server & Database<br>• App Name & App URL (http/https)<br>• ฐานข้อมูล MySQL (Host, Port, DB, User, Pass)<br>• ทดสอบการเชื่อมต่อจริง (PDO SELECT 1)"]
         S2 --> S3["Step 3: Organization & Owner<br>• ข้อมูลบริษัท (ชื่อ, เลขผู้เสียภาษี)<br>• ข้อมูลผู้ดูแลระบบ (ชื่อ, อีเมล, รหัสผ่าน >= 12 ตัว)"]
         S3 --> S4["Step 4: Confirmation<br>• ยืนยันการสั่งติดตั้งโดยพิมพ์ 'INSTALL'"]

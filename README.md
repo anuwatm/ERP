@@ -31,7 +31,7 @@ Installer -> Invite User -> Customer -> Deal -> Quotation -> Invoice / DO / Bill
 - **Operational Notification Outbox**: LINE OA / Slack / Telegram, Backoff ป้องกันบล็อก, Quiet Hours, Daily Digest
 - **Customer & Supplier Portals**: Passwordless Magic Link, Scoped Sessions, อนุมัติใบเสนอราคา, ส่งบิลคู่ค้า
 - **Master Dialog Standard (Phase 23.1)**: มาตรฐาน Modal Dialog 60 หน้าจอ พร้อม `useEditorCoordinator`, Deep Dirty Detection, และ Discard Guard
-- **Web Setup Wizard**: ตัวติดตั้งระบบผ่านเว็บ 4 ขั้นตอน ควบคุมด้วย Setup Token, Preflight Check, สร้าง `.env` แบบ Atomic, รัน 58 Migrations, ติดตั้ง Owner & Master Data อัตโนมัติ พร้อมล็อกระบบถาวรหลังติดตั้ง
+- **Web Setup Wizard**: ตัวติดตั้งระบบผ่านเว็บ 4 ขั้นตอน ควบคุมด้วย Setup Token, Preflight Check, สร้าง `.env` แบบ Atomic, รัน 58 Migrations, ติดตั้ง Owner & Master Data อัตโนมัติ พร้อมล็อกระบบถาวรหลังติดตั้ง; มีหน้า `/setup/system-requirements.php` สำหรับตรวจ server โดยไม่ใช้ token
 
 เอกสารสถานะงานหลักอยู่ที่ [`checklist.md`](checklist.md) และ [`docs/CURRENT_IMPLEMENTATION.md`](docs/CURRENT_IMPLEMENTATION.md)
 
@@ -428,7 +428,7 @@ Installer -> Invite User -> Customer -> Deal -> Quotation -> Invoice / DO / Bill
 เหมาะสำหรับการ Deploy ขึ้น Web Server จริงจาก Release Bundle (ที่มี `backend/vendor/` และ `backend/public/build/` มาแล้ว)
 
 #### 📋 สิ่งที่ต้องเตรียม (Server Requirements)
-- **PHP 8.3 ขึ้นไป** พร้อมส่วนขยาย: `pdo_mysql`, `openssl`, `mbstring`, `fileinfo`
+- **PHP 8.3 ขึ้นไป** พร้อมส่วนขยาย: `pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `dom`, `simplexml`, `curl`
 - **Database**: MySQL 8.0+ หรือ MariaDB 10.5+ (สร้าง Database เปล่าไว้ล่วงหน้า)
 - **สิทธิ์การเขียนไฟล์ (Writable Permissions)**: โฟลเดอร์ `backend/storage/`, `backend/bootstrap/cache/`, และไดเรกทอรีรากของ Backend เพื่อสร้างไฟล์ `.env`
 - **Web Document Root**:
@@ -436,6 +436,11 @@ Installer -> Invite User -> Customer -> Deal -> Quotation -> Invoice / DO / Bill
   - หรือ: ชี้ที่ไดเรกทอรีรากของโปรเจกต์ (มี `setup/index.php` รองรับ)
 
 #### 🚀 ขั้นตอนการติดตั้งทีละสเต็ป (Step-by-Step)
+
+##### ตรวจสอบ Server Requirement ก่อนติดตั้ง
+- เปิด `https://your-domain/setup/system-requirements.php` ได้โดยไม่ต้องใช้ `SETUP_TOKEN`
+- หน้านี้ตรวจ PHP, required extensions (`pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `dom`, `simplexml`, `curl`), runtime limits, release bundle และสิทธิ์เขียนไฟล์ โดยไม่แสดง password, token หรือ `phpinfo()`
+- รายการ Failed/Warning แสดงคำแนะนำเฉพาะสาเหตุ; ปุ่ม Fix มีเฉพาะกรณีสร้าง `storage/` หรือ `bootstrap/cache/` ที่ยังไม่มีและ web-server user สร้างได้
 
 ##### ขั้นตอนที่ 1: เปิดใช้งานตัวติดตั้ง (Activate Installer)
 เพื่อความปลอดภัย ตัวติดตั้งจะถูกปิดใช้งานเป็นค่าเริ่มต้น ให้เลือกทำอย่างใดอย่างหนึ่ง:

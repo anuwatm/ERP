@@ -97,7 +97,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '')
 $_SESSION['system_requirements_csrf'] ??= bin2hex(random_bytes(32));
 $csrfToken = $_SESSION['system_requirements_csrf'];
 
-$requiredExtensions = ['pdo_mysql', 'openssl', 'mbstring', 'fileinfo', 'json', 'dom', 'xml', 'curl'];
 $optionalExtensions = ['zip', 'gd', 'imagick', 'redis'];
 $checks = $installer->preflight();
 $runtimeChecks = [
@@ -108,24 +107,19 @@ $runtimeChecks = [
     ['label' => 'HTTPS request', 'ok' => (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'), 'detail' => 'Required before production go-live', 'required' => false],
 ];
 
-$extensionChecks = array_map(
-    fn (string $extension): array => ['label' => 'PHP extension: '.$extension, 'ok' => extension_loaded($extension), 'detail' => extension_loaded($extension) ? 'available' : 'missing', 'required' => true],
-    $requiredExtensions
-);
 $optionalChecks = array_map(
     fn (string $extension): array => ['label' => 'Optional extension: '.$extension, 'ok' => extension_loaded($extension), 'detail' => extension_loaded($extension) ? 'available' : 'not installed', 'required' => false],
     $optionalExtensions
 );
 
-$requiredChecks = array_merge($checks, $runtimeChecks, $extensionChecks);
+$requiredChecks = array_merge($checks, $runtimeChecks);
 $allRequired = ! array_filter($requiredChecks, fn (array $check): bool => ! $check['ok']);
 $passedRequired = count(array_filter($requiredChecks, fn (array $check): bool => $check['ok']));
 $totalRequired = count($requiredChecks);
 $progress = $totalRequired > 0 ? (int) round(($passedRequired / $totalRequired) * 100) : 0;
 $groups = [
-    ['title' => 'Release package', 'detail' => 'ไฟล์ที่จำเป็นสำหรับการรันระบบ', 'checks' => $checks],
+    ['title' => 'Core requirements', 'detail' => 'PHP, extensions และไฟล์ที่ระบบต้องใช้', 'checks' => $checks],
     ['title' => 'PHP runtime', 'detail' => 'ขีดจำกัดและการตั้งค่า PHP', 'checks' => $runtimeChecks],
-    ['title' => 'Required extensions', 'detail' => 'ส่วนขยายที่ระบบต้องใช้', 'checks' => $extensionChecks],
     ['title' => 'Optional improvements', 'detail' => 'ส่วนเสริมที่แนะนำ', 'checks' => $optionalChecks],
 ];
 ?>
