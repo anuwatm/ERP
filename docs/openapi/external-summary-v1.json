@@ -1,0 +1,938 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ERP External Summary API",
+    "version": "1.1.0",
+    "description": "Read-only server-to-server API. Credentials managed through Settings / API Access. All amounts are decimal strings, all queries scoped to key organization. HTTPS required outside local development. No browser-embedded secrets."
+  },
+  "servers": [
+    {
+      "url": "https://erp.example.com/ERP",
+      "description": "Replace with deployment base URL (including subdirectory, if any)"
+    }
+  ],
+  "paths": {
+    "/api/v1/summaries/sales": {
+      "get": {
+        "operationId": "getSalesSummary",
+        "summary": "Read organization sales summary",
+        "description": "Required integration scope: summary:sales:read. Organization is derived from the credential; user sessions do not authenticate this endpoint. Dates must be supplied together, inclusive, at most 366 days. Default current month in organization timezone. Unknown filters including org_id and branch_id are rejected. No pagination. Current-status cohorts by customer/deal created_at and quotation issue_date, original currency groups.",
+        "security": [
+          {
+            "integrationBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Supply both dates or neither. Inclusive organization-local business date."
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Supply both dates or neither. Inclusive organization-local business date."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live summary. Empty monetary groups are [] and counts are 0.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-store, private"
+                }
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid/expired/revoked key or inactive organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing endpoint scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Unsupported method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported filters, malformed dates, inverted or over 366-day period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "HTTPS required in production",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before retry"
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/summaries/finance": {
+      "get": {
+        "operationId": "getFinanceSummary",
+        "summary": "Read organization finance summary",
+        "description": "Required integration scope: summary:finance:read. Organization is derived from the credential; user sessions do not authenticate this endpoint. Dates must be supplied together, inclusive, at most 366 days. Default current month in organization timezone. Unknown filters including org_id and branch_id are rejected. No pagination. Period aggregates by document/payment date and stored base_currency. AR is a live current snapshot independent of the period. See metric dictionary in EXTERNAL_SUMMARY_API.md.",
+        "security": [
+          {
+            "integrationBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Supply both dates or neither. Inclusive organization-local business date."
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Supply both dates or neither. Inclusive organization-local business date."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live summary. Empty monetary groups are [] and counts are 0.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-store, private"
+                }
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid/expired/revoked key or inactive organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing endpoint scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Unsupported method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported filters, malformed dates, inverted or over 366-day period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "HTTPS required in production",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before retry"
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/summaries/projects": {
+      "get": {
+        "operationId": "getProjectsSummary",
+        "summary": "Read organization projects and tasks summary",
+        "description": "Requires summary:projects:read. Existing keys do not gain the new scope automatically. Date filters apply to created_at cohorts and done tasks completed_at, with organization-local day boundaries. Snapshot status/progress/overdue counts are current, independent of period. Active projects: planning/active/on_hold. Overdue tasks: todo/in_progress with due_date before today; blocked excluded. Tasks require a live project in the same organization. No names, people, budgets, costs or work hours. currency_mode: not_applicable. See EXTERNAL_SUMMARY_API.md.",
+        "security": [
+          {
+            "integrationBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Supply both dates or neither. Inclusive organization-local business date."
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Supply both dates or neither. Inclusive organization-local business date."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live summary. Empty monetary groups are [] and counts are 0.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-store, private"
+                }
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid/expired/revoked key or inactive organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing endpoint scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Unsupported method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported filters, malformed dates, inverted or over 366-day period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "HTTPS required in production",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before retry"
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "integrationBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "erp_<24 hex identifier>.<64 hex secret>"
+      }
+    },
+    "schemas": {
+      "AmountGroup": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "currency",
+          "count",
+          "amount"
+        ],
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "example": "1000.10"
+          }
+        }
+      },
+      "StatusAmountGroup": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "currency",
+          "count",
+          "amount"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "example": "1000.10"
+          }
+        }
+      },
+      "FlowGroup": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "currency",
+          "gross",
+          "reversals",
+          "net"
+        ],
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "gross": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "example": "1000.10"
+          },
+          "reversals": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "example": "1000.10"
+          },
+          "net": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "example": "1000.10"
+          }
+        }
+      },
+      "Period": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "Meta": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "api_version",
+          "request_id",
+          "generated_at",
+          "timezone",
+          "period",
+          "snapshot_as_of",
+          "currency_mode",
+          "visibility",
+          "freshness"
+        ],
+        "properties": {
+          "api_version": {
+            "type": "string",
+            "enum": [
+              "v1"
+            ]
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "snapshot_as_of": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currency_mode": {
+            "type": "string",
+            "enum": [
+              "original_currency",
+              "stored_base_currency",
+              "not_applicable"
+            ]
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "organization"
+            ]
+          },
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "live"
+            ]
+          }
+        }
+      },
+      "SalesResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "new_customers",
+              "deals_created_by_current_status",
+              "quotations_issued_by_current_status"
+            ],
+            "properties": {
+              "new_customers": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "deals_created_by_current_status": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StatusAmountGroup"
+                }
+              },
+              "quotations_issued_by_current_status": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StatusAmountGroup"
+                }
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "FinanceResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period",
+              "snapshot"
+            ],
+            "properties": {
+              "period": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "invoiced_revenue",
+                  "cash_received",
+                  "recognized_expense",
+                  "ap_cash_paid"
+                ],
+                "properties": {
+                  "invoiced_revenue": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AmountGroup"
+                    }
+                  },
+                  "cash_received": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FlowGroup"
+                    }
+                  },
+                  "recognized_expense": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AmountGroup"
+                    }
+                  },
+                  "ap_cash_paid": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FlowGroup"
+                    }
+                  }
+                }
+              },
+              "snapshot": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "as_of",
+                  "outstanding_ar",
+                  "overdue_ar"
+                ],
+                "properties": {
+                  "as_of": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "outstanding_ar": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AmountGroup"
+                    }
+                  },
+                  "overdue_ar": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AmountGroup"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "request_id"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "unauthorized",
+              "forbidden",
+              "not_found",
+              "method_not_allowed",
+              "invalid_filters",
+              "rate_limited",
+              "server_error",
+              "https_required"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "StatusCount": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "count"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "ProjectsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period",
+              "snapshot"
+            ],
+            "properties": {
+              "period": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "projects_created_by_current_status",
+                  "tasks_created_by_current_status",
+                  "tasks_completed"
+                ],
+                "properties": {
+                  "projects_created_by_current_status": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StatusCount"
+                    }
+                  },
+                  "tasks_created_by_current_status": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StatusCount"
+                    }
+                  },
+                  "tasks_completed": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "snapshot": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "as_of",
+                  "projects_by_status",
+                  "tasks_by_status",
+                  "active_projects",
+                  "overdue_projects",
+                  "overdue_tasks",
+                  "average_active_project_progress_percent"
+                ],
+                "properties": {
+                  "as_of": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "projects_by_status": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StatusCount"
+                    }
+                  },
+                  "tasks_by_status": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StatusCount"
+                    }
+                  },
+                  "active_projects": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "overdue_projects": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "overdue_tasks": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "average_active_project_progress_percent": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "^[0-9]+\\.[0-9]$",
+                    "description": "Unweighted mean stored progress for planning/active/on_hold, one decimal HALF_UP; null for no active projects."
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      }
+    }
+  }
+}

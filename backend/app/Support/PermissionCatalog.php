@@ -7,6 +7,8 @@ class PermissionCatalog
     public static function permissions(): array
     {
         return [
+            ['code' => 'api_keys.view', 'module' => 'api_keys', 'action' => 'view', 'description' => 'View integration API keys'],
+            ['code' => 'api_keys.manage', 'module' => 'api_keys', 'action' => 'manage', 'description' => 'Manage integration API keys'],
             ['code' => 'dashboard.view', 'module' => 'dashboard', 'action' => 'view', 'description' => 'View admin dashboard'],
             ['code' => 'sales.dashboard.view', 'module' => 'sales', 'action' => 'view', 'description' => 'View sales dashboard'],
             ['code' => 'executive.dashboard.view', 'module' => 'executive', 'action' => 'view', 'description' => 'View executive dashboard'],
@@ -144,6 +146,11 @@ class PermissionCatalog
             ['code' => 'ocr.upload', 'module' => 'ocr', 'action' => 'upload', 'description' => 'Upload documents for AI OCR processing'],
             ['code' => 'ocr.convert', 'module' => 'ocr', 'action' => 'convert', 'description' => 'Convert OCR extractions to expenses or bills'],
             ['code' => 'ai_settings.manage', 'module' => 'settings', 'action' => 'manage', 'description' => 'Manage organization AI configuration and models'],
+            ['code' => 'manufacturing.bom.view', 'module' => 'manufacturing', 'action' => 'bom_view', 'description' => 'View bill of materials'],
+            ['code' => 'manufacturing.bom.manage', 'module' => 'manufacturing', 'action' => 'bom_manage', 'description' => 'Create and manage bill of materials'],
+            ['code' => 'manufacturing.work_orders.view', 'module' => 'manufacturing', 'action' => 'work_orders_view', 'description' => 'View work orders and production schedule'],
+            ['code' => 'manufacturing.work_orders.manage', 'module' => 'manufacturing', 'action' => 'work_orders_manage', 'description' => 'Create and manage work orders'],
+            ['code' => 'manufacturing.work_orders.execute', 'module' => 'manufacturing', 'action' => 'work_orders_execute', 'description' => 'Issue stock, record QC, and complete work orders'],
         ];
     }
 
@@ -163,9 +170,16 @@ class PermissionCatalog
     public static function defaults(): array
     {
         $all = array_column(self::permissions(), 'code');
+        $manufacturing = [
+            'manufacturing.bom.view',
+            'manufacturing.bom.manage',
+            'manufacturing.work_orders.view',
+            'manufacturing.work_orders.manage',
+            'manufacturing.work_orders.execute',
+        ];
         $sales = ['dashboard.view', 'sales.dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'contacts.create', 'contacts.update', 'contacts.delete', 'deals.view', 'deals.create', 'deals.update', 'activities.create', 'activities.update', 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.approve', 'quotations.convert'];
-        $projects = ['dashboard.view', 'projects.view', 'projects.create', 'projects.update', 'tasks.view', 'tasks.create', 'tasks.update', 'tasks.comment'];
-        $procurement = ['suppliers.view', 'suppliers.create', 'suppliers.update', 'suppliers.delete', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.approve', 'purchase_orders.cancel', 'inventory.view', 'inventory.receive', 'inventory.adjust'];
+        $projects = ['dashboard.view', 'projects.view', 'projects.create', 'projects.update', 'tasks.view', 'tasks.create', 'tasks.update', 'tasks.comment', ...$manufacturing];
+        $procurement = ['suppliers.view', 'suppliers.create', 'suppliers.update', 'suppliers.delete', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.approve', 'purchase_orders.cancel', 'inventory.view', 'inventory.receive', 'inventory.adjust', ...$manufacturing];
         $phase9Finance = ['credit_debit_notes.view', 'credit_debit_notes.create', 'credit_debit_notes.update', 'credit_debit_notes.approve', 'billing_notes.view', 'billing_notes.create', 'billing_notes.update', 'billing_notes.approve', 'delivery_orders.view', 'delivery_orders.create', 'delivery_orders.update', 'delivery_orders.approve', 'purchase_requests.view', 'purchase_requests.create', 'purchase_requests.update', 'purchase_requests.approve', 'vouchers.view', 'vouchers.create', 'vouchers.update', 'vouchers.approve'];
         $treasury = ['treasury.accounts.view', 'treasury.accounts.manage', 'treasury.reconciliation.view', 'treasury.reconciliation.manage', 'treasury.reports.view', 'petty_cash.view', 'petty_cash.manage', 'petty_cash.approve', 'cheques.view', 'cheques.manage'];
         $accounting = ['accounting.chart_accounts.view', 'accounting.chart_accounts.manage', 'accounting.periods.view', 'accounting.periods.manage', 'accounting.journals.view', 'accounting.journals.create', 'accounting.journals.post', 'accounting.journals.reverse', 'accounting.reports.view'];

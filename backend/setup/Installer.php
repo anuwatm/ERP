@@ -52,6 +52,7 @@ final class Installer
             ['DOM extension', extension_loaded('dom'), extension_loaded('dom') ? 'available' : 'missing'],
             ['SimpleXML extension', extension_loaded('simplexml'), extension_loaded('simplexml') ? 'available' : 'missing'],
             ['cURL extension', extension_loaded('curl'), extension_loaded('curl') ? 'available' : 'missing'],
+            ['Zip extension', extension_loaded('zip'), extension_loaded('zip') ? 'available' : 'missing'],
             ['Storage writable', $this->writableDirectory('storage'), 'storage/'],
             ['Cache writable', $this->writableDirectory('bootstrap/cache'), 'bootstrap/cache/'],
             ['Environment writable', is_readable($this->path('.env.example')) && is_writable($this->basePath), '.env.example readable and application root writable'],

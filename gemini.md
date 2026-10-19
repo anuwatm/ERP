@@ -324,5 +324,203 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 1. **เติม Fallback ใน Cookie Path**: ปรับบรรทัด 14 ใน [`backend/public/setup/index.php`](file:///c:/LocalDevine/www/ERP/backend/public/setup/index.php#L14) เป็น `'path' => rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/setup/index.php'), '/') ?: '/'`
 2. **เพิ่ม Integration Test สำหรับ Installer**: พัฒนา Test เพิ่มเติมใน `backend/tests/Unit/Setup/InstallerTest.php` ให้ครอบคลุม `testDatabase()` และ `assertDatabaseEmpty()`
 
+---
+
+## 10. สถาปัตยกรรมระบบการผลิตและสูตรการผลิต Phase 27 (Manufacturing & BOM Architecture Reference)
+
+เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed — 2026-09-25).
+
+### 10.1 Schema & Data Models
+1. **`bill_of_materials`**: สูตรการผลิตแม่แบบ (Header)
+   - ฟิลด์: `org_id`, `bom_no`, `name`, `product_id` (Finished Product), `version`, `quantity` (Batch Size), `unit`, `material_cost`, `labor_cost`, `overhead_cost`, `total_cost`, `unit_cost`, `routing_notes`, `is_active`, `created_by`
+2. **`bom_items`**: รายการวัตถุดิบและชิ้นส่วนประกอบย่อย
+   - ฟิลด์: `bill_of_materials_id`, `item_type` (`raw_material` / `sub_assembly`), `product_id`, `sub_bom_id` (สำหรับ Nested Sub-Assembly), `quantity`, `unit`, `unit_cost`, `scrap_percentage`, `total_cost`, `sort_order`, `notes`
+3. **`work_orders`**: ใบสั่งผลิตและการควบคุมการผลิต
+   - ฟิลด์: `wo_no`, `bill_of_materials_id`, `product_id`, `warehouse_id` (Finished Goods Destination), `source_warehouse_id` (Raw Material Origin), `status` (`draft` $\rightarrow$ `planned` $\rightarrow$ `in_progress` $\rightarrow$ `quality_check` $\rightarrow$ `completed` / `cancelled`), `planned_quantity`, `actual_quantity`, `scrap_quantity`, `unit`, `material_cost`, `labor_cost`, `overhead_cost`, `total_cost`, `unit_cost`, `start_date`, `due_date`, `completed_date`, `qc_notes`, `qc_passed`, `created_by`
+4. **`work_order_items`**: รายการวัตถุดิบที่ถูกจัดสรรและเบิกใช้จริงในใบสั่งผลิต
+   - ฟิลด์: `work_order_id`, `product_id`, `bom_item_id`, `required_quantity`, `issued_quantity`, `unit`, `unit_cost`, `total_cost`
+5. **`production_costs`**: บันทึกต้นทุนค่าแรงและค่าโสหุ้ยที่เกิดขึ้นจริงระหว่างการผลิต
+   - ฟิลด์: `work_order_id`, `cost_type` (`labor` / `overhead`), `description`, `amount`, `cost_date`, `created_by`
+6. **`stock_movements` Extension**: เพิ่ม nullable `work_order_id` และประเภทการเคลื่อนไหวใหม่:
+   - `work_order_issue`: ตัดจ่ายวัตถุดิบออกจากคลัง
+   - `work_order_return`: คืนวัตถุดิบกลับเข้าคลังเมื่อยกเลิกใบสั่งผลิต
+   - `work_order_receipt`: รับสินค้าสำเร็จรูปเข้าคลัง
+
+### 10.2 Double-Entry General Ledger Integrity (GL Auto-Posting)
+- **Material Issue (เมื่อ Release Work Order):**
+  - **Dr. 1160 (Work-in-Progress - งานระหว่างทำ)** = ยอดรวมต้นทุนวัตถุดิบที่เบิก
+  - **Cr. 1140 (Raw Materials/Inventory - วัตถุดิบและสินค้าคงเหลือ)** = ยอดรวมต้นทุนวัตถุดิบที่เบิก
+- **Production Completion (เมื่อตรวจรับเข้าคลัง FG):**
+  - **Dr. 1140 (Finished Goods/Inventory - สินค้าสำเร็จรูป)** = ยอดรวมต้นทุนการผลิตจริง (`total_cost`)
+  - **Cr. 1160 (Work-in-Progress - ล้างงานระหว่างทำ)** = ต้นทุนวัตถุดิบ (`material_cost`)
+  - **Cr. 5500 (Direct Labor Absorbed - ค่าแรงทางตรงปันส่วนเข้าผลิต)** = ต้นทุนค่าแรง (`labor_cost`)
+  - **Cr. 5200 (Factory Overhead Absorbed - โสหุ้ยการผลิตปันส่วนเข้าผลิต)** = ต้นทุนโสหุ้ย (`overhead_cost`)
+- **Cancellation Reversal:** หากมีการ Release หรือเบิกจ่ายวัตถุดิบไปแล้วและถูก Cancelled ระบบจะสร้าง Journal Reversal อัตโนมัติ พร้อมส่งคืน Stock วัตถุดิบเข้าคลังเดิม
+
+### 10.3 Business Logic & Protection Mechanisms
+1. **Multi-level Recursive BOM Explosion & MRP Flattening:**
+   - ฟังก์ชัน `ProductionCostingService::explode()` สามารถคลี่และคำนวณสูตรการผลิตที่ซ้อนกันหลายระดับ (Multi-tier Assemblies)
+   - ฟังก์ชัน `flattenExplodedMaterials()` สรุปความต้องการวัตถุดิบสุทธิ (Net Material Demand) รวมทุกระดับพร้อม scrap rate
+2. **Circular Dependency Guard:**
+   - ตรวจจับ Cycle ในสูตรการผลิต (เช่น BOM A $\rightarrow$ BOM B $\rightarrow$ BOM A) และโยน `DomainException("Circular BOM dependency detected...")` เพื่อป้องกัน Infinite Recursion 100%
+3. **Multi-Tenant & Role Permissions Isolation:**
+   - สิทธิ์เฉพาะ: `manufacturing.bom.view`, `manufacturing.bom.manage`, `manufacturing.work_orders.view`, `manufacturing.work_orders.manage`, `manufacturing.work_orders.execute`
+   - Default roles: `owner`, `admin`, `project_manager`, `finance`
+   - Isolation: ทุก query ถูกกรองด้วย `org_id` อย่างเคร่งครัดและป้องกันข้ามองค์กร
+
+### 10.4 ผลการทดสอบและการตรวจรับ (Phase 27 Verification)
+- **Feature Test Suite:** `Tests\Feature\Phase27ManufacturingTest` — **8 passed / 69 assertions (100% green)**
+  - `can_create_bill_of_materials_and_calculate_costs`
+  - `multi_level_bom_explosion_and_flattening`
+  - `circular_bom_dependency_throws_domain_exception`
+  - `work_order_creation_from_bom_with_scaling`
+  - `work_order_lifecycle_flow_stock_movements_and_gl_postings`
+  - `work_order_cancellation_reverses_stock_and_gl_if_issued`
+  - `production_cost_recording_adjusts_total_and_unit_cost`
+  - `manufacturing_permissions_and_multi_tenant_isolation`
+- **Frontend Build & Lint:** `npm run build` ผ่าน 100% (Vite production bundle generated), Prettier clean, Pint PSR-12 clean.
+
+---
+
+## 11. External Read-only Summary API (Round 1) — สถาปัตยกรรม, ปัญหาที่พบ และข้อเสนอแนะสำหรับ GPT
+
+**สถานะ:** ผ่านการตรวจรับทางเทคนิคโดย Gemini ครบถ้วน 100% (Complete & Verified — 2026-10-18)
+**เอกสารอ้างอิง:** [EXTERNAL_SUMMARY_API.md](docs/EXTERNAL_SUMMARY_API.md), [EXTERNAL_SUMMARY_API_CHECKLIST.md](docs/EXTERNAL_SUMMARY_API_CHECKLIST.md), [OpenAPI Contract v1](docs/openapi/external-summary-v1.json), และ [gpt.md](gpt.md)
+
+### 11.1 สรุปสถาปัตยกรรมและผลการตรวจรับรอบแรก (Architecture & Verification Summary)
+1. **API Namespace & Scope Separation**:
+   - Base Route: `/api/v1/summaries`
+   - Sales: `GET /api/v1/summaries/sales` (ต้องใช้ scope: `summary:sales:read`)
+   - Finance: `GET /api/v1/summaries/finance` (ต้องใช้ scope: `summary:finance:read`)
+   - Authentication Middleware: `AuthenticateIntegrationKey` รับเฉพาะ Bearer Token รูปแบบ `erp_<public_id>.<secret>`
+2. **Security & Guardrails Compliance**:
+   - **Zero Plaintext Secret at Rest**: จัดเก็บเฉพาะ SHA-256 hash ในตาราง `integration_api_keys`
+   - **One-Time Secret Reveal**: แสดง Secret เต็มใน JSON response เฉพาะตอนสร้าง key และเก็บใน React state ชั่วคราว (ไม่ผ่าน Session, ไม่เก็บใน Inertia shared props หรือ LocalStorage)
+   - **Tenant Context Server-Side Derived**: ดึง `org_id` จาก key เท่านั้น ปฏิเสธการ inject `org_id` หรือ `branch_id` จากภายนอกด้วย HTTP 422
+   - **Zero Floating-Point Arithmetic**: คำนวณยอดเงินผ่าน `BigDecimal` สเกล 2 ตำแหน่ง (`RoundingMode::HalfUp`) ในรูปแบบ String ทั้งหมด ป้องกัน Floating-point rounding error ใน PHP
+   - **Zero Organization-wide Cash Balance Leak**: ไม่รวมยอด Inflow ลบ Outflow เป็นยอดเงินสดคงเหลือรวมทั้งองค์กร
+   - **HTTPS & CORS Protection**: Production บังคับ HTTPS (HTTP 426) และ API ปิด CORS wildcard (ออกแบบสำหรับ Server-to-Server ไม่ให้ Frontend Browser ถือ Secret)
+3. **ผลการทดสอบเชิงประจักษ์ (100% Passed)**:
+   - Scoped & Regression Feature Tests: **64 passed / 515 assertions** (`ExternalSummaryApiTest`, `DashboardMetricsEdgeCasesTest`, `Auth`, `Phase18TwoFactorTest`, `Phase23GatewayTest`)
+   - Manufacturing Suite: **8 passed / 69 assertions** (`Phase27ManufacturingTest`)
+   - Frontend Unit Tests: **38 passed / 0 failed** (`tests/Frontend/*.test.mjs`)
+   - Static Analysis & Build: TypeScript 0 errors, ESLint 0 errors, Laravel Pint 0 issues, Production Vite build ผ่านสมบูรณ์ (25.11s)
+
+---
+
+### 11.2 ปัญหา ข้อจำกัด และข้อสังเกตที่พบ (Known Issues & Limitations)
+
+1. **Browser UAT ยังไม่ได้รับการยืนยันด้วย Browser Automation**:
+   - หน้าจอ Settings → API Access (`ApiAccess.tsx` ที่ `/settings/api-access`) ผ่านการตรวจสอบโค้ด, TypeScript, ESLint และ Vite bundle สำเร็จแล้ว แต่ยังขาดการรัน Interactive Browser UAT (Create/Reveal, Copy, In-place Edit, Revoke Dialog, Discard Guard, Keyboard Navigation) เนื่องจากสภาพแวดล้อมเครื่องทดสอบติดปัญหา Timeout เมื่อเปิด Headless Browser กับ Localhost Fixture
+2. **การทดสอบ Performance และ EXPLAIN บนฐานข้อมูลขนาดใหญ่ (Production DB)**:
+   - ชุดทดสอบความเร็วปัจจุบันรันบน SQLite in-memory (1,000 deals, aggregate queries <= 10, ใช้ index `deals_org_id_created_at_index`) ยังไม่ครอบคลุมการทดสอบ Load บน MySQL/MariaDB ในระดับหลายหมื่นหรือหลายแสน Transactions
+3. **Regression เดิมใน `DashboardAccessTest` (นอกขอบเขต Summary API แต่ต้องระวัง)**:
+   - การรัน `DashboardAccessTest::test_finance_widget_payload_queries_only_authorized_sources` จะล้มที่ assertion `cash_flow_trend.11.cash_in`
+   - **สาเหตุรากเหง้า (Root Cause)**: ใน `Admin/DashboardController` ฟังก์ชัน `financeCashFlowTrend()` คำนวณช่วงเดือนโดยใช้ `endOfMonth()->subMonths(11)` ซึ่งเกิด Date Overflow ในเดือนที่มี 31 วัน ทำให้ array buckets ได้ไม่ครบ 12 เดือน ปัญหานี้เป็นบั๊กเดิมของ Dashboard ไม่ได้เกิดจากการเปลี่ยนแปลงของ External Summary API
+4. **ยังไม่ Deploy และยังไม่ Migrate ฐานข้อมูล Production**:
+   - Migrations `2026_10_18_000001_create_integration_api_keys.php` และ `2026_10_18_000002_add_summary_cohort_indexes.php` ยังไม่ได้รันในฐานข้อมูล Production จริง
+
+---
+
+### 11.3 ข้อเสนอแนะสำหรับ GPT ในการทำงานต่อ (Proposals & Next Steps for GPT)
+
+1. **การขยาย Summary API สู่โดเมนถัดไป (Projects & Tasks / Procurement & Inventory)**:
+   - **ลำดับที่แนะนำ**:
+     - **ลำดับที่ 1: Projects & Tasks** (`GET /api/v1/summaries/projects`, Scope: `summary:projects:read`)
+       - Metric: สรุปจำนวนโครงการแบ่งตามสถานะ, สรุปชั่วโมงทำงาน, งานที่ค้างส่ง (Overdue Tasks โดยตัดสถานะ `blocked` ออกตามกฎความปลอดภัยข้อ 86), ความคืบหน้าภาพรวม
+     - **ลำดับที่ 2: Procurement & Inventory** (`GET /api/v1/summaries/procurement`, Scope: `summary:procurement:read`)
+       - Metric: สรุปใบสั่งซื้อ (POs) แบ่งตามสถานะ (Draft, Approved, Partial, Received), สินค้าต่ำกว่าจุดสั่งซื้อ (Low Stock Items), มูลค่าสินค้าคงคลังรวมแยกตามคลัง
+     - **ลำดับที่ 3: HR & People** (ต้องระมัดระวังเรื่อง PDPA Privacy ไม่ส่งเงินเดือนรายบุคคล ให้ส่งเฉพาะจำนวนพนักงาน, วันลาค้างอนุมัติ, สถิติขาดลามาสายรวม)
+   - **แนวทางปฏิบัติ**:
+     - เพิ่มรายการ Scope ใหม่ใน `IntegrationApiKey::SCOPES`
+     - แยก service method ใน `ExternalSummaryService` และ map เข้ากับ Route ใน `routes/summaries.php`
+     - ยึดข้อกำหนด Metric Dictionary และการส่งยอดเงินเป็น Decimal String ตามรูปแบบ v1 เสมอ
+
+---
+
+## 12. ผลการตรวจรับรอบสมบูรณ์ Phase External API (Round 2 & P0–P6 Comprehensive Verification — 2026-10-19)
+
+**สถานะ:** ผ่านการรับรองทางเทคนิคครบถ้วน 100% (Complete & Verified by Gemini — 2026-10-19)  
+**เอกสารประกอบการตรวจรับ:** [gpt.md](gpt.md), [EXTERNAL_SUMMARY_API_CHECKLIST.md](docs/EXTERNAL_SUMMARY_API_CHECKLIST.md), [EXTERNAL_READ_API.md](docs/EXTERNAL_READ_API.md), สัญญา P1–P6 ([P1](docs/EXTERNAL_API_P1_CONTRACT.md), [P2](docs/EXTERNAL_API_P2_CONTRACT.md), [P3_P4](docs/EXTERNAL_API_P3_P4_CONTRACT.md), [P5](docs/EXTERNAL_API_P5_CONTRACT.md), [P6_P7](docs/EXTERNAL_API_P6_P7_CONTRACT.md)), และ [OpenAPI Contract v1 (62 GET paths)](docs/openapi/external-read-v1.json)
+
+---
+
+### 12.1 สรุปภาพรวมและผลการตรวจรับเชิงสถาปัตยกรรม (Architecture & Scope Verification)
+
+1. **ขอบเขตงานที่ได้รับการรับรอง (P0–P6 Read-only External API):**
+   - **P0 (Summary API):** ครบทั้ง 3 โดเมนหลัก ได้แก่ Sales (`/api/v1/summaries/sales`), Finance (`/api/v1/summaries/finance`) และ Projects (`/api/v1/summaries/projects`) พร้อมการ Optimize ลด aggregate queries ของ Projects จาก 8 เหลือ 2 queries และแก้ไข Date Overflow ใน Dashboard Cash Flow Trend ครบถ้วน
+   - **P1 (Catalog & Inventory):** Reference data registry, Products/Services list & detail พร้อม price/cost scopes แยกชัดเจน, Inventory summary, stock balances, lot number และ expiration tracking (รองรับ `on_hand` ตามบัญชีจริง ไม่สมมติ reservations/ATP)
+   - **P2 (HR & People):** HR, Attendance, Leaves, และ Roster summaries รวมถึง Employee directory/profile โดยบังคับใช้ Privacy Guardrail อย่างเคร่งครัด (ไม่เปิดเผยข้อมูลส่วนบุคคล, เงินเดือน, บัญชีธนาคาร, พิกัด GPS หรือเหตุผลการลาส่วนตัว) รองรับพนักงานที่เป็น non-User และคืน HTTP 409 กรณี leave ขาด user bridge
+   - **P3 & P4 (Business, Sales & Procurement):** Customer/Supplier directory, ใบเสนอราคา, ใบแจ้งหนี้, ใบส่งของ, สถานะการชำระเงิน, PO, GRN (จับคู่ PO/unit อย่างแม่นยำ), Procurement summary และ Projects/Tasks พร้อมระบบจำกัดสิทธิ์ระดับคู่ค้า (Party-scoped access)
+   - **P5 (Approval & Webhooks Outbox):** อ่านสถานะการอนุมัติ ประวัติ และ Delegation (ไม่มี API สำหรับกดอนุมัติ/ปฏิเสธ) พร้อมระบบ Outbound Webhook สถาปัตยกรรม Transactional Outbox ส่งสัญญาณแบบ Minimal pointer เพื่อความปลอดภัยสูงสุด มีระบบ DNS Pinning, HTTPS-only, Replay challenge และ Exponential backoff retry
+   - **P6 (Manufacturing & Documents):** สรุปสถานะการผลิต BOM, Work Orders, และ Document Metadata พร้อมระบบ Private Stream Download ที่ตรวจสอบ ACL รายเอกสาร ไม่อ้างอิง storage path หรือ public URL
+   - **P7 Exclusion (ตัดออกตามคำสั่งผู้ใช้ 100%):** ไม่มี Write APIs ทุกชนิด และไม่มี Payroll/Salary/Bank APIs ภายนอกเรียกดูผ่าน HTTP GET/HEAD เท่านั้น
+
+2. **การปฏิบัติตาม Security Guardrails และข้อตกลงความปลอดภัย:**
+   - **Zero Plaintext Secret at Rest:** แฮชด้วย SHA-256 ในตาราง `integration_api_keys`
+   - **One-Time Secret Reveal:** ไม่ส่ง secret ซ้ำ, ไม่เก็บใน session, Inertia shared props หรือ LocalStorage
+   - **Tenant & Org Isolation:** สิทธิ์ดึงจาก key เท่านั้น ปฏิเสธการ inject `org_id` / `branch_id` จากภายนอก
+   - **Zero Cash Balance Leak:** ไม่คำนวณหรือส่งยอดเงินสดคงเหลือรวมขององค์กรเด็ดขาด
+   - **Safe Cursor Sync:** เข้ารหัส cursor 30 นาที, เรียงลำดับ stable (`updated_at`, `id`), fixed watermark UTC delta, ปฏิเสธ future checkpoint
+
+---
+
+### 12.2 หลักฐานเชิงประจักษ์จากการทดสอบจริง (Empirical Verification Results)
+
+การตรวจรับดำเนินการรันชุดคำสั่งทดสอบจริงบนเครื่องในรอบนี้ โดยผลลัพธ์ทั้งหมดผ่าน 100%:
+
+| รายการทดสอบ / เครื่องมือ | คำสั่งที่ใช้ | ผลการทดสอบเชิงประจักษ์ | สถานะ |
+| :--- | :--- | :--- | :--- |
+| **External API Feature Tests (P0–P6)** | `php vendor/phpunit/phpunit/phpunit --configuration phpunit.xml tests/Feature/ExternalCatalogApiTest.php tests/Feature/ExternalHrApiTest.php tests/Feature/ExternalBusinessApiTest.php tests/Feature/ExternalRestrictedReadApiTest.php tests/Feature/ExternalWebhookTest.php tests/Feature/ExternalReadContractTest.php tests/Feature/ExternalSummaryApiTest.php` | **54 passed / 4,731 assertions** (35.38s) | **PASSED** |
+| **Node.js Client & Webhook Verifier** | `node --test examples/external-api/summary-client.test.mjs examples/external-api/webhook-verifier.test.mjs` | **13 passed / 0 failed** (4.03s) | **PASSED** |
+| **OpenAPI Specification Generator** | `node examples/external-api/build-openapi.mjs` | สร้างสมบูรณ์ **62 GET paths** (`docs/openapi/external-read-v1.json`) | **PASSED** |
+| **Frontend TypeScript Type Check** | `node node_modules/typescript/bin/tsc --noEmit --project tsconfig.json` | **0 errors** (exit code 0) | **PASSED** |
+| **Frontend ESLint (API Settings)** | `node node_modules/eslint/bin/eslint.js resources/js/Pages/Settings/ApiAccess.tsx resources/js/Pages/Settings/ApiWebhooks.tsx --max-warnings=0` | **0 errors / 0 warnings** (exit code 0) | **PASSED** |
+| **System-wide Regression Tests** | `php vendor/phpunit/phpunit/phpunit --configuration phpunit.xml tests/Feature/DashboardAccessTest.php tests/Feature/DashboardMetricsEdgeCasesTest.php tests/Feature/Phase4DeliveryDashboardTest.php tests/Feature/Auth tests/Feature/Phase18TwoFactorTest.php tests/Feature/Phase23GatewayTest.php tests/Feature/Phase19HrAttendanceTest.php tests/Feature/Phase233EmployeeMasterTest.php tests/Feature/Phase233RosterAndShiftTest.php tests/Feature/Phase20WorkflowTest.php tests/Feature/Phase17DocumentManagementTest.php tests/Feature/Phase181DocumentComplianceTest.php tests/Feature/Phase8InventoryTest.php tests/Feature/Phase15InventoryOperationsTest.php tests/Feature/Phase27ManufacturingTest.php` | **118 passed / 1,205 assertions** (2m 8s) | **PASSED** |
+
+---
+
+### 12.3 สถานะงานค้างและข้อจำกัดที่บันทึกตามข้อเท็จจริง (Pending & Deferred Items)
+
+ตามข้อตกลงและคำสั่งของผู้ใช้ ณ วันที่ 2026-10-19 บันทึกสถานะงานส่วนที่เหลือเพื่อความโปร่งใสและถูกต้องตามข้อกำหนด:
+
+1. **Browser UAT (Pending):**
+   - หน้าจอ Settings → API Access และ Webhooks (`ApiAccess.tsx`, `ApiWebhooks.tsx`) ผ่านการตรวจโค้ด, TypeScript, ESLint และ build bundle แล้ว แต่ Interactive Headless Browser UAT ยังติดปัญหา timeout ของสภาพแวดล้อมระบบ จึงยังคงสถานะ Pending สำหรับการตรวจด้วย browser อัตโนมัติ
+2. **Database Migrations บน Production (Deferred):**
+   - Migrations นโยบาย API และ Webhook Outbox (`2026_10_19_000001_add_integration_access_policy.php`, `2026_10_19_000002_create_external_webhook_outbox.php`) รวมถึง Cohort Indexes ยังไม่ได้รันในฐานข้อมูล Production จริง (รันเฉพาะใน SQLite `:memory:` สำหรับชุดทดสอบ) ตามคำสั่ง "งดไปก่อน" ของผู้ใช้
+3. **Target Deployment & Live App Integration (Deferred):**
+   - ยังไม่มีการเปิดใช้งาน secret key จริงในสภาพแวดล้อมใช้งานจริง, ไม่เปิดสิทธิ์ ERP จริง, และยังคงตั้งค่า `EXTERNAL_API_WEBHOOKS_ENABLED=false` ไม่ยิง webhook ออกเครือข่ายภายนอก
+4. **SLA & Concurrent HTTP Load Testing (Deferred):**
+   - ผลการทดสอบ MariaDB isolated fixture (84,000 rows) เป็นหลักฐานประสิทธิภาพ baseline ระดับ Service เท่านั้น ไม่ถือเป็นการรับรอง SLA หรือ Throughput บน Target Production Environment
+
+---
+
+## 13. ข้อเสนอแนะและข้อกำหนดเพิ่มเติมสำหรับ Phase 28 (Standalone POS & ERP Connector Architecture Review — 2026-10-19)
+
+**สถานะ:** ข้อเสนอแนะเชิงสถาปัตยกรรมสำหรับปรับปรุง [checklist.md](checklist.md) (Phase 28) อ้างอิงตาม [gpt.md](gpt.md) และ Guardrails หลักของระบบ  
+**เอกสารอ้างอิง:** [checklist.md](checklist.md#L1642-L1722) (Phase 28), [gpt.md](gpt.md), [docs/PHASE_23_PAYMENT_GATEWAY.md](docs/PHASE_23_PAYMENT_GATEWAY.md), และ [docs/SECURITY_REQUIREMENTS.md](docs/SECURITY_REQUIREMENTS.md)
+
+### 13.1 การประเมินและจุดยืนเชิงสถาปัตยกรรม (Architecture Evaluation)
+Gemini **เห็นด้วยอย่างยิ่ง** กับโครงสร้างหลักในร่าง Checklist Phase 28 ได้แก่:
+1. **การแยก Server และ Database เด็ดขาด (Physical & Logical Separation):** ป้องกันการบุกรุกจากหน้าร้าน (Store physical/network vector) ไม่ให้เข้าถึง ERP Core Database หรือ Credentials หลัก
+2. **การบังคับ Connection แบบ Outbound-Only (Pull / Polling Model):** สอดคล้องกับนโยบายใน `gpt.md` ที่ปิดตาย Write API จากภายนอก โดยให้ ERP Connector เป็นฝ่ายติดต่อไปยัง POS เอง (ERP $\rightarrow$ POS Sync API) และคงสถานะ Default Deny Inbound Firewall
+3. **การมองข้อมูลจาก POS เป็น Untrusted Input:** บังคับตรวจสอบความถูกต้อง, ราคา, สิทธิ์ส่วนลด, และบันทึกผ่าน ERP Domain Services เดิม
+4. **Guardrail การแยกยอดเงินในกะ POS (Cash Balance Boundary):** สอดคล้องกับกฎข้อ 60 & 82 ใน `gpt.md` ที่ห้ามนำยอดเงินสดในกะหน้าร้านไปอนุมานหรือเผยแพร่เป็นยอดเงินสดรวมขององค์กร
+
+---
+
+### 13.2 รายการข้อเสนอแนะ 6 ประเด็นหลักสำหรับปรับปรุง Checklist (Recommended Checklist Additions)
+
+| ประเด็นที่เสนอแนะ | ข้อควรระวัง / สาเหตุรากเหง้า (Root Cause) | ข้อกำหนดและเกณฑ์ที่ต้องเพิ่มเติมใน Checklist |
+| :--- | :--- | :--- |
+| **1. นโยบายภาษีขาย & e-Tax (Tax Invoicing Policy)** | หน้าร้านออก "ใบกำกับภาษีอย่างย่อ (ABB)" ทันที แต่ลูกค้าอาจขอ "ใบกำกับภาษีเต็มรูป (Full Tax Invoice)" หรือ e-Tax ในภายหลัง อาจเกิด Output VAT ซ้ำซ้อน | • กำหนด Sequence เลขที่ใบกำกับภาษีอย่างย่อและเต็มรูปแยกกัน<br>• มีกลไก Void / Replace Event: ยกเลิกใบกำกับภาษีอย่างย่อเมื่อออกใบเต็มรูป เพื่อป้องกันการนับยอดภาษีขาย (Output VAT 2130) ซ้ำ 2 ครั้ง<br>• ปฏิบัติตาม Guardrail ข้อ 97 ใน `gpt.md` (e-Tax ผ่าน HSM/Certified boundary เท่านั้น ไม่เก็บ Private Key ใน DB หน้าร้าน) |
+| **2. การจัดการ Stock Discrepancy หน้าร้าน (Physical vs ERP Stock Conflict)** | ลูกค้าชำระเงินและรับสินค้าหน้าร้านไปแล้ว (Physical Out) แต่เมื่อ Sync เข้า ERP ระบบอาจติด Guardrail "สต็อกในคลัง ERP ไม่พอ" | • **ห้าม Reject บิลขายที่เกิดจริงแล้วทิ้ง:** หากสต็อกคลังสาขาใน ERP ไม่พอ ให้รับบิลขายและยอดเงินเข้าบัญชีตามปกติ<br>• จัดสถานะเป็น `needs_review: inventory_discrepancy` และส่งเข้าคิว **Pending Stock Adjustment** พร้อมแจ้งเตือน Inventory Manager เพื่อตรวจนับและปรับปรุงยอดสต็อกจริง |
+| **3. การ Reconcile การชำระเงินดิจิทัล & บัญชีพัก (Multi-tender & Clearing Accounts)** | บิลขายที่เป็น PromptPay QR หรือ EDC Card อาจถูกปลอมแปลงสถานะ `paid` หรือนำยอดไปปนกับเงินสดในลิ้นชัก | • สอดคล้องกับ Phase 23 ใน `gpt.md`: ต้องแนบ `provider_transaction_id` และ `settled_amount` ที่สอบยันกับ Gateway ได้<br>• แยกบัญชีพักเงินตาม Tender Type ชัดเจน:<br>  - เงินสดหน้าร้าน $\rightarrow$ บัญชีพัก `1111 Cash on Hand (POS Drawer)`<br>  - PromptPay QR / EDC $\rightarrow$ บัญชีพัก `1113 Payment Gateway / EDC Clearing`<br>• ห้ามลงบัญชีเงินฝากธนาคารหลัก (`1112 Cash at Bank`) โดยตรงจนกว่าจะผ่านการ Reconcile ยอดสลิป/Statement |
+| **4. Double-Entry GL Posting Contract (รายบิล vs สรุปปิดกะ)** | ความสับสนว่าควรลงบัญชี GL รายบิลหรือรวบยอดกะ ทำให้เสี่ยงต่อการเกิด Double Journal Entry ซ้ำซ้อน | • **กำหนดมาตรฐานเด็ดขาด:** ลงบัญชี GL รายบิลแบบ Transactional (Dr. บัญชีพักเงิน/ลูกหนี้, Cr. รายได้ขาย, Cr. ภาษีขาย และ Dr. ต้นทุนขาย, Cr. สินค้าคงคลัง)<br>• **การปิดกะ (Shift Closing):** ทำหน้าที่เฉพาะบันทึกผลต่างเงินสดขาด/เกิน (Cash Over/Short) เท่านั้น:<br>  - เงินสดขาด: `Dr. 5400 Cash Shortage / Cr. 1111 Cash on Hand`<br>  - เงินสดเกิน: `Dr. 1111 Cash on Hand / Cr. 4400 Cash Overage`<br>• ป้องกันปัญหาการลงบัญชีซ้ำซ้อน 100% |
+| **5. กลไก Tamper-Proof & Dead-Letter Queue (DLQ)** | ข้อมูลใน POS Database หน้าร้านอาจถูกแก้ไขก่อน Sync หรือมี Payload ที่ Parse ไม่ผ่าน | • ทุก Event ต้องมี SHA-256 Payload Hash สร้าง ณ จุดบันทึก เพื่อตรวจจับการแก้ไขฐานข้อมูลหน้าร้าน<br>• จัดทำ Dead-Letter Queue (DLQ) ฝั่ง ERP Connector พร้อมหน้าจอ UI ใน Admin Settings สำหรับตรวจสอบสาเหตุ และกด Re-process รายการที่แก้ไขข้อมูลหลักแล้ว |
+| **6. Pre-implementation Gate: Business Fit Confirmation** | รูปแบบธุรกิจหน้าร้านส่งผลต่อโครงสร้าง Schema และ UI เป็นอย่างมาก | • ยึดตามข้อกำหนดใน `gpt.md` (line 100): ยืนยัน Business Model ของหน้าร้านให้ชัดเจนก่อนเขียนโค้ด (เช่น Retail ค้าปลีกทั่วไป, มินิมาร์ทตัดสต็อก Barcode รวดเร็ว, หรือ F&B ที่มีเปิดโต๊ะ/ส่งครัว) เพื่อไม่ให้เกิด Over-engineering หรือสร้าง Schema ที่ไม่ตรงกับงานจริง |
+
+
+
 
 

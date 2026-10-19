@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMovement extends Model
 {
-    use UsesOrderedUuid;
+    use \App\Models\Concerns\TransactionalExternalEvents, UsesOrderedUuid;
 
-    protected $fillable = ['org_id', 'product_id', 'goods_receipt_id', 'purchase_order_id', 'warehouse_id', 'warehouse_bin_id', 'inventory_lot_id', 'stock_transfer_id', 'stock_count_id', 'movement_type', 'movement_date', 'quantity', 'unit_cost', 'total_cost', 'currency', 'base_currency', 'exchange_rate', 'base_unit_cost', 'base_total_cost', 'note', 'created_by'];
+    protected $fillable = ['org_id', 'product_id', 'goods_receipt_id', 'purchase_order_id', 'warehouse_id', 'warehouse_bin_id', 'inventory_lot_id', 'stock_transfer_id', 'stock_count_id', 'work_order_id', 'movement_type', 'movement_date', 'quantity', 'unit_cost', 'total_cost', 'currency', 'base_currency', 'exchange_rate', 'base_unit_cost', 'base_total_cost', 'note', 'created_by'];
 
     protected function casts(): array
     {
@@ -28,5 +28,10 @@ class StockMovement extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class)->withTrashed();
+    }
+
+    public function workOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrder::class, 'work_order_id');
     }
 }

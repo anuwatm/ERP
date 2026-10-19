@@ -4,7 +4,7 @@ Wizard อยู่ที่ `backend/setup/` และ public entry อยู�
 
 ## Deployment bundle
 
-ต้อง copy ทั้ง `backend/vendor/`, `backend/public/build/`, `backend/setup/`, `backend/public/setup/` และ `setup/` พร้อม source/migrations. Server ไม่ต้องมี Composer หรือ Node แต่ต้องมี PHP 8.3+, PDO MySQL, OpenSSL, mbstring, fileinfo, DOM, SimpleXML, cURL และสิทธิ์เขียน `backend/.env`, `backend/storage/`, `backend/bootstrap/cache/`.
+ต้อง copy ทั้ง `backend/vendor/`, `backend/public/build/`, `backend/setup/`, `backend/public/setup/` และ `setup/` พร้อม source/migrations. Server ไม่ต้องมี Composer หรือ Node แต่ต้องมี PHP 8.3+, PDO MySQL, OpenSSL, mbstring, fileinfo, DOM, SimpleXML, cURL, zip และสิทธิ์เขียน `backend/.env`, `backend/storage/`, `backend/bootstrap/cache/`.
 
 ## เปิด installer
 
@@ -17,12 +17,11 @@ Wizard อยู่ที่ `backend/setup/` และ public entry อยู�
 
 ## การทำงานของ wizard
 
-ก่อนติดตั้ง เปิด `/setup/system-requirements.php` เพื่อตรวจ PHP version, required extensions (`pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `dom`, `simplexml`, `curl`), memory/upload limits, directory permissions และ build assets ได้โดยไม่ต้องใช้ `SETUP_TOKEN` หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()` และตรวจ database credential ใน Step 2 ของ wizard. ทุก Failed/Warning มีคำแนะนำเฉพาะสาเหตุ; ปุ่ม Fix สร้างได้เฉพาะ `storage/` หรือ `bootstrap/cache/` ที่ยังไม่มีและ parent directory เขียนได้ โดยใช้ CSRF token และไม่เปลี่ยน permission หรือ PHP/server configuration.
+ก่อนติดตั้ง เปิด `/setup/system-requirements.php` เพื่อตรวจ PHP version, required extensions (`pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `dom`, `simplexml`, `curl`, `zip`), memory/upload limits, directory permissions และ build assets ได้โดยไม่ต้องใช้ `SETUP_TOKEN` หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()` และตรวจ database credential ใน Step 2 ของ wizard. ทุก Failed/Warning มีคำแนะนำเฉพาะสาเหตุ; ปุ่ม Fix สร้างได้เฉพาะ `storage/` หรือ `bootstrap/cache/` ที่ยังไม่มีและ parent directory เขียนได้ โดยต้องยืนยัน `SETUP_TOKEN` พร้อม CSRF token และไม่เปลี่ยน permission หรือ PHP/server configuration.
 
-1. ตรวจ PHP, extensions, writable directories, `vendor/` และ `public/build/`
-2. ตรวจ setup token
-3. รับและทดสอบ database connection
-4. รับ Organization และ Owner
-5. สร้าง `.env`/`APP_KEY`, clear config cache, migrate เฉพาะ database ที่ยังไม่มี migration, provision roles/permissions/Owner และเขียน install lock
+1. **Step 1 (Security):** ตรวจ PHP, extensions, writable directories, `vendor/` และ `public/build/` พร้อมยืนยัน `SETUP_TOKEN`
+2. **Step 2 (Server & DB):** รับข้อมูล Application และทดสอบ database connection
+3. **Step 3 (Organization):** รับข้อมูล Organization และ Owner account
+4. **Step 4 (Install):** ยืนยันพิมพ์ INSTALL เพื่อสร้าง `.env`/`APP_KEY`, clear config cache, migrate เฉพาะ database ที่ยังไม่มี migration, provision roles/permissions/Owner และเขียน install lock
 
 หลังสำเร็จ lock อยู่ที่ `storage/app/installer/installed.json`; `/setup` จะตอบ 404 และไม่สามารถ run migration ซ้ำจาก web ได้. Wizard ไม่ seed demo data และไม่อนุญาตใช้ database ที่มีตาราง `migrations` อยู่แล้ว. Wizard ปฏิเสธ release directory ที่มี `.env` อยู่แล้ว เพื่อไม่เขียนทับระบบเดิม; การ upgrade ใช้ deployment runbook/CLI แยกต่างหากหลัง backup.

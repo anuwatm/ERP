@@ -11,7 +11,7 @@ session_set_cookie_params([
     'httponly' => true,
     'secure' => (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
     'samesite' => 'Strict',
-    'path' => rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/setup/index.php'), '/'),
+    'path' => rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/setup/index.php'), '/') ?: '/',
 ]);
 session_start();
 

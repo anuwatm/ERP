@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkflowInstance extends Model
 {
-    use UsesOrderedUuid;
+    use \App\Models\Concerns\TransactionalExternalEvents, UsesOrderedUuid;
 
     protected $fillable = ['org_id', 'workflow_definition_id', 'subject_type', 'subject_id', 'requester_user_id', 'status', 'current_step_no', 'definition_snapshot', 'subject_snapshot', 'submitted_at', 'completed_at'];
 

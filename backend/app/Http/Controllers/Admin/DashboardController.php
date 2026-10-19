@@ -408,7 +408,7 @@ class DashboardController extends Controller
     private function financeCashFlowTrend(string $orgId, array $filters, bool $canViewCashIn, bool $canViewCashOut): array
     {
         $end = CarbonImmutable::parse($filters['end_date'] ?? DashboardDate::now()->toDateString())->endOfMonth();
-        $start = $end->subMonths(11)->startOfMonth();
+        $start = $end->startOfMonth()->subMonths(11);
         if (! empty($filters['start_date'])) {
             $selectedStart = CarbonImmutable::parse($filters['start_date'])->startOfMonth();
             if ($selectedStart->gt($start)) {

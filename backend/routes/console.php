@@ -242,3 +242,4 @@ Artisan::command('cashflow:snapshot {--org=} {--horizon=90}', function () {
 })->purpose('Generate scheduled cash flow forecast snapshots and financial health metrics.');
 
 Schedule::command('cashflow:snapshot --horizon=90')->dailyAt('02:00');
+Schedule::command('external-api:dispatch-webhooks --limit=20')->everyMinute()->withoutOverlapping();

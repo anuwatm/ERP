@@ -14,9 +14,9 @@
 
 ## 2. Authorization and tenant isolation
 
-- ทุก API ตรวจ authentication, permission และ `org_id` ฝั่ง server ตามลำดับ.
+- ทุก API ตรวจ authentication, permission และ `org_id` ฝั่ง server ตามลำดับ; External Summary API ใช้ integration key และ endpoint scopes แยกจาก user session (ดู `EXTERNAL_SUMMARY_API.md`).
 - ห้ามเชื่อ `org_id`, `user_id`, `role`, price, total หรือ status ที่ client ส่งมา.
-- Read/update/delete ทุก query ต้อง bind `org_id` จาก session context, ไม่รับจาก request body/query string.
+- Read/update/delete ทุก query ต้อง bind `org_id` จาก session context หรือ integration key ที่ตรวจสอบแล้วฝั่ง server, ไม่รับจาก request body/query string.
 - ตรวจ row ownership เพิ่มเติมตาม Role Visibility Matrix ใน `docs/modules/02-user-role-permission.md` เช่น owner, assignee, project scope, finance scope.
 - Permission changes มีผลทันที: invalidate session หรือ refresh server-side permission context.
 - `owner` system role และ permission mapping ของ role นี้ต้อง immutable ผ่าน UI/API; ห้ามลบ/ถอนสิทธิ์เพื่อป้องกัน admin lockout.

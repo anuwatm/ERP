@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
-    use SoftDeletes, UsesOrderedUuid;
+    use \App\Models\Concerns\TransactionalExternalEvents, SoftDeletes, UsesOrderedUuid;
 
     public const STATUSES = ['draft', 'sent', 'partially_paid', 'paid', 'overdue', 'void'];
 

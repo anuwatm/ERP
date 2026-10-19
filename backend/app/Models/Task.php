@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use SoftDeletes, UsesOrderedUuid;
+    use \App\Models\Concerns\TransactionalExternalEvents, SoftDeletes, UsesOrderedUuid;
 
     public const STATUSES = ['todo', 'in_progress', 'blocked', 'done', 'cancelled'];
 

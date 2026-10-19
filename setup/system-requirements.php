@@ -15,6 +15,15 @@ if ($installer->isInstalled()) {
 }
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_name('erp_setup_requirements');
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/setup/system-requirements.php');
+    $cookiePath = rtrim(str_replace('\\', '/', $scriptDir), '/');
+    session_set_cookie_params([
+        'httponly' => true,
+        'secure' => (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'),
+        'samesite' => 'Strict',
+        'path' => $cookiePath !== '' ? $cookiePath : '/',
+    ]);
     session_start();
 }
 
@@ -79,10 +88,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '')
     $csrf = (string) ($_POST['_token'] ?? '');
     $targetName = (string) ($_POST['target'] ?? '');
     $targetPath = $repairTargets[$targetName] ?? null;
+    $setupToken = (string) ($_POST['setup_token'] ?? $_SERVER['HTTP_X_SETUP_TOKEN'] ?? '');
 
     if (! hash_equals((string) ($_SESSION['system_requirements_csrf'] ?? ''), $csrf) || $targetPath === null) {
         http_response_code(400);
         $repairNotice = ['type' => 'fail', 'text' => 'ไม่สามารถยืนยันคำขอแก้ไขได้ กรุณาโหลดหน้าใหม่แล้วลองอีกครั้ง.'];
+    } elseif (! $installer->isEnabled() || ! $installer->verifyToken($setupToken)) {
+        http_response_code(403);
+        $repairNotice = ['type' => 'fail', 'text' => 'ต้องระบุ SETUP_TOKEN ที่ถูกต้องเพื่อดำเนินการแก้ไข directory.'];
     } elseif (is_dir($targetPath)) {
         $repairNotice = ['type' => 'warn', 'text' => 'โฟลเดอร์มีอยู่แล้ว โปรดแก้ไขสิทธิ์ของ web-server user บน server.'];
     } elseif (! is_writable(dirname($targetPath))) {
@@ -97,7 +110,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '')
 $_SESSION['system_requirements_csrf'] ??= bin2hex(random_bytes(32));
 $csrfToken = $_SESSION['system_requirements_csrf'];
 
-$optionalExtensions = ['zip', 'gd', 'imagick', 'redis'];
+$optionalExtensions = ['gd', 'imagick', 'redis'];
 $checks = $installer->preflight();
 $runtimeChecks = [
     ['label' => 'Memory limit at least 128 MB', 'ok' => memoryBytes((string) ini_get('memory_limit')) >= 128 * 1024 * 1024, 'detail' => (string) ini_get('memory_limit'), 'required' => true],
@@ -177,7 +190,10 @@ foreach ($groups as $group) { ?>
                     <input type="hidden" name="action" value="repair_directory">
                     <input type="hidden" name="_token" value="<?= esc($csrfToken) ?>">
                     <input type="hidden" name="target" value="<?= esc($check['label']) ?>">
-                    <button class="fix-button" type="submit">Fix: สร้างโฟลเดอร์ที่ขาด</button>
+                    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;">
+                      <input type="password" name="setup_token" placeholder="ระบุ SETUP_TOKEN" required style="padding:6px 10px;border:1px solid #b7c9e9;border-radius:6px;font:inherit;font-size:.8rem;">
+                      <button class="fix-button" type="submit">Fix: สร้างโฟลเดอร์ที่ขาด</button>
+                    </div>
                   </form>
                 <?php } ?>
               <?php } ?>

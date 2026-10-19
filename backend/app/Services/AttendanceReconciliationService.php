@@ -117,6 +117,10 @@ class AttendanceReconciliationService
             $sheetFile = $tempDir.DIRECTORY_SEPARATOR.'xl'.DIRECTORY_SEPARATOR.'worksheets'.DIRECTORY_SEPARATOR.'sheet1.xml';
 
             if (! file_exists($sheetFile)) {
+                if (! class_exists(\ZipArchive::class)) {
+                    throw new \RuntimeException('PHP extension "zip" is required to parse XLSX files when extraction fallback is unavailable.');
+                }
+
                 return [];
             }
 

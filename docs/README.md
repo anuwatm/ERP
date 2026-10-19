@@ -2,6 +2,8 @@
 
 เอกสารออกแบบระบบ Company OS / Lightweight ERP
 
+**External App API (2026-10-19):** [คู่มือ Read API P1–P6](EXTERNAL_READ_API.md), [OpenAPI รวม 62 GET paths](openapi/external-read-v1.json), [Integration/client](EXTERNAL_API_INTEGRATION.md), [checklist](EXTERNAL_SUMMARY_API_CHECKLIST.md). P7 sensitive/write ตัดออกตามคำสั่งผู้ใช้; รอ Gemini ตรวจรวม/Browser UAT; deployment/integration/SLA deferred. [หลักฐาน](../gpt.md)
+
 > สถานะเอกสาร: ไฟล์ `modules/` และ `database/DATABASE.md` ส่วนใหญ่เป็น planning baseline ของ MVP. สำหรับ implementation ปัจจุบัน ให้ยึด `backend/database/migrations`, `backend/routes/web.php`, `document/DATABASE_ERD.md`, `document/GROUPS_WORKFLOW.md` และ `checklist.md` ตามลำดับ
 
 **เริ่มอ่าน implementation ปัจจุบัน:** [`CURRENT_IMPLEMENTATION.md`](./CURRENT_IMPLEMENTATION.md) และสถานะ HR Phase 23.3: [`PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](./PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md)

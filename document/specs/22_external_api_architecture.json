@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ERP API — การเข้าถึงข้อมูลจากแอปภายนอก",
+    "quality_profile": "showcase",
+    "viewBox": [1360, 720]
+  },
+  "components": [
+    {"id":"app","type":"external","label":"Backend แอปภายนอก","sublabel":"เก็บ secret ฝั่ง server","pos":[40,300],"size":[200,80]},
+    {"id":"guard","type":"security","label":"ตรวจ integration key","sublabel":"Hash / expiry / org / scopes","pos":[400,300],"size":[220,80]},
+    {"id":"summary","type":"backend","label":"Summary API v1","sublabel":"Sales / Finance / Projects","pos":[800,300],"size":[220,80]},
+    {"id":"data","type":"database","label":"ข้อมูลธุรกิจองค์กร","sublabel":"Aggregate ตาม org_id ของ key","pos":[1120,300],"size":[220,80]},
+    {"id":"admin","type":"frontend","label":"Owner / Admin","sublabel":"/settings/api-access","pos":[40,80],"size":[200,80]},
+    {"id":"keys","type":"database","label":"Integration API Keys","sublabel":"SHA-256 hash / scopes / org_id","pos":[400,80],"size":[220,80]},
+    {"id":"result","type":"backend","label":"JSON สำหรับแอป","sublabel":"data + meta / no-store","pos":[800,550],"size":[220,80]}
+  ],
+  "connections": [
+    {"id":"request","from":"app","to":"guard","label":"HTTPS + Bearer","variant":"security"},
+    {"id":"authorize","from":"guard","to":"summary","label":"Scope ผ่าน + rate limit","variant":"emphasis"},
+    {"id":"aggregate","from":"summary","to":"data","label":"อ่านสรุป"},
+    {"id":"manage","from":"admin","to":"keys","label":"สร้าง / แก้ไข / ถอน"},
+    {"id":"lookup","from":"guard","to":"keys","label":"ตรวจ key","variant":"security","fromSide":"top","toSide":"bottom"},
+    {"id":"response","from":"summary","to":"result","label":"ข้อมูลสรุปที่อนุญาต","fromSide":"bottom","toSide":"top","labelAt":[910,460]}
+  ],
+  "cards": [
+    {"dot":"emerald","title":"มี implementation แล้ว","items":["GET /api/v1/summaries/{sales|finance|projects}","Key แยกองค์กรและ scope; key เดิมไม่รับ scope ใหม่อัตโนมัติ"]},
+    {"dot":"amber","title":"ข้อจำกัดและแผนถัดไป","items":["HR / Employee / Inventory และ list/detail ยังเป็นแผน","Browser UAT, Round 2 acceptance และ load SLA ยังไม่ปิด"]}
+  ]
+}

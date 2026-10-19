@@ -1572,35 +1572,163 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 
 ### Phase 27 Design Backlog
 
-- [ ] Design Multi-Level BOM Schema (Raw Materials, Sub-assemblies, Labor Cost, Overhead Cost)
-- [ ] Design Work Order Lifecycle (Draft, Planned, In-Progress, Quality-Check, Completed, Cancelled)
-- [ ] Design Stock Movement Integration: เบิกวัตถุดิบ (Stock Issue) $\rightarrow$ ผลิต $\rightarrow$ รับสินค้าสำเร็จรูป (Finished Goods Receipt) พร้อมคำนวณต้นทุนต่อหน่วย
-- [ ] Design GL Auto-Posting (Dr. Work-in-Progress 1160 / Cr. Raw Materials 1140 $\rightarrow$ Dr. Finished Goods 1140 / Cr. Work-in-Progress 1160)
+- [x] Design Multi-Level BOM Schema (Raw Materials, Sub-assemblies, Labor Cost, Overhead Cost)
+- [x] Design Work Order Lifecycle (Draft, Planned, In-Progress, Quality-Check, Completed, Cancelled)
+- [x] Design Stock Movement Integration: เบิกวัตถุดิบ (Stock Issue) $\rightarrow$ ผลิต $\rightarrow$ รับสินค้าสำเร็จรูป (Finished Goods Receipt) พร้อมคำนวณต้นทุนต่อหน่วย
+- [x] Design GL Auto-Posting (Dr. Work-in-Progress 1160 / Cr. Raw Materials 1140 $\rightarrow$ Dr. Finished Goods 1140 / Cr. Work-in-Progress 1160)
 
 ### Phase 27 Implementation Backlog
 
-- [ ] เพิ่ม Schema/Models: `bill_of_materials`, `bom_items`, `work_orders`, `work_order_items`, `production_costs`
-- [ ] พัฒนา Production Costing Service & Stock Movement Dispatcher
-- [ ] เพิ่ม UI: BOM Builder, Work Order Management, Production Run & Cost Breakdown View
-- [ ] เพิ่ม Feature Tests: BOM multi-level explosion, Stock deduction, Work order state transitions, และ Production GL posting tests
+- [x] เพิ่ม Schema/Models: `bill_of_materials`, `bom_items`, `work_orders`, `work_order_items`, `production_costs`
+- [x] พัฒนา Production Costing Service & Stock Movement Dispatcher
+- [x] เพิ่ม UI: BOM Builder, Work Order Management, Production Run & Cost Breakdown View
+- [x] เพิ่ม Feature Tests: BOM multi-level explosion, Stock deduction, Work order state transitions, และ Production GL posting tests
+
+#### ผลการทดสอบและการตรวจสอบ Phase 27
+- **Database Migrations & Models**:
+  - สร้างตาราง `bill_of_materials`, `bom_items`, `work_orders`, `work_order_items`, `production_costs`, เพิ่ม `work_order_id` ใน `stock_movements`, และเพิ่ม Chart of Account `1160` (Work-in-Progress asset account)
+  - เพิ่ม Model relationships และ Permission catalog defaults (`manufacturing.bom.view`, `manufacturing.bom.manage`, `manufacturing.work_orders.view`, `manufacturing.work_orders.manage`, `manufacturing.work_orders.execute`)
+- **Business Logic & GL Automation Services**:
+  - `ProductionCostingService`: คำนวณ roll-up ต้นทุน BOM, Multi-level recursive explosion พร้อมป้องกัน Circular dependency (`DomainException`), สร้าง Work Order พร้อม scale วัตถุดิบ, ควบคุม state transitions (`plan`, `release`, `quality-check`, `complete`, `cancel`), และบันทึก Direct Labor/Overhead costs
+  - `FinancialJournalService`: Auto-posting Journal Entries สำหรับ Material Issue (`Dr. 1160 WIP / Cr. 1140 Raw Materials`) และ Work Order Completion (`Dr. 1140 Finished Goods / Cr. 1160 WIP, Cr. 5500 Labor, Cr. 5200 Overhead`) รวมถึง Reversal เมื่อยกเลิก
+- **Frontend UI & Navigation**:
+  - `BillOfMaterials.tsx`: หน้าจอจัดการ BOM, StatCards, Dynamic Cost Calculator, BOM Builder modal, และ Multi-level Tree Explosion & Flattened Materials modal
+  - `WorkOrders.tsx`: หน้าจอ Work Order lifecycle, Shop floor execution status badges, Inspection modal (QC), Finished goods intake, และ Production cost breakdown drawer
+  - Navigation menu: เพิ่มกลุ่ม `Manufacturing & Production` ใน `AuthenticatedLayout.tsx`
+- **Quality & Test Verifications**:
+  - Feature Test Suite: `Tests\Feature\Phase27ManufacturingTest` **8 passed, 69 assertions**
+  - Frontend Build: `npm run build` (tsc & vite) **0 errors, clean build (13.54s)**
+  - Code Style: Laravel Pint (PSR-12) **0 errors**, Prettier **clean**
 
 ---
 
-## Phase 28: Point of Sale (POS) & Retail Counter [Optional Vertical]
+## External Read-only Summary API — Round 1 Implementation (2026-10-18)
 
-เป้าหมาย: หน้าจอขายหน้าร้านสำหรับธุรกิจค้าปลีก จัดการกะแคชเชียร์ รองรับเครื่องสแกนบาร์โค้ด พิมพ์สลิป และตัดสต็อกแบบ Real-time
-**Guardrail:** การกระทบยอดเงินในกะ (Shift Reconciliation) จำกัดอยู่เฉพาะขอบเขต POS เท่านั้น และห้ามส่งต่อเป็น Organization-wide Cash Balance ใน Dashboard, Props หรือ API
+เป้าหมาย: ให้แอปภายนอกดึงข้อมูลสรุป ERP ผ่าน secret key โดยเริ่มทีละส่วน ก่อนขยายขอบเขตทั้งระบบ
+สถานะ: Implement รอบแรก Sales/Finance ผ่านการตรวจรับทางเทคนิคโดย Gemini ครบถ้วน (API/regression 64 tests / 514 assertions, Scoped/Phase27 36 tests / 275 assertions, Frontend 38 tests, TypeScript/ESLint/Vite/Pint 100% green); พร้อมสำหรับ Browser UAT และเตรียมขยายโดเมนถัดไป; ยังไม่ deploy/migrate ฐานข้อมูลใช้งานจริง
+รายละเอียดและเกณฑ์รับงาน: [External Summary API Checklist](docs/EXTERNAL_SUMMARY_API_CHECKLIST.md)
 
-### Phase 28 Design Backlog
+### External App API Priority Roadmap (2026-10-19)
 
-- [ ] Design POS Session & Cash Drawer Shift Management (Open Float, Cash In/Out, Shift End Reconciliation, Overage/Shortage)
-- [ ] Design Fast Checkout Screen (Barcode Scanner, Touch Grid, Discount, Multi-tender: Cash, PromptPay, Credit Card)
-- [ ] Design Offline Capability & Sync Engine (Local cache for products/pricing, offline queue for transactions)
-- [ ] Design Daily Shift Settlement & GL Auto-Posting (Dr. Cash/Bank / Cr. Sales 4100, Output VAT 2130)
+รายละเอียด: sections 14–19 ใน [API checklist](docs/EXTERNAL_SUMMARY_API_CHECKLIST.md); P1–P6 มี implementation/tests ครบถ้วน และผ่านการรับรองทางเทคนิคโดย Gemini ครบถ้วน (Complete & Verified by Gemini 2026-10-19). Browser UAT ยัง pending; target deployment/integration/SLA ยังคง deferred.
 
-### Phase 28 Implementation Backlog
+- [x] P0: guide/client และมาตรฐาน list/detail/scopes จัดทำแล้ว; ผ่านการรับรอง Gemini Round 2 (Projects summary & query optimization 8→2); Browser UAT pending; deployment/integration แอปจริงและ SLA deferred ตามผู้ใช้ 2026-10-19 (รายละเอียด API checklist section 18)
+- [x] P1: Reference Data → Products/Services → Inventory Summary/Stock/Lot/Expiry
+- [x] P2: HR Summary + Employee Profile → Attendance → Leave → Roster (รายละเอียดด้านล่าง)
+- [x] P3: Customer/Supplier Directory → Sales Documents → Payment Status และ party-scoped access
+- [x] P4: Procurement Summary/PO/GRN → Project/Task list/detail
+- [x] P5: Approval Read → Signed Webhooks/Outbox/Delivery tracking
+- [x] P6: Manufacturing/BOM/Work Orders → Document metadata/download ACL
+- [x] P7: ผู้ใช้ตัด salary/bank/sensitive และ Write APIs ทั้งหมดออก; integration key ใช้ GET/HEAD เท่านั้น
+- [x] Cross-cutting technical: cursor/watermark/reconciliation contracts และ automated tests ผ่าน Gemini review ตาม gemini.md section12 (2026-10-19)
+- [ ] Cross-cutting operational: Browser UAT pending; target integration/deployment/concurrent HTTP SLA deferred ตามผู้ใช้ ไม่ใช้ technical review แทน production acceptance
 
-- [ ] เพิ่ม Schema/Models: `pos_terminals`, `pos_shifts`, `pos_orders`, `pos_order_items`, `pos_payments`
-- [ ] เพิ่ม UI: Touch-friendly POS Cashier Interface, Shift Open/Close Modal, Thermal Receipt Print Layout
-- [ ] พัฒนา Barcode Lookup & Instant Stock Reduction Engine
-- [ ] เพิ่ม Feature Tests: Shift cash reconciliation, Multi-tender payments, Stock movements from POS, และ Shift settlement GL posting tests
+### HR & Employee API — รายละเอียด implementation / acceptance
+
+- [x] HR Summary: headcount, employment status/type, new hires, resignations และ probation milestones (`summary:hr:read`)
+- [x] Attendance/Leave/Roster Summary แยก endpoint และ scopes; รองรับ reconciliation/overnight และระบุข้อจำกัด non-User Employee
+- [x] Employee Directory & Profile: รายชื่อ/ข้อมูลพื้นฐานรายคน พร้อม search/filter/pagination (`employees:read`)
+- [x] Employee Attendance/Roster/Leave Balance/Leave Requests รายคน แยก scopes และตรวจ Employee→User bridge
+- [x] กำหนด field allowlist/privacy/org-unit visibility, OpenAPI, tests ตาม sections 14–16; ผ่านการตรวจรับทางเทคนิคโดย Gemini (Browser UAT ยังคง pending)
+
+### Round 1 implementation
+
+- [x] จัดทำ draft checklist ครอบคลุม API contract, metrics, tenant isolation, secret key และหน้า Admin
+- [x] กำหนดขอบเขตรอบแรก Sales/Finance และ default policy ตามคำสั่งเริ่มงานของผู้ใช้
+- [x] พัฒนา authentication, key lifecycle และหน้า Admin จัดการ key
+- [x] พัฒนา Sales Summary พร้อม tests และคู่มือ
+- [x] พัฒนา Finance Summary พร้อม tests และคู่มือ
+- [x] ตรวจรับก่อนขยาย Summary API ทีละโดเมน (Gemini Verified: Contract, Metrics, Security Isolation, API Key Lifecycle, Scoped & Regression Tests, Code Quality & Builds)
+
+## Phase 28: Standalone POS & ERP Connector [Optional Vertical]
+
+เป้าหมาย: POS ขายหน้าร้านติดตั้งคนละ Server กับ ERP ได้ แยกแอป ฐานข้อมูล บัญชีผู้ใช้ และ secrets โดย ERP Connector เป็นฝ่ายเริ่มเชื่อมออกไปส่ง catalog/ดึงรายการขาย/ส่งผลรับเข้า POS ไม่มีเส้นทางเริ่ม connection เข้าระบบหลักหรือเข้าฐาน ERP โดยตรง
+
+**สถานะ:** Checklist/แนวทางออกแบบตามคำขอผู้ใช้ 2026-10-19 ปรับตาม [Gemini review sections 13.1–13.2](gemini.md). ยังไม่เริ่ม implementation; architecture recommendations ไม่ใช่การตรวจรับโค้ดหรือ deployment
+
+### 28.1 ขอบเขตและหลักการที่บันทึกแล้ว
+
+- [x] บันทึกแนวทางแยก POS Server + POS Database ออกจาก ERP Server + ERP Database; ไม่แชร์ database credentials, APP_KEY, staff sessions หรือรหัสผ่าน ERP
+- [x] บันทึกทิศทาง connection: ERP Connector → POS Sync API เท่านั้น; POS/เครื่องแคชเชียร์ไม่มีสิทธิ์เริ่ม connection เข้า ERP หรือ ERP Database
+- [x] คง External API `/api/v1` เดิมเป็น GET/HEAD และไม่มี generic Write API; POS integration เป็น internal import เฉพาะงานที่ ERP Worker ดึงมาตรวจเอง การ POST catalog/ack ไป POS ไม่ใช่เปิด Write API เข้า ERP
+- [x] ขอบเขตเริ่มต้นที่เสนอ: online POS Server, คลังหรือ stock allocation แยกสาขา, ERP polling และขายต่อได้ระหว่าง ERP หยุดบริการ; browser offline/กรณี POS Server ล่มแยกไว้ภายหลัง
+- [x] Guardrail: เงินเปิดกะ/รับ–จ่าย/กระทบยอด/over-short จำกัดเฉพาะกะ POS ไม่เผยหรืออนุมานเป็น organization-wide Cash Balance ใน Dashboard, Props หรือ API
+- [x] Guardrail: การแยก Server ลดช่องทางเข้าถึง แต่รายการจาก POS ยังเป็น untrusted input ต้องตรวจ authority, values และ payment evidence ก่อนบันทึก ERP
+- [ ] Pre-implementation Gate: ยืนยันกับผู้ใช้ว่าเป็น Retail/มินิมาร์ท/F&B รวมสาขา/terminal/รูปแบบชำระ/ใบกำกับภาษี/อุปกรณ์/stock ownership ก่อนออก schema/UI หรือเริ่ม implementation; ไม่สมมติระบบโต๊ะ/ครัว/โปรโมชั่น และไม่ขยาย browser offline จาก baseline เอง (Gemini 13.2 ข้อ6)
+
+### 28.2 Architecture / Contract ก่อนลงโค้ด
+
+- [ ] จัดทำ architecture/sequence/threat model และ data ownership: ERP เป็น master ของสินค้า/ราคา/ภาษี/คลัง/บัญชี; POS เป็นเจ้าของกะ ตะกร้า และหลักฐานรายการขายหน้าร้าน; ระบุกรณีถูกเจาะหรือ credential รั่ว
+- [ ] กำหนด deployment แยก repository/release/config หรือ workspace ที่เหมาะสม พร้อม backup/restore และ upgrade compatibility ของสองระบบ โดยไม่บังคับ deploy พร้อมกัน
+- [ ] กำหนด org/branch/warehouse/terminal mapping จาก provisioning ฝั่ง ERP ไม่เชื่อ org_id/GL account/สิทธิ์จาก payload
+- [ ] ออก versioned POS Sync contract: catalog publish, event polling, pagination/cursor, acknowledgement/result และ reconciliation; ระบุ schema_version/backward compatibility และเพดาน batch/body/timeouts
+- [ ] กำหนด UUID/event identity, canonical payload bytes/schema, SHA-256 payload hash ณ transaction บันทึก, source sequence, occurred_at/timezone, immutable sale snapshots, currency/decimal precision และ ERP document correlation; hash ใช้ตรวจ integrity/ID เดิม payload ต่าง ไม่เรียก tamper-proof เพราะผู้โจมตีอาจแก้ทั้ง payload/hash
+- [ ] กำหนด sync interval/ความสดของ catalog/price/stock และ recovery objectives จากความต้องการจริงก่อนรับรอง real-time/SLA
+
+### 28.3 Network / Authentication / Security
+
+- [ ] วาง ERP private network และ firewall แบบ default deny: public/POS zone เข้า ERP/DB ไม่ได้ อนุญาต Connector outbound เฉพาะ POS host/port ที่กำหนด; แยกสิทธิ์ deployment/admin ของแต่ละระบบ
+- [ ] ออกแบบ HTTPS และ service authentication ของ Connector กับ POS เช่น mTLS พร้อม credential แยกต่อ instance/org และ scope เฉพาะ catalog/events/results; กำหนด rotation/revoke/expiry โดยไม่ใช้ ERP admin key
+- [ ] เก็บ POS credentials ที่ ERP Connector และเก็บเพียง identity ของ Connector ฝั่ง POS; ไม่มี credential ที่ POS ใช้ login/query ERP ได้ ไม่ฝัง secrets ในแคชเชียร์ browser
+- [ ] สร้างบัญชีแคชเชียร์/manager แยกจาก ERP พร้อมสิทธิ์สาขา/terminal, session policy และสิทธิ์ส่วนลด/void/refund/เปิด–ปิดกะ
+- [ ] กำหนด POS destination จาก admin allowlist ป้องกัน SSRF/redirect/private-network pivot ด้วย fixed paths, DNS/IP validation, TLS verification และ time/response limits
+- [ ] จำกัด fields ที่ส่ง POS เฉพาะ catalog/ราคา/ภาษี/stock allocation และข้อมูลอ้างอิงจำเป็น; ไม่ส่ง HR/payroll/bank/national_id/ข้อมูล ERP ทั้งองค์กรหรือต้นทุนโดยปริยาย
+- [ ] ออกแบบ authenticated event integrity: signature/HMAC ผูก instance/event_id/schema_version/sequence/payload hash พร้อม key rotation/verification และ immutable ERP-received evidence; จำกัดสิทธิ์กุญแจแยกจาก POS DB และระบุว่าถ้า POS host/key ถูกยึดยังปลอม events ได้ ต้องตรวจธุรกิจ/payment evidence อิสระ (Gemini 13.2 ข้อ5)
+- [ ] Audit provisioning, configuration, key lifecycle, cashier actions และ import decisions; redact secrets/payment credentials/PII พร้อม rate limits และ replay/deduplication policy
+
+### 28.4 Schema / POS และพื้นที่พักรับเข้า ERP
+
+- [ ] POS schema: `pos_terminals`, `pos_shifts`, `pos_orders`, `pos_order_items`, `pos_payments`, catalog/price snapshots และ transactional outbox (ชื่อสุดท้ายยืนยันใน schema design)
+- [ ] ERP schema: registered POS instances/mappings, integration inbox/checkpoints, import results และ source-to-ERP document links แยกจากตารางขายที่ผ่าน validation แล้ว
+- [ ] บังคับ unique `(pos_instance_id, event_id)` และ source-order identity ป้องกันขาย/รับเงิน/ตัดสต็อกซ้ำ แม้ retry หรือใช้ event_id ใหม่กับ order เดิม
+- [ ] บันทึก sale + payment references + outbox ภายใน POS transaction เดียวกัน; completed sale immutable เปลี่ยนด้วย void/refund events อ้างต้นฉบับ
+- [ ] เก็บ inbox ก่อนเลื่อน durable checkpoint; transaction ของแต่ละ import stage ต้องผูกเอกสาร/GL/payment/stock ที่ stage นั้นรับรองกับ import status/unique source links แบบ atomic; แยก financial_imported กับ inventory_pending เมื่อสต็อกขัดแย้ง ห้ามใช้ imported=true กลบงานค้างหรือ retry แล้วลงบัญชีซ้ำ
+- [ ] Dead-Letter Queue (DLQ) ฝั่ง ERP รองรับ parse/schema/master-data/terminal failures, retry limits และ Admin UI ดู reason/attempts; เก็บ original event/hash แบบจำกัดสิทธิ์+retention และไม่ log raw PII; malformed event ไม่ค้างทั้ง batch, replay ต้องผ่าน validation/idempotency เดิม ไม่แก้ event ต้นฉบับ (Gemini 13.2 ข้อ5)
+
+### 28.5 Catalog / Sales Sync และ Recovery
+
+- [ ] ERP ส่ง catalog allowlist ของสาขา: SKU/Barcode/name/unit/ราคา/ภาษี/status และ price version/validity; initial bootstrap + incremental updates + deletion/disable reconciliation
+- [ ] POS เก็บ catalog ที่พร้อมขายในฐานตัวเอง พร้อม last-sync/stale indication; กำหนด policy กรณีราคาเปลี่ยน สินค้าถูกปิด หรือ catalog เกินอายุ
+- [ ] ERP Worker poll events แบบ bounded cursor จาก POS ลง inbox พร้อม retry/backoff และ lease/locking ป้องกัน worker ซ้อน; ห้าม POS call back เข้า ERP
+- [ ] ตรวจ branch/terminal/product/unit/price version/discount permissions/tax/currency/ยอดรวม/เวลา และ payment evidence ฝั่ง ERP โดยใช้ price-policy snapshot ที่อนุมัติ ไม่รับ client ตั้ง GL/status paid เอง
+- [ ] เรียก ERP business services เดิมเพื่อสร้างเอกสาร ไม่ direct SQL ข้าม validation/permissions/stock/accounting rules
+- [ ] Stock Discrepancy: ไม่ทิ้งบิลขายจริงเพราะ stock ERP ไม่พอ; หลังผ่าน identity/ธุรกรรม/หลักฐานชำระแล้ว ให้รับส่วนการเงินตาม policy และสร้าง `needs_review: inventory_discrepancy` + Pending Stock Adjustment แจ้ง Inventory Manager; ห้าม auto-adjust/ยอม stock ติดลบ/ข้าม domain guards; payload ปลอมยังต้อง quarantine/reject พร้อมเหตุผล (Gemini 13.2 ข้อ2)
+- [ ] กำหนด state machine ของ inventory_pending → reviewed/adjusted → inventory_posted พร้อม manager authorization, valuation/COGS policy และ idempotent stock/GL completion; ระหว่างรอรายงานต้องแสดงต้นทุน/สต็อกที่ยังไม่ครบ ไม่สมมติ COGS=0; ห้ามโพสต์ stock/COGS ซ้ำเมื่อ replay
+- [ ] ส่งผล `accepted / rejected / needs_review` พร้อม reason code/ERP document ID กลับ POS หลัง commit; ack ซ้ำได้ ไม่ให้ ack failure ทำให้ import ซ้ำ
+- [ ] รองรับ at-least-once, duplicate/out-of-order, missing events, crash-before/after-commit และ event payload เปลี่ยนทั้งที่ ID เดิม; รายการขัดแย้งพักตรวจแทนโพสต์ซ้ำ
+- [ ] มี full reconciliation ต่อ instance/branch/ช่วงวัน เทียบ sales/payments/refunds/stock movements และติดตามรายการตกหล่นโดยไม่ใช้ยอดกะเป็นยอดเงินสดองค์กร
+
+### 28.6 Checkout / Shift / Payment / Stock
+
+- [ ] Touch-friendly checkout, barcode lookup, quantity/ส่วนลดที่มีสิทธิ์, tax calculation, พิมพ์ thermal receipt และเลขอ้างอิงการขายไม่ซ้ำ
+- [ ] Tax Invoicing: แยกลำดับเลข ABB/Full Tax/e-Tax พร้อม source sale เดียว, original/replacement links และ void/replace events ตาม policy ที่ตรวจสอบข้อกำหนดภาษีก่อนพัฒนา; การเปลี่ยนรูปเอกสารไม่สร้างรายได้/Output VAT ซ้ำ ไม่ลบประวัติหรือถือว่าต้อง void ทุกกรณีโดยไม่ตรวจเงื่อนไข (Gemini 13.2 ข้อ1)
+- [ ] e-Tax ใช้ certified-provider/HSM/KMS signing boundary ตาม deployment ที่อนุมัติ ไม่เก็บ signing private key ใน POS DB; กำหนดการออกเอกสารระหว่าง ERP offline และการใช้ข้อมูลลูกค้าเฉพาะจำเป็นโดยตรวจสิทธิ์/retention (Gemini 13.2 ข้อ1)
+- [ ] เปิดกะ/เงินตั้งต้น/Cash In-Out/ปิดกะ/ยอดนับจริง/over-short พร้อม approval/audit ของรายการปรับปรุง
+- [ ] Multi-tender Cash/PromptPay/Card; แยก cashier-declared cash จาก provider-verified payment และสถานะ pending/confirmed/failed/refunded
+- [ ] กำหนด provider/merchant ownership และ verify provider_transaction_id/settled_amount/currency/merchant/status กับหลักฐาน gateway/acquirer ที่เชื่อถือได้; unique payment reference ป้องกันใช้รายการเดียวจ่ายหลายบิล; แยก gross/fees/net/partial/reversal และ pending verification; ไม่เชื่อรูป QR/สลิป/browser flag และไม่เก็บ PAN/CVV (Gemini 13.2 ข้อ3)
+- [ ] Clearing Accounts แยก drawer cash กับ PromptPay/EDC ตาม account mapping ขององค์กร (1111/1113/1112 เป็นตัวอย่าง ต้องตรวจผังบัญชีจริง ไม่ hard-code); digital receipts พัก clearing จนตรวจ settlement/statement ก่อนย้ายเข้า bank, fees/refunds/partial settlement ต้อง trace ได้ ไม่ปน digital tender ในยอดเงินสดนับกะ (Gemini 13.2 ข้อ3)
+- [ ] กำหนดคลังหรือ stock quota แยกสาขา และผู้มีสิทธิ์ขาย stock pool แต่ละส่วนเพื่อป้องกัน oversell ระหว่าง sync; ไม่ใช้ ERP stock cache เป็นการรับประกัน available-to-promise
+- [ ] ตัดยอดขายภายใน POS แบบ atomic และนำ stock movements เข้า ERP ตาม event ที่ผ่าน validation เพียงครั้งเดียว; ระบุความหน่วงชัดเจน ไม่อ้าง ERP real-time ระหว่างขาดการเชื่อมต่อ
+- [ ] กำหนด returns/void/refunds, partial refunds, manager authorization และ reversal ของ payment/stock/ภาษี/GL โดยอ้างต้นฉบับและไม่ลบประวัติ
+- [ ] GL Contract: ลงรายบิลผ่าน source-linked transaction (cash/clearing/AR → sales/VAT และ COGS → inventory เมื่อรับรอง stock/cost แล้ว); ปิดกะไม่ลง sales/VAT/COGS/payment ของบิลซ้ำ บันทึกเฉพาะ over/short ตามสิทธิ์และ account mapping (5400/4400 เป็นเพียงตัวอย่าง); การนำเงินฝาก/settlement เป็นรายการโอนแยกมีหลักฐาน ไม่ใช่รายได้ใหม่ (Gemini 13.2 ข้อ4)
+
+### 28.7 Operations / Acceptance Tests
+
+- [ ] หน้าจัดการ POS instances/branch mappings/credentials และ pause/revoke instance โดย ERP admin พร้อมสิทธิ์และ re-authentication
+- [ ] หน้าติดตาม pending/accepted/rejected/needs_review, sync lag, last successful sync และ reconciliation discrepancies; replay เฉพาะผู้มีสิทธิ์ผ่าน pipeline เดิม
+- [ ] Tests network isolation/auth: POS zone เริ่ม connection เข้า ERP/DB ไม่ได้, credentials ไม่ใช้ข้าม instance/org/branch และ revoke/rotation มีผล
+- [ ] Tests import validation: malformed/oversized events, foreign products/warehouses, forged price/tax/discount/paid status และ compromised POS ไม่สามารถเลือก GL/อ่านข้อมูล ERP เพิ่มได้
+- [ ] Tests idempotency/concurrency: duplicate event/order, concurrent import, lost ack, crash/restart, out-of-order/refund-before-sale และ no duplicate invoice/payment/stock/GL
+- [ ] Tests checkout/shift: multi-tender, over/under payment, day/timezone boundary, close/reopen policy และ over-short เฉพาะกะ
+- [ ] Tests stock/payment/accounting: oversell/quota contention, provider proof, returns/refunds, tax rounding, balanced journals และ period locks
+- [ ] Tests tax replacement: ABB→Full Tax/e-Tax ซ้ำ/ย้อนลำดับ/refund/void/offline issuance ต้อง trace sale เดียว ไม่เพิ่มรายได้/VAT ซ้ำ; ห้าม POS ถือ private signing key
+- [ ] Tests stock discrepancy: verified physical sale ถูกพัก inventory โดยไม่สูญหาย, forged sale ยังไม่ผ่าน, manager resolution/retry ทำ stock/COGS ครั้งเดียว และรายงานต้นทุนค้างตรงสถานะ
+- [ ] Tests clearing/GL: multi-tender ไม่เพิ่ม cash drawer ด้วย QR/Card, provider reference reuse/gross-fees-net/settlement/refund และ close shift/replay ไม่สร้าง sales/VAT/COGS ซ้ำ
+- [ ] Tests integrity/DLQ: altered payload/hash, signature/key mismatch/rotation, ID เดิม payload ต่าง, malformed event ไม่บล็อกชุด และ Admin replay เก็บต้นฉบับ+ไม่สร้างเอกสารซ้ำ; ไม่ใช้ hash test เป็น proof ว่าทนต่อ compromised POS host
+- [ ] Tests outages/recovery: ERP offline แล้ว POS ขายต่อ, POS downtime แสดงสถานะถูกต้อง, stale catalog policy และ reconnect/reconcile โดยไม่สูญหายหรือสร้างซ้ำ
+- [ ] ทดสอบ deployment สอง Server จริง, operational UAT, backup/restore, polling/load และ recovery targets ที่ตกลงก่อนเปิด production; บันทึกผลจริงแยกจาก design checklist
+
+### 28.8 งานแยกภายหลัง — ไม่รวมการเริ่มต้น
+
+- [ ] Browser/PWA offline เมื่อ POS Server หรือ internet ใช้ไม่ได้: ออก design local encrypted cache, device identity, transaction queue, receipt numbering, quota และ conflict recovery แยกก่อนอนุมัติพัฒนา
+- [ ] หากต้องการ shared-stock real-time reservation หรือช่องทาง connection แบบอื่น ต้องออก contract/threat model เพิ่มก่อน ไม่ขยาย ERP public Write API เอง

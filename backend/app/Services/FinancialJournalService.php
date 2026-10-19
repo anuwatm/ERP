@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\PayrollRun;
 use App\Models\PettyCashReimbursement;
 use App\Models\VendorPayment;
+use App\Models\WorkOrder;
 
 class FinancialJournalService
 {
@@ -201,6 +202,52 @@ class FinancialJournalService
             ['account_code' => '2140', 'debit' => $net, 'description' => 'Payroll payable settlement'],
             ['account_code' => $this->cashAccount($run->bank_account_id, '1100'), 'credit' => $net, 'description' => 'Payroll payment'],
         ]);
+    }
+
+    public function postWorkOrderMaterialIssue(WorkOrder $workOrder, ?string $actorId): JournalEntry
+    {
+        $materialCost = round((float) $workOrder->material_cost, 2);
+        $entryDate = $workOrder->start_date ? $workOrder->start_date->toDateString() : today()->toDateString();
+
+        return $this->journals->post($workOrder->org_id, $actorId, 'work_order', $workOrder->id, 'material_issued', $entryDate, 'Work order '.$workOrder->wo_no.' material issued', [
+            ['account_code' => '1160', 'debit' => $materialCost, 'description' => 'Work in progress'],
+            ['account_code' => '1140', 'credit' => $materialCost, 'description' => 'Raw materials issued'],
+        ]);
+    }
+
+    public function postWorkOrderCompletion(WorkOrder $workOrder, ?string $actorId): JournalEntry
+    {
+        $totalCost = round((float) $workOrder->total_cost, 2);
+        $materialCost = round((float) $workOrder->material_cost, 2);
+        $laborCost = round((float) $workOrder->labor_cost, 2);
+        $overheadCost = round((float) $workOrder->overhead_cost, 2);
+        $entryDate = $workOrder->completed_date ? $workOrder->completed_date->toDateString() : today()->toDateString();
+
+        $lines = [
+            ['account_code' => '1140', 'debit' => $totalCost, 'description' => 'Finished goods received'],
+            ['account_code' => '1160', 'credit' => $materialCost, 'description' => 'Work in progress cleared'],
+        ];
+
+        if ($laborCost > 0) {
+            $lines[] = ['account_code' => '5500', 'credit' => $laborCost, 'description' => 'Direct labor absorbed'];
+        }
+
+        if ($overheadCost > 0) {
+            $lines[] = ['account_code' => '5200', 'credit' => $overheadCost, 'description' => 'Factory overhead absorbed'];
+        }
+
+        return $this->journals->post($workOrder->org_id, $actorId, 'work_order', $workOrder->id, 'completed', $entryDate, 'Work order '.$workOrder->wo_no.' completed', $lines);
+    }
+
+    public function reverseWorkOrder(WorkOrder $workOrder, ?string $actorId, string $date): ?JournalEntry
+    {
+        $entry = JournalEntry::where('org_id', $workOrder->org_id)
+            ->where('source_type', 'work_order')
+            ->where('source_id', $workOrder->id)
+            ->where('posting_event', 'material_issued')
+            ->first();
+
+        return $entry ? $this->journals->reverse($entry, $actorId, $date, 'Work order cancelled', 'cancelled') : null;
     }
 
     private function reverseSource(string $orgId, string $sourceType, string $sourceId, ?string $actorId, string $date, string $reason, string $event): ?JournalEntry

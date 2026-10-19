@@ -214,12 +214,14 @@ class Phase4DeliveryDashboardTest extends TestCase
 
     public function test_my_work_counts_only_assigned_tasks_and_links_to_exact_task(): void
     {
+        // Monday exposes accidental mutation of today's fixture into last week.
+        $this->travelTo(now()->setDate(2026, 10, 19)->setTime(5, 0));
         $user = User::factory()->create();
         $other = User::factory()->create(['org_id' => $user->org_id]);
         $this->attachRole($user, 'worker', ['tasks.view']);
         $businessNow = now($user->organization?->timezone ?: config('app.timezone'));
         $today = Task::create(['org_id' => $user->org_id, 'title' => 'Mine today', 'status' => 'todo', 'assignee_id' => $user->id, 'due_date' => $businessNow->toDateString()]);
-        Task::create(['org_id' => $user->org_id, 'title' => 'Mine overdue', 'status' => 'in_progress', 'assignee_id' => $user->id, 'due_date' => $businessNow->subDay()->toDateString()]);
+        Task::create(['org_id' => $user->org_id, 'title' => 'Mine overdue', 'status' => 'in_progress', 'assignee_id' => $user->id, 'due_date' => $businessNow->copy()->subDay()->toDateString()]);
         Task::create(['org_id' => $user->org_id, 'title' => 'Mine done', 'status' => 'done', 'assignee_id' => $user->id, 'completed_at' => $businessNow]);
         Task::create(['org_id' => $user->org_id, 'title' => 'Other task', 'status' => 'todo', 'assignee_id' => $other->id, 'due_date' => $businessNow->toDateString()]);
 

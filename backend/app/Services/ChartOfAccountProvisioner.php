@@ -14,6 +14,7 @@ class ChartOfAccountProvisioner
         ['code' => '1130', 'name' => 'Input VAT', 'account_type' => 'asset'],
         ['code' => '1140', 'name' => 'Inventory', 'account_type' => 'asset'],
         ['code' => '1150', 'name' => 'Goods Received Not Invoiced', 'account_type' => 'asset'],
+        ['code' => '1160', 'name' => 'Work in Progress', 'account_type' => 'asset'],
         ['code' => '1210', 'name' => 'Fixed Assets', 'account_type' => 'asset'],
         ['code' => '1219', 'name' => 'Accumulated Depreciation', 'account_type' => 'asset'],
         ['code' => '2110', 'name' => 'Accounts Payable', 'account_type' => 'liability'],

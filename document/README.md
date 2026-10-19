@@ -8,6 +8,8 @@
 
 ## 📑 สารบัญไดอะแกรมทั้งหมด (Table of Diagrams)
 
+**เพิ่ม 2026-10-19 — External App API:** [Interactive architecture](22_external_api_architecture.html) · [Mermaid: architecture / request sequence / key lifecycle / roadmap](22_external_api_architecture.md) · [JSON spec](specs/22_external_api_architecture.json)
+
 | # | ชื่อไดอะแกรม | ประเภท | ไฟล์ Interactive HTML | ไฟล์ JSON Spec |
 |---|---|---|---|---|
 | **01** | [System & Tech Stack Architecture](#01-system--tech-stack-architecture) | Architecture | [`01_system_architecture.html`](./01_system_architecture.html) | [`specs/01_system_architecture.json`](./specs/01_system_architecture.json) |

@@ -41,6 +41,8 @@ use App\Http\Controllers\Hr\PositionController;
 use App\Http\Controllers\Hr\RosterController;
 use App\Http\Controllers\HrController;
 use App\Http\Controllers\HrDashboardController;
+use App\Http\Controllers\Manufacturing\BillOfMaterialsController;
+use App\Http\Controllers\Manufacturing\WorkOrderController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
@@ -49,6 +51,8 @@ use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\DealController;
 use App\Http\Controllers\Sales\SalesDashboardController;
 use App\Http\Controllers\Settings\AiConfigurationController;
+use App\Http\Controllers\Settings\IntegrationApiKeyController;
+use App\Http\Controllers\Settings\IntegrationWebhookController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\OrganizationSettingsController;
 use App\Http\Controllers\Settings\OrganizationStructureController;
@@ -92,6 +96,26 @@ Route::post('/portal/vendor-bills', [PortalController::class, 'submitVendorBill'
 Route::get('/portal/document-versions/{version}/download', [PortalController::class, 'download'])->middleware('throttle:30,1')->name('portal.documents.download');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/settings/api-access', [IntegrationApiKeyController::class, 'index'])
+        ->middleware('permission:api_keys.view')->name('settings.api-access.index');
+    Route::get('/settings/api-access/webhooks', [IntegrationWebhookController::class, 'index'])
+        ->middleware('permission:api_keys.view')->name('settings.api-webhooks.index');
+    Route::post('/settings/api-access/webhooks', [IntegrationWebhookController::class, 'store'])
+        ->middleware(['permission:api_keys.manage', 'password.confirm', 'throttle:10,1'])->name('settings.api-webhooks.store');
+    foreach (['verify', 'pause', 'rotate'] as $action) {
+        Route::post('/settings/api-access/webhooks/{webhook}/'.$action, [IntegrationWebhookController::class, $action])
+            ->middleware(['permission:api_keys.manage', 'password.confirm', 'throttle:10,1'])->name('settings.api-webhooks.'.$action);
+    }
+    Route::get('/settings/api-access/parties', [IntegrationApiKeyController::class, 'parties'])
+        ->middleware(['permission:api_keys.manage', 'throttle:30,1'])->name('settings.api-access.parties');
+    Route::get('/settings/api-access/documents', [IntegrationApiKeyController::class, 'documents'])
+        ->middleware(['permission:api_keys.manage', 'throttle:30,1'])->name('settings.api-access.documents');
+    Route::post('/settings/api-access/keys', [IntegrationApiKeyController::class, 'store'])
+        ->middleware(['permission:api_keys.manage', 'password.confirm', 'throttle:10,1'])->name('settings.api-access.store');
+    Route::patch('/settings/api-access/keys/{apiKey}', [IntegrationApiKeyController::class, 'update'])
+        ->middleware(['permission:api_keys.manage', 'password.confirm', 'throttle:10,1'])->name('settings.api-access.update');
+    Route::post('/settings/api-access/keys/{apiKey}/revoke', [IntegrationApiKeyController::class, 'revoke'])
+        ->middleware(['permission:api_keys.manage', 'password.confirm', 'throttle:10,1'])->name('settings.api-access.revoke');
     Route::get('/settings/payment-gateway', [GatewayController::class, 'settings'])->middleware('permission:settings.organization.view')->name('gateway.settings');
     Route::put('/settings/payment-gateway', [GatewayController::class, 'configure'])->middleware(['permission:settings.organization.update', 'password.confirm', 'throttle:10,1'])->name('gateway.configure');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -412,6 +436,55 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/stock-transfers', [InventoryOperationsController::class, 'transfer'])->middleware(['permission:inventory.adjust', 'password.confirm', EnsureFormSubmission::class])->name('stock-transfers.store');
     Route::post('/stock-counts', [InventoryOperationsController::class, 'stockCount'])->middleware(['permission:inventory.adjust', 'password.confirm', EnsureFormSubmission::class])->name('stock-counts.store');
     Route::get('/inventory-scan', [InventoryOperationsController::class, 'scan'])->middleware('permission:inventory.view')->name('inventory.scan');
+
+    // Manufacturing & Bill of Materials (BOM)
+    Route::get('/manufacturing/boms', [BillOfMaterialsController::class, 'index'])
+        ->middleware('permission:manufacturing.bom.view')
+        ->name('manufacturing.boms.index');
+    Route::post('/manufacturing/boms', [BillOfMaterialsController::class, 'store'])
+        ->middleware(['permission:manufacturing.bom.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.boms.store');
+    Route::patch('/manufacturing/boms/{billOfMaterial}', [BillOfMaterialsController::class, 'update'])
+        ->middleware(['permission:manufacturing.bom.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('manufacturing.boms.update');
+    Route::post('/manufacturing/boms/{billOfMaterial}/duplicate', [BillOfMaterialsController::class, 'duplicate'])
+        ->middleware(['permission:manufacturing.bom.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('manufacturing.boms.duplicate');
+    Route::delete('/manufacturing/boms/{billOfMaterial}', [BillOfMaterialsController::class, 'destroy'])
+        ->middleware(['permission:manufacturing.bom.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('manufacturing.boms.destroy');
+    Route::get('/manufacturing/boms/{billOfMaterial}/explosion', [BillOfMaterialsController::class, 'explosion'])
+        ->middleware('permission:manufacturing.bom.view')
+        ->name('manufacturing.boms.explosion');
+
+    // Manufacturing Work Orders
+    Route::get('/manufacturing/work-orders', [WorkOrderController::class, 'index'])
+        ->middleware('permission:manufacturing.work_orders.view')
+        ->name('manufacturing.work-orders.index');
+    Route::post('/manufacturing/work-orders', [WorkOrderController::class, 'store'])
+        ->middleware(['permission:manufacturing.work_orders.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.work-orders.store');
+    Route::patch('/manufacturing/work-orders/{workOrder}', [WorkOrderController::class, 'update'])
+        ->middleware(['permission:manufacturing.work_orders.manage', 'password.confirm', 'throttle:10,1'])
+        ->name('manufacturing.work-orders.update');
+    Route::post('/manufacturing/work-orders/{workOrder}/plan', [WorkOrderController::class, 'plan'])
+        ->middleware(['permission:manufacturing.work_orders.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.work-orders.plan');
+    Route::post('/manufacturing/work-orders/{workOrder}/release', [WorkOrderController::class, 'release'])
+        ->middleware(['permission:manufacturing.work_orders.execute', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.work-orders.release');
+    Route::post('/manufacturing/work-orders/{workOrder}/quality-check', [WorkOrderController::class, 'qualityCheck'])
+        ->middleware(['permission:manufacturing.work_orders.execute', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.work-orders.quality-check');
+    Route::post('/manufacturing/work-orders/{workOrder}/complete', [WorkOrderController::class, 'complete'])
+        ->middleware(['permission:manufacturing.work_orders.execute', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.work-orders.complete');
+    Route::post('/manufacturing/work-orders/{workOrder}/cancel', [WorkOrderController::class, 'cancel'])
+        ->middleware(['permission:manufacturing.work_orders.execute', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.work-orders.cancel');
+    Route::post('/manufacturing/work-orders/{workOrder}/costs', [WorkOrderController::class, 'addCost'])
+        ->middleware(['permission:manufacturing.work_orders.manage', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
+        ->name('manufacturing.work-orders.costs.store');
     Route::get('/expenses', [ExpenseController::class, 'index'])
         ->middleware('permission:expenses.view')
         ->name('expenses.index');

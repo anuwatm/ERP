@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Support\DashboardAccess;
 use App\Support\DashboardLanding;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -77,6 +78,24 @@ class DashboardAccessTest extends TestCase
                 ->missing('dashboardWidgets.finance.cash_in')
                 ->where('dashboardWidgets.finance.cash_flow_trend.11.cash_in', null)
                 ->where('financeSummary', null));
+    }
+
+    public function test_finance_trend_keeps_twelve_calendar_months_and_respects_custom_range(): void
+    {
+        $user = User::factory()->create();
+        $this->attachPermissions($user, 'trend_reader', ['dashboard.view', 'expenses.view', 'invoices.view']);
+        foreach (['2026-09-18' => '2025-10', '2026-10-18' => '2025-11', '2024-02-29' => '2023-03', '2026-01-31' => '2025-02'] as $date => $first) {
+            $this->travelTo(CarbonImmutable::parse($date.' 05:00:00', 'UTC'));
+            $this->actingAs($user)->get(route('finance.dashboard'))->assertOk()
+                ->assertInertia(fn ($page) => $page->has('dashboardWidgets.finance.cash_flow_trend', 12)
+                    ->where('dashboardWidgets.finance.cash_flow_trend.0.label', $first)
+                    ->where('dashboardWidgets.finance.cash_flow_trend.11.label', substr($date, 0, 7))
+                    ->where('dashboardWidgets.finance.cash_flow_trend.11.cash_in', null));
+        }
+        $this->get(route('finance.dashboard', ['period' => 'custom', 'from' => '2026-08-01', 'to' => '2026-10-31']))->assertOk()
+            ->assertInertia(fn ($page) => $page->has('dashboardWidgets.finance.cash_flow_trend', 3)
+                ->where('dashboardWidgets.finance.cash_flow_trend.0.label', '2026-08')
+                ->where('dashboardWidgets.finance.cash_flow_trend.2.label', '2026-10'));
     }
 
     public function test_admin_widget_payload_does_not_require_or_query_other_admin_sources(): void

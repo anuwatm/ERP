@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Invoice;
+use App\Models\StockMovement;
+use App\Models\Task;
+use App\Models\WorkflowInstance;
+use App\Observers\ExternalWebhookObserver;
 use App\Services\ETax\ETaxSignatureAdapter;
 use App\Services\ETax\ETaxSubmissionAdapter;
 use App\Services\ETax\ETaxXmlSignatureService;
@@ -25,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        foreach ([Invoice::class, Task::class, StockMovement::class, WorkflowInstance::class] as $model) {
+            $model::observe(ExternalWebhookObserver::class);
+        }
         Vite::prefetch(concurrency: 3);
     }
 }
