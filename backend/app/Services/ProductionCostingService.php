@@ -261,6 +261,8 @@ class ProductionCostingService
     public function transitionStatus(WorkOrder $workOrder, string $newStatus, array $payload = [], ?string $userId = null): WorkOrder
     {
         return DB::transaction(function () use ($workOrder, $newStatus, $payload, $userId): WorkOrder {
+            $workOrder = WorkOrder::where('org_id', $workOrder->org_id)->whereKey($workOrder->id)->lockForUpdate()->with('items')->firstOrFail();
+            app(InventoryMovementService::class)->lockProducts($workOrder->org_id, [...$workOrder->items->pluck('product_id')->all(), $workOrder->product_id]);
             $currentStatus = $workOrder->status;
 
             if ($currentStatus === $newStatus) {
@@ -357,7 +359,7 @@ class ProductionCostingService
                         $actualMaterialCost += $itemTotal;
 
                         // Create StockMovement out for raw material
-                        StockMovement::create([
+                        app(InventoryMovementService::class)->record([
                             'org_id' => $workOrder->org_id,
                             'product_id' => $item->product_id,
                             'warehouse_id' => $workOrder->source_warehouse_id,
@@ -430,7 +432,7 @@ class ProductionCostingService
 
                     // Create StockMovement in for finished goods received
                     if ($actualGoodQty > 0) {
-                        StockMovement::create([
+                        app(InventoryMovementService::class)->record([
                             'org_id' => $workOrder->org_id,
                             'product_id' => $workOrder->product_id,
                             'warehouse_id' => $workOrder->warehouse_id,
@@ -465,7 +467,7 @@ class ProductionCostingService
                         $workOrder->loadMissing('items');
                         foreach ($workOrder->items as $item) {
                             if ((float) $item->issued_quantity > 0) {
-                                StockMovement::create([
+                                app(InventoryMovementService::class)->record([
                                     'org_id' => $workOrder->org_id,
                                     'product_id' => $item->product_id,
                                     'warehouse_id' => $workOrder->source_warehouse_id,

@@ -14,6 +14,7 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -151,7 +152,7 @@ class TaxReportController extends Controller
      */
     private function salesRows(Request $request, array $filters): array
     {
-        $invoiceRows = Invoice::query()
+        $invoices = Invoice::query()
             ->where('org_id', $request->user()->org_id)
             ->whereIn('status', self::SALES_STATUSES)
             ->with(['customer:id,company_name,tax_id', 'branch:id,code,name'])
@@ -162,19 +163,20 @@ class TaxReportController extends Controller
             ->when($filters['customer_id'], fn ($query, $customerId) => $query->where('customer_id', $customerId))
             ->orderBy('issue_date')
             ->orderBy('invoice_no')
-            ->get()
-            ->map(fn (Invoice $invoice) => [
-                'date' => $invoice->issue_date?->toDateString() ?: '',
-                'document_no' => $invoice->invoice_no,
-                'source' => 'invoice',
-                'partner' => $invoice->customer?->company_name ?: '-',
-                'tax_id' => $invoice->customer?->tax_id ?: '',
-                'branch' => $invoice->branch ? trim($invoice->branch->code.' '.$invoice->branch->name) : '',
-                'tax_mode' => $invoice->tax_mode,
-                'taxable_base' => $this->money((float) $invoice->total - (float) $invoice->tax_amount),
-                'tax_amount' => $this->money($invoice->tax_amount),
-                'total' => $this->money($invoice->total),
-            ])
+            ->get();
+        $posSources = DB::table('pos_import_sales')->whereIn('invoice_id', $invoices->pluck('id'))->whereIn('pos_instance_id', DB::table('pos_instances')->where('org_id', $request->user()->org_id)->select('id'))->whereNotNull('source_snapshot')->get()->mapWithKeys(fn ($sale) => [$sale->invoice_id => json_decode($sale->source_snapshot, true)]);
+        $invoiceRows = $invoices->map(fn (Invoice $invoice) => [
+            'date' => $invoice->issue_date?->toDateString() ?: '',
+            'document_no' => $invoice->invoice_no,
+            'source' => 'invoice',
+            'partner' => $invoice->customer?->company_name ?: '-',
+            'tax_id' => $invoice->customer?->tax_id ?: '',
+            'branch' => $invoice->branch ? trim($invoice->branch->code.' '.$invoice->branch->name) : '',
+            'tax_mode' => $invoice->tax_mode,
+            'taxable_base' => $this->money((float) ($posSources->get($invoice->id)['total'] ?? $invoice->total) - (float) ($posSources->get($invoice->id)['tax_amount'] ?? $invoice->tax_amount)),
+            'tax_amount' => $this->money($posSources->get($invoice->id)['tax_amount'] ?? $invoice->tax_amount),
+            'total' => $this->money($posSources->get($invoice->id)['total'] ?? $invoice->total),
+        ])
             ->values()
             ->all();
 
@@ -182,6 +184,7 @@ class TaxReportController extends Controller
             ->where('org_id', $request->user()->org_id)
             ->where('status', 'issued')
             ->with('invoice.customer:id,company_name,tax_id')
+            ->when($filters['branch_id'], fn ($query, $branchId) => $query->whereHas('invoice', fn ($invoiceQuery) => $invoiceQuery->where('branch_id', $branchId)))
             ->when($filters['date_from'], fn ($query, $date) => $query->whereDate('issue_date', '>=', $date))
             ->when($filters['date_to'], fn ($query, $date) => $query->whereDate('issue_date', '<=', $date))
             ->when($filters['customer_id'], fn ($query, $customerId) => $query->whereHas('invoice', fn ($invoiceQuery) => $invoiceQuery->where('customer_id', $customerId)))

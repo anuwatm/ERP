@@ -1,0 +1,8 @@
+# Keep published graph, fingerprints, metadata, and scan inventory.
+# Scratch files and viewer access tokens stay local.
+.trash-*/
+tmp/
+intermediate/*
+!intermediate/scan-result.json
+*.log
+dashboard-session.json

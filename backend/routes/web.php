@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Delivery\MyWorkDashboardController;
@@ -716,3 +717,20 @@ Route::get('/storage/{path}', function (string $path) {
 })->where('path', '.*')->name('storage.local');
 
 require __DIR__.'/auth.php';
+
+Route::get('/pos-integration', [PosController::class, 'index'])->middleware(['auth', 'verified', 'permission:pos.view'])->name('pos.index');
+Route::post('/pos-integration/recalls', [PosController::class, 'recall'])->middleware(['auth', 'verified', 'permission:pos.manage', 'password.confirm', 'throttle:10,1'])->name('pos.recalls');
+Route::post('/pos-integration/tax-settings', [PosController::class, 'taxSettings'])->middleware(['auth', 'verified', 'permission:pos.manage', 'password.confirm', 'throttle:10,1'])->name('pos.tax-settings');
+Route::post('/pos-integration/tax-profile', [PosController::class, 'taxProfile'])->middleware(['auth', 'verified', 'permission:pos.manage', 'password.confirm', 'throttle:10,1'])->name('pos.tax-profile');
+Route::post('/pos-integration/restaurant-options', [PosController::class, 'restaurantVariant'])->middleware(['auth', 'verified', 'permission:pos.manage', 'password.confirm', 'throttle:10,1'])->name('pos.restaurant-options');
+Route::post('/pos-integration/instances', [PosController::class, 'register'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.register');
+Route::post('/pos-integration/{instance}/activate', [PosController::class, 'activate'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.activate');
+Route::post('/pos-integration/{instance}/authorities', [PosController::class, 'authority'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.authority');
+Route::post('/pos-integration/{instance}/signing-keys', [PosController::class, 'signingKey'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.signing-key');
+Route::post('/pos-integration/{instance}/recover', [PosController::class, 'recover'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.recover');
+Route::post('/pos-integration/{instance}/checkpoint', [PosController::class, 'checkpoint'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.checkpoint');
+Route::post('/pos-integration/{instance}/catalog', [PosController::class, 'catalog'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.catalog');
+Route::post('/pos-integration/{instance}/grants', [PosController::class, 'grant'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.grant');
+Route::get('/pos-integration/{instance}/reconciliation', [PosController::class, 'reconciliation'])->middleware(['auth', 'verified', 'permission:pos.reconcile', 'throttle:30,1'])->name('pos.reconciliation');
+Route::post('/pos-integration/{instance}/pause', [PosController::class, 'pause'])->middleware(['auth', 'verified', 'permission:pos.manage', 'password.confirm', 'throttle:10,1'])->name('pos.pause');
+Route::post('/pos-events/{inbox}/replay', [PosController::class, 'replay'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.replay');

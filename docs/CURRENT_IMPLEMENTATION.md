@@ -1,6 +1,8 @@
 # Current Implementation Reference
 
-สถานะล่าสุด (2026-09-24): **Phase 1 - 26 (รวม Phase 18.1, 23.1, 23.2, 23.3, 24, 25, 26) และ Setup Wizard เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** — ครอบคลุม Core MVP, Commercial Docs, Tax Reports, Treasury, GL, Multi-Currency, Inventory, Payroll, DMS, 2FA, Workflows, Notifications, Self-Service Portals, Payment Gateway, System-wide Dialog Standard, Dashboard Redesign, HR Employee Master & Shifts & Reconciliation, e-Tax Gateway XML-DSig, Cash Flow Forecasting, AI OCR Document Ingestion (Local AI & Cloud Hubs), และ Web Setup Wizard. ผ่านการทดสอบ Full Backend Regression 380+ tests (3,680+ assertions ผ่าน 100%), Frontend Unit 23 tests, Pint/ESLint/Prettier/Vite production build 100% สะอาดสมบูรณ์.
+**ล่าสุด 2026-10-27:** Phase28 local ผ่าน Gemini; configured ERP83/POS17 migrations, pending0 ทั้งคู่. [Phase28 runtime](PHASE_28_POS.md) · [Database upgrade](../document/DATABASE_UPGRADE_20261027.md). ผล regression หลัง migration fix46/422; ไม่ใช่ production sign-off.
+
+Baseline ก่อน Phase28 (2026-09-24): **Phase 1 - 26 (รวม Phase 18.1, 23.1, 23.2, 23.3, 24, 25, 26) และ Setup Wizard เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** — ครอบคลุม Core MVP, Commercial Docs, Tax Reports, Treasury, GL, Multi-Currency, Inventory, Payroll, DMS, 2FA, Workflows, Notifications, Self-Service Portals, Payment Gateway, System-wide Dialog Standard, Dashboard Redesign, HR Employee Master & Shifts & Reconciliation, e-Tax Gateway XML-DSig, Cash Flow Forecasting, AI OCR Document Ingestion (Local AI & Cloud Hubs), และ Web Setup Wizard. ผ่านการทดสอบ Full Backend Regression 380+ tests (3,680+ assertions ผ่าน 100%), Frontend Unit 23 tests, Pint/ESLint/Prettier/Vite production build 100% สะอาดสมบูรณ์.
 
 เอกสารนี้เป็นภาพรวม implementation ปัจจุบัน ใช้สำหรับอ่านระบบร่วมกับ source code; โดย migration, route และ feature tests เป็น source of truth ของ runtime.
 

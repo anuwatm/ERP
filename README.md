@@ -313,6 +313,8 @@ php artisan schedule:run
 
 ## External Read-only API
 
+คู่มือราย endpoint: [API_Document — วิธีเรียก, output, fields และ errors](document/API_Document.md)
+
 Base path: `/api/v1` ใช้ `Authorization: Bearer <INTEGRATION_SECRET>` จาก backend ของแอปผู้เรียก รองรับ62 GET paths ตาม [OpenAPI](docs/openapi/external-read-v1.json)
 
 | กลุ่ม | ตัวอย่าง endpoints |
@@ -389,3 +391,33 @@ node --test examples/external-api/summary-client.test.mjs examples/external-api/
 ```
 
 สัญญา API และเอกสารโดเมนอยู่ใน [docs/](docs/README.md) การแก้ fields/scopes/metrics ต้องปรับ contract และ tests ให้สอดคล้องกัน
+
+## เรียกใช้ POS ร้านทั่วไป / ร้านอาหาร / ร้านขายยา
+
+POS ทั้งสามประเภทเปิดที่หน้าเดียว เช่น **http://127.0.0.1:8128/** โดยระบบดูประเภทสาขาจากบัญชี POS ที่เข้าสู่ระบบ ไม่ได้มี URL แยกตามประเภทร้าน
+
+| ประเภท | ประเภทสาขา | คู่มือใช้งาน |
+| --- | --- | --- |
+| ร้านขายของทั่วไป | `retail` | [README ร้านค้าทั่วไป](document/README_POS_RETAIL.md) |
+| ร้านอาหาร | `restaurant` | [README ร้านอาหาร](document/README_POS_RESTAURANT.md) |
+| ร้านขายยา | `pharmacy` | [README ร้านขายยา](document/README_POS_PHARMACY.md) |
+
+เริ่มที่ [README เปิดใช้ POS](document/README_POS.md): มีทั้งโหมดทดลองพร้อมบัญชีจำลอง และโหมดตั้งค่าสาขาของตนเอง รวม environment, dependencies, Terminal/staff และ catalog/quota ที่ต้องเตรียม
+
+หลังเตรียม local config/dependencies ตามคู่มือแล้ว เปิด server ของฐานสาขาตนเองได้ดังนี้:
+
+```powershell
+Set-Location C:/LocalDevine/www/ERP/pos
+$env:POS_SHARED_VENDOR = '1'  # เฉพาะ local ที่ใช้ vendor จาก backend
+php artisan serve --host=127.0.0.1 --port=8128
+```
+
+หากยังไม่มีข้อมูลพร้อมขาย ให้ใช้ขั้นตอน **ทดลองด้วยข้อมูลจำลอง** ในคู่มือกลางแทน คำสั่งเปิด server อย่างเดียวไม่ได้สร้างบัญชี/สินค้า/quota. บัญชี ERP ใช้ login POS โดยอัตโนมัติไม่ได้
+
+> **หมายเหตุ:** ยังไม่ได้ทดสอบการเชื่อมต่อกับระบบและอุปกรณ์จริง ผลปัจจุบันครอบคลุม local development เท่านั้น
+
+## Phase 28 — current status (2026-10-27)
+
+**Phase28 local accepted (Gemini 2026-10-27); ฐาน ERP/POS ตาม config อัปเดตแล้ว.** Retail/Restaurant/Pharmacy, local ABB/FULL, recall, signed checkpoints และ encrypted archive/recovery พร้อมใน local. POS e-Tax ยัง awaiting_provider. [สถานะ/คู่มือปัจจุบัน](docs/PHASE_28_POS.md) · [Database upgrade](document/DATABASE_UPGRADE_20261027.md)
+
+> **หมายเหตุ — ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง:** ขั้นตอนเชื่อมต่อในคู่มือยังไม่ได้ทดสอบบน Server/เครือข่ายจริง (firewall/mTLS), เครื่องพิมพ์ใบเสร็จ, เครื่องสแกนบาร์โค้ด หรือบริการ e-Tax จริง รวมถึง load/concurrency และ backup/recovery บนสภาพแวดล้อมใช้งานจริง. ผลตรวจรับปัจจุบันครอบคลุม local development เท่านั้น ต้องทดสอบการเชื่อมต่อจริงก่อนนำไปใช้งาน. ส่วน e-Tax provider/certificate และ adapter ยังรอการเลือกผู้ให้บริการ.

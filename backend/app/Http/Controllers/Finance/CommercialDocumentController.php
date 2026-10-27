@@ -8,16 +8,13 @@ use App\Models\BillingNote;
 use App\Models\CreditDebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\Invoice;
-use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
-use App\Models\StockMovement;
-use App\Models\User;
 use App\Models\Voucher;
 use App\Models\Warehouse;
 use App\Services\FinancialJournalService;
 use App\Services\FxRateService;
-use App\Services\NotificationService;
+use App\Services\InventoryMovementService;
 use App\Services\NumberSequenceService;
 use App\Support\FileAttachmentManager;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -66,6 +63,7 @@ class CommercialDocumentController extends Controller
         DB::transaction(function () use ($request, $numbers, $orgId, $validated, $journals, $fxRates): void {
             $invoice = Invoice::where('org_id', $orgId)->lockForUpdate()->findOrFail($validated['invoice_id']);
             abort_if($invoice->status === 'void', 422, 'Cannot issue CN/DN for void invoice.');
+            abort_if(DB::table('pos_import_sales')->where('invoice_id', $invoice->id)->exists(), 422, 'POS adjustments must originate from the source POS workflow.');
             $totals = $this->simpleTotals($validated['items'], $invoice->tax_mode);
             $snapshot = $fxRates->snapshot($orgId, $invoice->currency, $validated['issue_date'], $totals);
             abort_if($validated['type'] === 'credit' && $totals['total'] > (float) $invoice->balance_due, 422, 'Credit note exceeds invoice balance due.');
@@ -175,7 +173,10 @@ class CommercialDocumentController extends Controller
 
         DB::transaction(function () use ($request, $numbers, $orgId, $validated): void {
             $invoice = Invoice::where('org_id', $orgId)->with('items')->lockForUpdate()->findOrFail($validated['invoice_id']);
+            app(InventoryMovementService::class)->lockProducts($orgId, $invoice->items->pluck('product_id')->all());
             abort_if($invoice->status === 'void', 422, 'Cannot create delivery order from void invoice.');
+            $posSource = DB::table('pos_import_sales')->where('invoice_id', $invoice->id)->whereIn('pos_instance_id', DB::table('pos_instances')->where('org_id', $orgId)->select('id'))->first();
+            abort_if($posSource && $posSource->inventory_status !== 'posted' && $validated['status'] === 'delivered', 422, 'POS inventory posting is still pending.');
             abort_if(DeliveryOrder::where('org_id', $orgId)->where('invoice_id', $invoice->id)->where('status', 'delivered')->lockForUpdate()->exists(), 422, 'Invoice has already been delivered.');
             $order = DeliveryOrder::create([
                 'org_id' => $orgId,
@@ -191,15 +192,9 @@ class CommercialDocumentController extends Controller
 
             foreach ($invoice->items as $item) {
                 $order->items()->create(['org_id' => $orgId, 'product_id' => $item->product_id, 'description' => $item->description, 'quantity' => $item->quantity, 'unit' => $item->unit]);
-                if ($validated['status'] === 'delivered' && $item->product_id) {
-                    $stock = StockMovement::where('org_id', $orgId)->where('product_id', $item->product_id)
-                        ->when($validated['warehouse_id'] ?? null, fn ($query, $warehouseId) => $query->where('warehouse_id', $warehouseId));
-                    $onHand = (float) $stock->sum('quantity');
-                    abort_if((float) $item->quantity > $onHand, 422, 'Delivery order cannot make stock negative.');
-                    $unitCost = $onHand > 0 ? round((float) $stock->sum('base_total_cost') / $onHand, 2) : 0;
+                if ($validated['status'] === 'delivered' && $item->product_id && ! $posSource) {
                     $currency = $request->user()->organization?->currency ?: 'THB';
-                    StockMovement::create(['org_id' => $orgId, 'product_id' => $item->product_id, 'warehouse_id' => $validated['warehouse_id'] ?? null, 'movement_type' => 'deliver_to_customer', 'movement_date' => $validated['delivery_date'], 'quantity' => -((float) $item->quantity), 'unit_cost' => $unitCost, 'total_cost' => -((float) $item->quantity * $unitCost), 'currency' => $currency, 'base_currency' => $currency, 'exchange_rate' => 1, 'base_unit_cost' => $unitCost, 'base_total_cost' => -((float) $item->quantity * $unitCost), 'note' => $order->do_no, 'created_by' => $request->user()->id]);
-                    $this->notifyLowStock($item->product_id, $orgId, app(NotificationService::class));
+                    app(InventoryMovementService::class)->deductStockForSale($orgId, $item->product_id, (string) $item->quantity, $validated['warehouse_id'] ?? null, $validated['delivery_date'], $currency, $request->user()->id, 'delivery:'.$order->id.':'.$item->id, $order->do_no);
                 }
             }
 
@@ -337,21 +332,6 @@ class CommercialDocumentController extends Controller
         return ['subtotal' => round($subtotal, 2), 'tax_amount' => round($tax, 2), 'total' => round($subtotal + $tax, 2)];
     }
 
-    private function notifyLowStock(string $productId, string $orgId, NotificationService $notifications): void
-    {
-        $product = Product::where('org_id', $orgId)->where('reorder_point', '>', 0)->find($productId);
-        if (! $product) {
-            return;
-        }
-        $onHand = (float) StockMovement::where('org_id', $orgId)->where('product_id', $productId)->sum('quantity');
-        if ($onHand > (float) $product->reorder_point) {
-            return;
-        }
-        User::where('org_id', $orgId)->where('status', 'active')->whereHas('roles.permissions', fn ($query) => $query->whereIn('code', ['inventory.view', 'inventory.adjust']))->get()->each(function (User $user) use ($notifications, $product, $onHand): void {
-            $notifications->notify($user, 'inventory.low_stock', "inventory.low_stock:{$product->id}:".today()->toDateString(), "Low stock: {$product->name}", "On hand: {$onHand} {$product->unit}; reorder point: {$product->reorder_point}.", route('inventory-operations.index'));
-        });
-    }
-
     private function audit(Request $request, string $action, string $entityType, string $entityId, ?array $before, ?array $after): void
     {
         AuditLog::create([
@@ -394,8 +374,10 @@ class CommercialDocumentController extends Controller
 
     private function creditDebitPayload(CreditDebitNote $note): array
     {
+        $isPosRefund = DB::table('pos_import_refunds')->where('credit_note_id', $note->id)->exists();
+
         return [
-            'title' => $note->type === 'credit' ? 'Credit Note' : 'Debit Note',
+            'title' => $isPosRefund ? 'POS Refund Ledger Copy' : ($note->type === 'credit' ? 'Credit Note' : 'Debit Note'),
             'number' => $note->note_no,
             'date' => $note->issue_date?->toDateString() ?: '-',
             'partner' => $note->invoice?->customer?->company_name ?: '-',

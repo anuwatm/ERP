@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseBin;
 use App\Services\FinancialJournalService;
+use App\Services\InventoryMovementService;
 use App\Services\NotificationService;
 use App\Services\NumberSequenceService;
 use Illuminate\Http\RedirectResponse;
@@ -110,6 +111,7 @@ class GoodsReceiptController extends Controller
         $this->validateStorageLocation($validated, $orgId);
 
         $receipt = DB::transaction(function () use ($request, $numbers, $orgId, $validated, $po, $journals): GoodsReceipt {
+            app(InventoryMovementService::class)->lockProducts($orgId, $po->items->pluck('product_id')->all());
             $receipt = GoodsReceipt::create([
                 'org_id' => $orgId,
                 'purchase_order_id' => $po->id,
@@ -166,7 +168,7 @@ class GoodsReceiptController extends Controller
                     'base_line_total' => $baseLineTotal,
                 ]);
 
-                StockMovement::create([
+                app(InventoryMovementService::class)->record([
                     'org_id' => $orgId,
                     'product_id' => $poItem->product_id,
                     'goods_receipt_id' => $receipt->id,
@@ -216,43 +218,46 @@ class GoodsReceiptController extends Controller
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $quantity = round((float) $validated['quantity'], 4);
-        $this->validateStorageLocation($validated, $orgId);
-        $isOutbound = in_array($validated['movement_type'], ['adjustment_out', 'return_to_supplier'], true);
-        $signedQuantity = $isOutbound ? -$quantity : $quantity;
-        $onHand = $this->onHand($validated['product_id'], $orgId, $validated['warehouse_id'] ?? null);
-        abort_if($isOutbound && $quantity > $onHand, 422, 'Stock movement cannot make on-hand quantity negative.');
+        return DB::transaction(function () use ($request, $validated, $orgId): RedirectResponse {
+            app(InventoryMovementService::class)->lockProducts($orgId, [$validated['product_id']]);
+            $quantity = round((float) $validated['quantity'], 4);
+            $this->validateStorageLocation($validated, $orgId);
+            $isOutbound = in_array($validated['movement_type'], ['adjustment_out', 'return_to_supplier'], true);
+            $signedQuantity = $isOutbound ? -$quantity : $quantity;
+            $onHand = $this->onHand($validated['product_id'], $orgId, $validated['warehouse_id'] ?? null);
+            abort_if($isOutbound && $quantity > $onHand, 422, 'Stock movement cannot make on-hand quantity negative.');
 
-        $unitCost = filled($validated['unit_cost'] ?? null)
-            ? round((float) $validated['unit_cost'], 2)
-            : $this->averageCost($validated['product_id'], $orgId);
+            $unitCost = filled($validated['unit_cost'] ?? null)
+                ? round((float) $validated['unit_cost'], 2)
+                : $this->averageCost($validated['product_id'], $orgId);
 
-        StockMovement::create([
-            'org_id' => $orgId,
-            'product_id' => $validated['product_id'],
-            'warehouse_id' => $validated['warehouse_id'] ?? null,
-            'warehouse_bin_id' => $validated['warehouse_bin_id'] ?? null,
-            'inventory_lot_id' => $validated['inventory_lot_id'] ?? null,
-            'movement_type' => $validated['movement_type'],
-            'movement_date' => $validated['movement_date'],
-            'quantity' => $signedQuantity,
-            'unit_cost' => $unitCost,
-            'total_cost' => round($signedQuantity * $unitCost, 2),
-            'currency' => $request->user()->organization?->currency ?: 'THB',
-            'base_currency' => $request->user()->organization?->currency ?: 'THB',
-            'exchange_rate' => 1,
-            'base_unit_cost' => $unitCost,
-            'base_total_cost' => round($signedQuantity * $unitCost, 2),
-            'note' => $validated['note'] ?? null,
-            'created_by' => $request->user()->id,
-        ]);
+            app(InventoryMovementService::class)->record([
+                'org_id' => $orgId,
+                'product_id' => $validated['product_id'],
+                'warehouse_id' => $validated['warehouse_id'] ?? null,
+                'warehouse_bin_id' => $validated['warehouse_bin_id'] ?? null,
+                'inventory_lot_id' => $validated['inventory_lot_id'] ?? null,
+                'movement_type' => $validated['movement_type'],
+                'movement_date' => $validated['movement_date'],
+                'quantity' => $signedQuantity,
+                'unit_cost' => $unitCost,
+                'total_cost' => round($signedQuantity * $unitCost, 2),
+                'currency' => $request->user()->organization?->currency ?: 'THB',
+                'base_currency' => $request->user()->organization?->currency ?: 'THB',
+                'exchange_rate' => 1,
+                'base_unit_cost' => $unitCost,
+                'base_total_cost' => round($signedQuantity * $unitCost, 2),
+                'note' => $validated['note'] ?? null,
+                'created_by' => $request->user()->id,
+            ]);
 
-        Product::where('org_id', $orgId)->whereKey($validated['product_id'])->update(['track_inventory' => true]);
-        if ($isOutbound) {
-            $this->notifyLowStock($validated['product_id'], $orgId, app(NotificationService::class));
-        }
+            Product::where('org_id', $orgId)->whereKey($validated['product_id'])->update(['track_inventory' => true]);
+            if ($isOutbound) {
+                $this->notifyLowStock($validated['product_id'], $orgId, app(NotificationService::class));
+            }
 
-        return back()->with('success', 'Stock movement posted.');
+            return back()->with('success', 'Stock movement posted.');
+        });
     }
 
     private function poReceiptStatus(PurchaseOrder $po, string $orgId): string

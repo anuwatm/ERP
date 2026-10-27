@@ -1,0 +1,185 @@
+{
+  "completedAt": "2026-10-24T12:38:50.231Z",
+  "project": {
+    "name": "ERP",
+    "languages": [
+      "config",
+      "css",
+      "example",
+      "html",
+      "javascript",
+      "json",
+      "markdown",
+      "php",
+      "txt",
+      "typescript",
+      "unknown",
+      "xml",
+      "yaml"
+    ],
+    "frameworks": [
+      "Laravel",
+      "React",
+      "Inertia.js",
+      "Vite",
+      "Tailwind CSS",
+      "PHPUnit"
+    ],
+    "description": "Company OS / Lightweight ERP สำหรับ SME บริษัทบริการ ทีมโครงการ และธุรกิจจัดซื้อ/คลังสินค้า เชื่อมข้อมูลลูกค้า การขาย การเงิน โครงการ สินค้าคงคลัง และบุคลากร พร้อมรองรับหลายองค์กรและสิทธิ์ผู้ใช้งาน หมายเหตุ: โครงการมีไฟล์มากกว่า 100 ไฟล์; หากต้องการผลวิเคราะห์เร็วขึ้น สามารถจำกัดขอบเขตเป็นโฟลเดอร์ย่อยได้",
+    "analyzedAt": "2026-10-24T12:33:42.874Z",
+    "gitCommitHash": "b03c393c19762a09862b4a7aab688f1fe47dcdb3"
+  },
+  "scope": {
+    "files": 861,
+    "batches": 40,
+    "filteredByIgnore": 107,
+    "categories": {
+      "code": 682,
+      "docs": 127,
+      "config": 31,
+      "markup": 21
+    }
+  },
+  "graph": {
+    "nodes": 2698,
+    "edges": 7043,
+    "nodeTypes": {
+      "file": 703,
+      "function": 1441,
+      "class": 396,
+      "document": 127,
+      "config": 31
+    },
+    "edgeTypes": {
+      "contains": 1837,
+      "exports": 599,
+      "imports": 2513,
+      "tested_by": 760,
+      "calls": 275,
+      "inherits": 24,
+      "documents": 1003,
+      "configures": 21,
+      "depends_on": 11
+    },
+    "layers": [
+      {
+        "id": "layer:ui",
+        "name": "ส่วนติดต่อผู้ใช้และเอกสารพิมพ์",
+        "files": 159
+      },
+      {
+        "id": "layer:http",
+        "name": "คำขอเว็บและการควบคุมสิทธิ์",
+        "files": 99
+      },
+      {
+        "id": "layer:service",
+        "name": "กฎธุรกิจและงานเบื้องหลัง",
+        "files": 45
+      },
+      {
+        "id": "layer:data",
+        "name": "ข้อมูลและการเปลี่ยนแปลงฐานข้อมูล",
+        "files": 197
+      },
+      {
+        "id": "layer:integration",
+        "name": "การเชื่อมบริการและแอปภายนอก",
+        "files": 44
+      },
+      {
+        "id": "layer:test",
+        "name": "การทดสอบและข้อมูลตรวจสอบ",
+        "files": 108
+      },
+      {
+        "id": "layer:documentation",
+        "name": "เอกสารอ้างอิงและภาพสถาปัตยกรรม",
+        "files": 168
+      },
+      {
+        "id": "layer:config",
+        "name": "การตั้งค่าแอปและเครื่องมือพัฒนา",
+        "files": 24
+      },
+      {
+        "id": "layer:runtime",
+        "name": "จุดเริ่มทำงานและการติดตั้ง",
+        "files": 17
+      }
+    ],
+    "tourSteps": 15
+  },
+  "validation": {
+    "issues": 0,
+    "orphanWarnings": 69,
+    "fileCoverage": 861,
+    "missingFiles": [],
+    "missingImports": [],
+    "schemaValid": true
+  },
+  "parser": {
+    "structuredFiles": 827,
+    "unsupportedReadable": 34,
+    "unreadable": []
+  },
+  "phases": [
+    {
+      "name": "preflight",
+      "status": "complete"
+    },
+    {
+      "name": "scan",
+      "status": "complete"
+    },
+    {
+      "name": "batch",
+      "status": "complete"
+    },
+    {
+      "name": "analyze",
+      "status": "complete"
+    },
+    {
+      "name": "assemble-review",
+      "status": "complete"
+    },
+    {
+      "name": "architecture",
+      "status": "complete"
+    },
+    {
+      "name": "tour",
+      "status": "complete"
+    },
+    {
+      "name": "validation",
+      "status": "complete"
+    },
+    {
+      "name": "save-fingerprints-meta",
+      "status": "complete"
+    },
+    {
+      "name": "dashboard",
+      "status": "complete"
+    }
+  ],
+  "dashboard": {
+    "verified": true,
+    "uiVerified": true,
+    "workingTreeWarningFiles": 32,
+    "verification": "HTTP page, token-authorized graph JSON, and visible nine-layer project overview",
+    "port": "5173"
+  },
+  "limitations": [
+    "34 readable formats have semantic file-level nodes without parser substructure.",
+    "Anonymous Laravel migrations and OpenAPI have limited structural extraction; graph is not a complete table-level ERD or endpoint catalog.",
+    "Call graph includes only source-backed direct relationships; runtime dispatch may add paths.",
+    "10 neighbor-map soft-cap warnings limit agent context only; all 2513 import relationships are preserved.",
+    "Orphan warnings identify nodes without captured edges and do not mean files were omitted.",
+    "No new PHP/build/browser application tests were run as part of graph analysis.",
+    "Prebuilt remote viewer execution was rejected by auto-review; the installed local Vite dashboard passed HTTP verification instead.",
+    "Viewer warns about 32 uncommitted working-tree documentation files because commit metadata does not represent uncommitted changes; graph analysis used the working-tree inventory and no commit was created."
+  ]
+}

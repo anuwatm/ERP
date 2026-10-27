@@ -520,6 +520,276 @@ Gemini **เห็นด้วยอย่างยิ่ง** กับโค�
 | **5. กลไก Tamper-Proof & Dead-Letter Queue (DLQ)** | ข้อมูลใน POS Database หน้าร้านอาจถูกแก้ไขก่อน Sync หรือมี Payload ที่ Parse ไม่ผ่าน | • ทุก Event ต้องมี SHA-256 Payload Hash สร้าง ณ จุดบันทึก เพื่อตรวจจับการแก้ไขฐานข้อมูลหน้าร้าน<br>• จัดทำ Dead-Letter Queue (DLQ) ฝั่ง ERP Connector พร้อมหน้าจอ UI ใน Admin Settings สำหรับตรวจสอบสาเหตุ และกด Re-process รายการที่แก้ไขข้อมูลหลักแล้ว |
 | **6. Pre-implementation Gate: Business Fit Confirmation** | รูปแบบธุรกิจหน้าร้านส่งผลต่อโครงสร้าง Schema และ UI เป็นอย่างมาก | • ยึดตามข้อกำหนดใน `gpt.md` (line 100): ยืนยัน Business Model ของหน้าร้านให้ชัดเจนก่อนเขียนโค้ด (เช่น Retail ค้าปลีกทั่วไป, มินิมาร์ทตัดสต็อก Barcode รวดเร็ว, หรือ F&B ที่มีเปิดโต๊ะ/ส่งครัว) เพื่อไม่ให้เกิด Over-engineering หรือสร้าง Schema ที่ไม่ตรงกับงานจริง |
 
+---
+
+## 14. การประเมินและทบทวนความเหมาะสมของ Checklist Phase 28 (Standalone POS & ERP Connector Review — 2026-10-24)
+
+**สถานะ:** บันทึกผลการตรวจสอบและประเมินความเหมาะสมของ [checklist.md](checklist.md#L1643-L1793) (Phase 28) ฉบับปรับปรุงตามขอบเขตความต้องการ 2026-10-24  
+**เอกสารอ้างอิง:** [checklist.md](checklist.md#L1643-L1793) (Phase 28), [gpt.md](gpt.md#L252-L280), [gemini.md](gemini.md#L498-L522) (Section 13)
+
+### 14.1 สรุปผลการประเมิน (Overall Evaluation Verdict)
+Gemini ได้ทำการตรวจสอบรายการ Checklist Phase 28 ใน [checklist.md](checklist.md) ครอบคลุมหัวข้อ 28.1 ถึง 28.8 อย่างละเอียด และมีความเห็นว่า:
+**"Checklist Phase 28 มีความเหมาะสมอย่างยิ่ง รัดกุม ชัดเจน และพร้อมใช้เป็นกรอบการออกแบบสถาปัตยกรรม (Architecture & Contract Design Gate) ได้อย่างสมบูรณ์"**
+
+---
+
+### 14.2 จุดเด่นและข้อดีของ Checklist ฉบับปรับปรุง (Key Strengths & Architectural Merits)
+
+1. **การควบคุมขอบเขตอย่างเฉียบขาด ป้องกัน Scope Creep (Disciplined Boundary & De-scoping):**
+   - **การล็อก 3 กิจการหลัก (Retail, Restaurant, Pharmacy):** กำหนด Core POS ร่วมกันและแยก Capability/Workflow ตามกิจการชัดเจน
+   - **การตัดความซับซ้อนเกินจำเป็นในรุ่นแรก:** ตัด Patient History / เวชระเบียน / ระบบวินิจฉัยโรคของร้านขายยาออกไปอย่างเด็ดขาด, ตัด EDC/Card, ระบบสมาชิก/Loyalty, Delivery ออกไปเป็นงานอนาคตใน 28.8
+   - **ขอบเขตการชำระเงินที่ชัดเจน:** ยืนยันเฉพาะ เงินสด และ QR Code (Dynamic PromptPay) ซึ่งสอดคล้องกับบริบทหน้าร้านส่วนใหญ่
+   - **การจำกัดขอบเขต Online Menu ผ่าน QR:** วางบทบาทเป็นเพียง Catalog / เมนูให้ลูกค้าเปิดดูบนมือถือ หากจะขยายไปสู่การสั่งออเดอร์/ชำระเงินออนไลน์ ได้มีข้อกำหนด Pre-implementation Gate และ Server-side validation กั้นไว้อย่างรัดกุม
+
+2. **การคง Guardrails ด้านสถาปัตยกรรมและความปลอดภัยครบถ้วน (Architectural & Security Guardrails):**
+   - **Physical & Logical Separation:** แยก POS Server/Database ออกจาก ERP Server/Database เด็ดขาด ไม่มี Shared DB credentials, `APP_KEY`, หรือ Session
+   - **Outbound-Only Polling (Pull Architecture):** ERP Connector ทำหน้าที่ Outbound ออกไปดึงรายการขายและส่งผล Ack กลับ ไม่เปิด Inbound Write API เข้าสู่ ERP Core
+   - **Zero Trust on POS Payload:** มองข้อมูลจาก POS เป็น Untrusted Input ต้องผ่านการตรวจสอบสิทธิ์, ราคา, ส่วนลด, สาขา, และหลักฐานการชำระเงินจริงจาก Gateway ฝั่ง ERP ก่อนบันทึกผ่าน Domain Services เดิม
+   - **Network Security & SSRF Protection:** บังคับ mTLS / Service Auth, Destination Allowlist, และ Default Deny Firewall
+
+3. **ความถูกต้องทางบัญชีและสต็อกตามมาตรฐาน ERP (Accounting & Stock Integrity):**
+   - **Double-Entry GL Contract:** บังคับบันทึก GL รายบิลแบบ Transactional ชัดเจน และใช้การปิดกะ (Shift Closing) บันทึกเฉพาะผลต่างเงินสดขาด/เกิน (Cash Over/Short) เท่านั้น ป้องกันการลงบัญชีซ้ำซ้อน
+   - **Clearing Account Segregation:** แยกบัญชีพักเงินสดหน้าร้าน (1111) และบัญชีพักเงินดิจิทัล QR Gateway (1113) ออกจากกันอย่างเด็ดขาด และห้ามลงเงินฝากธนาคารหลัก (1112) จนกว่าจะ Reconcile ยอดสลิป/Statement
+   - **Physical vs ERP Stock Conflict Handling:** ไม่ทิ้งบิลขายจริงหน้าร้าน (Verified Physical Sale) หากสต็อก ERP ขาด แต่รับยอดเงินและแยกไปพักที่สถานะ `needs_review: inventory_discrepancy` เข้าคิว Pending Stock Adjustment ให้ผู้จัดการคลังตรวจสอบ โดยไม่ฝืนยอมให้สต็อกติดลบหรือเสกตัวเลขขึ้นมา
+   - **Tax Invoicing & Anti-Duplicate Output VAT:** รองรับการออกใบกำกับภาษีอย่างย่อ (ABB) และเต็มรูป (Full Tax) โดยมี Void/Replace event เชื่อมโยง source sale เดียว ป้องกันการลงภาษีขาย (Output VAT 2130) ซ้ำซ้อน
+
+4. **การรักษาวินัยการบันทึกสถานะ (Honest Status Tracking & Gatekeeping):**
+   - กำกับไว้อย่างโปร่งใสว่าเครื่องหมาย `[x]` ใน 28.1 หมายถึง **"บันทึกขอบเขตความต้องการแล้ว"** ไม่ใช่การอ้างว่าพัฒนาเสร็จ
+   - งานส่วน Architecture, Schema, Code, และ Tests ใน 28.2 - 28.7 ยังคงเป็น `[ ]` รอการพัฒนาจริง
+   - มี Pre-implementation Gate (28.1 L1665-1668) เป็นเงื่อนไขตรวจสอบก่อนเริ่มลงมือ Implement
+
+---
+
+### 14.3 ข้อเสนอแนะเชิงลึกเพิ่มเติมสำหรับขั้นตอนออกแบบรายละเอียด (Detailed Design Recommendations)
+
+เพื่อให้การออกแบบสถาปัตยกรรมในหัวข้อ 28.2 - 28.4 มีความราบรื่นสูงสุด Gemini ขอเสนอแนะ 5 ประเด็นสำคัญที่ควรระบุไว้ใน Design Document:
+
+| ลำดับ | ประเด็นที่เสนอแนะ | ข้อควรระวัง / ผลกระทบหากไม่ระบุ | แนวทางออกแบบที่แนะนำ (Recommended Practice) |
+| :---: | :--- | :--- | :--- |
+| **1** | **รูปแบบเลขที่บิลขายหน้าร้าน (Terminal Document Sequence)** | หากหลาย Terminal ในสาขาแย่งขอ Running Sequence เดียวกันจาก POS Server อาจเกิด Lock Contention หรือติดขัดเมื่อเครือข่ายภายในร้านหน่วง | กำหนด Prefix รูปแบบกระจายศูนย์ เช่น `{BranchCode}-{TerminalID}-{YYYYMMDD}-{Sequence}` เพื่อให้แต่ละ Terminal สามารถ Generate เลขที่บิลได้แบบ Local Sequential โดยไม่ต้องแย่ง Global Lock |
+| **2** | **จังหวะการตัดสต็อกวัตถุดิบร้านอาหาร (Restaurant Stock Deduction Timing)** | ร้านอาหารมีทั้งแบบ Fast-Casual (จ่ายก่อนรับอาหาร) และ Dine-In (รับประทานก่อนคิดเงิน) การตัดสต็อกวัตถุดิบอาจไม่ตรงกับจังหวะชำระเงิน | ควรกำหนดให้การจอง/ตัดสต็อกวัตถุดิบ (Recipe Deduction) เกิดขึ้น ณ จังหวะ **"ส่งคำสั่งเข้าครัว (Order Sent to Kitchen)"** ส่วนขั้นตอนชำระเงินเป็นเพียง Settlement และหากลูกค้ายกเลิกอาหารหลังจากเข้าครัวแล้ว ต้องบันทึกเป็น Waste/Spoilage แทนการคืนสต็อกดี |
+| **3** | **ความละเอียดของหน่วยนับยา (Pharmacy Base UoM Precision)** | การขายแยกหน่วย (เช่น 1 กล่อง = 10 แผง = 100 เม็ด) หากกำหนด Base Unit ไม่ดี อาจเกิดเศษทศนิยมปัดเศษสะสมใน Stock Ledger | กำหนดให้ **Base Unit of Measure (UoM) ใน ERP เป็นหน่วยย่อยที่สุดที่ตรวจนับได้จริง (เช่น "เม็ด")** และใช้ Conversion Factor ในการขายระดับแผงหรือกล่อง เพื่อให้ยอดตัดสต็อกคงเหลือเป็นจำนวนเต็มเสมอ |
+| **4** | **การป้องกัน Race Condition ระหว่าง QR Payment กับ Cash** | ลูกค้าสแกน QR Code แล้วเกิดการหน่วง จึงขอเปลี่ยนใจชำระเงินสดทันที แคชเชียร์กดรับเงินสดขณะที่ลูกค้ากดยืนยันโอนเงินสำเร็จในเวลาไล่เลี่ยกัน | เมื่อลูกค้าขอเปลี่ยนช่องทางชำระเงิน แคชเชียร์ต้องกด "Cancel QR Intent" บนหน้าจอ Terminal ก่อนรับเงินสด เพื่อตัดสิทธิ์การรับ Callback หรือ Reject Webhook ที่เข้ามาภายหลังโดยอัตโนมัติ |
+| **5** | **นโยบายการจัดเก็บและล้างข้อมูลบน POS Server (Data Retention & Pruning)** | POS Server ในสาขามักเป็น Hardware ขนาดเล็ก (Mini PC / POS Appliance) ที่มี Disk จำกัด หากเก็บ Log และ Payload ภาพสลิป/QR นานเกินไป Disk อาจเต็ม | ควรกำหนด Data Retention Policy สำหรับ POS Local DB ให้ทำการ Archive หรือ Prune ข้อมูล Event และ Transactions ที่ผ่านการ Sync และ Reconcile เข้า ERP สำเร็จเกิน 90 วันออกจากเครื่องหน้าร้านอย่างปลอดภัย |
+
+---
+
+### 14.4 บทสรุปและคำแนะนำถัดไป (Conclusion & Next Steps)
+- **ความเหมาะสมของ Checklist:** **อนุมัติ (Approved for Planning & Design Phase)** สามารถใช้ Checklist Phase 28 ใน [checklist.md](checklist.md) เป็นฐานอ้างอิงในการเริ่มจัดทำ Architecture Document, Sequence Diagram, และ Data Ownership Matrix ตามหัวข้อ 28.2 ได้ทันที
+- **คำแนะนำ:** ยึดถือ Pre-implementation Gate ใน 28.1 อย่างเคร่งครัด โดยรอให้ผู้ใช้หรือผู้มีอำนาจตัดสินใจยืนยันรายละเอียดเชิงปฏิบัติการ (เช่น Payment Gateway Provider และรายชื่อสาขา/Terminal นำร่อง) ก่อนเริ่มการล็อก Table Schema หรือสร้างตาราง Migrations จริง
+
+---
+
+## 15. ผลการทบทวนความเข้ากันได้ของระบบ (POS & ERP Compatibility Review — ข้อเสนอแนะเชิงลึกตอบกลับ gpt.md และ checklist.md 2026-10-24)
+
+**สถานะ:** **Approved with Conditions (อนุมัติเชิงหลักการแบบมีเงื่อนไขด้านสถาปัตยกรรม)**  
+**เอกสารอ้างอิง:** [gpt.md](gpt.md#L293-L334) (Phase 28 Compatibility Review), [checklist.md](checklist.md#L1643-L1793) (Phase 28), [backend/app/Http/Controllers/Finance/CommercialDocumentController.php](backend/app/Http/Controllers/Finance/CommercialDocumentController.php), [backend/app/Services/FinancialJournalService.php](backend/app/Services/FinancialJournalService.php)
+
+Gemini ได้ทำการตรวจสอบรายการความเสี่ยงเชิงโค้ดและข้อเสนอแนะที่บันทึกใน [gpt.md](gpt.md#L293-L334) ร่วมกับ [checklist.md](checklist.md) Phase 28 อย่างละเอียด มีข้อสรุปและข้อกำหนดเชิงสถาปัตยกรรมเพิ่มเติมดังนี้:
+
+### 15.1 การยืนยันข้อค้นพบระดับโค้ดของ GPT (Validation of GPT's Code-Level Findings)
+Gemini **เห็นพ้อง 100% กับข้อสังเกตและข้อค้นพบเชิงลึกที่ GPT ตรวจพบในโค้ด ERP ปัจจุบัน** ซึ่งถือเป็นประเด็นเสี่ยงวิกฤต (Critical Design Risks) หากเริ่มเขียนโค้ดโดยไม่วางแผนล่วงหน้า:
+
+1. **ความเสี่ยงการตัดสต็อกซ้ำซ้อน (Double Stock Deduction Risk):**
+   - โค้ดใน [`CommercialDocumentController::deliver()`](backend/app/Http/Controllers/Finance/CommercialDocumentController.php#L194-L201) ทำการคำนวณและสร้าง `StockMovement` ติดลบ (`movement_type = 'deliver_to_customer'`) อยู่ใน Controller โดยตรง
+   - หากขั้นตอน POS Import สร้าง Delivery Order (DO) ที่มีสถานะ `delivered` และตัว Connector เองก็สร้าง Stock Movement จากบิล POS อีกชุดหนึ่ง จะทำให้ **สต็อกสินค้าถูกตัดเบิ้ล 2 เท่าทันที**
+2. **ความจำเป็นในการสกัด Controller Logic (Service Extraction Requirement):**
+   - ปัจจุบัน Logic การตรวจสอบสต็อกติดลบและการสร้าง `StockMovement` ฝังแน่นอยู่ใน Controller
+   - ERP Connector Worker ไม่สามารถจำลอง HTTP Request ไปยัง Controller ได้ และในขณะเดียวกันก็ **ห้าม** ยิง Eloquent `StockMovement::create()` ตรงๆ เพื่อข้าม Business Rules, Validation และ Notification Guards
+3. **ข้อจำกัดของ FinancialJournalService เดิม (GL Account Mapping & Fallback 1100):**
+   - โค้ด [`FinancialJournalService::postPayment()`](backend/app/Services/FinancialJournalService.php#L41) มี Fallback บัญชีเงินสดอยู่ที่ `1100` (Cash & Cash Equivalents)
+   - หากนำโมเดล `Payment` เดิมมาใช้กับ POS โดยตรง ยอดเงินสดในลิ้นชัก (Drawer Cash) และยอด PromptPay QR จะวิ่งเข้าบัญชีรวม `1100` ซึ่ง **ละเมิด Guardrail บัญชีพักเงิน (Clearing Accounts 1111 และ 1113)**
+4. **ความเสี่ยง Race Condition ระหว่าง QR Settlement ล่าช้ากับเงินสด (Late Webhook Edge Case):**
+   - เมื่อแคชเชียร์กดยกเลิก QR เพื่อรับเงินสด แต่หลังจากนั้นไม่กี่วินาที Gateway กลับส่ง Webhook ยืนยันว่าลูกค้าโอนสำเร็จ
+   - หากระบบโยน Webhook ทิ้ง ยอดเงินในบัญชีธนาคารกับระบบ ERP จะไม่ตรงกัน (Unreconciled) แต่หากนำไปตัดบิลเดิม จะกลายเป็นการจ่ายเงินซ้ำ 2 เท่า
+5. **ความเสี่ยง Overkill ในการใช้ Work Order กับร้านอาหาร (Restaurant BOM vs Manufacturing WO):**
+   - แบบจำลอง `WorkOrder` ใน Phase 27 ออกแบบมาสำหรับงานสั่งผลิตแบบ Batch อุตสาหกรรม (มี Planned, Released, Quality Check, Completed)
+   - หากนำ Work Order ไปสร้างต่อจานอาหารทุกจานในร้านอาหาร จะทำให้เกิด Overhead มหาศาลและฐานข้อมูลบวมโดยใช่เหตุ
+
+---
+
+### 15.2 เงื่อนไขและข้อกำหนดสถาปัตยกรรม 5 ประการสำหรับขั้นตอนออกแบบ (Architectural Conditions)
+
+Gemini กำหนดให้ขั้นตอนการจัดทำ Architecture & Contract Design (หัวข้อ 28.2) ต้องปฏิบัติตามเงื่อนไข 5 ประการนี้อย่างเคร่งครัด:
+
+| ลำดับ | เงื่อนไขด้านสถาปัตยกรรม (Architectural Condition) | รายละเอียดและแนวทางการนำไปปฏิบัติ (Implementation Directive) |
+| :---: | :--- | :--- |
+| **1** | **Service Extraction Gate (สกัด Reusable Domain Service)** | • ก่อนสร้าง Connector ให้ทำการสกัด (Refactor) Logic ตัดสต็อกออกจาก `CommercialDocumentController` มาเป็น **`InventoryMovementService`** กลาง<br>• มี method ชัดเจน เช่น `deductStockForSale()` ที่ครอบคลุม `lockForUpdate()`, Negative Stock Guard, Moving Average Costing, และ Low Stock Alert<br>• ให้ทั้ง `CommercialDocumentController` (ERP Web UI) และ `PosImportService` (Connector Worker) เรียกใช้ Service กลางตัวเดียวกัน 100% |
+| **2** | **Single Stock Posting Path (กำหนดเส้นทางตัดสต็อกเอกภาพ)** | • กำหนด Transaction Boundary ชัดเจน: เมื่อ POS Event นำเข้า ERP ให้สร้างเอกสารขายพร้อมกำหนด `movement_type = 'pos_sale'` เพียงเส้นทางเดียว<br>• ห้ามผูกการตัดสต็อกไว้กับ Delivery Order ที่ทำงานซ้ำซ้อน<br>• หากต้องสร้าง DO เพื่อการอ้างอิงทางเอกสาร ให้ DO นั้นอยู่ในสถานะที่เชื่อมโยงกับ `pos_sale` movement เดิม โดยไม่ trigger movement ใหม่ |
+| **3** | **Direct Cash Sale GL Posting (รองรับการลงบัญชีขายสดหน้าร้าน)** | • ขยาย `FinancialJournalService` ให้มี method **`postPosSale()`** สำหรับบิลขายหน้าร้านโดยเฉพาะ:<br>  - เงินสด: `Dr. 1111 Cash on Hand (POS Drawer) / Cr. 4100 Sales Revenue / Cr. 2130 Output VAT`<br>  - QR Code: `Dr. 1113 Payment Gateway Clearing / Cr. 4100 Sales Revenue / Cr. 2130 Output VAT`<br>• ไม่ต้องวนบันทึกผ่านลูกหนี้การค้า (`1120 Accounts Receivable`) หากเป็นบิลที่ชำระเสร็จสิ้นหน้าร้านทันที เพื่อลดภาระ Journal Entries และป้องกันการสับสนใน Subledger |
+| **4** | **นโยบาย Suspended Gateway Receipts (จัดการ Late Webhook)** | • หาก Webhook การชำระเงินของ QR เข้ามาหลังจากบิลนั้นถูกปิดด้วยเงินสดไปแล้ว หรือรายการถูกยกเลิกแล้ว<br>• ระบบ **ห้าม Drop ทิ้งเด็ดขาด** และ **ห้ามนำไปตัดยอดซ้ำ**<br>• ให้บันทึกเข้าตาราง **`suspended_gateway_receipts`** และลงบัญชีพัก `Dr. 1113 Gateway Clearing / Cr. 2190 Other Current Liabilities (Suspended Receipts)` พร้อมส่งการแจ้งเตือนระดับ Priority ไปยังผู้จัดการร้าน/แผนกบัญชีเพื่อกด Refund คืนลูกค้า หรือ Reconcile ยอดเงิน |
+| **5** | **Lightweight Recipe Consumption สำหรับร้านอาหาร** | • สำหรับร้านอาหาร ห้ามสร้างเอกสาร `work_orders` รายจาน<br>• ให้ใช้กลไก **On-demand Recipe Consumption (Backflush)** โดย Connector จะอ่านสูตรอาหาร (BOM Snapshot) ณ เวลาขาย แล้วสร้าง `StockMovement` ตัดวัตถุดิบด้วย `movement_type = 'recipe_consumption'` โดยตรง<br>• แยกกรณี "ยกเลิกหลังเข้าครัว" ให้บันทึกเป็น `movement_type = 'food_waste_spoilage'` (Dr. ต้นทุนสูญเสีย / Cr. วัตถุดิบ) ตามสิทธิ์ผู้จัดการ |
+
+---
+
+### 15.3 สรุปผลการรับรอง (Formal Certification Verdict)
+
+- **ผลการรับรองแนวทาง:** **Approved with Conditions**
+- แนวคิดการใช้ **Shared Core + Business Modules** (Retail / Restaurant / Pharmacy) ของ POS และการแยก Server ตามที่ระบุใน [checklist.md](checklist.md) มีความเหมาะสมและผ่านการรับรองเชิงหลักการ
+- **ขั้นตอนถัดไป:** ทีมพัฒนาสามารถเริ่มขั้นตอนจัดทำเอกสารสถาปัตยกรรมและ Schema (หัวข้อ 28.2–28.4) ได้ โดยต้องนำเงื่อนไขทั้ง 5 ข้อใน Section 15.2 ไปเป็นเกณฑ์ตั้งต้นใน Design Document และ **ต้องไม่เริ่มเขียนโค้ด Application/Connector จนกว่าจะผ่านการ Review แผนสกัด Service (Service Extraction Plan)**
+
+---
+
+### 15.4 รายการ Action Items สำหรับ GPT (Action Items for GPT to Update checklist.md & gpt.md)
+
+เพื่อให้แผนงาน Phase 28 ในเอกสารมีความสมบูรณ์ สอดคล้องกับข้อเท็จจริงในโค้ด และพร้อมสำหรับการออกแบบสถาปัตยกรรมอย่างแท้จริง ขอให้ GPT ดำเนินการอัปเดตเอกสารตามรายการต่อไปนี้:
+
+#### 1. การปรับปรุง [checklist.md](checklist.md#L1643-L1793) (Phase 28 Checklist Updates)
+- [x] **Action Item 1.1 (Service Extraction Gate):** เพิ่มข้อกำหนดในหัวข้อ 28.2 และ 28.5 กำหนดให้ต้องทำการสกัด (Refactor) Stock Deduction Logic ออกจาก [`CommercialDocumentController`](backend/app/Http/Controllers/Finance/CommercialDocumentController.php) มาเป็น Service กลาง (`InventoryMovementService`) ก่อนพัฒนา Connector เพื่อให้ทั้งหน้าเว็บ ERP และ Worker ใช้ Business Rules เดียวกัน ป้องกันการยิง SQL ตรงข้าม Validation
+- [x] **Action Item 1.2 (Single Stock Posting Path):** ระบุเงื่อนไขในหัวข้อ 28.5 ให้ชัดเจนว่า การนำเข้ารายการขาย POS สู่ ERP ต้องตัดสต็อกผ่าน `movement_type = 'pos_sale'` เพียงเส้นทางเดียว และหากมีการสร้างเอกสาร Delivery Order (DO) ต้องไม่ให้ DO นั้นสร้าง `StockMovement` ซ้ำซ้อน
+- [x] **Action Item 1.3 (Direct POS Sale GL Posting Contract):** เพิ่มในหัวข้อ 28.6 และ 28.7 ระบุการขยาย [`FinancialJournalService`](backend/app/Services/FinancialJournalService.php) ให้มี method `postPosSale()` ลงบัญชีขายสดหน้าร้านตรง (`Dr. 1111 Drawer Cash / 1113 Gateway Clearing`, `Cr. 4100 Sales`, `Cr. 2130 Output VAT`) โดยไม่ต้องวนผ่าน `1120 Accounts Receivable`
+- [x] **Action Item 1.4 (Suspended Gateway Receipts Policy):** เพิ่มในหัวข้อ 28.6 และ 28.7 นโยบายรองรับ Late QR Webhook โดยไม่ Drop ทิ้งและไม่ตัดบิลซ้ำ แต่บันทึกเข้าตาราง `suspended_gateway_receipts` และลงบัญชีพัก `2190 Other Current Liabilities` พร้อมแจ้งเตือน Manager
+- [x] **Action Item 1.5 (Lightweight Recipe Consumption สำหรับร้านอาหาร):** เพิ่มในหัวข้อ 28.6.3 ระบุชัดเจนว่าร้านอาหารจะไม่สร้างเอกสาร `work_orders` ต่อจาน แต่ใช้การตัดสต็อกวัตถุดิบทางตรง (`movement_type = 'recipe_consumption'`) ตาม BOM Snapshot และรองรับ `movement_type = 'food_waste_spoilage'` กรณียกเลิกอาหารหลังเข้าครัว
+
+#### 2. การปรับปรุง [gpt.md](gpt.md#L293-L334) (Handoff Log Updates)
+- [x] **Action Item 2.1 (บันทึกสถานะการรับรอง):** บันทึกผลตรวจรับรองสถาปัตยกรรมเดิมใน `gpt.md` และ `checklist.md` เรียบร้อยแล้ว
+- [x] **Action Item 2.2 (บันทึกเงื่อนไข 5 ประการ):** สรุปเงื่อนไขสถาปัตยกรรม 5 ข้อเป็นฐานในการจัดทำ Architecture & Contract Document (28.2) และเริ่ม Implementation แล้ว
+- [x] **Action Item 2.3 (คงวินัยเอกสาร):** ดำเนินการจัดทำ Architecture Document ([document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md](document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md)) และ Security Plan ([document/PHASE_28_3_POS_SECURITY.md](document/PHASE_28_3_POS_SECURITY.md)) ก่อนเริ่มพัฒนา
+
+---
+
+## 16. การตรวจรับงาน Phase 28 (Standalone POS & ERP Connector — Implementation & Architecture Verification — 2026-10-26)
+
+**สถานะ:** **ผ่านการตรวจรับระดับ Local Development & Architectural Prototype (Verified Local Implementation — In Progress for Production Acceptance)**  
+**เอกสารอ้างอิง:** [checklist.md](checklist.md#phase-28-standalone-pos--erp-connector--shared-core--business-modules-planning) (Phase 28), [document/PHASE_28_IMPLEMENTATION_STATUS.md](document/PHASE_28_IMPLEMENTATION_STATUS.md), [document/PHASE_28_LOCAL_TEST_SECURITY.md](document/PHASE_28_LOCAL_TEST_SECURITY.md), [document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md](document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md), [document/PHASE_28_3_POS_SECURITY.md](document/PHASE_28_3_POS_SECURITY.md), [pos/README.md](pos/README.md), [gpt.md](gpt.md)
+
+---
+
+### 16.1 สรุปผลการตรวจรับ (Executive Summary)
+
+Gemini ได้ดำเนินการตรวจสอบและตรวจรับงานพัฒนา **Phase 28 (Standalone POS & ERP Connector — Shared Core + Business Modules)** ตามขอบเขตงานที่มีการส่งมอบ ณ วันที่ 2026-10-26 อย่างละเอียด ทั้งในระดับโค้ด สถาปัตยกรรม ฐานข้อมูล ความปลอดภัย และผลการทดสอบเชิงประจักษ์ (Empirical Evidence)
+
+**ข้อสรุปผลการประเมิน:**
+1. **การพัฒนาระดับ Local Development ได้รับการตรวจรับ (Approved for Local Prototype & Core Workflows):**
+   - มีการแยก Workspace ของ Standalone POS (`pos/`) ออกจาก ERP Backend (`backend/`) อย่างเด็ดขาด ทั้งในระดับ Dependency, Database, Config, Session, Staff Credentials และ APP_KEY
+   - มีการสกัด (Extract) ตรรกะการตัดสต็อกออกจาก Controller สู่ [`InventoryMovementService`](backend/app/Services/InventoryMovementService.php) สำเร็จ ทำให้ทั้งหน้าเว็บ ERP และ POS Worker ใช้ Business Rules และ Entitlement Guard เดียวกัน
+   - ระบบ Core และ Business Modules ทั้ง 3 สาย (Retail, Restaurant, Pharmacy) รวมถึงความสามารถส่วนขยาย (QR Menu, Refunds, Cash In-Out, Authorized Discount, Recipe Consumption, Food Waste Spoilage, Pharmacy Return Inspection, e-Tax Signing Owner Selector, และ ERP Ledger Checks) ได้รับการพัฒนาและทดสอบครอบคลุมทุก Test Suite และ Browser Fixture บน Local Environment
+2. **ยังไม่สามารถปิด Phase 28 ในระดับ Production Sign-off ได้ (Phase 28 Remains In Progress):**
+   - ยังไม่มีการเลือกผู้ให้บริการ e-Tax Provider / Channel / Real Signing / Live Submission
+   - ยังไม่มีการต่อเชื่อมระบบเครือข่ายจริงข้าม 2 Server, Certificate mTLS จริง, และ Hardware จริง (เครื่องพิมพ์ใบเสร็จ Thermal Printer / เครื่องสแกนบาร์โค้ด)
+   - การทดสอบ Concurrency และ Row-locking ยังกระทำบน SQLite `:memory:` ยังไม่ได้ทดสอบประสิทธิภาพและ Lock Contention บน MariaDB Production
+   - โมดูลร้านอาหารยังขาดระบบ Modifiers/Options และ Live Kitchen Push/Polling ส่วนโมดูลร้านขายยายังขาดระบบ Drug Recall/Quarantine แบบอัตโนมัติเต็มรูปแบบ
+   - ระบบกระทบยอดปัจจุบันเป็นระดับ ERP-only Ledger Checks ยังขาด Signed POS Checkpoints, Automated Retention Pruning, และ Disaster Recovery Fencing
+
+---
+
+### 16.2 ผลการตรวจสอบความสอดคล้องตามหลักการและ Guardrails (Architecture & Compliance Audit)
+
+| หัวข้อการตรวจสอบ | ผลการตรวจรับเชิงสถาปัตยกรรมและโค้ด | สถานะ |
+| :--- | :--- | :---: |
+| **1. Service Extraction & Stock Concurrency** | สกัด logic สู่ [`InventoryMovementService`](backend/app/Services/InventoryMovementService.php); บังคับใช้ pessimistic row lock บนตาราง Product ทุก warehouse/lot แม้ stock ledger จะว่าง; ป้องกันการ oversell และป้องกันการบันทึก Delivery Order ซ้ำซ้อน | **ผ่าน (PASSED)** |
+| **2. Standalone Isolation & Zero Trust** | โฟลเดอร์ `pos/` แยกแอปพลิเคชันชัดเจน; ทิศทางการเชื่อมต่อเป็น ERP Connector outbound ดึงข้อมูลจาก POS Sync API เท่านั้น ปราศจากเส้นทางที่ POS จะ query หรือ write เข้าฐาน ERP โดยตรง; ไม่มี ERP credentials หลุดไปฝั่ง POS | **ผ่าน (PASSED)** |
+| **3. Financial Evidence & Staged Import** | การนำเข้ารายการขายของ ERP Worker แยกสถานะ `financial_imported` ออกจาก `inventory_pending`; หากสต็อกไม่พอ เงินยังคงบันทึกหลักฐานไว้และเปิดงานค้างให้ Inventory Manager ตรวจสอบ ไม่มีการบันทึกซ้ำเมื่อ Replay | **ผ่าน (PASSED)** |
+| **4. Cash In-Out & Shift Guardrail** | บันทึกเงินเปิดกะ, รับ–จ่าย และปิดกะจำกัดเฉพาะกะ POS ไม่ปนกับ organization-wide cash balance; การลงบัญชี Cash In-Out ผูกกับ `cash_clearing` asset mapping โดยตรง ไม่สร้าง Invoice, Payment, รายได้ หรือ VAT โดยมิชอบ | **ผ่าน (PASSED)** |
+| **5. Refunds & Source Correlation** | การคืนเงินต้องใช้ fresh manager password re-auth; ระบบบันทึก Credit Note และคืนเงินผ่าน `pos_import_refunds` โดยไม่ทำลาย one-reversal constraint เดิมของ ERP และปิดกั้น generic reversal จากฝั่ง ERP ต่อเอกสาร POS | **ผ่าน (PASSED)** |
+| **6. Authorized Discount Controls** | เพดานส่วนลดกำหนดโดย ERP (`max_manager_discount_pct`); การอนุมัติของ Manager มีอายุ 5 นาที ผูกมัดกับ Normalized Cart และใช้ได้ครั้งเดียวใน transaction; การคำนวณภาษีและ COGS ถูกต้องตามยอดสุทธิ | **ผ่าน (PASSED)** |
+| **7. Lightweight Recipe & Kitchen Lifecycle** | ระบบร้านอาหารตัดสต็อกวัตถุดิบทางตรง (`recipe_consumption`) ตาม BOM Snapshot ณ จังหวะ preparing ครั้งเดียว ไม่สร้าง Work Order ต่อจาน; การยกเลิกหลังเข้าครัวจัดประเภทเป็น `food_waste_spoilage` ไม่ตัดสต็อกซ้ำ | **ผ่าน (PASSED)** |
+| **8. Pharmacy Return Inspection & Governance** | การตรวจรับยาคืนกำหนดสิทธิ์เฉพาะผู้จัดการที่เป็นเภสัชกร (`pharmacist_qualified = true`); บันทึกหลักฐาน lot, expiry, สภาพบรรจุภัณฑ์; เลือกคืนสต็อก (Restock พร้อมคืนต้นทุนเดิม) หรือทำลาย (Destroy) ได้อย่างรัดกุม | **ผ่าน (PASSED)** |
+| **9. Local Security & Hard-Block Guard** | Feature Flags สำหรับ Transport Loopback, Prescriptions, Public Menu, Refunds, Cash Movements, Discounts, Restaurant และ Inspections ปิดเป็นค่าเริ่มต้น และมี Hard-block ปฏิเสธการทำงานทันทีหาก `APP_ENV=production` | **ผ่าน (PASSED)** |
+
+---
+
+### 16.3 หลักฐานเชิงประจักษ์จากการทดสอบจริง (Empirical Verification Results)
+
+การตรวจรับได้ดำเนินการรันชุดคำสั่งทดสอบจริงบนสภาพแวดล้อม ณ วันที่ 2026-10-26 สรุปผลเชิงประจักษ์ดังตาราง:
+
+| ขอบเขตการทดสอบ | คำสั่งทดสอบ | ผลการทดสอบเชิงประจักษ์ | สถานะ |
+| :--- | :--- | :--- | :---: |
+| **ERP Phase 28 Feature Tests** | `php artisan test --filter=Phase28` | **33 passed / 290 assertions** (76.88s)<br>- `Phase28InventoryServiceTest` (4 tests)<br>- `Phase28PosImportTest` (22 tests)<br>- `Phase28PosTransportTest` (4 tests)<br>- `Phase28TaxSettingsTest` (3 tests) | **PASSED** |
+| **POS Isolated PHPUnit Tests** | `php ../backend/vendor/phpunit/phpunit/phpunit -c phpunit.xml` (จาก `pos/`) | **33 passed / 175 assertions** (1m 32s)<br>ครอบคลุม Core Cash, Cart, Staff, Signer, Shifts, Discounts, Refunds, Restaurant, และ Pharmacy Inspections | **PASSED** |
+| **ERP TypeScript & Vite Build** | `npm run build` (ใน `backend/`) | **0 errors / 1,124 modules transformed**<br>Bundle assets สร้างสมบูรณ์รวมถึง `Pos.tsx` และ `PosReconciliation.tsx` (1m 9s) | **PASSED** |
+| **POS TypeScript Type Check** | `node backend/node_modules/typescript/bin/tsc -p pos/tsconfig.json --noEmit` | **0 errors** (exit code 0) | **PASSED** |
+| **POS Vite Build** | `node backend/node_modules/vite/bin/vite.js build --config pos/vite.config.mjs` | **0 errors / 22 modules transformed**<br>สร้าง `manifest.json`, `pos.js`, `pos.css`, `menu.js` สำเร็จ (7.05s) | **PASSED** |
+| **Backend Code Style (Pint)** | `php vendor/bin/pint --test` (ใน `backend/`) | **PASSED** (exit code 0, formatting clean) | **PASSED** |
+| **Browser Headless Fixtures** | Playwright test scripts ใน `pos/tests/Browser/` | **ผ่านทุก scenario บนความละเอียด 1440px และ 390px**<br>- QR Menu: `menu-result.json`<br>- Cash Checkout & Shifts: `checkout` result<br>- Manager Refund: `refund-result.json`<br>- Cash Movements: `cash-movements-result.json`<br>- Manager Discount: `discount-result.json`<br>- Restaurant Table/Kitchen/Split: `restaurant-result.json`<br>- Pharmacy Inspection: `inspection-result.json`<br>*(Console errors = 0, Network isolation strictly loopback-only)* | **PASSED** |
+
+---
+
+### 16.4 สรุปสถานะรายการคงค้างสู่ขั้นตอน Production (Pending Items for Production Acceptance)
+
+เพื่อให้ Phase 28 พร้อมสำหรับการลงสู่สภาพแวดล้อมใช้งานจริง ขอให้บันทึกรายการที่ยังต้องดำเนินการต่อ (Pending Action Items) ดังนี้:
+
+1. **e-Tax Live Integration Gate (รอผู้ใช้เลือก Provider):**
+   - คัดเลือกและทำสัญญากับผู้ให้บริการ e-Tax Service Provider / Webhook Gateway
+   - พัฒนาระบบเชื่อมต่อ Digital Signing (HSM / Cloud Key / PKCS#12) และระบบส่งเอกสาร XML/PDF-A3 พร้อมระบบ Error Handling / Retry ตามมาตรฐาน ขมธอ.
+2. **Target Network & Hardware Deployment Gate:**
+   - ติดตั้งและกำหนดค่า Reverse Proxy / Firewall แบบ Mutual TLS (mTLS) บน Server จริง แยกโซน ERP และ POS
+   - ทดสอบการเชื่อมต่อกับอุปกรณ์จริงหน้าร้าน (Thermal Receipt Printer รุ่นที่เลือกใช้ และเครื่องสแกน 2D Barcode)
+3. **MariaDB Concurrency & High Load Stress Testing:**
+   - ทดสอบจำลองการขายพร้อมกันหลาย Terminal และแย่งโควตาสต็อกหน่วยสุดท้ายบนฐานข้อมูล MariaDB เพื่อพิสูจน์ Row-level Pessimistic Locking ภายใต้โหลดจริง
+4. **Full Reconciliation & Disaster Recovery:**
+   - พัฒนาระบบ Signed POS End-of-Day Checkpoints เพื่อตรวจรับรองความครบถ้วนของ event sequence จากฝั่ง POS
+   - กำหนดนโยบาย Data Retention, Pruning Policy, และ Fencing เมื่อเกิดกรณี Restore ฐานข้อมูลย้อนหลัง
+5. **Business Modules Extended Polish:**
+   - Restaurant: เพิ่มการรองรับ Food Modifiers, Portion Sizes, และระบบ WebSocket/SSE Push แจ้งเตือนจอครัวแบบเรียลไทม์
+   - Pharmacy: เพิ่มระบบ Batch/Lot Recall อัตโนมัติในกรณีที่พบปัญหายาไม่ผ่านมาตรฐาน
+
+---
+
+## 17. ผลการตรวจรับงาน Phase 28 ฉบับสมบูรณ์สำหรับสภาพแวดล้อม Local (Phase 28 Local Acceptance Sign-off — 2026-10-27)
+
+**สถานะ:** **ผ่านการตรวจรับระดับ Local Development ครบถ้วน 100% (PASSED — Local Development & Architecture Acceptance Verified by Gemini)**  
+**เอกสารประกอบการตรวจรับ:** [checklist.md](checklist.md#phase-28-standalone-pos--erp-connector--shared-core--business-modules-planning), [document/PHASE_28_LOCAL_ACCEPTANCE.md](document/PHASE_28_LOCAL_ACCEPTANCE.md), [document/PHASE_28_IMPLEMENTATION_STATUS.md](document/PHASE_28_IMPLEMENTATION_STATUS.md), [document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md](document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md), [document/PHASE_28_3_POS_SECURITY.md](document/PHASE_28_3_POS_SECURITY.md), [document/PHASE_28_REVIEW_ATTEMPT_20261027.md](document/PHASE_28_REVIEW_ATTEMPT_20261027.md), [gpt.md](gpt.md)
+
+---
+
+### 17.1 บทสรุปผลการประเมินรอบสมบูรณ์ (Comprehensive Local Verdict)
+
+Gemini ได้ดำเนินการตรวจสอบโค้ดอย่างละเอียด (Read-only Code Review) ครอบคลุมทั้งส่วนที่ Untracked ทั้งหมดใน [`pos/`](pos/) และ [`backend/`](backend/) รวมถึงรันชุดคำสั่งทดสอบจริงทุกชุดบนเครื่องในวันที่ 2026-10-27
+
+**ผลการวินิจฉัย (Verdict): PASS (ผ่านการรับรองสำหรับ Local Development)**
+
+1. **สถาปัตยกรรมและการป้องกันข้อมูลสองฝั่ง (Zero Trust & No Double-Posting):**
+   - **Standalone Isolation**: ฝั่ง POS แยกฐานข้อมูล, Credentials, Session, และ Private Keys ออกจาก ERP ชัดเจน และเชื่อมต่อผ่าน ERP Outbound Connector ผ่าน Loopback HTTPS เท่านั้น ไม่มีเส้นทางที่ POS จะเขียนตรงเข้าฐาน ERP
+   - **Double-Entry & Inventory Integrity**: ตรรกะตัดสต็อกรวมศูนย์ที่ [`InventoryMovementService`](backend/app/Services/InventoryMovementService.php) มี Pessimistic Row Lock ระดับ Product เสมอ และระบบ Import บันทึกเงิน (`financial_imported`) กับสต็อก (`inventory_status`) แยกกัน หากสต็อกขาดจะคงหลักฐานเงินไว้และไม่ตัดซ้ำเมื่อ Replay
+   - **Zero Tax Inflation**: การเปลี่ยนใบกำกับภาษีอย่างย่อ (ABB) เป็นใบกำกับภาษีเต็มรูป (FULL) อ้างอิงสล็อตเอกสารเดิม ไม่สร้างยอดขาย รายได้ หรือภาษีมูลค่าเพิ่มซ้ำซ้อน และสถานะ e-Tax ถูกตรึงไว้ที่ `awaiting_provider` ไม่แสดงสถานะส่งสำเร็จเท็จ
+
+2. **โมดูลธุรกิจทั้ง 3 สาย (Core & Business Vertical Implementations):**
+   - **Retail**: ระบบ QR Menu และ Token Expiry, Cash In-Out ผูกกับ `cash_clearing` asset mapping (ไม่สร้าง Invoice/VAT มิชอบ), Manager Discount เพดานตาม ERP กำหนด ผูก Cart/Terminal และมีอายุ 5 นาที, Refunds ผ่าน Credit Note อ้างอิงเอกสารเดิม
+   - **Restaurant**: รองรับ Variant / Size / Modifier ผูกกับ SKU และ BOM เฉพาะของตนเอง, Table Session + Staff Accept, Kitchen Polling ทุก 5 วินาที, การยกเลิกหลังเข้าครัวจัดประเภทเป็น `food_waste_spoilage` ไม่ตัดสต็อกวัตถุดิบซ้ำ
+   - **Pharmacy**: กำหนดสิทธิ์ตรวจรับยาคืนเฉพาะผู้จัดการที่เป็นเภสัชกร (`pharmacist_qualified = true`), บันทึกหลักฐาน Lot/Expiry และเลือก Restock คืนต้นทุนเดิม หรือ Destroy ได้อย่างแม่นยำ, ระบบ Lot Recall ดักจับและ Quarantine ทั้งใน POS และ ERP Stock Movement
+
+3. **ความต่อเนื่องและการกู้คืนข้อมูล (Resilience, Checkpoints & Recovery):**
+   - **Signed Checkpoints**: ตรวจสอบ Envelope Hash, Sequence, Generation และ High Watermark ครบถ้วน
+   - **Independent Recovery Anchor**: เก็บไฟล์ Anchor ภายนอก DB ป้องกันกรณี Restore DB ย้อนหลังแล้วเกิด Event ซ้ำ หากตรวจพบความไม่สอดคล้องจะล็อกระบบด้วย Recovery Fence (HTTP 423) ทันที
+   - **Encrypted Archival**: ข้อมูล Outbox ที่ผ่านการกระทบยอดเกิน 90 วัน จะถูกย้ายและเข้ารหัสแบบ Authenticated Encryption ใน Private Disk โดยคง Metadata และ Dedupe Identity ป้องกันการ Replay ซ้ำ
+
+---
+
+### 17.2 หลักฐานเชิงประจักษ์จากการทดสอบจริง (Empirical Verification Results)
+
+| รายการทดสอบ | คำสั่งทดสอบที่ใช้จริง | ผลลัพธ์เชิงประจักษ์ (Empirical Evidence) | สถานะ |
+| :--- | :--- | :--- | :---: |
+| **ERP Phase 28 Feature Tests** | `php artisan test --filter=Phase28` | **39 passed / 348 assertions** (14.42s)<br>- `Phase28InventoryServiceTest` (4 tests)<br>- `Phase28PosImportTest` (27 tests)<br>- `Phase28PosTransportTest` (4 tests)<br>- `Phase28RecallTest` (1 test)<br>- `Phase28TaxSettingsTest` (3 tests) | **PASSED** |
+| **POS Isolated PHPUnit Tests** | `php ../backend/vendor/phpunit/phpunit/phpunit -c phpunit.xml` (ใน `pos/`) | **41 passed / 242 assertions** (31.95s)<br>ครอบคลุม Cart, Shift, Cash, Refunds, Discounts, Tax, Checkpoint, Recovery | **PASSED** |
+| **ERP Manufacturing & GL Regression** | `php artisan test --filter=Phase27ManufacturingTest` | **18 passed / 105 assertions** (11.43s)<br>ยืนยันไม่กระทบ Stock Movement และ Journal Posting เดิม | **PASSED** |
+| **POS TypeScript Compilation** | `node backend/node_modules/typescript/bin/tsc -p pos/tsconfig.json --noEmit` | **0 errors** (Exit code: 0) | **PASSED** |
+| **POS Production Vite Build** | `node backend/node_modules/vite/bin/vite.js build --config pos/vite.config.mjs` | **0 errors / 23 modules transformed**<br>สร้าง manifest.json, pos.js, menu.js, pos.css สำเร็จ (1.22s) | **PASSED** |
+| **ERP Production Vite Build** | `npm run build` (ใน `backend/`) | **0 errors / 1,124+ modules transformed**<br>Bundle สร้างสมบูรณ์รวม `Pos.tsx`, `PosSetup.tsx`, `PosReconciliation.tsx` (12.58s) | **PASSED** |
+| **Code Style (Laravel Pint)** | `php vendor/bin/pint --test ...` | **0 errors / Passed** (PSR-12 clean) | **PASSED** |
+| **Browser Headless Fixtures** | Playwright scripts (1440px และ 390px) | **ผ่านทุก Scenario / Console errors = 0**<br>- `restaurant-online-result.json`: QR, Variant, Kitchen Polling, Checkout<br>- `tax-documents-result.json`: ABB, Full Replacement, Reprint, awaiting_provider | **PASSED** |
+
+---
+
+### 17.3 เงื่อนไขภายนอกสู่ระดับ Production (Pending External Gates)
+
+รายการคงค้างต่อไปนี้เป็น External Dependency สำหรับการ Deploy สู่ Production จริง ไม่ใช่ข้อผิดพลาดในโค้ดระดับ Local:
+
+1. **e-Tax Service Provider & Signing Integration Gate**:
+   - การคัดเลือกและทำสัญญากับผู้ให้บริการ e-Tax Service Provider / Gateway ที่ผ่านการรับรองจาก ขมธอ.
+   - การติดตั้งใบรับรองอิเล็กทรอนิกส์ (Digital Signing Key / HSM) และระบบเชื่อมต่อ XML/PDF-A3
+2. **Physical Hardware & Network Deployment Gate**:
+   - การติดตั้งเครือข่ายสอง Server แยกโซนด้วย Mutual TLS (mTLS) Reverse Proxy และ Firewall
+   - การทดสอบการเชื่อมต่อกับเครื่องพิมพ์ใบเสร็จความร้อน (Thermal Receipt Printer) และเครื่องสแกนบาร์โค้ดจริง
+3. **MariaDB High-Load & Concurrency Stress Gate**:
+   - การทดสอบโหลดและการแย่งโควตาสต็อกพร้อมกันหลาย Terminal บน MariaDB 11.2+ เพื่อทดสอบ Row Lock Contention จริง
+4. **Operational UAT & Disaster Recovery Drill**:
+   - การทดสอบระบบกู้คืนข้อมูล (Recovery Drill) ร่วมกับผู้ดูแลระบบบนสภาพแวดล้อมใช้งานจริง
+
+
+
+
+
 
 
 

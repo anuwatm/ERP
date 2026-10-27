@@ -316,4 +316,6 @@ Create/Edit entry points ทั้งหมด 60 หน้า 92 ไฟล์�
 | Create project | `POST /projects` | `projects.create` |
 | Create task | `POST /tasks` | `tasks.create` |
 
+## Phase28 POS / ERP admin — 2026-10-27
 
+ERP `GET /pos-integration` พร้อม PosSetup และ instance/catalog/quota/staff/key/recall/tax/recovery operations; `GET /pos-integration/{instance}/reconciliation` ต้องpos.reconcile. POS `/` staff app, `/menu` public token menu, `/tax-documents/{id}/print` scoped localprint. Connector `/connector/v1/*` ใช้service authคนละแอปกับERP. [Complete runtime route inventory](../document/PHASE_28_API.md)

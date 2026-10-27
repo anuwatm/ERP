@@ -1,0 +1,124 @@
+{
+  "analyzedAt": "2026-10-27T05:03:02.274Z",
+  "project": "ERP",
+  "sourceState": "working-tree",
+  "gitCommitHash": "b03c393c19762a09862b4a7aab688f1fe47dcdb3",
+  "inputSnapshotHash": "a762e7fb6fd2ea5c13a679e937d1f2f2fcead04b71b94b78eeb332824eb7aead",
+  "files": {
+    "total": 1026,
+    "byCategory": {
+      "code": 826,
+      "docs": 142,
+      "config": 36,
+      "markup": 22
+    },
+    "pos": 98,
+    "excludedByIgnore": 123,
+    "missing": 0,
+    "unreadable": 0
+  },
+  "graph": {
+    "totalNodes": 3122,
+    "totalEdges": 9970,
+    "totalLayers": 10,
+    "tourSteps": 22,
+    "nodeTypes": {
+      "file": 848,
+      "class": 458,
+      "function": 1638,
+      "document": 142,
+      "config": 36
+    },
+    "edgeTypes": {
+      "contains": 3469,
+      "exports": 667,
+      "imports": 2765,
+      "calls": 852,
+      "depends_on": 178,
+      "tested_by": 798,
+      "configures": 45,
+      "documents": 1196
+    }
+  },
+  "validation": {
+    "typedSchema": "PASS",
+    "deterministicIssues": 0,
+    "sourceFileCoverage": "1026/1026",
+    "imports": "2765/2765",
+    "outOfSourceLineRanges": 0,
+    "duplicateIds": 0,
+    "danglingReferences": 0,
+    "browserTestEdgesRestored": 9
+  },
+  "warnings": {
+    "orphanNodes": 49,
+    "unsupportedStructuralFormatFiles": 37,
+    "phpTraitSymbolsNotExtracted": [
+      "backend/app/Models/Concerns/UsesOrderedUuid.php",
+      "backend/app/Models/Concerns/TransactionalExternalEvents.php",
+      "backend/tests/Concerns/ActsAsOrgUser.php"
+    ],
+    "anonymousPhpMigrationSymbols": "file-level migration nodes retained; table/method symbols not fabricated",
+    "neighborHints": "high-degree cross-batch hints capped at 50; 2765 imports retained",
+    "staticAnalysisOnly": true
+  },
+  "layers": [
+    {
+      "id": "layer:ui",
+      "name": "ส่วนติดต่อผู้ใช้และเอกสารพิมพ์",
+      "files": 162
+    },
+    {
+      "id": "layer:http",
+      "name": "คำขอเว็บและการควบคุมสิทธิ์",
+      "files": 100
+    },
+    {
+      "id": "layer:service",
+      "name": "กฎธุรกิจและงานเบื้องหลัง",
+      "files": 45
+    },
+    {
+      "id": "layer:data",
+      "name": "ข้อมูลและการเปลี่ยนแปลงฐานข้อมูล",
+      "files": 216
+    },
+    {
+      "id": "layer:integration",
+      "name": "การเชื่อมบริการและแอปภายนอก",
+      "files": 67
+    },
+    {
+      "id": "layer:pos",
+      "name": "แอป POS แยกอิสระ",
+      "files": 61
+    },
+    {
+      "id": "layer:test",
+      "name": "การทดสอบและข้อมูลตรวจสอบ",
+      "files": 135
+    },
+    {
+      "id": "layer:documentation",
+      "name": "เอกสารอ้างอิงและภาพสถาปัตยกรรม",
+      "files": 183
+    },
+    {
+      "id": "layer:config",
+      "name": "การตั้งค่าแอปและเครื่องมือพัฒนา",
+      "files": 40
+    },
+    {
+      "id": "layer:runtime",
+      "name": "จุดเริ่มทำงานและการติดตั้ง",
+      "files": 17
+    }
+  ],
+  "tourSteps": 22,
+  "applicationCodeChanged": false,
+  "databaseChanged": false,
+  "outputs": {
+    "graph": ".ua/knowledge-graph.json",
+    "report": "document/UNDERSTAND_PIPELINE.md"
+  }
+}

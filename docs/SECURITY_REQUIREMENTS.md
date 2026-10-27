@@ -105,5 +105,6 @@ Production / UAT with real users:
 - upload file ผิด type/เกินขนาด/download โดยไม่มี permission ไม่สำเร็จ.
 - login/reset ถูก rate limit; export rate limit ใช้เมื่อเปิด feature export หลัง MVP; API ไม่เผย secret/stack trace.
 
+## Phase28 local security — 2026-10-27
 
-
+POS staff auth/scope/timeout, connector allowlists/service identity, signature/key lifecycle, manager re-auth/command binding, independent recovery fencing และ encrypted private archive/sticky hold ทำและตรวจlocalแล้ว. [Security contract](../document/PHASE_28_3_POS_SECURITY.md) · [Operations](PHASE_28_OPERATIONS.md). Actual target firewall/mTLS/certificatesยังไม่ทดสอบ ไม่ใช้local PASSแทนproduction

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TransactionalExternalEvents;
 use App\Models\Concerns\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkflowInstance extends Model
 {
-    use \App\Models\Concerns\TransactionalExternalEvents, UsesOrderedUuid;
+    use TransactionalExternalEvents, UsesOrderedUuid;
 
     protected $fillable = ['org_id', 'workflow_definition_id', 'subject_type', 'subject_id', 'requester_user_id', 'status', 'current_step_no', 'definition_snapshot', 'subject_snapshot', 'submitted_at', 'completed_at'];
 

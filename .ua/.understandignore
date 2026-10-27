@@ -1,0 +1,104 @@
+# .understandignore — patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore (globs, # comments, ! negation, trailing / for dirs)
+# Lines below are suggestions — uncomment to activate.
+# Use ! prefix to force-include something excluded by defaults.
+#
+# Built-in defaults (always excluded unless negated):
+#   node_modules/, .git/, dist/, build/, obj/, *.lock, *.min.js, etc.
+#
+
+# --- ERP: active exclusions for dependencies, secrets and generated/runtime data ---
+.ua/
+.understand-anything/
+.pnpm-store/
+temp/
+graphify-out/
+backend/storage/
+storage/
+backend/bootstrap/cache/
+**/.env
+**/.env.*
+!**/.env.example
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**/*.sqlite
+**/*.sqlite-*
+# Source code, tests, migrations, docs, document/ and examples remain included.
+
+# --- From .gitignore (uncomment to exclude) ---
+
+# .pnpm-store/
+# backend/.env
+# backend/database/database.sqlite
+# backend/node_modules/
+# backend/vendor/
+# backend/public/build/
+# backend/storage/*.key
+# backend/storage/framework/cache/data/
+# backend/storage/framework/sessions/
+# backend/storage/framework/testing/
+# backend/storage/framework/views/
+# backend/storage/logs/
+# temp/
+
+# --- Detected directories (uncomment to exclude) ---
+
+# docs/
+# examples/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# JS / TS
+# *.test.*
+# *.spec.*
+# *.snap
+# C# / .NET
+# **/*Tests.cs
+# **/*Test.cs
+# **/*Fixture.cs
+# **/*.Tests.csproj
+# Java / Kotlin
+# **/src/test/**
+# **/*Test.java
+# **/*IT.java
+# **/*Spec.kt
+# Go
+# **/*_test.go
+# C++
+# **/*_test.cc
+# **/*_test.cpp
+# **/*_test.cxx
+# **/*Test.cc
+# **/*Test.cpp
+# **/*_unittest.cc
+# **/*_unittest.cpp
+# **/*_browsertest.cc
+# **/*_benchmark.cc
+# **/*Benchmark.cpp
+# Python
+# **/test_*.py
+# **/*_test.py
+# **/tests.py
+# **/conftest.py
+# Rust
+# **/tests.rs
+# **/test_*.rs
+# **/*_test.rs
+# **/bench_*.rs
+# **/*_bench.rs
+# Ruby
+# **/*_spec.rb
+# **/*_test.rb
+# **/test_*.rb
+# **/spec_helper.rb
+# **/test_helper.rb
+# **/rails_helper.rb
+# Swift
+# **/Tests/**/*.swift
+# **/Specs/**/*.swift
+
+pos/storage/
+
+pos/bootstrap/cache/

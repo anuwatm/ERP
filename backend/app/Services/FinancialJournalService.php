@@ -14,20 +14,21 @@ use App\Models\PayrollRun;
 use App\Models\PettyCashReimbursement;
 use App\Models\VendorPayment;
 use App\Models\WorkOrder;
+use App\Services\Pos\PosAccountMapping;
 
 class FinancialJournalService
 {
     public function __construct(private readonly JournalPostingService $journals) {}
 
-    public function postInvoice(Invoice $invoice, ?string $actorId): JournalEntry
+    public function postInvoice(Invoice $invoice, ?string $actorId, ?PosAccountMapping $mapping = null): JournalEntry
     {
         $tax = round((float) $invoice->base_tax_amount ?: (float) $invoice->tax_amount, 2);
         $total = round((float) $invoice->base_total ?: (float) $invoice->total, 2);
 
         return $this->journals->post($invoice->org_id, $actorId, 'invoice', $invoice->id, 'issued', $invoice->issue_date->toDateString(), 'Invoice '.$invoice->invoice_no, array_filter([
-            ['account_code' => '1120', 'debit' => $total, 'description' => 'Accounts receivable'],
-            ['account_code' => '4100', 'credit' => $total - $tax, 'description' => 'Sales revenue'],
-            $tax > 0 ? ['account_code' => '2130', 'credit' => $tax, 'description' => 'Output VAT'] : null,
+            ['account_code' => $mapping?->code('receivable', $invoice->org_id) ?? '1120', 'debit' => $total, 'description' => 'Accounts receivable'],
+            ['account_code' => $mapping?->code('revenue', $invoice->org_id) ?? '4100', 'credit' => $total - $tax, 'description' => 'Sales revenue'],
+            $tax > 0 ? ['account_code' => $mapping?->code('vat', $invoice->org_id) ?? '2130', 'credit' => $tax, 'description' => 'Output VAT'] : null,
         ]));
     }
 
@@ -36,9 +37,9 @@ class FinancialJournalService
         return $this->reverseSource($invoice->org_id, 'invoice', $invoice->id, $actorId, $date, 'Invoice void', 'voided');
     }
 
-    public function postPayment(Payment $payment, ?string $actorId): JournalEntry
+    public function postPayment(Payment $payment, ?string $actorId, ?PosAccountMapping $mapping = null): JournalEntry
     {
-        $cashAccount = $this->cashAccount($payment->bank_account_id, '1100');
+        $cashAccount = $mapping?->code('drawer', $payment->org_id) ?? $this->cashAccount($payment->bank_account_id, '1100');
         $isReceipt = $payment->entry_type === 'receipt';
         $cashAmount = round((float) $payment->base_amount, 2);
         $receivableAmount = round((float) $payment->invoice_base_amount, 2);
@@ -46,9 +47,9 @@ class FinancialJournalService
 
         $lines = $isReceipt ? [
             ['account_code' => $cashAccount, 'debit' => $cashAmount, 'description' => 'Cash received'],
-            ['account_code' => '1120', 'credit' => $receivableAmount, 'description' => 'Accounts receivable'],
+            ['account_code' => $mapping?->code('receivable', $payment->org_id) ?? '1120', 'credit' => $receivableAmount, 'description' => 'Accounts receivable'],
         ] : [
-            ['account_code' => '1120', 'debit' => $receivableAmount, 'description' => 'Accounts receivable'],
+            ['account_code' => $mapping?->code('receivable', $payment->org_id) ?? '1120', 'debit' => $receivableAmount, 'description' => 'Accounts receivable'],
             ['account_code' => $cashAccount, 'credit' => $cashAmount, 'description' => 'Cash reversed'],
         ];
         if ($difference !== 0.0) {
@@ -136,7 +137,7 @@ class FinancialJournalService
         return $this->reverseSource($expense->org_id, 'expense', $expense->id, $actorId, $date, 'Expense rejected', 'rejected');
     }
 
-    public function postCreditDebitNote(CreditDebitNote $note, ?string $actorId): JournalEntry
+    public function postCreditDebitNote(CreditDebitNote $note, ?string $actorId, ?PosAccountMapping $mapping = null): JournalEntry
     {
         $tax = round((float) $note->tax_amount, 2);
         $total = round((float) $note->total, 2);
@@ -144,9 +145,9 @@ class FinancialJournalService
         $isCredit = $note->type === 'credit';
 
         return $this->journals->post($note->org_id, $actorId, 'credit_debit_note', $note->id, 'issued', $note->issue_date->toDateString(), strtoupper($note->type).' note '.$note->note_no, array_filter($isCredit ? [
-            ['account_code' => '4100', 'debit' => $revenue, 'description' => 'Sales return'],
-            $tax > 0 ? ['account_code' => '2130', 'debit' => $tax, 'description' => 'Output VAT reversal'] : null,
-            ['account_code' => '1120', 'credit' => $total, 'description' => 'Accounts receivable'],
+            ['account_code' => $mapping?->code('revenue', $note->org_id) ?? '4100', 'debit' => $revenue, 'description' => 'Sales return'],
+            $tax > 0 ? ['account_code' => $mapping?->code('vat', $note->org_id) ?? '2130', 'debit' => $tax, 'description' => 'Output VAT reversal'] : null,
+            ['account_code' => $mapping?->code('receivable', $note->org_id) ?? '1120', 'credit' => $total, 'description' => 'Accounts receivable'],
         ] : [
             ['account_code' => '1120', 'debit' => $total, 'description' => 'Accounts receivable'],
             ['account_code' => '4100', 'credit' => $revenue, 'description' => 'Additional revenue'],

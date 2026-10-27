@@ -1,6 +1,8 @@
-# ผังแบบจำลองฐานข้อมูลทั้งระบบ (Complete Database ER Diagram — 70+ Tables)
+# ผังแบบจำลองฐานข้อมูล ERP และส่วนขยาย POS
 
-เอกสารนี้รวบรวม **Entity Relationship (ER) Diagram ฉบับสมบูรณ์ของระบบ Company OS / Lightweight ERP ทั้งหมด 70+ ตาราง** อ้างอิง migration runtime (58 migration files) เป็นหลัก. ครอบคลุม Phase 0 ถึง Phase 26 และ Setup Wizard สถานะ **เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** ครอบคลุมทั้ง Position Master, Bulk Import, Overnight Shifts, 1.5x/2x/3x OT Rates, e-Tax Gateway, Cash Flow Forecasting, AI OCR Ingestion และ Setup Wizard Lifecycle.
+**อัปเดต 2026-10-27:** ผังหลักด้านล่างเป็น baseline Phase0–26 ไม่รวมทุกตาราง runtime ล่าสุด. อ่าน [Phase28 tables/relationships](PHASE_28_DATABASE.md) และ [database upgrade](DATABASE_UPGRADE_20261027.md) เพิ่ม; ERP83/POS17 migrations applied, pending0. ห้ามใช้จำนวนตาราง/migrationsเก่าเป็นสถานะปัจจุบัน.
+
+ผังหลักด้านล่างเก็บ baseline Phase0–26/Setup Wizard ณ58 migration files เดิม. Schema runtime ปัจจุบันให้ยึด migrations และส่วนขยายที่ลิงก์ด้านบน: ERP83 migration files และ POS17 files appliedแล้ว. การปิด Phase1–26 ใน baseline ไม่ใช่การรับรอง production ของ POS Phase28.
 
 ---
 

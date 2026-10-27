@@ -131,3 +131,6 @@
 - Notifications/Queues เสร็จ: PO pending approval, invoice due/overdue, invite, task/project assignment, queued mail, in-app notification, unread count, dedupe, preferences.
 - Phase 8 closed: ไม่มี pending item ใน roadmap ปัจจุบัน.
 
+## Phase28 acceptance — 2026-10-27
+
+**Local Development: PASS ตามGeminiหมวด17.** Configured ERP/POS schema current, backup/data/integritychecksผ่าน. ล่าสุดmigration-fix regression46/422; POS41/242 baseline; ชุดทับซ้อนไม่บวก. [Acceptance evidence](../document/PHASE_28_LOCAL_ACCEPTANCE.md). **Production: pending** e-Tax provider/signing adapter, real network/hardware, MariaDB contention/load, UAT/recovery drill/SLO

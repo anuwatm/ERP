@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TransactionalExternalEvents;
 use App\Models\Concerns\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use \App\Models\Concerns\TransactionalExternalEvents, SoftDeletes, UsesOrderedUuid;
+    use SoftDeletes, TransactionalExternalEvents, UsesOrderedUuid;
 
     public const STATUSES = ['todo', 'in_progress', 'blocked', 'done', 'cancelled'];
 

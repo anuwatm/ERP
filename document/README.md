@@ -1,5 +1,21 @@
 # Company OS / Lightweight ERP — System Diagrams & Architecture
 
+**คู่มือใช้งาน POS:** [วิธีเปิดใช้และเลือกประเภทร้าน](README_POS.md) — ร้านค้าทั่วไป ร้านอาหาร และร้านขายยา พร้อมคู่มือแยกแต่ละประเภทใน `document/`
+
+**Phase 28 implementation:** [Work Register / Authorization / Results](PHASE_28_IMPLEMENTATION_STATUS.md) · [POS workspace](../pos/README.md) — Gemini ตรวจรับ local แล้ว; ฐาน ERP/POS ตาม config อัปเดตแล้ว. การเชื่อมต่อระบบและอุปกรณ์จริงยังไม่ได้ทดสอบ ดูหมายเหตุท้าย README นี้
+
+**Local-only ที่ผู้ใช้อนุมัติ:** [Connector / Synthetic Prescription / Pharmacy / Quota Recovery — scope และผลตรวจ](PHASE_28_LOCAL_TEST_SECURITY.md)
+
+**Phase 28.3:** [POS Network / Authentication / Security](PHASE_28_3_POS_SECURITY.md) — local implementation ผ่าน Geminiแล้ว; target firewall/mTLS และอุปกรณ์จริงยังไม่ได้ทดสอบ
+
+**Phase 28.2:** [POS Architecture & Contract / Service Extraction Plan](PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md) — local architecture ผ่าน Geminiแล้ว; signing-owner selector พัฒนาแล้ว ส่วน e-Tax provider/certificate และ adapter ยังรอการเลือกผู้ให้บริการ
+
+**คู่มืออ่านโค้ดทีละโมดูล (2026-10-24):** [Module Reference — Architecture, workflows, source map และข้อจำกัด implementation](modules/README.md)
+
+**Full Understand Pipeline (2026-10-24):** [ผลวิเคราะห์ 861 ไฟล์ พร้อม Knowledge Graph, 9 layers และ guided tour 15 ขั้น](UNDERSTAND_PIPELINE.md)
+
+**API Reference:** [API_Document](API_Document.md) — ครบ62 GET endpoints พร้อมข้อมูลที่ดึงได้ วิธีเรียก ตัวอย่าง output ความหมาย fields/scopes/parameters และ error reference
+
 เอกสารนี้รวบรวม **Diagram ทั้งหมดของระบบ** ครอบคลุมทั้งระดับสถาปัตยกรรม (Architecture), เวิร์กโฟลว์ธุรกิจ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow), และวงจรสถานะ (Lifecycle) โดยถูกสร้างขึ้นด้วย **Archify Showcase Standard** และบันทึกเป็น Interactive Standalone HTML พร้อม JSON Spec
 
 🌐 **หน้าเมนูรวมไดอะแกรมทั้งหมด:** เปิดไฟล์ [`document/index.html`](./index.html) ในเบราว์เซอร์
@@ -815,3 +831,9 @@ flowchart LR
 3. **แก้ไขหรือสร้างใหม่:**
    - ไฟล์ JSON Specification อยู่ในโฟลเดอร์ [`document/specs/`](./specs/)
    - สามารถรันคำสั่ง `node <archify-path>/bin/archify.mjs deliver <type> <spec.json> <output.html> --quality showcase --json` เพื่อ render ใหม่ได้ตลอดเวลา
+
+## Phase 28 — current status (2026-10-27)
+
+[Local acceptance](PHASE_28_LOCAL_ACCEPTANCE.md) · [Current implementation](../docs/PHASE_28_POS.md) · [API/routes](PHASE_28_API.md) · [Schema/relationships](PHASE_28_DATABASE.md) · [Database upgrade](DATABASE_UPGRADE_20261027.md) · [Operations](../docs/PHASE_28_OPERATIONS.md). Geminiหมวด17รับรอง local; ERP/POSตามconfig current.
+
+> **หมายเหตุ:** ขั้นตอนเชื่อมต่อระบบและอุปกรณ์จริงยังไม่ได้ทดสอบกับระบบจริง ดู [README หลัก](../README.md#phase-28--current-status-2026-10-27) และ [POS integration boundaries](../pos/README.md#integration-boundaries). ผล local ไม่ใช่ผลรับรองการเชื่อมต่อจริง.

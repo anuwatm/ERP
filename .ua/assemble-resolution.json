@@ -1,0 +1,159 @@
+{
+  "status": "resolved",
+  "verifiedBrowserEdgesRestored": 9,
+  "edges": 9970,
+  "reason": "Bundled test-path classifier excludes these browser .cjs paths; restored canonical edges after source-chain verification.",
+  "evidence": [
+    {
+      "edge": {
+        "source": "file:pos/app/Services/CashMovementService.php",
+        "target": "file:pos/tests/Browser/cash-movements.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/cash-movements.cjs:17",
+        "pos/tests/Browser/cash-movements.cjs:20",
+        "pos/resources/pos.tsx:344",
+        "pos/routes/web.php:169",
+        "pos/routes/web.php:175",
+        "pos/app/Services/CashMovementService.php:21"
+      ],
+      "verifiedChain": "บันทึก Cash In-Out → /local-cash-movements → move"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/CheckoutService.php",
+        "target": "file:pos/tests/Browser/checkout.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/checkout.cjs:29",
+        "pos/resources/pos.tsx:887",
+        "pos/routes/web.php:256",
+        "pos/app/Services/CheckoutService.php:49"
+      ],
+      "verifiedChain": "ยืนยันรับเงินสด → /checkout → checkout"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/DiscountService.php",
+        "target": "file:pos/tests/Browser/discount.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/discount.cjs:16",
+        "pos/resources/pos.tsx:784",
+        "pos/routes/web.php:159",
+        "pos/routes/web.php:167",
+        "pos/app/Services/DiscountService.php:33"
+      ],
+      "verifiedChain": "ตรวจและอนุมัติส่วนลด → /local-discount-approvals → approve"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/ReturnInspectionService.php",
+        "target": "file:pos/tests/Browser/inspection.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/inspection.cjs:28",
+        "pos/resources/ReturnInspectionPanel.tsx:65",
+        "pos/routes/web.php:122",
+        "pos/routes/web.php:128",
+        "pos/app/Services/ReturnInspectionService.php:24"
+      ],
+      "verifiedChain": "ยืนยันผลตรวจของคืน → /local-return-inspections → inspect"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/PublicMenuService.php",
+        "target": "file:pos/tests/Browser/public-menu.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/public-menu.cjs:24",
+        "pos/resources/menu.tsx:109",
+        "pos/routes/web.php:28",
+        "pos/routes/web.php:31",
+        "pos/app/Services/PublicMenuService.php:64"
+      ],
+      "verifiedChain": "ส่งคำขอให้พนักงาน → /menu/requests → submit"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/RefundService.php",
+        "target": "file:pos/tests/Browser/refund.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/refund.cjs:28",
+        "pos/resources/pos.tsx:415",
+        "pos/routes/web.php:177",
+        "pos/routes/web.php:183",
+        "pos/app/Services/RefundService.php:25"
+      ],
+      "verifiedChain": "ยืนยันจ่ายคืนเงินสด → /local-refunds → refund"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/RestaurantService.php",
+        "target": "file:pos/tests/Browser/restaurant-online.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/restaurant-online.cjs:19",
+        "pos/resources/pos.tsx:619",
+        "pos/routes/web.php:131",
+        "pos/routes/web.php:134",
+        "pos/app/Services/RestaurantService.php:12"
+      ],
+      "verifiedChain": "สร้างออเดอร์ครัวจากคำขอ → /restaurant/customer-requests/{id} → fromCustomerRequest"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/RestaurantService.php",
+        "target": "file:pos/tests/Browser/restaurant.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/restaurant.cjs:29",
+        "pos/resources/RestaurantPanel.tsx:169",
+        "pos/routes/web.php:147",
+        "pos/app/Services/RestaurantService.php:110"
+      ],
+      "verifiedChain": "บันทึกออเดอร์อาหาร → /restaurant/orders → createOrder"
+    },
+    {
+      "edge": {
+        "source": "file:pos/app/Services/TaxDocumentService.php",
+        "target": "file:pos/tests/Browser/tax-documents.cjs",
+        "type": "tested_by",
+        "direction": "forward",
+        "weight": 0.5
+      },
+      "sourceEvidence": [
+        "pos/tests/Browser/tax-documents.cjs:17",
+        "pos/resources/TaxDocumentsPanel.tsx:47",
+        "pos/routes/web.php:82",
+        "pos/app/Services/TaxDocumentService.php:30"
+      ],
+      "verifiedChain": "ออกเอกสารภาษีทดสอบ → /tax-documents → issue"
+    }
+  ]
+}

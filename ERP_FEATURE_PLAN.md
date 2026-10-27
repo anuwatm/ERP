@@ -1116,12 +1116,6 @@ MVP ถือว่าสำเร็จถ้า:
 - https://github.com/maruf-pfc/erp-system
 - https://github.com/aureuserp/aureuserp
 
+## Phase 28 — current status (2026-10-27)
 
-
-
-
-
-
-
-
-
+ส่วน roadmap ด้านล่างเป็น baseline ดั้งเดิม. POS local ผ่าน Geminiแล้ว และ configured ERP/POS databases current. ดู [สถานะ runtime](docs/PHASE_28_POS.md); e-Tax provider/production acceptance ยัง pending.

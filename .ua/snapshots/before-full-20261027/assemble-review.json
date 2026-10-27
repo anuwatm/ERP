@@ -1,0 +1,42 @@
+{
+  "fixedSectionOk": true,
+  "nodesRecovered": 0,
+  "edgesRestored": 0,
+  "crossBatchEdgesAdded": 0,
+  "typesRemapped": 0,
+  "complexityRemapped": 0,
+  "semanticSummariesCorrected": 604,
+  "duplicateClausesRemoved": 565,
+  "upstreamSemanticCorrectionsApplied": 27,
+  "sourceSpecificSummariesRefined": 12,
+  "metrics": {
+    "filesCovered": 861,
+    "nodes": 2698,
+    "edges": 7043,
+    "importRelationshipsVerified": 2513,
+    "callsWithDirectSourceEvidence": 275,
+    "inheritsWithDirectSourceEvidence": 24,
+    "testedByDirectionsVerified": 760,
+    "danglingEdges": 0
+  },
+  "notes": [
+    "ตรวจ merge report แล้วมีเพียงการกลับทิศ tested_by 7 รายการ ไม่มีการแก้ ID/drop node/drop edge และไม่ต้องกู้ imports จึงไม่พบ systemic ID issue",
+    "ตรวจ importMap ทุกความสัมพันธ์รวม 2513 รายการพร้อม node ต้นทางและปลายทาง ครบก่อน review ไม่ต้องเพิ่ม cross-batch imports",
+    "ตรวจ calls 275 รายการและ inherits 24 รายการจาก source ตาม lineRange พบชื่อการเรียกหรือ extends ตรงกันทั้งหมด เป็นหลักฐานเชิง static ไม่ยืนยัน runtime dispatch",
+    "ตรวจ tested_by 760 รายการว่าทิศ production → test ถูกต้อง; tested tag แสดงการเชื่อมโยง test ไม่ใช่ผลว่ารันทดสอบผ่าน",
+    "ใช้ semantic corrections 27 รายการจากผู้วิเคราะห์ shard 11–22 ที่อ่าน source แล้ว ปรับความหมาย preview/snapshot/sign/verify ให้ตรง owning class",
+    "อ่าน WorkflowEngineService และ DocumentRetentionService เพิ่มเติม แก้สรุปเกี่ยวกับ snapshot, delegation, self-approval, paid leave refund, GL posting, legal hold และ shared storage purge ให้ตรงโค้ด",
+    "ตัด clause ซ้ำจากการ refine summary รอบก่อน และแก้ API พนักงานให้ชัดว่าเป็นการอ่านข้อมูล",
+    "ไม่พบ node ชื่อ belongsToMany/belongsTo/hasMany ที่เป็น parser false positive และไม่มีการประดิษฐ์ table/schema/cross-file calls เพิ่ม",
+    "ครบ 861 ไฟล์ในขอบเขต; parser วิเคราะห์ 827 ไฟล์และ unsupported แต่ยังอ่านได้ 34 ไฟล์มี file-level semantic node ไม่มี unreadable",
+    "ข้อจำกัด: anonymous Laravel migrations ไม่มี symbol ย่อยจาก parser จึงสรุปเป็นไฟล์ ไม่ได้อ้างว่ามี table-level ER graph ครบทุกตาราง; call graph เป็นบางส่วนที่ยืนยันได้จากการเรียกตรง",
+    "ข้อจำกัด: static semantic review ไม่แทนผล PHP/build/browser tests และไม่ยืนยันว่าฟังก์ชันธุรกิจทุกเส้นทางทำงานสำเร็จจริง",
+    "ตรวจระหว่าง Tour พบ bootstrap/app.php summary ปะปน frontend จึงแก้ตาม source และยืนยัน depends_on ของ require chain เดิม2edges; ไม่มีการเพิ่มedgeและimportMapเดิมคงครบ2513"
+  ],
+  "postTourCorrections": {
+    "bootstrapSummaryCorrected": true,
+    "entryConfigTagsCorrected": 2,
+    "sourceBackedDependenciesAdded": 0,
+    "existingEntryDependenciesVerified": 2
+  }
+}

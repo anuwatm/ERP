@@ -1,8 +1,12 @@
 # ERP Documentation
 
+**คู่มือใช้งาน POS:** [วิธีเปิดใช้และเลือกประเภทร้าน](../document/README_POS.md) — ร้านค้าทั่วไป ร้านอาหาร และร้านขายยา พร้อมคู่มือแยกแต่ละประเภทใน `document/`
+
+**API Reference ราย endpoint:** [API_Document](../document/API_Document.md) — วิธีเรียก ตัวอย่าง output, field dictionary และ errors ของ62 GET endpoints
+
 เอกสารออกแบบระบบ Company OS / Lightweight ERP
 
-**External App API (2026-10-19):** [คู่มือ Read API P1–P6](EXTERNAL_READ_API.md), [OpenAPI รวม 62 GET paths](openapi/external-read-v1.json), [Integration/client](EXTERNAL_API_INTEGRATION.md), [checklist](EXTERNAL_SUMMARY_API_CHECKLIST.md). P7 sensitive/write ตัดออกตามคำสั่งผู้ใช้; รอ Gemini ตรวจรวม/Browser UAT; deployment/integration/SLA deferred. [หลักฐาน](../gpt.md)
+**External App API (2026-10-19):** [คู่มือ Read API P1–P6](EXTERNAL_READ_API.md), [OpenAPI รวม 62 GET paths](openapi/external-read-v1.json), [Integration/client](EXTERNAL_API_INTEGRATION.md), [checklist](EXTERNAL_SUMMARY_API_CHECKLIST.md). P7 sensitive/write ตัดออกตามคำสั่งผู้ใช้; Geminiตรวจรับเทคนิคแล้วตามgemini.mdหมวด12; Browser UATยังpending; deployment/integration/SLA deferred. [หลักฐาน](../gpt.md)
 
 > สถานะเอกสาร: ไฟล์ `modules/` และ `database/DATABASE.md` ส่วนใหญ่เป็น planning baseline ของ MVP. สำหรับ implementation ปัจจุบัน ให้ยึด `backend/database/migrations`, `backend/routes/web.php`, `document/DATABASE_ERD.md`, `document/GROUPS_WORKFLOW.md` และ `checklist.md` ตามลำดับ
 
@@ -55,3 +59,9 @@
 ```text
 CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 ```
+
+## Phase 28 — current status (2026-10-27)
+
+[สถานะปัจจุบัน](PHASE_28_POS.md) · [Operations](PHASE_28_OPERATIONS.md) · [API/routes](../document/PHASE_28_API.md) · [Database inventory](../document/PHASE_28_DATABASE.md) · [Configured DB upgrade](../document/DATABASE_UPGRADE_20261027.md). Gemini local PASS; configured DB current.
+
+> **หมายเหตุ:** ขั้นตอนเชื่อมต่อระบบและอุปกรณ์จริงยังไม่ได้ทดสอบกับระบบจริง ดู [ขอบเขตการทดสอบใน README หลัก](../README.md#phase-28--current-status-2026-10-27) และ [POS integration boundaries](../pos/README.md#integration-boundaries). ผล local ไม่ใช่ผลรับรองการเชื่อมต่อจริง.

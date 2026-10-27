@@ -35,7 +35,7 @@ return new class extends Migration
         Schema::create('integration_webhook_deliveries', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('integration_webhook_id')->constrained('integration_webhooks')->cascadeOnDelete();
-            $table->foreignUuid('integration_webhook_event_id')->constrained('integration_webhook_events')->cascadeOnDelete();
+            $table->foreignUuid('integration_webhook_event_id')->constrained('integration_webhook_events', indexName: 'integration_delivery_event_fk')->cascadeOnDelete();
             $table->string('status', 30)->default('pending');
             $table->unsignedSmallInteger('attempts')->default(0);
             $table->timestamp('available_at');

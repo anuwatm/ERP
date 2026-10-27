@@ -125,5 +125,6 @@
 - ทุก download ต้องตรวจ permission ของ parent entity.
 - `storage_key` ต้องสร้างฝั่ง server เท่านั้นและห้ามมี `..`, slash จาก input, หรือ filename เดิมเป็น path.
 
+## Phase28 validation — 2026-10-27
 
-
+ตรวจ instance/branch/terminal/catalog/version/price/unit/lot/quota/currency/money/manager authority ฝั่งserver. Immutable source IDsและhashป้องกันreplay; signatureไม่แทนbusiness/payment proof. Restaurant variantsใช้configuredSKU/BOM; pharmacy restockต้องqualifiedmanager+lot/expiry/storage evidence. Checkpointต้องsource/ledgerverifiedก่อนACK; recoveryต้องfresh chainครบ; hold/pending/reviewห้ามข้ามgate. [Contracts/API](../document/PHASE_28_API.md)

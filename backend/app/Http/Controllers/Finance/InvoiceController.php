@@ -156,6 +156,7 @@ class InvoiceController extends Controller
     public function void(Request $request, Invoice $invoice, FinancialJournalService $journals): RedirectResponse
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);
+        abort_if(DB::table('pos_import_sales')->where('invoice_id', $invoice->id)->exists(), 422, 'POS ledger invoices retain their original source; use the POS refund workflow.');
         abort_if((float) $invoice->paid_amount > 0 || $invoice->status === 'void', 422, 'Cannot void invoice after payment or already void.');
         $before = $this->snapshot($invoice);
         DB::transaction(function () use ($request, $invoice, $journals, $before): void {
@@ -176,6 +177,10 @@ class InvoiceController extends Controller
     public function print(Request $request, Invoice $invoice, BahtText $bahtText): View
     {
         abort_unless($invoice->org_id === $request->user()->org_id, 403);
+
+        $posSource = DB::table('pos_import_sales')->where('invoice_id', $invoice->id)->whereIn('pos_instance_id', DB::table('pos_instances')->where('org_id', $invoice->org_id)->select('id'))->first();
+        $isPosLedger = $posSource !== null;
+        $sourceAmounts = $posSource?->source_snapshot ? json_decode($posSource->source_snapshot, true, flags: JSON_THROW_ON_ERROR) : [];
 
         $invoice->load(['branch', 'customer', 'items']);
         $organization = $request->user()->organization;
@@ -208,21 +213,21 @@ class InvoiceController extends Controller
                 'email' => $invoice->customer?->email,
             ],
             'document' => [
-                'title' => $invoice->status === 'paid' ? 'Tax Invoice / Receipt' : 'Invoice',
+                'title' => $isPosLedger ? 'POS Ledger Copy' : ($invoice->status === 'paid' ? 'Tax Invoice / Receipt' : 'Invoice'),
                 'number' => $invoice->invoice_no,
                 'issue_date' => $invoice->issue_date?->format('Y-m-d') ?: '-',
                 'due_date' => $invoice->due_date?->format('Y-m-d'),
                 'status' => $invoice->status,
-                'copy_label' => $request->boolean('copy') ? 'Copy' : 'Original',
+                'copy_label' => $isPosLedger ? 'Copy — POS source document' : ($request->boolean('copy') ? 'Copy' : 'Original'),
                 'party_label' => 'Customer',
                 'tax_wording' => $this->taxWording($invoice->tax_mode),
                 'currency' => $invoice->currency ?: 'THB',
-                'subtotal' => $this->displayMoney($invoice->subtotal),
+                'subtotal' => $this->displayMoney($sourceAmounts['subtotal'] ?? $invoice->subtotal),
                 'discount_amount' => $this->displayMoney($invoice->discount_amount),
-                'tax_amount' => $this->displayMoney($invoice->tax_amount),
-                'total' => $this->displayMoney($invoice->total),
-                'baht_text' => $bahtText->convert($invoice->total),
-                'notes' => $invoice->notes,
+                'tax_amount' => $this->displayMoney($sourceAmounts['tax_amount'] ?? $invoice->tax_amount),
+                'total' => $this->displayMoney($sourceAmounts['total'] ?? $invoice->total),
+                'baht_text' => $bahtText->convert($sourceAmounts['total'] ?? $invoice->total),
+                'notes' => $isPosLedger ? $invoice->notes.' — Original sale amounts; refunds and credit notes recorded separately.' : $invoice->notes,
                 'void' => $invoice->status === 'void',
             ],
             'items' => $invoice->items->map(fn ($item) => [

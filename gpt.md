@@ -277,3 +277,141 @@ Sales, Finance และ Projects Summary implement แล้ว; Gemini รั�
 - gemini.md section12 มี combined technical verification จริงแล้ว: ปรับสถานะเก่าใน docs/EXTERNAL_SUMMARY_API_CHECKLIST.md และแยก master cross-cutting technical passed ออกจาก operational pending/deferred. ข้อความ Gemini pending ในบันทึกก่อนหน้านี้เป็นประวัติก่อนผลตรวจล่าสุด
 - API BrowserUATยังpending; migrations/deployment/liveintegration/concurrentHTTPSLAยังdeferredตามgemini12.3 ไม่ถือว่าreviewนี้รับรองproductionแล้ว. ไม่เปลี่ยนREADMEให้มีPhase/progress ไม่รันcode/tests/migrations/networkในงานMarkdownนี้
 - ตรวจเอกสาร: six review topics/acceptance tasks มีครบ, checked boundary6ข้อเดิมไม่เพิ่ม, ไม่มี Gemini technical gate ค้างผิดสถานะ และลิงก์ local ผ่าน; diff check ใช้เฉพาะไฟล์เอกสารที่แก้
+
+## API_Document reference — 2026-10-19
+
+- ผู้ใช้ขอเอกสาร API_Document ใน folder document: สร้าง document/API_Document.md สำหรับ external read `/api/v1` ครบ62GETpaths แยก endpointไม่รวมadminsession/paymentcallbacks/POSfuturewrite
+- แต่ละ endpointมี purpose/scopes/visibility, allowlistedpath+queryparameters/limits, curlplaceholder, JSONoutputสมมติ, fieldpath/type/optional additional scope/ความหมายภาษาไทย และ error codes ที่ต้องจัดการ
+- เพิ่ม common metadata/pagination/watermark/delta/tombstone/fullreconciliation, currentstatuses และerrorreference401/403/404/405/409coverage+genericconflict/422/426/429/500พร้อมretryguidance แยกproxy/TLSerrorsจากapplicationJSON
+- อธิบายruntimeอย่างตรงไปตรงมา: ข้อความกลางยังใช้คำsummaryแม้เรียกresourceอื่น,422ไม่ส่งfielderrorarray, metadataไม่ครบทุกendpoint และvisibilityorganizationไม่ลบHR/partyACL; ราคา/costoptional ไม่ใช่0, summarysnapshotไม่ใช่historical, nonUserleave409, costsไม่มีcurrencysnapshot
+- ตัวอย่างdownloadเป็นprivatebinary ไม่มีJSONdata/meta/publicURL; currentversion/scan/ACLอาจทำให้404แม้metadataอ่านได้ และcurl --outputต้องตรวจstatusก่อนเก็บไฟล์
+- ใช้routes/controllers/services/models/configและOpenAPIปัจจุบันอ้างอิง; ตัวอย่างทั้งหมดสมมติ ไม่ดึงฐานERPจริง/ไม่ใช้secretจริง/ไม่ส่งnetwork
+- ตรวจเทียบเอกสารครบ62pathตรงOpenAPIและมีscope/request/output/fields/errors;61JSONexamplesผ่านตรวจfield/type/required/patternตามschema, JSONcodeblocksparseได้ และfencesสมดุล (เป็นofflineโครงสร้างvalidation ไม่ใช่liveintegrationหรือfullJSONSchema certification)
+- เพิ่มลิงก์ในREADME.md/document/README.md/docs/README.md ไม่เพิ่มPhase/progressในREADME ไม่แก้runtimeหรือmigrations
+- Finaldoccheck:62endpointsectionsครบpurpose/scopes/parameters/curl/output/fields/errors, JSONparse/fences/local linksผ่าน และไม่พบliteralERPsecret; diffcheckเฉพาะเอกสาร ไม่รันapplicationtestsเพราะไม่มีruntimechanges
+
+## Phase 28 — POS / ERP Compatibility Review สำหรับ Gemini — 2026-10-24
+
+**สถานะ:** Gemini ให้ผล **Approved with Conditions (2026-10-24)** ตาม [gemini.md sections 14–15](gemini.md) โดย section 15 เป็นผลทบทวน compatibility: รับรองแนวทางเชิงหลักการแบบมีเงื่อนไข ไม่ใช่ผลทดสอบ integration หรือ production readiness. อ้างอิง [Phase 28](checklist.md#phase-28-standalone-pos--erp-connector--shared-core--business-modules-planning). งานรอบนี้แก้เอกสารเท่านั้น ไม่แก้ runtime/schema หรือเริ่ม coding; งานออกแบบและเงื่อนไขที่ยังไม่เสร็จยัง pending
+
+### แนวทางที่ผู้ใช้ยืนยัน
+
+- POS codebase เดียว ใช้ Shared Core + Business Modules: Retail / Restaurant / Pharmacy; Core ร่วมนี้เป็นส่วนกลางของ POS ไม่ใช่การสร้าง ERP บัญชี/คลังอีกชุด
+- POS Server/DB แยกจาก ERP; ERP Connector เริ่ม connection ออกไป POS เท่านั้น และ External API `/api/v1` เดิมยังเป็น read-only. ไม่มีการให้ POS เขียนฐาน ERP โดยตรง
+- Core รับผิดชอบสาขา/Terminal/สิทธิ์/กะ/ตะกร้า/เงินสดและ QR/เอกสารขาย/คืนสินค้า/stock reservation/sync ร่วมกัน; Modules เพิ่มกฎเฉพาะกิจการ ไม่ทำ payment/tax/stock posting ซ้ำ
+- รุ่นแรกไม่เก็บประวัติผู้ป่วย; workflow ร้านอาหาร/เภสัชกร, Provider QR, รูปแบบเอกสารภาษี และรายละเอียด stock ownership ยังมีข้อรอยืนยันตาม checklist
+
+### ข้อสรุปและหลักฐานจากโค้ดเดิม
+
+**ประเมินว่าออกแบบให้ทำงานร่วมกับ ERP เดิมได้ แต่ยังรับประกันว่าไม่มีข้อขัดแย้งทั้งหมดไม่ได้.** การแยก Server ไม่ป้องกันยอดขาย/รับเงิน/Stock/GL ซ้ำโดยตัวมันเอง ต้องมี integration contract และทดสอบร่วม
+
+| จุดเชื่อม | หลักฐาน / ความเสี่ยง | ข้อเสนอให้ตรวจรับก่อน implementation |
+| --- | --- | --- |
+| Stock / Delivery Order | [CommercialDocumentController](backend/app/Http/Controllers/Finance/CommercialDocumentController.php) สร้าง StockMovement ติดลบเมื่อ Delivery Order เป็น delivered; หาก POS import ตัดอีกหรือสร้าง DO ที่ตัดซ้ำ ยอดจะผิด | ระบุ event เจ้าของ stock movement, source sale/line/lot และ correlation กับ DO; ใช้ stock posting เพียงเส้นทางเดียวต่อเหตุการณ์ พร้อม reservation/consumption แยกชัด |
+| Invoice / Payment / GL | [InvoiceController](backend/app/Http/Controllers/Finance/InvoiceController.php) เรียก postInvoice และ [PaymentController](backend/app/Http/Controllers/Finance/PaymentController.php) เรียก postPayment ผ่าน [FinancialJournalService](backend/app/Services/FinancialJournalService.php); POS ลง GL แยกแล้วเรียกเส้นทางเดิมซ้ำอาจลงบัญชีซ้ำ | เลือก ERP document/posting path ให้แน่นอน พร้อม source identity/idempotency; ปิดกะลงเฉพาะผลต่าง ไม่ลงยอดขาย/รับเงิน/ภาษีซ้ำ |
+| Payment clearing / บัญชี | FinancialJournalService::postPayment ปัจจุบันเลือกบัญชีผ่าน cashAccount และ fallback `1100`; ยังไม่ใช่หลักฐานว่ารองรับ POS drawer/QR clearing mapping ตามแผนแล้ว | ตรวจ account mapping จริงขององค์กรและ extension point ก่อน reuse; ไม่ hard-code เลขบัญชีตามตัวอย่างหรือถือว่าบริการเดิมรองรับครบ |
+| สินค้า / ราคา / หน่วย | ERP เป็น master ตามแผน แต่ POS cache อาจเก่าระหว่าง polling | กำหนด catalog/version/stale policy และราคา/ภาษี/หน่วย/สูตร snapshot ณ เวลาขาย; import ตรวจตาม contract ไม่แทนหลักฐานขายด้วยค่าปัจจุบันอย่างเงียบ ๆ |
+| คลังสาขา / quota | ERP และ POS อาจแย่ง stock pool เดียวระหว่าง sync; ยอดใน cache ไม่รับประกันว่ายังขายได้ | กำหนด ownership ของ warehouse/quota และทุกช่องทางที่ใช้ pool; concurrency control, reconciliation และ inventory_pending โดยไม่ข้าม stock guard |
+| QR / เอกสารภาษี | ช่องทางเดิมและ POS อาจสร้าง payment/document จากต้นทางเดียวกัน; cancel QR ไม่รับประกันว่าเงินยังไม่เข้า | กำหนด provider/merchant/document ownership, unique references และ original/replacement links; valid late webhook ต้องตรวจและกระทบยอด/คืนเงิน ไม่ทิ้งอัตโนมัติและไม่ apply ซ้ำ |
+| Restaurant / Pharmacy | สูตร/จังหวะใช้วัตถุดิบ หน่วยขาย lot/expiry และ precision ต้องตรวจความสามารถเดิมก่อนต่อเพิ่ม | ทำ gap analysis ต่อ module; reuse กลไก Stock ที่เหมาะสม เพิ่ม adapter/service เท่าที่จำเป็น ไม่เปลี่ยนความหมายข้อมูลเดิมหรือเพิ่ม patient history |
+
+### ข้อเสนอด้านการปรับโครงสร้าง
+
+- Logic Stock บางส่วนอยู่ใน Controller จริง จึงอาจต้อง extract เป็น application/domain service ที่ ERP UI และ Connector เรียกใช้ร่วมกัน; ไม่เรียก Controller จำลอง request จาก Connector และไม่เขียน StockMovement ตรงเพื่อข้าม validation/สิทธิ์/period locks
+- ยังไม่ได้ตัดสินว่าต้อง refactor ทุก Controller หรือสร้าง generic framework; ให้สำรวจเส้นทางที่จำเป็นก่อน แล้วแยกเฉพาะ logic ที่ต้อง reuse พร้อมรักษาพฤติกรรมเดิมและทดสอบ regression
+- บริการที่มีอยู่ เช่น FinancialJournalService/JournalPostingService เป็นจุด reuse ที่ต้องตรวจ contract/guards จริง ไม่ถือว่าต่อ Connector ได้ทันทีโดยไม่ปรับใด ๆ
+
+### ผลรับรองและงานตรวจต่อหลัง Gemini review
+
+- [x] บันทึกผล Gemini section 15: Approved with Conditions; เห็นพ้องความเสี่ยงเชิงโค้ดและ Shared Core + Business Modules. เครื่องหมายนี้หมายถึงบันทึกผล review แล้ว ไม่ใช่งาน implementation หรือ acceptance tests ผ่าน
+
+- [ ] ตรวจหลักฐานจากโค้ดและความเหมาะสมของ Shared Core + Business Modules โดยคง ERP เป็นระบบหลักด้าน master data/stock ledger/บัญชี
+- [ ] ตรวจ Event-to-ERP Mapping ที่ต้องจัดทำ: POS event → ERP document/service → stock movement → payment → GL รวม refund/void/replacement/waste; ระบุ owner, transaction boundary, dedupe key, ordering และ retry/recovery ของแต่ละผลกระทบ
+- [ ] ตรวจว่าการใช้ Invoice/Payment/DO และการตัดวัตถุดิบครัวไม่ทำรายได้/ภาษี/เงินรับ/stock/COGS ซ้ำ; ช่องว่างต้องระบุเป็นงานออกแบบ ไม่รับรองด้วยการแยก Server เพียงอย่างเดียว
+- [ ] ตรวจแผน extract/reuse services และ account mapping ว่าไม่เปลี่ยนพฤติกรรม ERP เดิม ไม่ข้าม org/branch permissions, period locks, validation หรือ audit
+- [ ] ตรวจเกณฑ์ regression/integration: ERP UI เดิมยังทำงาน, duplicate/concurrent/out-of-order/lost-ack, ERP offline/reconnect, payment race/late webhook, stock shortage/quota และ refund ผ่านเพียงครั้งเดียว
+- [x] บันทึกผลการรับรองเชิงหลักการพร้อมเงื่อนไขทั้ง 5 ข้อตาม Gemini section 15.2 ด้านล่าง; งาน mapping/design/code/tests ในรายการอื่นยังไม่เสร็จ และ requirement ที่ผู้ใช้ยังไม่ยืนยันยัง pending
+
+### การตอบรับเงื่อนไข Gemini section 15.2 และ Action Items 15.4
+
+1. **Service Extraction Gate:** เพิ่มใน checklist 28.2/28.5 ให้ review แผน extract stock logic เป็นบริการกลาง เช่น InventoryMovementService ก่อนพัฒนา Connector; หลังอนุมัติ design จึง refactor และ regression เส้นทาง ERP เดิม. ต้องออกแบบ concurrency lock ต่อ stock pool จริง รวมกรณี ledger ว่าง ไม่ถือว่า lock บน SUM แก้ทุก race
+2. **Single Stock Posting Path:** เพิ่ม mapping/dedupe/DO linkage; เสนอ pos_sale สำหรับสินค้าสำเร็จรูป และ recipe_consumption สำหรับวัตถุดิบตามสูตร ไม่ตัดสิ่งเดียวกันซ้ำ. DO อ้างอิงต้องไม่ trigger movement อีกชุด ชื่อ movement และผลต่อรายงานยังต้องตรวจ schema/design
+3. **Direct POS Sale GL:** เพิ่มตัวเลือก postPosSale สำหรับบิลชำระครบและ guard ไม่ให้ลงซ้ำผ่าน Invoice/Payment; direct paid sale ไม่ใช่คำตอบอัตโนมัติสำหรับออเดอร์ร้านอาหารที่ยังไม่จ่าย ต้องกำหนด recognition/AR/settlement และ document linkage. เลขบัญชี 1111/1113/4100/2130/1120 ใน review เป็นตัวอย่าง ต้องตรวจ mapping องค์กร ไม่ hard-code หรือเปลี่ยน ERP ทุกช่องทางให้ใช้ direct sale
+4. **Suspended Gateway Receipts:** เพิ่ม durable evidence/สถานะพักเงิน เช่น suspended_gateway_receipts, dedupe, liability mapping, notification และ refund/reconcile ที่มีสิทธิ์. เลข 2190 เป็นตัวอย่าง; หาก clearing บันทึกแล้วต้องไม่ debit อีกครั้ง และไม่ทิ้ง valid late webhook/ไม่ apply บิลที่จ่ายแล้วซ้ำ
+5. **Lightweight Recipe Consumption:** ไม่สร้าง work_orders ต่อจาน; ใช้ snapshot ณ consumption event ผ่านบริการกลาง. ปรับถ้อยคำ Gemini ที่เสนอสร้าง movement โดยตรงให้ไม่ขัดกับ Service Extraction Gate และแยก waste หลัง consume เป็น cost reclassification/หลักฐานที่ไม่ลดวัตถุดิบเดิมซ้ำ; ส่งครัวไม่ได้แปลว่าใช้วัตถุดิบแล้วทุกครั้ง
+
+เพิ่มเกณฑ์ regression/integration ใน checklist 28.7 ครอบคลุมเงื่อนไขทั้งหมด. **สถานะ Action Items คือปรับเอกสารแล้ว ไม่ใช่ทำ services/tables/GL/refund เสร็จ**; ชื่อ service/method/table/movement เป็นข้อเสนอสำหรับ design review ไม่ใช่ schema ที่ล็อกแล้ว. การรับรองของ Gemini ไม่ใช่คำยืนยัน requirement ใหม่จากผู้ใช้
+
+**Gate ที่คงไว้:** จัดทำและอนุมัติ Architecture & Contract Document (28.2) รวม Service Extraction Plan และปิด requirement gates ที่เกี่ยวข้องก่อน Application/Connector code หรือ migrations. ไม่แก้ gemini.md เพื่อรับรองแทนผู้เขียน; รอบนี้แก้เฉพาะ checklist.md/gpt.md และตรวจ diff ไม่รัน application tests
+
+**การตรวจของ GPT รอบนี้:** อ่านโค้ดเฉพาะจุดตามลิงก์ข้างต้นเพื่อยืนยันความเสี่ยงเชิงออกแบบ ไม่ใช่ full code audit; ไม่รัน application tests เพราะไม่มี runtime changes. ตรวจ `git diff --check -- gpt.md` สำหรับงานเอกสาร
+
+## Phase 28.1 — คำตอบผู้ใช้ 2026-10-25
+
+บันทึกคำตอบใน document/PHASE_28_1_POS_SCOPE.md และปรับ checklist แล้ว; คำตอบล่าสุดมีผลแทน scope เดิมที่ขัดกัน: pilot 1 สาขา 1 PC, หนึ่งสาขาหนึ่งกิจการ, Stock สาขา/HQ ดูภาพรวม, cash-only รุ่นแรก (QR payment deferred), ABB/Full ที่ POS และ e-Tax รุ่นแรก, online ส่งออเดอร์ให้พนักงาน, restaurant โต๊ะ/กลับบ้าน/จ่ายหลังกิน/จอครัว; pharmacy กล่อง/แผง/เม็ด/ยาน้ำ เภสัชกรบันทึก สั่งยาหน้าร้าน แนบใบสั่งยา optional ไม่มี patient history.
+
+D10 ผู้ใช้ขอข้อเสนอ: online POS Server, Terminal/ครัวเชื่อมตลอด, browser offline ภายหลัง; ERP outage ใช้ stock/catalog สาขาที่ตกลงและ outbox, e-Tax ส่งไม่ได้เก็บ pending ไม่อ้างส่งสำเร็จ. ยังรอยืนยัน baseline/deployment และข้อค้างใน Scope Register ไม่ปิด 28.1 โดยสมมติคำตอบ. e-Tax Provider/channel/signing ยังไม่เลือก ไม่ถือว่าของเดิมพร้อม production. รอบนี้เอกสารเท่านั้น ไม่แก้ code/schema/migrations.
+
+## Phase 28.1 — Requirements Baseline Complete — 2026-10-25
+
+ผู้ใช้ยืนยัน baseline online, POS Server ส่วนกลาง, มี receipt printer, ERP ขาย/เบิก Stock สาขาได้, Restaurant แยกบิลและ takeaway จ่ายตอนรับอาหาร. e-Tax ยังไม่มี provider; จัดเป็น gate 28.2 ก่อนล็อก contract/schema ตามคำถามก่อนหน้า ไม่ตัด e-Tax ออกจากรุ่นแรก.
+
+ปิด 28.1 เฉพาะ requirement scope ใน checklist และ document/PHASE_28_1_POS_SCOPE.md. รุ่นเครื่องพิมพ์/driver และประเภทกิจการนำร่องยังไม่ถูกเลือก ต้องระบุก่อน setup/UAT ไม่เดาแทนผู้ใช้. Stock pool มี ERP/POS สอง writer จึงต้อง design reservation/quota/concurrency ที่ทั้งสองเคารพก่อน implementation; ขายต่อช่วง ERP outage ได้เฉพาะ allocation policy ที่ review แล้ว ไม่รับประกันจาก polling/cache. สาขาขาดการเชื่อม POS ส่วนกลางไม่รองรับ browser offline รุ่นแรก.
+
+28.2–28.7 ยังไม่เสร็จ ไม่แก้ code/schema/migrations. Gemini review เดิมไม่ใช่การรับรอง requirement ใหม่หรือ design ที่ยังไม่ทำ. รอบนี้ตรวจเอกสาร/diff เท่านั้น.
+
+## Phase 28.2 — Architecture & Contract Draft — 2026-10-25
+
+**Authorization/implementation ต่อเนื่อง:** ผู้ใช้อนุมัติ drafts 28.2–28.3 เป็นฐานพัฒนา รวม quota partition และหยุดขายเมื่อ quota หมดระหว่าง ERP outage; ทำรุ่นแรก 28.2–28.7 คง 28.8 deferred. ผู้ใช้ยังไม่มีของจริง ให้ทดสอบเท่าที่ทำได้. ดู [Work Register](document/PHASE_28_IMPLEMENTATION_STATUS.md) และ [POS README](pos/README.md). เพิ่ม shared InventoryMovementService/ERP writers regression, standalone POS Retail cash workspace, inbox/import stages/validated account mappings/DO correlation และ monitor/pause/replay. Broad ERP regression ล่าสุด 89 tests/540 assertions, focused import 10/57 (ทับซ้อน), POS 9/26, browser cash shift desktop/mobile และ builds/typecheck ผ่าน. ไม่ migrate ฐานใช้งานจริงหรืออ้าง production readiness
+
+**Approval review / คำอนุมัติล่าสุด:** ผู้ใช้ตอบ “อนุญาตพัฒนาและทดสอบ local เท่านั้น” แล้วสำหรับ outbound Connector และ prescription upload/download. เพิ่ม loopback HTTPS transport และ synthetic-file hash allowlist/private quarantine/ACL/audit/checkout rollback พร้อม production hard-block; default flags ปิด. เพิ่ม Pharmacy conversion/pharmacist authority และ quota freeze/reclaim แบบ local-only. ดู [ขอบเขตและผลตรวจ](document/PHASE_28_LOCAL_TEST_SECURITY.md). ไม่ส่ง remote/เก็บ real prescription; scanner จริง/provider/production gates ยังค้าง. ข้อปฏิเสธเดิมเรื่อง mass assignment/arbitrary GL mapping แก้เป็น explicit allowlist/typed validated persisted mapping แล้ว ไม่ใช่ blocker ค้าง
+
+งานต่อเนื่อง: เริ่ม 28.3 ตามคำสั่งผู้ใช้ ดู [Security Design Draft](document/PHASE_28_3_POS_SECURITY.md). ครอบคลุม firewall matrix, service identity/rotation/revoke, key custody, staff role/session, public menu token, SSRF, catalog allowlist, event signature/replay และ audit/incident/verification matrix. สถานะ In Progress / Draft for Review; ไม่ถือว่าคำสั่งเริ่ม 28.3 อนุมัติ draft 28.2 แล้ว. ยังไม่แก้ application/config/network จริงหรือสร้างบัญชี; deployment inputs/workflow/retention/thresholds ยังต้อง review และ e-Tax provider gate คงเดิม. ตรวจ links/whitespace ของเอกสาร ไม่รัน application tests สำหรับงานเอกสาร
+
+เริ่มตามคำสั่งผู้ใช้; จัดทำ [Architecture & Contract Draft](document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md) พร้อม topology/sequence/threat model, data ownership, Service Extraction Plan อ้าง source จริง, stock quota grant/reclaim/fencing, versioned sync/import transaction/recovery, Core/Module contracts และ event-to-ERP mapping
+
+ผู้ใช้ยืนยันยังไม่มี e-Tax provider/signing owner; คง decision gate ก่อน freeze integration/schema. Quota partition, kitchen consumption trigger, pharmacist policy และค่าตั้งต้น operational เป็นข้อเสนอรอ review ไม่ถือว่าผู้ใช้อนุมัติแล้ว. ตรวจพบ stock writers เพิ่มใน InventoryOperationsController/GoodsReceiptController/ProductionCostingService ซึ่งต้องเคารพ shared locking/entitlement ก่อนเปิด quota ไม่สกัดเฉพาะ Delivery Order แล้วอ้างว่าปลอดภัยทั้งหมด
+
+สถานะ In Progress / Draft for Review; checklist 28.2 ยังไม่ติ๊กผ่าน. ต้อง review Architecture + Service Extraction Plan และปิด gates ที่เกี่ยวข้องก่อน Application/Connector code/migrations ตาม checklist และ Gemini section 15.2. ไม่แก้ gemini.md เพื่อรับรองแทน reviewer. รอบนี้แก้เฉพาะเอกสาร ตรวจ links/diff ไม่รัน application tests
+
+## Phase 28 — Local Menu and Refunds — 2026-10-26
+
+เพิ่ม Retail QR menu/token expiry/revoke, explicit online visibility, anonymous request/dedupe, staff accept/reject/re-review, shared checkout claim และ customer status. เพิ่ม partial/full cash refunds ด้วย fresh manager approval ที่ผูก exact command, original conversion/base precision, cumulative rounding, current shift cash availability และ quarantine-only returns. ERP รับ signed sale.refunded, manager registry, dependency recovery, dedicated original-payment/Credit Note/refund Payment subledger, original account snapshot และ GL/period-lock rollback. กัน generic ERP reverse/void/CN-DN ที่ข้าม source workflow; tax report และ ledger copy คง original source amounts แล้วแสดง adjustment แยก ไม่หักซ้ำ
+
+ผลตรวจ: POS 26 tests/112 assertions; ERP selected Stock/Finance/GL/Manufacturing/Phase28 regression 82/624; focused import/transport หลัง account snapshot/worker recovery 18/140 (ทับซ้อน). Browser QR menu, cash checkout และ refund desktop/mobile 1440/390 ไม่มี JS errors; TypeScript/Vite/Pint ผ่าน. ใช้ SQLite :memory: หรือ dedicated temp browser fixture เท่านั้น; local server ปิดหลังตรวจ. ไม่มี migration ฐานใช้งานจริงหรือ external provider traffic
+
+Phase 28 ยัง In Progress: Restaurant/recipe/kitchen/split/waste, Cash In-Out/discount, stock return inspection/recall, full tax/e-Tax, reconciliation/retention/restore และ production operations acceptance ยังค้าง; 28.8 deferred. รายละเอียดปัจจุบันอยู่ document/PHASE_28_IMPLEMENTATION_STATUS.md. ไม่ถือว่าคำขอทำที่เหลือทั้งหมดเสร็จแล้ว
+
+### Phase 28 — Cash In-Out / ERP ledger checks — 2026-10-26
+
+ต่อจาก menu/refunds: เพิ่ม signed cash.moved, manager re-auth/dedupe/overdraw, decimal shift cash ledger และ explicit cash_clearing asset mapping ใน ERP; ไม่สร้าง Invoice/Payment/revenue/VAT/Stock. POS 27/120, browser Cash In 20/Out 30/opening 100/close 90 ผ่าน desktop/mobile. ERP selected Finance/GL/Phase28 หลัง cash 47/453; focused import หลัง ledger checks 16/161 (ทับซ้อนชุดก่อนหน้า). เพิ่ม readonly ledger reconciliation UI แยก pos.reconcile/org scope ตรวจ source/net refunds/Payment/GL totals/stock และ currency; ยังไม่มี signed POS checkpoint จึงไม่รับรอง events ครบ. Restaurant/discount/inspection/full tax/e-Tax/full reconciliation/operations ยังเหลือ ดู work register ปัจจุบัน
+
+### Phase 28 — Authorized Discount — 2026-10-26
+
+เพิ่ม local-only manager discount approval ผูก normalized cashier/cart/unit/terminal/catalog, expire 5 นาที และใช้ได้ครั้งเดียวใน checkout transaction. ERP ต้อง publish max_manager_discount_pct ต่อ SKU (default 0), ตรวจ signed approval/registered manager/เพดาน/เวลา และ unique approval ข้าม sale. Tax/Invoice/Payment/GL ใช้ net หลังส่วนลด, quantity/COGS เดิม; refund คืนตาม original net. Signer failure rollback approval consumption+stock+sale ทั้งกลุ่ม. POS 29/136, ERP focused import/transport 21/189; browser cashier→manager approval→net 8.56/change 11.44→close shift ผ่าน 1440/390 ไม่มี JS error. 20% ใน browser เป็น synthetic fixture policy เท่านั้น. Restaurant/inspection/full tax/e-Tax/full reconciliation/operations ยังเหลือ และ 28.8 deferred
+
+### Phase 28 — Restaurant / selectable signing owner / Pharmacy inspections — 2026-10-26
+
+Restaurant local UI ครบโต๊ะ/ครัว/เสิร์ฟ/แยกบิล พร้อม reservation/recipe consumption/waste และ ERP pipeline เดิม; ไม่สร้าง Stock/COGS ซ้ำตอนชำระ. Reconciliation เพิ่ม kitchen source/stock/cost/journal checks. Browser 1440/390 ผ่าน ไม่มี JS error.
+
+ผู้ใช้ยืนยันยังไม่มี e-Tax provider และให้เลือก signing owner เป็นบุคคลได้: เพิ่ม org-scoped active ERP user selector พร้อม pos.manage/password confirmation/audit; ยังไม่มี certificate/signing/submission. ผู้ใช้ยืนยันของคืน Pharmacy ให้ผู้จัดการที่เป็นเภสัชกรเลือกคืนขาย/ทำลาย: เพิ่ม pharmacist_qualified แยก role, local inspection UI/quantity bounds/lot/expiry/condition evidence/signed event และ ERP original-cost restock. Retry รอ refund ได้ ไม่คืน quota และ destroy ไม่ลด stock ซ้ำ.
+
+ผลตรวจ ERP Phase28 33 tests/290 assertions; focused ล่าสุด 5/54 ทับซ้อน. POS ทั้งชุด 33/173 ก่อนเพิ่ม expiry/storage assertions; focused ล่าสุด 1/10. ERP/POS TypeScript, POS Vite, Pint ผ่าน. Browser Restaurant และ inspection ทั้งสองผลผ่าน 1440/390 ไม่มี JS error. ใช้ SQLite :memory: และ temp fixture เท่านั้น ไม่ migrate ฐานใช้งานจริงหรือส่ง provider traffic. รายละเอียดและงานที่ยังต้องพัฒนาอยู่ document/PHASE_28_IMPLEMENTATION_STATUS.md; ยังไม่ปิด Phase 28.
+
+### Phase 28 — Local completion handoff — 2026-10-27
+
+เพิ่ม provisioning/admin, restaurant variants/table QR/auto-poll, lot recall, local ABB→Full, signed checkpoints, encrypted private archive/restore/sticky hold, independent recovery anchor + paged fenced recovery และ persisted backoff/health. ERP Phase28 39/348; POS 41/240 ก่อน sticky-hold extension, focused checkpoint 1/18 หลังเพิ่ม. Selected Finance/Inventory regression 80/674; TypeScript/build สองแอปและ browser 1440/390 ผ่าน. ดู document/PHASE_28_LOCAL_ACCEPTANCE.md สำหรับหลักฐานและ runbook. ยังไม่ใช่ production sign-off; provider adapter รอ e-Tax contract จริง. ส่ง Gemini ตรวจรับหลังพัฒนา ไม่อ้างผลล่วงหน้า.
+
+ผลรอบสุดท้าย POS ทั้งชุด 41/242 หลัง sticky hold. เรียก Gemini CLI แบบ plan/read-only แล้ว: configured model และ Gemini 3 Flash ตอบ503 ซ้ำ; 2.5 Pro ตอบ404. ไม่มีผลตรวจรับใหม่ ไม่อ้างว่า Gemini อนุมัติ. บันทึก document/PHASE_28_REVIEW_ATTEMPT_20261027.md; fixture servers ปิดแล้ว.
+
+### Configured database upgrade — 2026-10-27
+
+ผู้ใช้ยืนยัน Gemini ตรวจรับแล้ว: gemini.md section17 ระบุ PASS local. จากนั้นผู้ใช้สั่งอัปเดตฐานตาม config: สำรอง ERP ก่อน migrate, รัน 24 migrations ค้าง (รวม83/pending0); สร้าง POS SQLite ที่ config ระบุ รัน17/pending0. ตาราง ERP เดิม133ครบ ไม่มีจำนวนแถวลดลง; เพิ่มเฉพาะ migrations/permissions. แก้8 generated constraint/index names เกิน MySQL64 chars และซ่อมเฉพาะตาราง webhook ใหม่ที่ว่างหลัง failed migration. Regression Phase28+ExternalWebhook46/422 และ Pint ผ่าน. รายละเอียด/backup: document/DATABASE_UPGRADE_20261027.md. ไม่ seed POS; ยังต้อง provision ก่อนขาย.
+
+### Documentation reconciliation — 2026-10-27
+
+ผู้ใช้สั่ง update all document. ปรับเอกสารปัจจุบันให้ตรง Geminiหมวด17 local PASS และ configured DB upgrade; active Phase28 checklist แยก local done/production external/deferred. เก็บ checklistเดิมครบใน document/PHASE_28_CHECKLIST_BASELINE.md พร้อมแก้relative links. เพิ่ม docs/PHASE_28_POS.md, PHASE_28_OPERATIONS.md, document/PHASE_28_API.md (runtime route metadata), PHASE_28_DATABASE.md (migration inventory). อัปเดต root/pos/central READMEs, architecture/security/requirements/schema/ERD/routes/validation/acceptance และ externalAPI migration status. ไม่แก้รายงาน Geminiต้นฉบับ/ไม่เพิ่มผลทดสอบที่ไม่ได้รัน. ไม่มี app code/DB change ในรอบเอกสารนี้; ตรวจเอกสาร/links/route+schema inventories แทน business testsซ้ำ
+
+### POS usage READMEs — 2026-10-27
+
+ผู้ใช้ขอวิธีเปิด POSสามประเภทและคู่มือรายประเภท. เพิ่ม document/README_POS.md และ README_POS_RETAIL/RESTAURANT/PHARMACY.md พร้อมลิงก์จากroot/pos/docs/document READMEs. ใช้URLPOSrootเดียว เลือกตามstaffbranch.business_type+flags; มีโหมดtemp fixturesแยกจากconfiguredDBและโหมดprovisionสาขาตนเอง. ตรวจrolesจริง: restrictedpharmacyต้องpharmacist ส่วนinspectionต้องqualifiedmanager; restaurantfrontdeskใช้cashier/manager ครัวใช้kitchen/manager. อธิบายlocalHTTP UIไม่แทนHTTPSconnector และหมายเหตุยังไม่ทดสอบระบบ/อุปกรณ์จริง. ไม่สร้างบัญชี/เปลี่ยน.env/ฐานข้อมูลในงานเอกสารนี้

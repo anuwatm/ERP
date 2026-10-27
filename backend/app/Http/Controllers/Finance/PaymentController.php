@@ -156,6 +156,7 @@ class PaymentController extends Controller
                     ->firstOrFail();
 
                 abort_unless($receipt->entry_type === 'receipt', 422, 'Only receipt payments can be reversed.');
+                abort_if(DB::table('pos_import_sales')->where('payment_id', $receipt->id)->exists(), 422, 'POS payments must be refunded through the source POS workflow.');
                 abort_if($receipt->reversals()->exists(), 422, 'Payment receipt has already been reversed.');
 
                 $existing = $this->existingIdempotentPayment($request, $idempotencyKey);

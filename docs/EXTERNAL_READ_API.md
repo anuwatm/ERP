@@ -2,7 +2,7 @@
 
 อัปเดต 2026-10-19: มี implementation รวม 62 GET paths ตาม [OpenAPI 1.2.0](openapi/external-read-v1.json). ทุก route `/api/v1` รับเฉพาะ GET/HEAD ผ่าน integration key. **ไม่มี business Write API, payroll, salary, bank account หรือ identity API** ตามคำสั่งผู้ใช้ล่าสุด. Admin session จัดการ key/webhook แยกจากสิทธิ์แอปภายนอก.
 
-สถานะ: มีโค้ดและ automated checks; รอ Gemini ตรวจรวมและ Browser UAT. Deployment/แอปจริง/SLA deferred ตามผู้ใช้ ไม่ถือว่าผ่าน acceptance จากเอกสารนี้. หลักฐานคำสั่งและข้อจำกัดอยู่ใน [gpt.md](../gpt.md).
+สถานะ: มีโค้ดและ automated checks; Geminiตรวจรวมทางเทคนิคแล้วตาม gemini.mdหมวด12; Browser UATยังpending. Deployment/แอปจริง/SLA deferred ตามผู้ใช้ ไม่ถือว่าผ่าน acceptance จากเอกสารนี้. หลักฐานคำสั่งและข้อจำกัดอยู่ใน [gpt.md](../gpt.md).
 
 ## ขอบเขต
 
@@ -97,6 +97,6 @@ P5 เป็นสัญญาณไปยัง receiver เพื่อให�
 
 ## Deployment ที่ยัง deferred
 
-ยังไม่รัน migration ใหม่บนฐาน ERP ใช้งานจริง: `2026_10_19_000001_add_integration_access_policy` และ `2026_10_19_000002_create_external_webhook_outbox`. ตรวจ prerequisite migrations ของ source domains และ indexes ด้วย deployment process/backup ปกติก่อนเปิด. Tests ใช้ SQLite in-memory ไม่ใช่ฐานจริง.
+รัน `2026_10_19_000001_add_integration_access_policy` และ `2026_10_19_000002_create_external_webhook_outbox` รวม prerequisite migrations บนฐาน localตามconfigแล้ว2026-10-27: [backup/migration evidence](../document/DATABASE_UPGRADE_20261027.md). Target production deployment/Browser UAT/network/SLAยังdeferred. Unit testsใช้SQLite in-memory แยกจาก actual configured database migration.
 
 เปิด read APIs หลัง migrate และทดสอบ Admin policy ใน target environment; ปิด key ที่ไม่ต้องใช้. หลาย instance ต้องใช้ shared rate-limit cache และ app encryption key ที่จัดการถูกต้อง. Webhook ต้อง cURL พร้อม DNS pinning, scheduler และ `EXTERNAL_API_WEBHOOKS_ENABLED=true` หลังยืนยันปลายทางจริง; ตอนนี้ false และไม่ได้ส่ง live network. ตรวจ Browser UAT, integration จริง, MariaDB correctness/performance และ concurrent HTTP SLA ของโดเมนใหม่ก่อนประกาศพร้อม production. Benchmark P0 เดิมไม่ครอบคลุม P1–P6.

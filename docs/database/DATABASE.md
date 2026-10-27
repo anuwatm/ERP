@@ -1,5 +1,7 @@
 # Central Database Schema
 
+**ส่วนขยายปัจจุบัน 2026-10-27:** [Phase28 schema inventory](../../document/PHASE_28_DATABASE.md) และ [configured database upgrade](../../document/DATABASE_UPGRADE_20261027.md): ERP83/POS17 migrations applied, pending0. เนื้อหา MVP ด้านล่างคงเป็นประวัติ ไม่ใช่ schema ครบทุก Phase.
+
 > **สถานะ: planning baseline (MVP historical document).** Schema runtime ปัจจุบันให้ยึด migration ใน `backend/database/migrations` เป็น source of truth และดู [`../../document/DATABASE_ERD.md`](../../document/DATABASE_ERD.md) สำหรับ ERD ที่ sync หลัง Phase 20. ไฟล์นี้ยังเก็บไว้เพื่ออธิบายเจตนาเดิมของ MVP เท่านั้น
 
 อ้างอิงแผน: [`ERP_FEATURE_PLAN.md`](../../ERP_FEATURE_PLAN.md)

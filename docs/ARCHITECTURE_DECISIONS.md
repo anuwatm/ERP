@@ -117,3 +117,6 @@ MVP ต้องใช้ Laravel policy + shared query scope/trait สำหร
 - การ bypass scope ใช้ได้เฉพาะ system job ที่ระบุชัดและต้อง audit/log.
 - Child tables ที่ query ได้โดยตรงควรมี `org_id` เพื่อป้องกัน tenant leakage.
 
+## Phase28 runtime decisions — 2026-10-27
+
+Standalone POSแยกDB/secrets; ERP outbound pull, partitioned quota/shared InventoryMovementService, immutable signed events/checkpoints และ financial/inventory stages. Restaurantใช้SKU/BOM consumption ไม่สร้าง work-orderรายจาน; tax replacementไม่ลงยอดใหม่. [Actual architecture/status](PHASE_28_POS.md). Localผ่านGemini; production external gatesยังเปิด

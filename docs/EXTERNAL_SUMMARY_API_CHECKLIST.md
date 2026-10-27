@@ -5,7 +5,7 @@
 
 ## 1. เป้าหมายและขอบเขต
 
-ให้แอปภายนอกดึงข้อมูล ERP ผ่าน API ได้ โดยเริ่มจากข้อมูลสรุป แล้วขยายทีละโดเมนจนครอบคลุมระบบ ผู้ใช้อนุญาตเริ่ม implementation เมื่อ 2026-10-18 โดยให้ทำตาม checklist และบันทึกหลักฐานใน gpt.md; ยังไม่ deploy/migrate ฐานข้อมูลใช้งานจริง
+ให้แอปภายนอกดึงข้อมูล ERP ผ่าน API ได้ โดยเริ่มจากข้อมูลสรุป แล้วขยายทีละโดเมนจนครอบคลุมระบบ ผู้ใช้อนุญาตเริ่ม implementation เมื่อ 2026-10-18 โดยให้ทำตาม checklist และบันทึกหลักฐานใน gpt.md; ยังไม่ deploy production; ฐาน localตามconfig migrateครบแล้ว2026-10-27 ตาม [upgrade report](../document/DATABASE_UPGRADE_20261027.md)
 
 - [x] รอบแรก: Summary API สำหรับ Sales และ Finance พร้อมโครงสร้าง authentication และหน้า Admin จัดการ secret key
 - [ ] รอบถัดไป: Projects/Tasks → Procurement/Inventory → HR/Payroll → Manufacturing → โดเมนอื่นตามลำดับที่ตกลง

@@ -200,14 +200,6 @@ ERP/
 | Report module timing | หลัง MVP ทันที vs คู่ Phase 5 | ตาม AD-01 อยู่นอก MVP; Dashboard ตาม Phase อยู่ใน MVP |
 | External IdP | Auth0 / Keycloak / Google Workspace | หลัง MVP |
 
+## Phase 28 — current status (2026-10-27)
 
-
-
-
-
-
-
-
-
-
-
+POS มี local implementation และผ่าน Gemini แล้ว ไม่ใช่เพียงรายการอนาคต. ดู [implementation/acceptance](docs/PHASE_28_POS.md). Configured ERP/POS databases current; target production/e-Tax/hardware/UAT ยัง pending.

@@ -1,0 +1,17 @@
+{
+  "files": 1030,
+  "graphFileCoverage": 1030,
+  "unreadableFiles": [],
+  "warnings": {
+    "orphanNodes": 49,
+    "unsupportedStructuralFormatFiles": 37,
+    "phpTraitSymbolsNotExtracted": [
+      "backend/app/Models/Concerns/UsesOrderedUuid.php",
+      "backend/app/Models/Concerns/TransactionalExternalEvents.php",
+      "backend/tests/Concerns/ActsAsOrgUser.php"
+    ],
+    "anonymousPhpMigrationSymbols": "file-level migration nodes retained; table/method symbols not fabricated",
+    "neighborHints": "high-degree cross-batch hints capped at 50; 2765 imports retained",
+    "staticAnalysisOnly": true
+  }
+}
