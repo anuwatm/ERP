@@ -1,5 +1,11 @@
 # README — เรียกใช้และตั้งต้น POS
 
+> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **Phase28.8.1 — 2026-10-30:** Retail/Restaurant มี Delivery local ที่ /deliveries; COD เป็น custody รอ accounting review. Pharmacy Delivery ปิด. [คู่มือ/diagram](PHASE_28_8_1_DELIVERY.md). **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 คู่มือวันที่ 2026-10-27 สำหรับ local development ที่ผ่านการตรวจรับแล้ว
 
 > **หมายเหตุ:** ยังไม่ได้ทดสอบการเชื่อมต่อกับระบบและอุปกรณ์จริง เช่น Server/firewall/mTLS, เครื่องพิมพ์, เครื่องสแกน และ e-Tax provider. คำสั่งเปิด PHP development server ใช้ทดลองในเครื่องเท่านั้น
@@ -15,6 +21,18 @@
 | ร้านขายยา | `pharmacy` | `POS_LOCAL_PHARMACY_ENABLED=true` | [README ร้านขายยา](README_POS_PHARMACY.md) |
 
 บัญชี POS เป็นคนละบัญชีกับ ERP. การสร้าง ERP user หรือเปิดหน้า ERP `/pos-integration` ไม่ได้สร้างบัญชีแคชเชียร์ให้อัตโนมัติ. รุ่นนำร่องใช้หนึ่งสาขาหนึ่งประเภทกิจการ; ไม่เปลี่ยนประเภทสาขาเดิมเพื่อทดลองอีกกิจการ
+
+## หน้า Config สำหรับผู้จัดการ (เพิ่ม 2026-10-29)
+
+หลังเข้าสู่ระบบด้วย role `manager` กด **ตั้งค่า POS** หรือเปิด `/config` บน POS URL เดิม. เปิดเฉพาะ local/testing และ loopback; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
+- แก้ชื่อสาขา และเลือก `retail` / `restaurant` / `pharmacy` ก่อนมี Terminal/catalog/quota/orders/tax profile. สาขาที่ provision แล้วเปลี่ยนกิจการให้สร้างสาขาใหม่ ไม่แก้ประวัติเดิม
+- เพิ่ม Terminal พร้อมดู UUID สำหรับลงทะเบียน ERP
+- เพิ่มพนักงาน/role ของสาขาตนเอง พร้อมรหัสผ่านอย่างน้อย 12 ตัวและยืนยันรหัสผ่าน
+- ดูรายชื่อพนักงาน UUID สถานะ feature flags และ instance; ไม่มีการแสดงรหัสผ่าน/private keys
+- ทุกการบันทึกต้องยืนยันรหัสผ่านผู้จัดการ มี audit และไม่รับ branch_id จาก browser เพื่อจัดการสาขาอื่น
+
+การสร้างสาขาและ manager คนแรกยังใช้ CLI ตามคู่มือด้านล่าง. คุณสมบัติผู้จัดการเภสัชกร provision ผ่านผู้ดูแล. หน้า Config ไม่แก้ `.env`, keys, feature flags, catalog/quota, GL หรือ issuer profile; ดูสถานะและตั้งค่าฝั่ง Server/ERP ตามรายการในหน้า. การเพิ่มบัญชีไม่สร้าง ERP staff authority อัตโนมัติ.
 
 ## 2. ทางเลือก A — ทดลองหน้าจอด้วยข้อมูลจำลอง
 

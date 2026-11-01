@@ -1,0 +1,72 @@
+const { chromium } = require('C:/Users/anuwat/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const fs = require('fs');
+const assert = require('node:assert/strict');
+const base = 'http://127.0.0.1:8139';
+const report = { scope: 'API key management UI; synthetic owner/keys; no live integration', cases: [], errors: [] };
+(async () => {
+    const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', headless: true });
+    try {
+        for (const width of [1280, 375]) {
+            const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: width === 375 ? 'dark' : 'light' });
+            await context.route('**/*', r => r.request().url().startsWith(base + '/') ? r.continue() : r.abort());
+            const page = await context.newPage(); page.setDefaultTimeout(20000);
+            page.on('pageerror', e => report.errors.push(e.message));
+            await page.goto(base + '/login');
+            await page.locator('[name=email]').fill('remaining-owner@fixture.test');
+            await page.locator('[name=password]').fill('local-acceptance-password');
+            await page.locator('button[type=submit]').click();
+            await page.waitForURL(u => !u.pathname.includes('login'), { timeout: 60000 });
+            await page.goto(base + '/settings/api-access');
+            await page.evaluate(async () => { await window.axios.post('/confirm-password', { password: 'local-acceptance-password' }); });
+            await page.getByRole('button', { name: 'สร้าง secret key', exact: true }).click();
+            const dialog = page.getByRole('dialog').last();
+            const name = 'Synthetic browser app ' + width + ' ' + Date.now();
+            await dialog.getByRole('textbox', { name: 'ชื่อแอป', exact: true }).fill(name);
+            await dialog.locator('label').filter({ hasText: 'products:read' }).getByRole('checkbox').check();
+            await dialog.locator('label').filter({ hasText: 'products:prices:read' }).getByRole('checkbox').check();
+            await dialog.getByRole('button', { name: 'สร้าง secret key', exact: true }).first().click();
+            const secret = await page.locator('#new-secret').inputValue();
+            assert(/^erp_[a-f0-9]{24}\.[a-f0-9]{64}$/.test(secret), 'Secret shape');
+            await page.getByRole('button', { name: 'บันทึกแล้ว ปิดหน้าต่าง', exact: true }).click();
+            assert.equal(await page.locator('#new-secret').count(), 0);
+            assert(!(await page.content()).includes(secret));
+            await page.reload();
+            assert(!(await page.content()).includes(secret));
+            const response = await fetch(base + '/api/v1/products', { headers: { Accept: 'application/json', Authorization: 'Bearer ' + secret } });
+            assert.equal(response.status, 200);
+            assert((await response.json()).data.every(p => 'price' in p));
+            const row = page.locator('tbody tr').filter({ hasText: name });
+            await row.getByRole('button', { name: 'แก้ไข', exact: true }).click();
+            const edit = page.getByRole('dialog').last();
+            await edit.getByRole('textbox', { name: 'ชื่อแอป', exact: true }).fill(name + ' edited');
+            await edit.getByRole('button', { name: 'แก้ไข key', exact: true }).first().click();
+            await page.locator('#api-key-editor').waitFor({ state: 'detached' });
+            await page.getByRole('button', { name: 'สร้าง secret key', exact: true }).click();
+            const replacement = page.getByRole('dialog').last();
+            const replacementName = 'Synthetic replacement app ' + width + ' ' + Date.now();
+            await replacement.getByRole('textbox', { name: 'ชื่อแอป', exact: true }).fill(replacementName);
+            await replacement.locator('label').filter({ hasText: 'products:read' }).getByRole('checkbox').check();
+            await replacement.getByRole('button', { name: 'สร้าง secret key', exact: true }).first().click();
+            const replacementSecret = await page.locator('#new-secret').inputValue();
+            await page.getByRole('button', { name: 'บันทึกแล้ว ปิดหน้าต่าง', exact: true }).click();
+            const restricted = await fetch(base + '/api/v1/products', { headers: { Accept: 'application/json', Authorization: 'Bearer ' + replacementSecret } });
+            assert.equal(restricted.status, 200);
+            assert(!(await restricted.json()).data.some(p => 'price' in p));
+            await row.getByRole('button', { name: 'ถอน key', exact: true }).click();
+            await page.getByRole('dialog').last().getByRole('button', { name: 'ถอน key', exact: true }).first().click();
+            await page.locator('#api-key-editor').waitFor({ state: 'detached' });
+            const revoked = await fetch(base + '/api/v1/products', { headers: { Accept: 'application/json', Authorization: 'Bearer ' + secret } });
+            assert.equal(revoked.status, 401);
+            const replacementRow = page.locator('tbody tr').filter({ hasText: replacementName });
+            await replacementRow.getByRole('button', { name: 'ถอน key', exact: true }).click();
+            await page.getByRole('dialog').last().getByRole('button', { name: 'ถอน key', exact: true }).first().click();
+            await page.locator('#api-key-editor').waitFor({ state: 'detached' });
+            const replacementRevoked = await fetch(base + '/api/v1/products', { headers: { Accept: 'application/json', Authorization: 'Bearer ' + replacementSecret } });
+            assert.equal(replacementRevoked.status, 401);
+            report.cases.push({ width, result: 'PASS', created: true, edited: true, oneTimeSecretCleared: true, secretAbsentAfterReload: true, httpRead: 200, narrowedViaReplacementKey: true, revokedStatus: 401, replacementRevokedStatus: 401 });
+            await context.close();
+        }
+        report.status = 'PASS';
+    } catch (e) { report.status = 'FAIL'; report.error = e.message; process.exitCode = 1; }
+    finally { await browser.close(); fs.writeFileSync('temp/remaining-20261029/api-browser.json', JSON.stringify(report, null, 2)); console.log(JSON.stringify(report)); }
+})();

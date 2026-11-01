@@ -29,8 +29,8 @@ class ReturnInspectionService
         return DB::transaction(function () use ($staff, $command, $approval) {
             $current = Staff::whereKey($staff->id)->lockForUpdate()->firstOrFail();
             $approval->assertFor($current, $command);
-            DB::table('pos_branches')->where('id', $current->branch_id)->where('active', true)->where('business_type', 'pharmacy')->lockForUpdate()->firstOrFail();
-            abort_unless($current->pharmacist_qualified, 403, 'A pharmacist-qualified manager is required.');
+            $branch = DB::table('pos_branches')->where('id', $current->branch_id)->where('active', true)->whereIn('business_type', ['pharmacy', 'retail'])->lockForUpdate()->firstOrFail();
+            abort_unless($branch->business_type === 'retail' ? config('pos.local_delivery_enabled') === true : $current->pharmacist_qualified, 403, 'Qualified return authority required.');
             $hash = hash('sha256', CanonicalJson::encode($command));
             $old = DB::table('pos_return_inspections')->where('branch_id', $current->branch_id)->where('request_key', $command['request_key'])->first();
             if ($old) {
@@ -45,7 +45,7 @@ class ReturnInspectionService
             abort_unless($source && $returned && ($source['stock_effect'] ?? null) !== 'prepared', 422, 'Original stock evidence required.');
             $allocation = collect($source['allocations'])->firstWhere('grant_id', $command['grant_id']);
             $grant = DB::table('pos_grants')->where('id', $command['grant_id'])->where('branch_id', $current->branch_id)->where('product_id', $source['product_id'])->first();
-            abort_unless($allocation && $grant && $grant->lot_id && $grant->lot_id === ($allocation['lot_id'] ?? null), 422, 'Traceable original lot is required.');
+            abort_unless($allocation && $grant && ($branch->business_type !== 'pharmacy' || $grant->lot_id) && $grant->lot_id === ($allocation['lot_id'] ?? null), 422, 'Traceable original lot is required.');
             abort_unless(isset($source['base_step']) && bccomp(bcmod($command['base_quantity'], $source['base_step'], 4), '0', 4) === 0, 422, 'Inspection violates original unit precision.');
             $prior = DB::table('pos_return_inspections')->where('refund_id', $refund->id)->where('source_line_id', $command['source_line_id'])->get();
             $total = $prior->reduce(fn ($sum, $r) => bcadd($sum, (string) $r->base_quantity, 4), $command['base_quantity']);

@@ -30,6 +30,7 @@ class PosTransport
             abort_unless(preg_match('/^[A-Za-z0-9_-]{1,80}$/D', $identity), 422, 'Invalid POS resource identity.');
         }
         [$method, $path] = match ($operation) {
+            'membership' => ['PUT', '/membership/'.$identity],
             'events' => ['GET', '/events'],
             'tax-profile' => ['PUT', '/tax-profile'],
             'checkpoint' => ['GET', '/checkpoint'],

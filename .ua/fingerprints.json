@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "gitCommitHash": "b03c393c19762a09862b4a7aab688f1fe47dcdb3",
-  "generatedAt": "2026-10-27T09:31:27.437Z",
+  "gitCommitHash": "db57f11e3631a26314581a8f351278886f7d41f1",
+  "generatedAt": "2026-10-30T04:27:30.441Z",
   "files": {
     ".htaccess": {
       "filePath": ".htaccess",
@@ -15,12 +15,12 @@
     },
     "ERP_FEATURE_PLAN.md": {
       "filePath": "ERP_FEATURE_PLAN.md",
-      "contentHash": "eb83866794961aaec3265684f0585bef820b7f5a81ce625fbe1b1bafd9e4d118",
+      "contentHash": "cb51e68d896d4ff45e3ae9e48fc3a95e9a13b9fe6e679e9458e5a13ec0a557f0",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 1122,
+      "totalLines": 1126,
       "hasStructuralAnalysis": false
     },
     "MVP_SCOPE.md": {
@@ -35,32 +35,32 @@
     },
     "PROJECT.md": {
       "filePath": "PROJECT.md",
-      "contentHash": "79c5987fcdcbd6557caed0664b9cfa823a2977368d23599d028b25ff15975d2f",
+      "contentHash": "95906e70a755c6dc010f02f7606184757d2d7fcc7f5c1cc4b406e68c399dddfa",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 206,
+      "totalLines": 210,
       "hasStructuralAnalysis": false
     },
     "README.md": {
       "filePath": "README.md",
-      "contentHash": "015464ad764227ebaa4cde90e45256ac8293b1675b8e1bcdd01b797794b3e68a",
+      "contentHash": "4ba418a2061419f2835f27eccb33f6a0b6815a4f701e93712f6e5989980580b2",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 424,
+      "totalLines": 428,
       "hasStructuralAnalysis": false
     },
     "backend/.env.example": {
       "filePath": "backend/.env.example",
-      "contentHash": "3c5853963427d5a8cef3ab150db48eeb3875ff19b127e0238786d1a63cc78e70",
+      "contentHash": "361a2b6a4528f22a9135489b6279a6bd66c38bafcbd8bbe2b0abc35b5ee19e7c",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 80,
+      "totalLines": 87,
       "hasStructuralAnalysis": false
     },
     "backend/.gitattributes": {
@@ -85,12 +85,12 @@
     },
     "backend/README.md": {
       "filePath": "backend/README.md",
-      "contentHash": "1ed7f729d514ddbddaac5944a07298c3c896099ae3cab8667030145cf8ff0e47",
+      "contentHash": "1d44bc49f12b515b7961e0f94cf82532c967cf1db395ac1182ee4b0e69a4c16d",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 59,
+      "totalLines": 69,
       "hasStructuralAnalysis": false
     },
     "backend/app/Console/Commands/BackfillLegacyDocuments.php": {
@@ -601,7 +601,7 @@
     },
     "backend/app/Http/Controllers/Admin/DashboardController.php": {
       "filePath": "backend/app/Http/Controllers/Admin/DashboardController.php",
-      "contentHash": "508c429facf04c7cb0eeae9e6a06b1d6a3ac31521c39ab621b4083aa61b67607",
+      "contentHash": "9ad77c1e6c59da6fa166a6e5e6d69f857ffa2514a98384ba450dea040a0ddb78",
       "functions": [
         {
           "name": "__invoke",
@@ -3967,7 +3967,7 @@
     },
     "backend/app/Http/Controllers/Auth/TwoFactorController.php": {
       "filePath": "backend/app/Http/Controllers/Auth/TwoFactorController.php",
-      "contentHash": "7a53c1f7c1aedcd83f8b8d536412074460a21c0c5baaa4ed42dbcf5789b23374",
+      "contentHash": "bd33fd8f5cf43458d437d42c4cf690f5c0c0c22f3d539856dac893f222f51bb4",
       "functions": [
         {
           "name": "setup",
@@ -3976,9 +3976,9 @@
             "$totp",
             "$policy"
           ],
-          "returnType": "Response",
+          "returnType": "\\Symfony\\Component\\HttpFoundation\\Response",
           "exported": false,
-          "lineCount": 8
+          "lineCount": 15
         },
         {
           "name": "confirmSetup",
@@ -3987,16 +3987,28 @@
             "$totp",
             "$policy"
           ],
-          "returnType": "RedirectResponse",
+          "returnType": "\\Symfony\\Component\\HttpFoundation\\Response",
           "exported": false,
-          "lineCount": 13
+          "lineCount": 22
+        },
+        {
+          "name": "recoveryCodes",
+          "params": [
+            "$request"
+          ],
+          "returnType": "\\Symfony\\Component\\HttpFoundation\\Response",
+          "exported": false,
+          "lineCount": 9
         },
         {
           "name": "challenge",
-          "params": [],
+          "params": [
+            "$request",
+            "$policy"
+          ],
           "returnType": "Response",
           "exported": false,
-          "lineCount": 6
+          "lineCount": 8
         },
         {
           "name": "verifyChallenge",
@@ -4047,6 +4059,7 @@
           "methods": [
             "setup",
             "confirmSetup",
+            "recoveryCodes",
             "challenge",
             "verifyChallenge",
             "resetByOwner",
@@ -4055,7 +4068,7 @@
           ],
           "properties": [],
           "exported": true,
-          "lineCount": 93
+          "lineCount": 121
         }
       ],
       "imports": [
@@ -4144,6 +4157,12 @@
           ]
         },
         {
+          "source": "Illuminate\\Validation\\ValidationException",
+          "specifiers": [
+            "ValidationException"
+          ]
+        },
+        {
           "source": "Inertia\\Inertia",
           "specifiers": [
             "Inertia"
@@ -4159,7 +4178,7 @@
       "exports": [
         "TwoFactorController"
       ],
-      "totalLines": 115,
+      "totalLines": 144,
       "hasStructuralAnalysis": true
     },
     "backend/app/Http/Controllers/Auth/VerifyEmailController.php": {
@@ -15346,6 +15365,64 @@
       "totalLines": 32,
       "hasStructuralAnalysis": true
     },
+    "backend/app/Jobs/OperationsHeartbeat.php": {
+      "filePath": "backend/app/Jobs/OperationsHeartbeat.php",
+      "contentHash": "7fb72949aa972724d892e9aeac48d714dbd4a3f94463dcf33cf028b443571f70",
+      "functions": [
+        {
+          "name": "__construct",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "handle",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 4
+        }
+      ],
+      "classes": [
+        {
+          "name": "OperationsHeartbeat",
+          "methods": [
+            "__construct",
+            "handle"
+          ],
+          "properties": [
+            "timeout"
+          ],
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "imports": [
+        {
+          "source": "Illuminate\\Contracts\\Queue\\ShouldQueue",
+          "specifiers": [
+            "ShouldQueue"
+          ]
+        },
+        {
+          "source": "Illuminate\\Foundation\\Queue\\Queueable",
+          "specifiers": [
+            "Queueable"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Cache",
+          "specifiers": [
+            "Cache"
+          ]
+        }
+      ],
+      "exports": [
+        "OperationsHeartbeat"
+      ],
+      "totalLines": 25,
+      "hasStructuralAnalysis": true
+    },
     "backend/app/Jobs/SubmitETaxDocument.php": {
       "filePath": "backend/app/Jobs/SubmitETaxDocument.php",
       "contentHash": "d09fc3841d5131f999a23224bc54fcc45c5e7e0d621957ce217f031d25c270d2",
@@ -15428,6 +15505,57 @@
         "SubmitETaxDocument"
       ],
       "totalLines": 40,
+      "hasStructuralAnalysis": true
+    },
+    "backend/app/Logging/RedactOperationalLogs.php": {
+      "filePath": "backend/app/Logging/RedactOperationalLogs.php",
+      "contentHash": "1dc48c22eef67e07553304b475447889eb43f89182b02971bd33d595f87b7e18",
+      "functions": [
+        {
+          "name": "__invoke",
+          "params": [
+            "$logger"
+          ],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 30
+        }
+      ],
+      "classes": [
+        {
+          "name": "RedactOperationalLogs",
+          "methods": [
+            "__invoke"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 33
+        }
+      ],
+      "imports": [
+        {
+          "source": "Illuminate\\Log\\Logger",
+          "specifiers": [
+            "Logger"
+          ]
+        },
+        {
+          "source": "Monolog\\LogRecord",
+          "specifiers": [
+            "LogRecord"
+          ]
+        },
+        {
+          "source": "Throwable",
+          "specifiers": [
+            "Throwable"
+          ]
+        }
+      ],
+      "exports": [
+        "RedactOperationalLogs"
+      ],
+      "totalLines": 42,
       "hasStructuralAnalysis": true
     },
     "backend/app/Mail/ErpNotificationMail.php": {
@@ -29404,7 +29532,7 @@
     },
     "backend/app/Services/Ocr/UniversalOpenAiVisionAdapter.php": {
       "filePath": "backend/app/Services/Ocr/UniversalOpenAiVisionAdapter.php",
-      "contentHash": "e347328825a832944bdaa21e16a75f865ec7ba96e6855e96f2a1a35eca6c3a3c",
+      "contentHash": "840407c9e0ccdba85c03e4f07deeddd9ebc048ee94c6d18388e9e5949655f003",
       "functions": [
         {
           "name": "extract",
@@ -29415,7 +29543,7 @@
           ],
           "returnType": "array",
           "exported": false,
-          "lineCount": 151
+          "lineCount": 150
         },
         {
           "name": "isCloudProvider",
@@ -29478,7 +29606,7 @@
           ],
           "properties": [],
           "exported": true,
-          "lineCount": 252
+          "lineCount": 251
         }
       ],
       "imports": [
@@ -29510,7 +29638,7 @@
       "exports": [
         "UniversalOpenAiVisionAdapter"
       ],
-      "totalLines": 262,
+      "totalLines": 261,
       "hasStructuralAnalysis": true
     },
     "backend/app/Services/OpnEventService.php": {
@@ -34155,10 +34283,16 @@
     },
     "backend/config/logging.php": {
       "filePath": "backend/config/logging.php",
-      "contentHash": "299ec1ba5b5a803c8e20f666ae7628e442e856cc2ff7ac9e2adb17b97e8ad63b",
+      "contentHash": "d1bf33fe7329fca9ed8105a32ab8508130e00dcae1fa1b9b6677c046014f0057",
       "functions": [],
       "classes": [],
       "imports": [
+        {
+          "source": "App\\Logging\\RedactOperationalLogs",
+          "specifiers": [
+            "RedactOperationalLogs"
+          ]
+        },
         {
           "source": "Monolog\\Handler\\NullHandler",
           "specifiers": [
@@ -34185,7 +34319,7 @@
         }
       ],
       "exports": [],
-      "totalLines": 133,
+      "totalLines": 136,
       "hasStructuralAnalysis": true
     },
     "backend/config/mail.php": {
@@ -34196,6 +34330,16 @@
       "imports": [],
       "exports": [],
       "totalLines": 119,
+      "hasStructuralAnalysis": true
+    },
+    "backend/config/operations.php": {
+      "filePath": "backend/config/operations.php",
+      "contentHash": "099b1972125a31f7131894429adddc29d3ac2d471da51bb5c405320d47fa5a04",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 9,
       "hasStructuralAnalysis": true
     },
     "backend/config/pos.php": {
@@ -37439,6 +37583,26 @@
       "totalLines": 112,
       "hasStructuralAnalysis": false
     },
+    "backend/resources/fonts/OFL.txt": {
+      "filePath": "backend/resources/fonts/OFL.txt",
+      "contentHash": "b26cae1321380296ba8311b632a397d5eac11b47197f9d0aa0b9310f1531ad60",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 94,
+      "hasStructuralAnalysis": false
+    },
+    "backend/resources/fonts/manifest.json": {
+      "filePath": "backend/resources/fonts/manifest.json",
+      "contentHash": "c85ddb6e9b1c48d0dc00ecb62d65f691befaffd86e68d099150d5fb6ac8e2f8f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 18,
+      "hasStructuralAnalysis": false
+    },
     "backend/resources/js/Components/ApplicationLogo.tsx": {
       "filePath": "backend/resources/js/Components/ApplicationLogo.tsx",
       "contentHash": "ac63dbb2a15d3b7a4ad3000b853dc271e5b975ccff1e71dd58e6a0a2a79b86dd",
@@ -37987,6 +38151,45 @@
       "totalLines": 24,
       "hasStructuralAnalysis": true
     },
+    "backend/resources/js/Components/NetworkFailureNotice.tsx": {
+      "filePath": "backend/resources/js/Components/NetworkFailureNotice.tsx",
+      "contentHash": "7f4ea915a0057d8ccf919b26aa0b1f0ac04032c8537190a3e709d9e8c9e1fafa",
+      "functions": [
+        {
+          "name": "NetworkFailureNotice",
+          "params": [],
+          "exported": true,
+          "lineCount": 45
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@inertiajs/react",
+          "specifiers": [
+            "router"
+          ]
+        },
+        {
+          "source": "axios",
+          "specifiers": [
+            "axios"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        }
+      ],
+      "exports": [
+        "NetworkFailureNotice"
+      ],
+      "totalLines": 50,
+      "hasStructuralAnalysis": true
+    },
     "backend/resources/js/Components/PrimaryButton.tsx": {
       "filePath": "backend/resources/js/Components/PrimaryButton.tsx",
       "contentHash": "c4295515277669019bbc5a13958a47553ff91d7f37bfbf1e6ea1ddb3c80c1d1c",
@@ -38174,7 +38377,7 @@
     },
     "backend/resources/js/Components/UI/CreateEditDialog.tsx": {
       "filePath": "backend/resources/js/Components/UI/CreateEditDialog.tsx",
-      "contentHash": "42c97b67d14ea531caf4eea750ba811be254cfa26ecb450f6c4bb6effcda87f6",
+      "contentHash": "c4d5b3ca7ad5abef4b6a39e765db390d462824399e90fe47f6796899c7adb1e7",
       "functions": [
         {
           "name": "CreateEditDialog",
@@ -38182,7 +38385,7 @@
             "{\n    open,\n    minimized,\n    suspended = false,\n    onMinimize,\n    onClose,\n    title,\n    breadcrumb,\n    entityLabel,\n    draftLabel,\n    storageKey,\n    formId,\n    processing,\n    saveDisabled = false,\n    saveLabel,\n    status,\n    errors,\n    onSubmit,\n    children,\n    requiresPasswordConfirmation = true,\n}"
           ],
           "exported": true,
-          "lineCount": 399
+          "lineCount": 408
         }
       ],
       "classes": [],
@@ -38222,7 +38425,7 @@
       "exports": [
         "CreateEditDialog"
       ],
-      "totalLines": 415,
+      "totalLines": 424,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Components/UI/DataTable.tsx": {
@@ -40040,13 +40243,15 @@
     },
     "backend/resources/js/Pages/Auth/TwoFactorChallenge.tsx": {
       "filePath": "backend/resources/js/Pages/Auth/TwoFactorChallenge.tsx",
-      "contentHash": "e5ebe590a6eac4a623bbd41bd56b823bec2a0ed4894baccf6d01f7a54518dcc6",
+      "contentHash": "c6ee221b7f439ee51c7d6e550e60bc2cd119fb8187136488d1481f47e5380ad2",
       "functions": [
         {
           "name": "TwoFactorChallenge",
-          "params": [],
+          "params": [
+            "{\n    allowTrustedDevices,\n    trustedDeviceDays,\n}"
+          ],
           "exported": true,
-          "lineCount": 48
+          "lineCount": 56
         }
       ],
       "classes": [],
@@ -40074,7 +40279,7 @@
       "exports": [
         "TwoFactorChallenge"
       ],
-      "totalLines": 53,
+      "totalLines": 61,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Auth/TwoFactorSetup.tsx": {
@@ -40489,7 +40694,7 @@
     },
     "backend/resources/js/Pages/Delivery/ProjectMembersDialog.tsx": {
       "filePath": "backend/resources/js/Pages/Delivery/ProjectMembersDialog.tsx",
-      "contentHash": "383019ffb3500c051d80e6c43cf263d445ada435ec8a61f672e46e07c6260a9a",
+      "contentHash": "b234c3046357c3ed73e1b7a26a0bac9a2015d726127320bc5f3d4d34d9900d2c",
       "functions": [
         {
           "name": "ProjectMembersDialog",
@@ -40919,7 +41124,7 @@
     },
     "backend/resources/js/Pages/Documents/DocumentDialogs.tsx": {
       "filePath": "backend/resources/js/Pages/Documents/DocumentDialogs.tsx",
-      "contentHash": "7e3d1887a5df01cb4b1718728419d02189c0af9b586525d1a1ccb11f7b17473d",
+      "contentHash": "dfd234952862bfaa41d2013af002ba0d3f29a49af3052cae67a05c04c1d4d2ae",
       "functions": [
         {
           "name": "DocumentDialog",
@@ -40927,7 +41132,7 @@
             "{\n    open,\n    onClose,\n    categories,\n}"
           ],
           "exported": true,
-          "lineCount": 191
+          "lineCount": 200
         },
         {
           "name": "DocumentVersionDialog",
@@ -40935,7 +41140,7 @@
             "{\n    open,\n    onClose,\n    documentId,\n    documentTitle,\n}"
           ],
           "exported": true,
-          "lineCount": 117
+          "lineCount": 126
         },
         {
           "name": "DocumentLinkDialog",
@@ -40943,7 +41148,7 @@
             "{\n    open,\n    onClose,\n    documentId,\n    documentTitle,\n}"
           ],
           "exported": true,
-          "lineCount": 119
+          "lineCount": 128
         },
         {
           "name": "DocumentCategoryDialog",
@@ -40951,7 +41156,7 @@
             "{\n    open,\n    onClose,\n    retentionPolicies,\n}"
           ],
           "exported": true,
-          "lineCount": 177
+          "lineCount": 186
         },
         {
           "name": "RetentionPolicyDialog",
@@ -40959,7 +41164,7 @@
             "{\n    open,\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 154
+          "lineCount": 163
         }
       ],
       "classes": [],
@@ -41017,7 +41222,7 @@
         "DocumentCategoryDialog",
         "RetentionPolicyDialog"
       ],
-      "totalLines": 789,
+      "totalLines": 834,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Documents/Index.tsx": {
@@ -41720,7 +41925,7 @@
     },
     "backend/resources/js/Pages/Finance/DeliveryOrderDialog.tsx": {
       "filePath": "backend/resources/js/Pages/Finance/DeliveryOrderDialog.tsx",
-      "contentHash": "2c9d6d4b16ff552913f6e6c7b7e8a9fcacdfc9f85e21ffb3ba33c02be75dbc1e",
+      "contentHash": "c658c1620e775223e433ba8fe4d8eda55270f4bb1681168f4e250dc9db5e3868",
       "functions": [
         {
           "name": "DeliveryOrderDialog",
@@ -41728,7 +41933,7 @@
             "{\n    open,\n    invoices,\n    warehouses,\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 227
+          "lineCount": 233
         }
       ],
       "classes": [],
@@ -41794,12 +41999,12 @@
       "exports": [
         "DeliveryOrderDialog"
       ],
-      "totalLines": 266,
+      "totalLines": 272,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Finance/ETax.tsx": {
       "filePath": "backend/resources/js/Pages/Finance/ETax.tsx",
-      "contentHash": "a9ed0efcca650a21d273e877be463b14a87a3d821d57a7475801fc6237b6257f",
+      "contentHash": "4f5f2ba9736b1efe5e11fb584a590febac5a6f40eec58986c5ce0b20961003de",
       "functions": [
         {
           "name": "ETax",
@@ -41807,7 +42012,7 @@
             "{\n    config,\n    documents,\n    invoices,\n    payments,\n    notes,\n    canManage,\n    canSubmit,\n}"
           ],
           "exported": true,
-          "lineCount": 589
+          "lineCount": 651
         }
       ],
       "classes": [],
@@ -41855,6 +42060,30 @@
           ]
         },
         {
+          "source": "@/Components/UI/CreateEditDialog",
+          "specifiers": [
+            "CreateEditDialog"
+          ]
+        },
+        {
+          "source": "@/Components/UI/DiscardChangesDialog",
+          "specifiers": [
+            "DiscardChangesDialog"
+          ]
+        },
+        {
+          "source": "@/Hooks/useDiscardGuard",
+          "specifiers": [
+            "useDiscardGuard"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
           "source": "@inertiajs/react",
           "specifiers": [
             "Head",
@@ -41866,12 +42095,12 @@
       "exports": [
         "ETax"
       ],
-      "totalLines": 641,
+      "totalLines": 707,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Finance/ExpenseEditorDialog.tsx": {
       "filePath": "backend/resources/js/Pages/Finance/ExpenseEditorDialog.tsx",
-      "contentHash": "a93828e72b960d5cbac0fae76391af63efcba128ab47f6bba31079abe771f55c",
+      "contentHash": "253d59fc06dcd1c04b710e8553eff7dab215e73887f70b5cbc8c208746d75762",
       "functions": [
         {
           "name": "ExpenseEditorDialog",
@@ -41879,7 +42108,7 @@
             "{\n    open,\n    expense,\n    categories,\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 295
+          "lineCount": 285
         }
       ],
       "classes": [],
@@ -41939,7 +42168,7 @@
       "exports": [
         "ExpenseEditorDialog"
       ],
-      "totalLines": 370,
+      "totalLines": 360,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Finance/Expenses.tsx": {
@@ -43716,7 +43945,7 @@
     },
     "backend/resources/js/Pages/Finance/ReceiveGoodsDialog.tsx": {
       "filePath": "backend/resources/js/Pages/Finance/ReceiveGoodsDialog.tsx",
-      "contentHash": "e895eab94eb2729ca04712c118eb7fc9d7f698df2b4e58f3ca18d5618a20e680",
+      "contentHash": "41fb6cc9a6c65d4dcd55a9adaf3db91c382bf17ae5a5b2befb48559f82dfb4dd",
       "functions": [
         {
           "name": "ReceiveGoodsDialog",
@@ -43724,7 +43953,7 @@
             "{\n    open,\n    purchaseOrders,\n    warehouses,\n    inventoryLots,\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 308
+          "lineCount": 312
         }
       ],
       "classes": [],
@@ -43778,12 +44007,12 @@
       "exports": [
         "ReceiveGoodsDialog"
       ],
-      "totalLines": 361,
+      "totalLines": 365,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Finance/StockMovementDialog.tsx": {
       "filePath": "backend/resources/js/Pages/Finance/StockMovementDialog.tsx",
-      "contentHash": "4112a07d0ff8815460aa03301a85ade826b4fb2bd4df6eb5fa401d68334e7398",
+      "contentHash": "621e99b69a18d66d5acfc7d0129321f6fc985e1003d917a1b4a4fe84fad245ba",
       "functions": [
         {
           "name": "StockMovementDialog",
@@ -43791,7 +44020,7 @@
             "{\n    open,\n    products,\n    warehouses,\n    initialProductId = '',\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 281
+          "lineCount": 285
         }
       ],
       "classes": [],
@@ -43858,7 +44087,7 @@
       "exports": [
         "StockMovementDialog"
       ],
-      "totalLines": 319,
+      "totalLines": 323,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Finance/Suppliers.tsx": {
@@ -44466,7 +44695,7 @@
     },
     "backend/resources/js/Pages/Hr/Employees.tsx": {
       "filePath": "backend/resources/js/Pages/Hr/Employees.tsx",
-      "contentHash": "7f25c8ee65d36a3a6a59fe41e2b55919717195fa57012dc7ce8d32df79ff7a7f",
+      "contentHash": "663a6b6b2072e7fbcedb70c42c3f3e9d9bdf114a1948d07a18453064f479d259",
       "functions": [
         {
           "name": "PositionCombobox",
@@ -44482,7 +44711,7 @@
             "{\n    employee,\n    open,\n    close,\n    branches,\n    divisions,\n    departments,\n    positions: initialPositions,\n    employees,\n    accounts,\n}"
           ],
           "exported": false,
-          "lineCount": 286
+          "lineCount": 319
         },
         {
           "name": "Employees",
@@ -44511,6 +44740,24 @@
           "source": "@/Components/UI/CreateEditDialog",
           "specifiers": [
             "CreateEditDialog"
+          ]
+        },
+        {
+          "source": "@/Components/UI/DiscardChangesDialog",
+          "specifiers": [
+            "DiscardChangesDialog"
+          ]
+        },
+        {
+          "source": "@/Hooks/useDiscardGuard",
+          "specifiers": [
+            "useDiscardGuard"
+          ]
+        },
+        {
+          "source": "@/Hooks/useSubmissionKey",
+          "specifiers": [
+            "useSubmissionKey"
           ]
         },
         {
@@ -44566,12 +44813,12 @@
       "exports": [
         "Employees"
       ],
-      "totalLines": 843,
+      "totalLines": 879,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Hr/HrDialogs.tsx": {
       "filePath": "backend/resources/js/Pages/Hr/HrDialogs.tsx",
-      "contentHash": "33a5a6352a70dfd9706e2ee15828ad6661d6496aa526d987c979b19312f1d2b4",
+      "contentHash": "4ff5c806c7bb4c141e11fc7706eed222432f356498aae7081861f2bda84624e5",
       "functions": [
         {
           "name": "LeaveRequestDialog",
@@ -44579,7 +44826,7 @@
             "{\n    open,\n    onClose,\n    leaveTypes,\n}"
           ],
           "exported": true,
-          "lineCount": 131
+          "lineCount": 136
         },
         {
           "name": "HrSummaryDialog",
@@ -44587,7 +44834,7 @@
             "{\n    open,\n    onClose,\n    users,\n}"
           ],
           "exported": true,
-          "lineCount": 135
+          "lineCount": 140
         },
         {
           "name": "ShiftDialog",
@@ -44595,7 +44842,7 @@
             "{\n    open,\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 147
+          "lineCount": 152
         },
         {
           "name": "LeaveTypeDialog",
@@ -44603,7 +44850,7 @@
             "{\n    open,\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 141
+          "lineCount": 150
         },
         {
           "name": "WorkProfileDialog",
@@ -44611,7 +44858,7 @@
             "{\n    open,\n    onClose,\n    users,\n    shifts,\n}"
           ],
           "exported": true,
-          "lineCount": 154
+          "lineCount": 163
         },
         {
           "name": "HolidayDialog",
@@ -44619,7 +44866,7 @@
             "{\n    open,\n    onClose,\n}"
           ],
           "exported": true,
-          "lineCount": 89
+          "lineCount": 98
         }
       ],
       "classes": [],
@@ -44677,7 +44924,7 @@
         "WorkProfileDialog",
         "HolidayDialog"
       ],
-      "totalLines": 839,
+      "totalLines": 881,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Pages/Hr/Index.tsx": {
@@ -47131,7 +47378,7 @@
     },
     "backend/resources/js/Pages/Workflows/WorkflowDialogs.tsx": {
       "filePath": "backend/resources/js/Pages/Workflows/WorkflowDialogs.tsx",
-      "contentHash": "3fb9364cd3138ec3a94abe5254d65fab90aab8bd58edfd2e586fab6eb9d474dd",
+      "contentHash": "b7f436ad2a6610259f87c975f63d6b66d8340ee4f99ef6857b2c65d5f6678816",
       "functions": [
         {
           "name": "newBuilderStep",
@@ -47146,7 +47393,7 @@
             "{\n    open,\n    onClose,\n    users,\n}"
           ],
           "exported": true,
-          "lineCount": 301
+          "lineCount": 307
         },
         {
           "name": "WorkflowDelegationDialog",
@@ -47154,7 +47401,7 @@
             "{\n    open,\n    onClose,\n    users,\n}"
           ],
           "exported": true,
-          "lineCount": 144
+          "lineCount": 152
         }
       ],
       "classes": [],
@@ -47208,7 +47455,7 @@
         "WorkflowDefinitionDialog",
         "WorkflowDelegationDialog"
       ],
-      "totalLines": 477,
+      "totalLines": 491,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/Support/editorPreview.ts": {
@@ -47381,7 +47628,7 @@
     },
     "backend/resources/js/app.tsx": {
       "filePath": "backend/resources/js/app.tsx",
-      "contentHash": "af4a610e8367a9f0f73151ced314618629049610e02b9ec848fdbf74ffc4b222",
+      "contentHash": "3f3685e52eaf3cb0c3e6e81adae4b71e70d3cfc20ada995887d459cc9647e748",
       "functions": [],
       "classes": [],
       "imports": [
@@ -47416,10 +47663,16 @@
           "specifiers": [
             "initializeHistoryGuard"
           ]
+        },
+        {
+          "source": "./Components/NetworkFailureNotice",
+          "specifiers": [
+            "NetworkFailureNotice"
+          ]
         }
       ],
       "exports": [],
-      "totalLines": 29,
+      "totalLines": 35,
       "hasStructuralAnalysis": true
     },
     "backend/resources/js/bootstrap.ts": {
@@ -47449,24 +47702,34 @@
       "totalLines": 23,
       "hasStructuralAnalysis": true
     },
-    "backend/resources/views/documents/commercial-print.blade.php": {
-      "filePath": "backend/resources/views/documents/commercial-print.blade.php",
-      "contentHash": "e85398ef6b9dfe3801efc94f08e88343c761d9f344f0620215b211fc2b6d93f6",
+    "backend/resources/views/auth/recovery-codes.blade.php": {
+      "filePath": "backend/resources/views/auth/recovery-codes.blade.php",
+      "contentHash": "721ab47b703239feafa399dcc3f9b0a644bced5af7504c5614f305dca982e576",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 81,
+      "totalLines": 8,
+      "hasStructuralAnalysis": true
+    },
+    "backend/resources/views/documents/commercial-print.blade.php": {
+      "filePath": "backend/resources/views/documents/commercial-print.blade.php",
+      "contentHash": "663bdfe163e338634d3a1ddff9098ecf417a89affeb3d16134ebdebe1fbdb3d6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 87,
       "hasStructuralAnalysis": true
     },
     "backend/resources/views/documents/official-print.blade.php": {
       "filePath": "backend/resources/views/documents/official-print.blade.php",
-      "contentHash": "d8796505c56f98c53e1e7b4c81b835e26fc4d825d804bc0cdfc5c418ce2e4222",
+      "contentHash": "18512e83f2445f8781d2565393309084eb45ef33f6969cafe1e0aae8e2cd398e",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 155,
+      "totalLines": 160,
       "hasStructuralAnalysis": true
     },
     "backend/resources/views/documents/payment-qr.blade.php": {
@@ -47479,14 +47742,34 @@
       "totalLines": 11,
       "hasStructuralAnalysis": true
     },
-    "backend/resources/views/documents/withholding-certificate.blade.php": {
-      "filePath": "backend/resources/views/documents/withholding-certificate.blade.php",
-      "contentHash": "2f6f191dd922b76b5ed181eefde7411df1ef716d1f700437b2abd81e85c3ea40",
+    "backend/resources/views/documents/pdf-fonts.blade.php": {
+      "filePath": "backend/resources/views/documents/pdf-fonts.blade.php",
+      "contentHash": "161eb1c4f604996aa1c19557ae277aeafc6819dff51084a41cc9af3f684ef9d0",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 78,
+      "totalLines": 3,
+      "hasStructuralAnalysis": true
+    },
+    "backend/resources/views/documents/pdf-layout.blade.php": {
+      "filePath": "backend/resources/views/documents/pdf-layout.blade.php",
+      "contentHash": "dbd0c99f2c1551edeb6493529d457b3f357d4c3fd9a5eae01bd1ebd01c44a973",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 28,
+      "hasStructuralAnalysis": true
+    },
+    "backend/resources/views/documents/withholding-certificate.blade.php": {
+      "filePath": "backend/resources/views/documents/withholding-certificate.blade.php",
+      "contentHash": "f94557e05d2524e7dac5094101fde4f6ecce0490f377dbbb6b120c48116e5c56",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 81,
       "hasStructuralAnalysis": true
     },
     "backend/resources/views/emails/erp-notification.blade.php": {
@@ -47501,17 +47784,17 @@
     },
     "backend/resources/views/payroll/payslip.blade.php": {
       "filePath": "backend/resources/views/payroll/payslip.blade.php",
-      "contentHash": "f844c66acb392d5c06e144338db804e961be6f6a6014d952003d5ab0248c14f3",
+      "contentHash": "e0c2397de6614c775c831e1dfbe834b3b7cb8b1c650da502f8ad6628d04ac8ed",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 18,
+      "totalLines": 20,
       "hasStructuralAnalysis": true
     },
     "backend/routes/auth.php": {
       "filePath": "backend/routes/auth.php",
-      "contentHash": "2b031579a31966fac2a05c9acc9158fc3030d1ffb336ebf85786e055837c362b",
+      "contentHash": "5e9e7acc14ef293913c925bd347853950d114f482e874150f17dc74e8926b566",
       "functions": [],
       "classes": [],
       "imports": [
@@ -47589,12 +47872,12 @@
         }
       ],
       "exports": [],
-      "totalLines": 75,
+      "totalLines": 76,
       "hasStructuralAnalysis": true
     },
     "backend/routes/console.php": {
       "filePath": "backend/routes/console.php",
-      "contentHash": "1ac7084182792290f0f1ddbe509244c5669b44ff614ef7f9bbf029f4f79b9ceb",
+      "contentHash": "ad93e7adc8566426617a7db370b671e70e5282f5c1dc9155b6af84be9165d361",
       "functions": [],
       "classes": [],
       "imports": [
@@ -47696,7 +47979,7 @@
         }
       ],
       "exports": [],
-      "totalLines": 246,
+      "totalLines": 248,
       "hasStructuralAnalysis": true
     },
     "backend/routes/external.php": {
@@ -47803,6 +48086,47 @@
       ],
       "exports": [],
       "totalLines": 15,
+      "hasStructuralAnalysis": true
+    },
+    "backend/routes/operations.php": {
+      "filePath": "backend/routes/operations.php",
+      "contentHash": "ff581141131ddc65c7abf939c97eae7bb8095aea141fda6afe64b68b57173ce6",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "App\\Jobs\\OperationsHeartbeat",
+          "specifiers": [
+            "OperationsHeartbeat"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Artisan",
+          "specifiers": [
+            "Artisan"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Cache",
+          "specifiers": [
+            "Cache"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\DB",
+          "specifiers": [
+            "DB"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Schedule",
+          "specifiers": [
+            "Schedule"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 43,
       "hasStructuralAnalysis": true
     },
     "backend/routes/summaries.php": {
@@ -48464,12 +48788,12 @@
     },
     "backend/setup/README.md": {
       "filePath": "backend/setup/README.md",
-      "contentHash": "7431a1255295ebf1fdc2199b2a04afaec2b560b5df806746a158c28e23eff406",
+      "contentHash": "5c64e2bfbffa1582e17f2257a9bf5376b2e2ddcf2758cab3d8d9aab5846a4c94",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 20,
+      "totalLines": 22,
       "hasStructuralAnalysis": false
     },
     "backend/setup/enable.php.example": {
@@ -48755,6 +49079,399 @@
       ],
       "exports": [],
       "totalLines": 58,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/prepare-remaining-api.php": {
+      "filePath": "backend/tests/Browser/prepare-remaining-api.php",
+      "contentHash": "cba13f089ef65f65aedcf2368d7e30d25f942ea4556c4e38e9b8afa56f5dcdab",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "App\\Models\\IntegrationApiKey",
+          "specifiers": [
+            "IntegrationApiKey"
+          ]
+        },
+        {
+          "source": "App\\Models\\User",
+          "specifiers": [
+            "User"
+          ]
+        },
+        {
+          "source": "Illuminate\\Contracts\\Console\\Kernel",
+          "specifiers": [
+            "Kernel"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 30,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/prepare-remaining-records.php": {
+      "filePath": "backend/tests/Browser/prepare-remaining-records.php",
+      "contentHash": "593fd8dec7ca68c9c6d60b091432d4aa93c54ebb0a5c8cdaaaf3a12ad1eb2761",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "App\\Models\\AssetCategory",
+          "specifiers": [
+            "AssetCategory"
+          ]
+        },
+        {
+          "source": "App\\Models\\Branch",
+          "specifiers": [
+            "Branch"
+          ]
+        },
+        {
+          "source": "App\\Models\\ChartOfAccount",
+          "specifiers": [
+            "ChartOfAccount"
+          ]
+        },
+        {
+          "source": "App\\Models\\Customer",
+          "specifiers": [
+            "Customer"
+          ]
+        },
+        {
+          "source": "App\\Models\\Deal",
+          "specifiers": [
+            "Deal"
+          ]
+        },
+        {
+          "source": "App\\Models\\Department",
+          "specifiers": [
+            "Department"
+          ]
+        },
+        {
+          "source": "App\\Models\\Division",
+          "specifiers": [
+            "Division"
+          ]
+        },
+        {
+          "source": "App\\Models\\Expense",
+          "specifiers": [
+            "Expense"
+          ]
+        },
+        {
+          "source": "App\\Models\\FixedAsset",
+          "specifiers": [
+            "FixedAsset"
+          ]
+        },
+        {
+          "source": "App\\Models\\Invoice",
+          "specifiers": [
+            "Invoice"
+          ]
+        },
+        {
+          "source": "App\\Models\\Permission",
+          "specifiers": [
+            "Permission"
+          ]
+        },
+        {
+          "source": "App\\Models\\PortalUser",
+          "specifiers": [
+            "PortalUser"
+          ]
+        },
+        {
+          "source": "App\\Models\\Project",
+          "specifiers": [
+            "Project"
+          ]
+        },
+        {
+          "source": "App\\Models\\Role",
+          "specifiers": [
+            "Role"
+          ]
+        },
+        {
+          "source": "App\\Models\\Supplier",
+          "specifiers": [
+            "Supplier"
+          ]
+        },
+        {
+          "source": "App\\Models\\Task",
+          "specifiers": [
+            "Task"
+          ]
+        },
+        {
+          "source": "App\\Models\\User",
+          "specifiers": [
+            "User"
+          ]
+        },
+        {
+          "source": "App\\Models\\Voucher",
+          "specifiers": [
+            "Voucher"
+          ]
+        },
+        {
+          "source": "App\\Services\\PortalAccessService",
+          "specifiers": [
+            "PortalAccessService"
+          ]
+        },
+        {
+          "source": "Illuminate\\Contracts\\Console\\Kernel",
+          "specifiers": [
+            "Kernel"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Hash",
+          "specifiers": [
+            "Hash"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 64,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/prepare-remaining.php": {
+      "filePath": "backend/tests/Browser/prepare-remaining.php",
+      "contentHash": "7f36728016f1d2b88e4c3fc2aa4376810329d6f2f0fd1d003aa493596825e9b1",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "App\\Models\\Permission",
+          "specifiers": [
+            "Permission"
+          ]
+        },
+        {
+          "source": "App\\Models\\Product",
+          "specifiers": [
+            "Product"
+          ]
+        },
+        {
+          "source": "App\\Models\\Role",
+          "specifiers": [
+            "Role"
+          ]
+        },
+        {
+          "source": "App\\Models\\User",
+          "specifiers": [
+            "User"
+          ]
+        },
+        {
+          "source": "App\\Services\\OrganizationProvisioner",
+          "specifiers": [
+            "OrganizationProvisioner"
+          ]
+        },
+        {
+          "source": "Illuminate\\Contracts\\Console\\Kernel",
+          "specifiers": [
+            "Kernel"
+          ]
+        },
+        {
+          "source": "Illuminate\\Http\\Request",
+          "specifiers": [
+            "Request"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Artisan",
+          "specifiers": [
+            "Artisan"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-api-ui.cjs": {
+      "filePath": "backend/tests/Browser/remaining-api-ui.cjs",
+      "contentHash": "801b2f564bc8c06aaf392bde8300b1784b4f7b28da6e272843ee98a08cc4fe2f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 73,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-api.cjs": {
+      "filePath": "backend/tests/Browser/remaining-api.cjs",
+      "contentHash": "519dde49a294c2b706d5e2d2d2e5505068fff0184abaab2c5c64728dc39f10e7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 41,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-contexts.cjs": {
+      "filePath": "backend/tests/Browser/remaining-contexts.cjs",
+      "contentHash": "aeaa476c28cb7bfaa70e594d3df684308df8534170ad77a8e4acab9ccfaef31d",
+      "functions": [
+        {
+          "name": "add",
+          "params": [],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "snapshot",
+          "params": [],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "exercise",
+          "params": [
+            "page",
+            "name"
+          ],
+          "exported": false,
+          "lineCount": 31
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 84,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-coordination.cjs": {
+      "filePath": "backend/tests/Browser/remaining-coordination.cjs",
+      "contentHash": "660c2a17062bb3dfa246505490a769df5012f0d51f310d855c3c9308fd41fce6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 111,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-dms.cjs": {
+      "filePath": "backend/tests/Browser/remaining-dms.cjs",
+      "contentHash": "6db1978d6a40c5fc70253853062ba31d29cbac636589a3096d6392ed99967ccd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 52,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-environment.php": {
+      "filePath": "backend/tests/Browser/remaining-environment.php",
+      "contentHash": "24f1f16382e7e153de326416bff9b73f19a95b006440df67faf08566dadb78b9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 14,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-etax.cjs": {
+      "filePath": "backend/tests/Browser/remaining-etax.cjs",
+      "contentHash": "831585468cdeddd3e360ef852cdcd9ea0fbbfbcc3f49caf84333f0511f491ad8",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 39,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-matrix.cjs": {
+      "filePath": "backend/tests/Browser/remaining-matrix.cjs",
+      "contentHash": "90b4bcefa08ba9be11e60566f6b13813cd5bccca1bddbdddbdf5a79d285cbf50",
+      "functions": [
+        {
+          "name": "values",
+          "params": [],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "save",
+          "params": [],
+          "exported": false,
+          "lineCount": 2
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 342,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-permissions.cjs": {
+      "filePath": "backend/tests/Browser/remaining-permissions.cjs",
+      "contentHash": "bdbeea493b002691858e197e3f4872c3602775ece7ef543188b22446c489013d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 40,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-resilience.cjs": {
+      "filePath": "backend/tests/Browser/remaining-resilience.cjs",
+      "contentHash": "b11ae3d49f144d5c8cc6414108029f6978aebc670cba76a24375a3842adf4b07",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 114,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-router.php": {
+      "filePath": "backend/tests/Browser/remaining-router.php",
+      "contentHash": "3d75adf28126d4f5f5ce08d731d5bb3c5816cb9e037f7d98bf2cc7c7ce998d34",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "Illuminate\\Http\\Request",
+          "specifiers": [
+            "Request"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Vite",
+          "specifiers": [
+            "Vite"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Browser/remaining-viewport.cjs": {
+      "filePath": "backend/tests/Browser/remaining-viewport.cjs",
+      "contentHash": "c8e3952521fadb3142d988097f34bf9d8fc81f0f0bdaff28603a4179d938802b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 48,
       "hasStructuralAnalysis": true
     },
     "backend/tests/Concerns/ActsAsOrgUser.php": {
@@ -52026,6 +52743,130 @@
       "totalLines": 67,
       "hasStructuralAnalysis": true
     },
+    "backend/tests/Feature/OperationalLogRedactionTest.php": {
+      "filePath": "backend/tests/Feature/OperationalLogRedactionTest.php",
+      "contentHash": "b2cf57290fdc3e033b1546265045d9526dc03006b02a3d54e82bd12f75d607ba",
+      "functions": [
+        {
+          "name": "test_raw_exceptions_and_untrusted_context_never_reach_operational_handler",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 15
+        }
+      ],
+      "classes": [
+        {
+          "name": "OperationalLogRedactionTest",
+          "methods": [
+            "test_raw_exceptions_and_untrusted_context_never_reach_operational_handler"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 18
+        }
+      ],
+      "imports": [
+        {
+          "source": "App\\Logging\\RedactOperationalLogs",
+          "specifiers": [
+            "RedactOperationalLogs"
+          ]
+        },
+        {
+          "source": "Illuminate\\Log\\Logger",
+          "specifiers": [
+            "Logger"
+          ]
+        },
+        {
+          "source": "Monolog\\Handler\\TestHandler",
+          "specifiers": [
+            "TestHandler"
+          ]
+        },
+        {
+          "source": "Monolog\\Logger",
+          "specifiers": [
+            "Logger"
+          ]
+        },
+        {
+          "source": "Tests\\TestCase",
+          "specifiers": [
+            "TestCase"
+          ]
+        }
+      ],
+      "exports": [
+        "OperationalLogRedactionTest"
+      ],
+      "totalLines": 29,
+      "hasStructuralAnalysis": true
+    },
+    "backend/tests/Feature/OperationsHealthTest.php": {
+      "filePath": "backend/tests/Feature/OperationsHealthTest.php",
+      "contentHash": "019afedf695b8351dd58af0ba27deac0083c0dc75f6657ee095dfd38cf7172e7",
+      "functions": [
+        {
+          "name": "test_health_requires_real_fresh_scheduler_and_async_worker_evidence",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "test_sync_queue_cannot_masquerade_as_running_worker",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 7
+        }
+      ],
+      "classes": [
+        {
+          "name": "OperationsHealthTest",
+          "methods": [
+            "test_health_requires_real_fresh_scheduler_and_async_worker_evidence",
+            "test_sync_queue_cannot_masquerade_as_running_worker"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 25
+        }
+      ],
+      "imports": [
+        {
+          "source": "App\\Jobs\\OperationsHeartbeat",
+          "specifiers": [
+            "OperationsHeartbeat"
+          ]
+        },
+        {
+          "source": "Illuminate\\Foundation\\Testing\\RefreshDatabase",
+          "specifiers": [
+            "RefreshDatabase"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Cache",
+          "specifiers": [
+            "Cache"
+          ]
+        },
+        {
+          "source": "Tests\\TestCase",
+          "specifiers": [
+            "TestCase"
+          ]
+        }
+      ],
+      "exports": [
+        "OperationsHealthTest"
+      ],
+      "totalLines": 35,
+      "hasStructuralAnalysis": true
+    },
     "backend/tests/Feature/Phase10BankAccountsTest.php": {
       "filePath": "backend/tests/Feature/Phase10BankAccountsTest.php",
       "contentHash": "12a4731585606f71c1ab45526859c91680224d4ea76ce267033648c792ee16ca",
@@ -54285,8 +55126,29 @@
     },
     "backend/tests/Feature/Phase18TwoFactorTest.php": {
       "filePath": "backend/tests/Feature/Phase18TwoFactorTest.php",
-      "contentHash": "38d93218032588173c0d3dfb4b06c918e6baeddd70a1f765eff4033450986ba7",
+      "contentHash": "a5b558aaf044a3dc548a538b3a83c2a1882645bf7a24328f771695610b73003c",
       "functions": [
+        {
+          "name": "test_setup_survives_invalid_code_and_refresh_then_displays_recovery_codes_once",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "test_setup_secret_expires_and_cannot_confirm_after_expiry",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "test_challenge_uses_pending_users_organization_trust_policy",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 7
+        },
         {
           "name": "test_privileged_user_must_pass_totp_after_password_login",
           "params": [],
@@ -54368,6 +55230,9 @@
         {
           "name": "Phase18TwoFactorTest",
           "methods": [
+            "test_setup_survives_invalid_code_and_refresh_then_displays_recovery_codes_once",
+            "test_setup_secret_expires_and_cannot_confirm_after_expiry",
+            "test_challenge_uses_pending_users_organization_trust_policy",
             "test_privileged_user_must_pass_totp_after_password_login",
             "test_recovery_code_is_single_use_and_invalid_codes_are_rejected",
             "test_trusted_device_is_accepted_only_before_expiry",
@@ -54381,7 +55246,7 @@
           ],
           "properties": [],
           "exported": true,
-          "lineCount": 125
+          "lineCount": 166
         }
       ],
       "imports": [
@@ -54458,6 +55323,12 @@
           ]
         },
         {
+          "source": "Inertia\\Testing\\AssertableInertia",
+          "specifiers": [
+            "AssertableInertia"
+          ]
+        },
+        {
           "source": "ReflectionMethod",
           "specifiers": [
             "ReflectionMethod"
@@ -54473,7 +55344,7 @@
       "exports": [
         "Phase18TwoFactorTest"
       ],
-      "totalLines": 145,
+      "totalLines": 187,
       "hasStructuralAnalysis": true
     },
     "backend/tests/Feature/Phase19HrAttendanceTest.php": {
@@ -61680,7 +62551,7 @@
     },
     "backend/tests/Feature/Phase5EndToEndTest.php": {
       "filePath": "backend/tests/Feature/Phase5EndToEndTest.php",
-      "contentHash": "a2e2c1cb148206bb687cd601f116855a6575f5ebf1f9bce412c4c953e1c443cf",
+      "contentHash": "aa396fdae28e4d342a560fc58f764ebb974ca563bcc14f7351cc2b63a165a393",
       "functions": [
         {
           "name": "setUp",
@@ -61718,11 +62589,11 @@
           "lineCount": 46
         },
         {
-          "name": "test_security_review_has_no_sensitive_audit_payload_and_no_export_notification_or_public_api_routes",
+          "name": "test_security_review_has_no_sensitive_audit_payload_and_guards_current_export_notification_and_api_routes",
           "params": [],
           "returnType": "void",
           "exported": false,
-          "lineCount": 33
+          "lineCount": 42
         },
         {
           "name": "test_production_invite_does_not_flash_plain_token",
@@ -61780,7 +62651,7 @@
             "test_e2e_role_isolation_and_multi_role_permission_union",
             "test_e2e_payment_reversal_updates_invoice_and_dashboard_metrics",
             "test_e2e_invoice_totals_and_needs_sales_review_after_void",
-            "test_security_review_has_no_sensitive_audit_payload_and_no_export_notification_or_public_api_routes",
+            "test_security_review_has_no_sensitive_audit_payload_and_guards_current_export_notification_and_api_routes",
             "test_production_invite_does_not_flash_plain_token",
             "paymentPayload",
             "taskPayload",
@@ -61789,7 +62660,7 @@
           ],
           "properties": [],
           "exported": true,
-          "lineCount": 428
+          "lineCount": 437
         }
       ],
       "imports": [
@@ -61893,12 +62764,12 @@
       "exports": [
         "Phase5EndToEndTest"
       ],
-      "totalLines": 450,
+      "totalLines": 459,
       "hasStructuralAnalysis": true
     },
     "backend/tests/Feature/Phase5ExecutiveDashboardTest.php": {
       "filePath": "backend/tests/Feature/Phase5ExecutiveDashboardTest.php",
-      "contentHash": "4dc5e5df0838594d2d65ac8a839778de6a9ee7e530fc7467fdecc069bd81dcfb",
+      "contentHash": "08a791034932aef9fc515070e276c423c7fde7e004d41e9ce8f249a2988bacb0",
       "functions": [
         {
           "name": "setUp",
@@ -61913,6 +62784,13 @@
           "returnType": "void",
           "exported": false,
           "lineCount": 156
+        },
+        {
+          "name": "test_executive_trend_keeps_twelve_unique_months_at_calendar_boundaries",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 13
         },
         {
           "name": "test_non_executive_finance_user_does_not_receive_executive_summary",
@@ -61953,6 +62831,7 @@
           "methods": [
             "setUp",
             "test_executive_permission_sees_sales_finance_delivery_metrics_without_cash_balance",
+            "test_executive_trend_keeps_twelve_unique_months_at_calendar_boundaries",
             "test_non_executive_finance_user_does_not_receive_executive_summary",
             "test_executive_widgets_keep_sales_scope_and_currencies_separate",
             "test_project_risk_uses_same_currency_approved_cost_and_project_scope",
@@ -61960,7 +62839,7 @@
           ],
           "properties": [],
           "exported": true,
-          "lineCount": 273
+          "lineCount": 287
         }
       ],
       "imports": [
@@ -62052,7 +62931,7 @@
       "exports": [
         "Phase5ExecutiveDashboardTest"
       ],
-      "totalLines": 293,
+      "totalLines": 307,
       "hasStructuralAnalysis": true
     },
     "backend/tests/Feature/Phase5UatSeedDataTest.php": {
@@ -62983,7 +63862,7 @@
     },
     "backend/tests/Feature/Phase8OfficialDocumentsTest.php": {
       "filePath": "backend/tests/Feature/Phase8OfficialDocumentsTest.php",
-      "contentHash": "a48c723231a3b0a1b8c3b193f1690305598b9b1e8404e7f1bf152be23a5e6c4f",
+      "contentHash": "e601ba3691d916c7fd871e6e0c0fd47424d2375a71a0b9fd6b135d226ece337e",
       "functions": [
         {
           "name": "setUp",
@@ -63011,14 +63890,14 @@
           "params": [],
           "returnType": "void",
           "exported": false,
-          "lineCount": 34
+          "lineCount": 38
         },
         {
           "name": "test_withholding_certificate_pdf_download_is_org_scoped",
           "params": [],
           "returnType": "void",
           "exported": false,
-          "lineCount": 28
+          "lineCount": 30
         },
         {
           "name": "test_print_view_blocks_cross_org_documents",
@@ -63026,6 +63905,16 @@
           "returnType": "void",
           "exported": false,
           "lineCount": 29
+        },
+        {
+          "name": "capturePdf",
+          "params": [
+            "$name",
+            "$contents"
+          ],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 11
         },
         {
           "name": "attachRole",
@@ -63049,11 +63938,12 @@
             "test_invoice_and_purchase_order_pdf_downloads_are_binary",
             "test_withholding_certificate_pdf_download_is_org_scoped",
             "test_print_view_blocks_cross_org_documents",
+            "capturePdf",
             "attachRole"
           ],
           "properties": [],
           "exported": true,
-          "lineCount": 227
+          "lineCount": 245
         }
       ],
       "imports": [
@@ -63127,7 +64017,7 @@
       "exports": [
         "Phase8OfficialDocumentsTest"
       ],
-      "totalLines": 244,
+      "totalLines": 262,
       "hasStructuralAnalysis": true
     },
     "backend/tests/Feature/Phase8TaxReportsTest.php": {
@@ -64527,12 +65417,12 @@
     },
     "checklist.md": {
       "filePath": "checklist.md",
-      "contentHash": "35507ba4d60be10bdfb72db197e3824b9fbf2e1f81c1947af6779a176af2b1af",
+      "contentHash": "11e5eace2799141a57ac6fcc1b07a4c7f08f34c4b6cfc14e2eccce984b3f2fb6",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 1706,
+      "totalLines": 1710,
       "hasStructuralAnalysis": false
     },
     "create-edit-dialog-template-concept.md": {
@@ -64545,24 +65435,64 @@
       "totalLines": 78,
       "hasStructuralAnalysis": false
     },
-    "docs/ARCHITECTURE_DECISIONS.md": {
-      "filePath": "docs/ARCHITECTURE_DECISIONS.md",
-      "contentHash": "83c0f0c3d9adb6f92a82e50a922e66e1d2faa6110412fa17c50106467ccd299d",
+    "deploy/backup-mysql.sh": {
+      "filePath": "deploy/backup-mysql.sh",
+      "contentHash": "821c35e7f8d15165f9d077781356c9f0454c56976e8d517b536d4b81ac74f520",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 123,
+      "totalLines": 19,
+      "hasStructuralAnalysis": false
+    },
+    "deploy/cron/company-erp.cron": {
+      "filePath": "deploy/cron/company-erp.cron",
+      "contentHash": "b410f665f3094e6aee1f6fd8b01f85a1d5db3557f15218234bc78625671ad342",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": false
+    },
+    "deploy/supervisor/company-erp.conf": {
+      "filePath": "deploy/supervisor/company-erp.conf",
+      "contentHash": "8dfc5d3dbc2de37abb38c25f126cca4fd46afbf691e6554b225747da0a2d4d0d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": false
+    },
+    "deploy/systemd/company-erp-worker.service": {
+      "filePath": "deploy/systemd/company-erp-worker.service",
+      "contentHash": "468adfd2fffbb3b4cf6d316cca8e9820857a30211cb2e7bd3ae477812b71d92c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 18,
+      "hasStructuralAnalysis": false
+    },
+    "docs/ARCHITECTURE_DECISIONS.md": {
+      "filePath": "docs/ARCHITECTURE_DECISIONS.md",
+      "contentHash": "29f092aaa6cb5759c9e9eca232d159b1208fb79a3a91e0ba137f24239d67de52",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 125,
       "hasStructuralAnalysis": false
     },
     "docs/CURRENT_IMPLEMENTATION.md": {
       "filePath": "docs/CURRENT_IMPLEMENTATION.md",
-      "contentHash": "78b27c3de3c1611d028b94fca5b28866e8b6a2662c5834a5e8d6b7711237c587",
+      "contentHash": "f1dc9b98a06c998cad1915518ad7fab9dac56139418128b3fd424dca9c61d721",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 79,
+      "totalLines": 83,
       "hasStructuralAnalysis": false
     },
     "docs/DESIGN_SYSTEM.md": {
@@ -64665,6 +65595,16 @@
       "totalLines": 274,
       "hasStructuralAnalysis": false
     },
+    "docs/LOCAL_ACCEPTANCE_20261030.md": {
+      "filePath": "docs/LOCAL_ACCEPTANCE_20261030.md",
+      "contentHash": "011ccd6a574fe45db476fc2c93028f921b5c8b443a2a609e21eb01089554b77d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 48,
+      "hasStructuralAnalysis": false
+    },
     "docs/PHASE_10_TREASURY_DESIGN.md": {
       "filePath": "docs/PHASE_10_TREASURY_DESIGN.md",
       "contentHash": "6ede5b123aa2d36a6c6c4b2f6031628732cf25433659496e58a1b1816bc8139a",
@@ -64737,7 +65677,7 @@
     },
     "docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md": {
       "filePath": "docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md",
-      "contentHash": "506d0bd08d991c885c44978b4c8a862af33d6ce231196e2fab2a8bf710ae10f6",
+      "contentHash": "f730e54cf483dd5100dcfe46cdb2b350d1a7eb97d3028ed211cf5f5d84f4aa49",
       "functions": [],
       "classes": [],
       "imports": [],
@@ -64787,12 +65727,12 @@
     },
     "docs/PHASE_23_1_FORM_INVENTORY.md": {
       "filePath": "docs/PHASE_23_1_FORM_INVENTORY.md",
-      "contentHash": "2584f2ab6f97699f82a182986cfef144820d0835d8ab8fcba219d32d014b1d71",
+      "contentHash": "04f4d4778a6870e17c8b017f6e0cd8bf66970afc0fefea24d0bb283bbd195119",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 2038,
+      "totalLines": 2040,
       "hasStructuralAnalysis": false
     },
     "docs/PHASE_23_1_MASTER_ROLLOUT.md": {
@@ -64907,22 +65847,22 @@
     },
     "docs/PHASE_28_OPERATIONS.md": {
       "filePath": "docs/PHASE_28_OPERATIONS.md",
-      "contentHash": "265fb085c86d3a923ae52d9402483fa374c1d7dd9ed389a640fe040910f06e22",
+      "contentHash": "6ca5f7c62ae060bd558fb4b6061081d3efac013fc035b8e48cfb9d9a84e1ff27",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 41,
+      "totalLines": 43,
       "hasStructuralAnalysis": false
     },
     "docs/PHASE_28_POS.md": {
       "filePath": "docs/PHASE_28_POS.md",
-      "contentHash": "3cd54c07b32780310ff22c691d352f3f754d93b3611709f471093dfc601d15e1",
+      "contentHash": "c5ea72f17a57dd883bbab8dbd37e61deca6995b471a41953968a667650daa744",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 36,
+      "totalLines": 38,
       "hasStructuralAnalysis": false
     },
     "docs/PHASE_7_POST_MVP_DESIGN.md": {
@@ -64945,34 +65885,54 @@
       "totalLines": 137,
       "hasStructuralAnalysis": false
     },
-    "docs/README.md": {
-      "filePath": "docs/README.md",
-      "contentHash": "a2bd497e3ea5c6d7e10507b38e6e6726fc1b25cea7eccf5504c4da2ff99fe828",
+    "docs/PRODUCTION_RUNBOOK.md": {
+      "filePath": "docs/PRODUCTION_RUNBOOK.md",
+      "contentHash": "3813dd0cdc78404a7c24dcdc91d57d2c527a2835adb42290d19c5b2184b15d5f",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 68,
+      "totalLines": 56,
+      "hasStructuralAnalysis": false
+    },
+    "docs/README.md": {
+      "filePath": "docs/README.md",
+      "contentHash": "067d79c90262f6cff8ea1b9df7f78b4991371166c9b55fd3215eccf4c67b67d8",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 70,
+      "hasStructuralAnalysis": false
+    },
+    "docs/REMAINING_WORK_20261029.md": {
+      "filePath": "docs/REMAINING_WORK_20261029.md",
+      "contentHash": "4b4545e1f0d7d5d61745492ea80e5a331be4919fefd75ee27cb8bb42bcbfb570",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 23,
       "hasStructuralAnalysis": false
     },
     "docs/ROUTES_AND_SCREENS.md": {
       "filePath": "docs/ROUTES_AND_SCREENS.md",
-      "contentHash": "69649a22b80d23d9a001c611275666e52d78ce3f20479ddb475e797fd1285010",
+      "contentHash": "6f337fe4944a52456679a9b27fe417c3433725f6c44c8800c060aa9363477ccb",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 322,
+      "totalLines": 326,
       "hasStructuralAnalysis": false
     },
     "docs/SECURITY_REQUIREMENTS.md": {
       "filePath": "docs/SECURITY_REQUIREMENTS.md",
-      "contentHash": "8917d417ecfff2e7e85b6efd40d60858408a0ace474737a1b7b19b75952408ea",
+      "contentHash": "119ffc13446fd205d1c83df434c3a09b0dd21e244075fc7a0686cc55b8ae72a5",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 111,
+      "totalLines": 113,
       "hasStructuralAnalysis": false
     },
     "docs/SEED_DATA.md": {
@@ -64987,22 +65947,22 @@
     },
     "docs/SETUP_WIZARD.md": {
       "filePath": "docs/SETUP_WIZARD.md",
-      "contentHash": "1916a2755e4fef75aa4c45b62ad8a59dad91f43c7e0c5eecbe9389daeabae4d7",
+      "contentHash": "f79ad38d0540c8a8a53e6fef4d1a119005ccd94f06db7b3208c0459ef034778f",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 28,
+      "totalLines": 30,
       "hasStructuralAnalysis": false
     },
     "docs/VALIDATION_RULES.md": {
       "filePath": "docs/VALIDATION_RULES.md",
-      "contentHash": "477d898f081f2bd7bb282b51e4c345f137cf224eb575126e254119ce5cd060b8",
+      "contentHash": "b161c8386d9d3f039415d2bafedf80456365c09aadde032b3346a454c6f6370b",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 131,
+      "totalLines": 133,
       "hasStructuralAnalysis": false
     },
     "docs/build-phase231-inventory.cjs": {
@@ -65422,12 +66382,12 @@
     },
     "docs/modules/README.md": {
       "filePath": "docs/modules/README.md",
-      "contentHash": "0a8f92aa275e259e7194e2990bc6a09ca280ece222d8604c717ce1f26d6fd341",
+      "contentHash": "1b85165b884d19b5760a7c8541ab062c2c203016b24321ecca49730521dcf62d",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 96,
+      "totalLines": 98,
       "hasStructuralAnalysis": false
     },
     "docs/openapi/external-read-v1.json": {
@@ -65462,117 +66422,317 @@
     },
     "document/01_system_architecture.html": {
       "filePath": "document/01_system_architecture.html",
-      "contentHash": "b8c361f7a151aef773369e0ca3f17d6329803c1de34b8f37cc31edee459fdcab",
+      "contentHash": "a5c121f490eb903ecee0f7aa9fe5d4a462cfb500e4a652acd9e7bbca23b12f55",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14702,
+      "totalLines": 14668,
+      "hasStructuralAnalysis": false
+    },
+    "document/01_system_architecture.visual-check.html": {
+      "filePath": "document/01_system_architecture.visual-check.html",
+      "contentHash": "8887e8a58aed415e282813fddd399e77849b56b0a7e2919d0f75e9d97e59a96a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/01_system_architecture.visual-check.json": {
+      "filePath": "document/01_system_architecture.visual-check.json",
+      "contentHash": "0f013b79f154bb82547b37c8f752a61d5296680c98650b118e4ab0b7f6db1135",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/02_multitenancy_org_hierarchy.html": {
       "filePath": "document/02_multitenancy_org_hierarchy.html",
-      "contentHash": "dca83c34ee2e79a01c704d193d5c129af33b89458da1d7912a3aafe69aef431d",
+      "contentHash": "04e81c36cf243bcbb00bdf9ab8e862002c0efcaf7ee74461f215a5e6bb4f771c",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14705,
+      "totalLines": 14671,
+      "hasStructuralAnalysis": false
+    },
+    "document/02_multitenancy_org_hierarchy.visual-check.html": {
+      "filePath": "document/02_multitenancy_org_hierarchy.visual-check.html",
+      "contentHash": "f0027fd8c63ca39f8e010bd669bccb1472754390fa2697a8c1f4ba053faa8a8b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/02_multitenancy_org_hierarchy.visual-check.json": {
+      "filePath": "document/02_multitenancy_org_hierarchy.visual-check.json",
+      "contentHash": "812f71c71a491811362afa8c4b2cd0fa6c03b7a809d6091b24a292d5d3b28113",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/03_business_core_workflow.html": {
       "filePath": "document/03_business_core_workflow.html",
-      "contentHash": "43c15cb071a528e9fb3d22b9ad133681ea3c439e11aae004d510a713edd6e565",
+      "contentHash": "589674e09309b4e05a581bb68c6c3c1f3d4f7399b61fb1bb85bfc68f6d2df753",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14712,
+      "totalLines": 14675,
+      "hasStructuralAnalysis": false
+    },
+    "document/03_business_core_workflow.visual-check.html": {
+      "filePath": "document/03_business_core_workflow.visual-check.html",
+      "contentHash": "526479943f05af769009f8774c9c6a259f1cc227cad3f869c9070b2f144ba68f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/03_business_core_workflow.visual-check.json": {
+      "filePath": "document/03_business_core_workflow.visual-check.json",
+      "contentHash": "709c4e2f4bfb90ef5f4dd6f9f21047a3615f0dff09d66ad6b9867393480f93cd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/04_auth_session_rbac_sequence.html": {
       "filePath": "document/04_auth_session_rbac_sequence.html",
-      "contentHash": "1c8dcabc278fb8889f3386f5c75d5e647531c7e3ea217eef19528fedc1426522",
+      "contentHash": "4cb978296e54d864c81f6af7138d9f161700dfcc0e1f74bbd624828441b7d236",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14769,
+      "totalLines": 14735,
+      "hasStructuralAnalysis": false
+    },
+    "document/04_auth_session_rbac_sequence.visual-check.html": {
+      "filePath": "document/04_auth_session_rbac_sequence.visual-check.html",
+      "contentHash": "e94b9c33dcf769b20194c1039a3b8e9eacbd7cb91a8401df46508e3f8ba19b86",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/04_auth_session_rbac_sequence.visual-check.json": {
+      "filePath": "document/04_auth_session_rbac_sequence.visual-check.json",
+      "contentHash": "bb01b0c869ccabc07001e52aa72576fed5f20d2c4dab64abdd73cc2da6356b71",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/05_invoice_creation_payment_sequence.html": {
       "filePath": "document/05_invoice_creation_payment_sequence.html",
-      "contentHash": "ba612478e76396c28559d8afcf4b858b2231d7325d58e8cc60a99697f5d9c6bb",
+      "contentHash": "812cd0f51636c6faebb48ada6cf006ce8b1803f260fd39b2b87940b9e2558d48",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14759,
+      "totalLines": 14725,
+      "hasStructuralAnalysis": false
+    },
+    "document/05_invoice_creation_payment_sequence.visual-check.html": {
+      "filePath": "document/05_invoice_creation_payment_sequence.visual-check.html",
+      "contentHash": "c23f809c1b21dc67c52cccda6dadac2cbdcc2eab3be6a4ac0461e2b10f8d6ce9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/05_invoice_creation_payment_sequence.visual-check.json": {
+      "filePath": "document/05_invoice_creation_payment_sequence.visual-check.json",
+      "contentHash": "ae53bd8bc2d07f06279681e101c884aae5993ebffa6ea72e428efe0ca9597472",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/06_erp_data_lineage_flow.html": {
       "filePath": "document/06_erp_data_lineage_flow.html",
-      "contentHash": "00957f812868d0ed1ed17d13f2dba5b1b9ec0070bc57a7ab72c12a920dddf7b5",
+      "contentHash": "dd97730881c9d7f3b19aa346fe8b801fe0e65809d912dac37cc67ff51a9d40bb",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14717,
+      "totalLines": 14683,
+      "hasStructuralAnalysis": false
+    },
+    "document/06_erp_data_lineage_flow.visual-check.html": {
+      "filePath": "document/06_erp_data_lineage_flow.visual-check.html",
+      "contentHash": "fe17d272fac7445a03a2c1f2cd6bcdc13a8d8d28d1bdc3488e87f6672bcac8bd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/06_erp_data_lineage_flow.visual-check.json": {
+      "filePath": "document/06_erp_data_lineage_flow.visual-check.json",
+      "contentHash": "0ef51abeb25fb8e22fd183573c222a864476af19be48c2b0d453a8ba04ff3924",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/07_deal_sales_lifecycle.html": {
       "filePath": "document/07_deal_sales_lifecycle.html",
-      "contentHash": "80d6b8be482fa0b84957a07a8d6b0963ca761ea6b111384c566418e01257107d",
+      "contentHash": "0d0d614ff5a237e8452500129ee10d66705e8938f716ca6aab7a11ff30130472",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14656,
+      "totalLines": 14622,
+      "hasStructuralAnalysis": false
+    },
+    "document/07_deal_sales_lifecycle.visual-check.html": {
+      "filePath": "document/07_deal_sales_lifecycle.visual-check.html",
+      "contentHash": "007951725f199c842b728e02357ed46355cd1c41294f7b7985fabddb84a38842",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/07_deal_sales_lifecycle.visual-check.json": {
+      "filePath": "document/07_deal_sales_lifecycle.visual-check.json",
+      "contentHash": "1906d03e2eaf3c04ac22a9ae87bdb140068d626829a84fbeada0e0c6fc4b3b59",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/08_invoice_lifecycle.html": {
       "filePath": "document/08_invoice_lifecycle.html",
-      "contentHash": "dd72db4aa72861a3ac7125f3b63e474067ed4e61bdd180b77708114ef80a0324",
+      "contentHash": "38b21e6453dad943c9df9eabaa020de5c5b7ecc9ff8b53c0bc2e8c18a03477be",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14638,
+      "totalLines": 14604,
+      "hasStructuralAnalysis": false
+    },
+    "document/08_invoice_lifecycle.visual-check.html": {
+      "filePath": "document/08_invoice_lifecycle.visual-check.html",
+      "contentHash": "54bfabc50456661a82527864b23b4a6b0c6d77febaf98ff796e6d10fd1de7121",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/08_invoice_lifecycle.visual-check.json": {
+      "filePath": "document/08_invoice_lifecycle.visual-check.json",
+      "contentHash": "578bdd105177da88140d3b958b6d8281621a7fd56321e77013c67e2bf61b8c1a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/09_task_project_lifecycle.html": {
       "filePath": "document/09_task_project_lifecycle.html",
-      "contentHash": "19fcca531279c543e2c3caf622fee301ce1ffa52d4d0712220197539883728b3",
+      "contentHash": "aa47824114aa79801b688acbe5b16e4659e5c155078f23c2874a9c8ece25c7fd",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14627,
+      "totalLines": 14593,
+      "hasStructuralAnalysis": false
+    },
+    "document/09_task_project_lifecycle.visual-check.html": {
+      "filePath": "document/09_task_project_lifecycle.visual-check.html",
+      "contentHash": "bb1c353eb64f3716354c46405021459e4c1b4ea1de04286d8ece6f9bb5fb6ef3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/09_task_project_lifecycle.visual-check.json": {
+      "filePath": "document/09_task_project_lifecycle.visual-check.json",
+      "contentHash": "9e0e2830eb50406c18f3851e4f44b534b0a050e4dad5afd76cf09944aa97e449",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/10_database_er_domain_model.html": {
       "filePath": "document/10_database_er_domain_model.html",
-      "contentHash": "947fed014e06d73e4089a4aabecef9fc6f124855cf7a45f44547f2b33fbffb06",
+      "contentHash": "5f00d7e3c894cd78a9ba26b0942c1903bd81bc13956d0120a2dcfcf2e4abcb30",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14718,
+      "totalLines": 14684,
+      "hasStructuralAnalysis": false
+    },
+    "document/10_database_er_domain_model.visual-check.html": {
+      "filePath": "document/10_database_er_domain_model.visual-check.html",
+      "contentHash": "998190f0bc47ffda0004ea872c09415113544cee8d4495b442c34f4ce0669aef",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/10_database_er_domain_model.visual-check.json": {
+      "filePath": "document/10_database_er_domain_model.visual-check.json",
+      "contentHash": "535245af956f31b8e2d37de5ae98ae9c4becab840b002b3d5f210615f209ad47",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/11_payroll_policy_gl_flow.html": {
       "filePath": "document/11_payroll_policy_gl_flow.html",
-      "contentHash": "2845b229b3d3543ab9d0b5e1540232cb7f9237ebd982fc36e3c736d3ba54e253",
+      "contentHash": "e928ace8e0b42db8b99d89bb9ebfea8018d93a945a309fedd1c980275c8b1ec9",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14702,
+      "totalLines": 14665,
       "hasStructuralAnalysis": false
     },
     "document/11_payroll_policy_gl_flow.visual-check.html": {
       "filePath": "document/11_payroll_policy_gl_flow.visual-check.html",
-      "contentHash": "06dc7d0700de4bc641f035640101be01ffa5177bce643dcb474f30209aaac911",
+      "contentHash": "07205da4593f533a73a9507b85744b77a18ad17e82a2acb380c51e60e33cf3a2",
       "functions": [],
       "classes": [],
       "imports": [],
@@ -65582,7 +66742,7 @@
     },
     "document/11_payroll_policy_gl_flow.visual-check.json": {
       "filePath": "document/11_payroll_policy_gl_flow.visual-check.json",
-      "contentHash": "f2d30f67a8787d6e49e76184b2f52e43bb6b0b868c797bb7888d401f366c7e0d",
+      "contentHash": "b6438e8175d8df19320d572c95eea80c2e99c831f021b77e91d0e67c4c32e0c9",
       "functions": [],
       "classes": [],
       "imports": [],
@@ -65592,52 +66752,152 @@
     },
     "document/12_document_management_lifecycle.html": {
       "filePath": "document/12_document_management_lifecycle.html",
-      "contentHash": "6eb3ec71413f8667e26309e286d9a275f65e95684ab12e0c7bd3d79924b7b8e7",
+      "contentHash": "e03a4b1054a284a6e273ebf29f6560de2c4e7d85ed63741186f287c52bc46178",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14656,
+      "totalLines": 14622,
+      "hasStructuralAnalysis": false
+    },
+    "document/12_document_management_lifecycle.visual-check.html": {
+      "filePath": "document/12_document_management_lifecycle.visual-check.html",
+      "contentHash": "efcbd855761878257372ef80e9bc369ecabada96425cd8368c3f49ae2bde2a52",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/12_document_management_lifecycle.visual-check.json": {
+      "filePath": "document/12_document_management_lifecycle.visual-check.json",
+      "contentHash": "430d8207163df8cf5f8433b2307bda9ffed434e90583b35690a47a3eca2694b3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/13_two_factor_auth_sequence.html": {
       "filePath": "document/13_two_factor_auth_sequence.html",
-      "contentHash": "5583e5eede7a5acfdd2277dc55ab7dccdd9523e471e97478d52570caf66bb122",
+      "contentHash": "212b95587f93e433880e5ffeeedbba2f056877aa66fb1ddbe282ede2d470dbcf",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14793,
+      "totalLines": 14759,
+      "hasStructuralAnalysis": false
+    },
+    "document/13_two_factor_auth_sequence.visual-check.html": {
+      "filePath": "document/13_two_factor_auth_sequence.visual-check.html",
+      "contentHash": "d01bd9e64fedbe7497f9c40eb35accd05e9a0f34fecefed3e6ce65c108ea9771",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/13_two_factor_auth_sequence.visual-check.json": {
+      "filePath": "document/13_two_factor_auth_sequence.visual-check.json",
+      "contentHash": "21dfc17a88c2641c0e8ec5759cf935e7d38c4619b35ac46d6fa9102793a6d17b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/14_approval_workflow_engine.html": {
       "filePath": "document/14_approval_workflow_engine.html",
-      "contentHash": "8becaac11eef0b0d7e6eddb218daad5901ee658b9854ee72c2d9303660b9a0d5",
+      "contentHash": "054d8e5b711fe6ca6ac62e5d8f2e821f294b598028234f848b60b4c2af167df8",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14641,
+      "totalLines": 14607,
+      "hasStructuralAnalysis": false
+    },
+    "document/14_approval_workflow_engine.visual-check.html": {
+      "filePath": "document/14_approval_workflow_engine.visual-check.html",
+      "contentHash": "c77b4aba154bee6ef6da4fe4b15ac2b7babf6e467f0d81202524cb73f270e08d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/14_approval_workflow_engine.visual-check.json": {
+      "filePath": "document/14_approval_workflow_engine.visual-check.json",
+      "contentHash": "6917a90d1c471646acbb2440166c0020e807591a2bad23a2cccc7c1ca7ef1ea9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/15_payment_gateway_settlement.html": {
       "filePath": "document/15_payment_gateway_settlement.html",
-      "contentHash": "ddc2c27effe0ecb4607fddff7edf1e5548148318d67194197395a69620f91ebd",
+      "contentHash": "eb3e43341db7e1dc972870b48b7dcfe84165bd76cf9d082e4a625aa7dbb30d0e",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14786,
+      "totalLines": 14752,
+      "hasStructuralAnalysis": false
+    },
+    "document/15_payment_gateway_settlement.visual-check.html": {
+      "filePath": "document/15_payment_gateway_settlement.visual-check.html",
+      "contentHash": "57260fbc87bdfd3e720cc8cad147596a632275c14da4c708ec77a306fcb62237",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/15_payment_gateway_settlement.visual-check.json": {
+      "filePath": "document/15_payment_gateway_settlement.visual-check.json",
+      "contentHash": "ee379f2c749e77ead7777c37a10a13872e395cf00dd38113a0fb2733b951a14a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/16_master_dialog_editor_lifecycle.html": {
       "filePath": "document/16_master_dialog_editor_lifecycle.html",
-      "contentHash": "18452633dae208d63acf3ce3b3bef909250f5974d03d81f40070cc06e21ad2c5",
+      "contentHash": "19de673b6639fe11cb17d001cfcd141fa3752affafc996d5ae14b790992b35f0",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14641,
+      "totalLines": 14607,
+      "hasStructuralAnalysis": false
+    },
+    "document/16_master_dialog_editor_lifecycle.visual-check.html": {
+      "filePath": "document/16_master_dialog_editor_lifecycle.visual-check.html",
+      "contentHash": "aeef39b123f1c2352af6edd617e930361f6376b56a322ba23adedfb8319575f1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/16_master_dialog_editor_lifecycle.visual-check.json": {
+      "filePath": "document/16_master_dialog_editor_lifecycle.visual-check.json",
+      "contentHash": "0b9f063565d041e5a51d38268d14e3aef9a9a6f6142edba52cedd0e048be3ae9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
       "hasStructuralAnalysis": false
     },
     "document/17_hr_employee_attendance_payroll.md": {
@@ -65662,7 +66922,7 @@
     },
     "document/19_cash_flow_forecasting_engine.md": {
       "filePath": "document/19_cash_flow_forecasting_engine.md",
-      "contentHash": "22a091403db4a0d29e76e440383f8887edaa9805b4ad97d3facee5d7ecf46add",
+      "contentHash": "8e50696a6b4ee4b9f51536a41aaa6484cf2fa2aebc8f18d299c34c4ba9d79da1",
       "functions": [],
       "classes": [],
       "imports": [],
@@ -65692,12 +66952,12 @@
     },
     "document/22_external_api_architecture.html": {
       "filePath": "document/22_external_api_architecture.html",
-      "contentHash": "fe68fe864f3c49354ab4086bf4c420708143b427f82eb0ea78e4079928bccb6e",
+      "contentHash": "47828b348827d1cbc0c036a619e57530b29d9ac0761c220573bad9c5fecfd34e",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 14646,
+      "totalLines": 14647,
       "hasStructuralAnalysis": false
     },
     "document/22_external_api_architecture.md": {
@@ -65722,7 +66982,37 @@
     },
     "document/22_external_api_architecture.visual-check.json": {
       "filePath": "document/22_external_api_architecture.visual-check.json",
-      "contentHash": "a51219b3a292b497787384d29a51be0a00c8bceeb137bd3b9ac453f9a919e2e7",
+      "contentHash": "7fa9e2f390e7d12e2a1050067ee08507718bcc4a669fcdf9b8934b4a1405f650",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 483,
+      "hasStructuralAnalysis": false
+    },
+    "document/23_pos_server_configuration.html": {
+      "filePath": "document/23_pos_server_configuration.html",
+      "contentHash": "250e3beccc505ae5d12dfeef22c71e8cb136e35e09f48a8b46a441716989b524",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 14605,
+      "hasStructuralAnalysis": false
+    },
+    "document/23_pos_server_configuration.visual-check.html": {
+      "filePath": "document/23_pos_server_configuration.visual-check.html",
+      "contentHash": "a2d4a50cdd142d3645a3c389f9932cbe4fcfcf3be57bc3926b1f679b98ea6756",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/23_pos_server_configuration.visual-check.json": {
+      "filePath": "document/23_pos_server_configuration.visual-check.json",
+      "contentHash": "de2f5e22cf6f4c2abd8f8b251b668f6e233a9601b2bef9ddbc4ab09c01a20abe",
       "functions": [],
       "classes": [],
       "imports": [],
@@ -65732,22 +67022,22 @@
     },
     "document/API_Document.md": {
       "filePath": "document/API_Document.md",
-      "contentHash": "c1a5a82fd0dcd31df662d95fa506dce6fbbc3eb1a2ccad4a03a21687eef1cd35",
+      "contentHash": "c4071e70bc084c805fc3aa24bb772c870b767d3c370b9e0e50ad2e318b45b56a",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 5281,
+      "totalLines": 5283,
       "hasStructuralAnalysis": false
     },
     "document/DATABASE_ERD.md": {
       "filePath": "document/DATABASE_ERD.md",
-      "contentHash": "da1372fb19ba0bb339a85c70596e517cc5991d1b38a45ed78c364bfa7ee2e0bf",
+      "contentHash": "af96156c4493634518a07a1c84f36fffc93dc2d90705ffab3e113b2cdf2495ca",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 1646,
+      "totalLines": 1648,
       "hasStructuralAnalysis": false
     },
     "document/DATABASE_UPGRADE_20261027.md": {
@@ -65760,54 +67050,104 @@
       "totalLines": 35,
       "hasStructuralAnalysis": false
     },
-    "document/GROUPS_WORKFLOW.md": {
-      "filePath": "document/GROUPS_WORKFLOW.md",
-      "contentHash": "7a1e3e25b914b426dbd08c8e1a9cbeff05236272127e9a71206c84fd2c74180a",
+    "document/DIAGRAM_DELIVERY_20261029.json": {
+      "filePath": "document/DIAGRAM_DELIVERY_20261029.json",
+      "contentHash": "1732773ad3c45f92235e869098c99ad00c44e8f3fef8a3e5f7ae67c1a10940c3",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 1193,
+      "totalLines": 507,
+      "hasStructuralAnalysis": false
+    },
+    "document/DIAGRAM_NOTES.md": {
+      "filePath": "document/DIAGRAM_NOTES.md",
+      "contentHash": "ed3c80e6ca33ec68305ab2c1393714e0d9c526635957732d160e9c7334c214b5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 391,
+      "hasStructuralAnalysis": false
+    },
+    "document/DIAGRAM_VISUAL_CHECK_20261029.json": {
+      "filePath": "document/DIAGRAM_VISUAL_CHECK_20261029.json",
+      "contentHash": "5e8a20729c9242fd26c07330c917ab3fae88e7ea29b64610123094faf870a814",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8751,
+      "hasStructuralAnalysis": false
+    },
+    "document/DOCUMENTATION_UPDATE_20261029.md": {
+      "filePath": "document/DOCUMENTATION_UPDATE_20261029.md",
+      "contentHash": "d567efd5ba643a5e688a60961ca8d54811958c7f920f2db1f041ae84b7b1fc3a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": false
+    },
+    "document/DOCUMENT_LINK_CHECK_20261029.json": {
+      "filePath": "document/DOCUMENT_LINK_CHECK_20261029.json",
+      "contentHash": "c1bb1ffbf116ebfda2fba54bfeb07aa4fb6c1274d0469bbed96c840500779be3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 6,
+      "hasStructuralAnalysis": false
+    },
+    "document/GROUPS_WORKFLOW.md": {
+      "filePath": "document/GROUPS_WORKFLOW.md",
+      "contentHash": "f1ed3f329c653a8066c204ae855a0995563288ed0467ed1b954589a719031e37",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1195,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_1_POS_SCOPE.md": {
       "filePath": "document/PHASE_28_1_POS_SCOPE.md",
-      "contentHash": "d8b6bb64c7c37b757137c9c5d247004a40e10e75c2a9bc5ce1bf235b52280aa5",
+      "contentHash": "169892aee24238204d06535a57b4b92321a6a23cd6b87a37952d600c270e5ef3",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 49,
+      "totalLines": 51,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md": {
       "filePath": "document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md",
-      "contentHash": "3306f62f37edec6d5804bab34cae037de0f3954b28a3569122cb77ec5a40283c",
+      "contentHash": "f39f25aeae018dd6349ed9bdf8616e8ece746a18322b3c2127309052e22532fb",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 211,
+      "totalLines": 213,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_3_POS_SECURITY.md": {
       "filePath": "document/PHASE_28_3_POS_SECURITY.md",
-      "contentHash": "d1ffb0d811f72e346cb84ef3668210edee206451667815b1d2f85478acbae0da",
+      "contentHash": "801096d2ffc6998f5f74cacb12290b8f2ac6f982cd33fdbc8d6f6cb94125e294",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 133,
+      "totalLines": 135,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_API.md": {
       "filePath": "document/PHASE_28_API.md",
-      "contentHash": "c2c64d1ffe0ffb441a61c5c61ca2006c610aaff61c5c5c785b62613eda9df89a",
+      "contentHash": "f337e1064cae6924523e71b7a5aac4b55ada37174298812bd523e60f38c21db5",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 93,
+      "totalLines": 106,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_CHECKLIST_BASELINE.md": {
@@ -65822,42 +67162,42 @@
     },
     "document/PHASE_28_DATABASE.md": {
       "filePath": "document/PHASE_28_DATABASE.md",
-      "contentHash": "dee14b801d1570035cf92a7a750a4b4baa9f99753c5ee4318561b20c16c9fd75",
+      "contentHash": "611b0aaed8ca207b430eed92b26df346a0cff914d7506fed50a064b684d3f620",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 115,
+      "totalLines": 117,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_IMPLEMENTATION_STATUS.md": {
       "filePath": "document/PHASE_28_IMPLEMENTATION_STATUS.md",
-      "contentHash": "b1c9e2ca4a665123b1c8539d026d374048a1553404c44f967b86d0e278d2022b",
+      "contentHash": "8e94aa95b1c34a5515764ed41047437a07a5258c42b235e7b6633155ee9565fa",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 92,
+      "totalLines": 94,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_LOCAL_ACCEPTANCE.md": {
       "filePath": "document/PHASE_28_LOCAL_ACCEPTANCE.md",
-      "contentHash": "10b76c82011e1c351afcdb166821ceae64c2609ca5fd6b897f377295c33f0ed4",
+      "contentHash": "d3a8541ae9fe677da2996c48db874e6dd340dfbdce12cbcd8b0f6bd6e413a35a",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 61,
+      "totalLines": 63,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_LOCAL_TEST_SECURITY.md": {
       "filePath": "document/PHASE_28_LOCAL_TEST_SECURITY.md",
-      "contentHash": "ddcd681e0a99aef1f33f464df194ea4b58524ef35b7fc3cfa65badf33a614863",
+      "contentHash": "c93f26c1d92ad07df108678d1909082fd99346dc3bb7e248545115b66efeea3f",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 56,
+      "totalLines": 58,
       "hasStructuralAnalysis": false
     },
     "document/PHASE_28_REVIEW_ATTEMPT_20261027.md": {
@@ -65870,74 +67210,244 @@
       "totalLines": 20,
       "hasStructuralAnalysis": false
     },
-    "document/README.md": {
-      "filePath": "document/README.md",
-      "contentHash": "26acf52b52022e9b3eef6be5b9343a3d28c940caa658906a8a4e06be0a8d4c0c",
+    "document/POS_CONFIGURATION.md": {
+      "filePath": "document/POS_CONFIGURATION.md",
+      "contentHash": "484c26fff0087033957e76b84d9c9ce316f3e695e4346f8334eef86ff4d70078",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 840,
+      "totalLines": 78,
+      "hasStructuralAnalysis": false
+    },
+    "document/POS_CONFIG_GEMINI_REVIEW_20261029.md": {
+      "filePath": "document/POS_CONFIG_GEMINI_REVIEW_20261029.md",
+      "contentHash": "5a0a2ed60593abddd96753bb58117cf8d088a0b4c07afa3a3b2fa6d31dcc4486",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 43,
+      "hasStructuralAnalysis": false
+    },
+    "document/README.md": {
+      "filePath": "document/README.md",
+      "contentHash": "eb49b7ae772a3feeecf8be006adbc0a4be77bd92ee76403b184ead6946e1a7cf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 844,
       "hasStructuralAnalysis": false
     },
     "document/README_POS.md": {
       "filePath": "document/README_POS.md",
-      "contentHash": "299a69c7b7b58c9c273c33fe452866abac6ad83422f3c635df808877c12e099d",
+      "contentHash": "fb402dfeff80b2e1805f85547271ffc95edde325e00ee1bdb20ddba703a69236",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 146,
+      "totalLines": 160,
       "hasStructuralAnalysis": false
     },
     "document/README_POS_PHARMACY.md": {
       "filePath": "document/README_POS_PHARMACY.md",
-      "contentHash": "c1627674bc6032aac1f8ccc338f32a461bd965501f1c9df0be7ea07d49ceae6c",
+      "contentHash": "ae1903111868f0afdb44ce3e6f58144f1aaa6025b98ffde99cf427017f998857",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 77,
+      "totalLines": 79,
       "hasStructuralAnalysis": false
     },
     "document/README_POS_RESTAURANT.md": {
       "filePath": "document/README_POS_RESTAURANT.md",
-      "contentHash": "628101021e2ea073904636df9660699ea12db7c9072a385015fbb559c8b45257",
+      "contentHash": "d3c804cb666441cc06eaad4c04951e35518b38e7eca5c3f6e617eb272a20a012",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 76,
+      "totalLines": 78,
       "hasStructuralAnalysis": false
     },
     "document/README_POS_RETAIL.md": {
       "filePath": "document/README_POS_RETAIL.md",
-      "contentHash": "58e0f44e20cd4d8ec5efdc37e3a51ad07b787d20021807397826d60c164ff9be",
+      "contentHash": "6a3bde5ef6da1567a2eac477d8044bc5fa894ccdfd1b87a5bd32f18f7d5418f3",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 61,
+      "totalLines": 63,
       "hasStructuralAnalysis": false
     },
     "document/UNDERSTAND_PIPELINE.md": {
       "filePath": "document/UNDERSTAND_PIPELINE.md",
-      "contentHash": "c4ae901ec01d6190232e4d5f95682e81c0dded9aed4cee818f3d92275b34f826",
+      "contentHash": "065ff59285298f502888f41c0e6f9282c23b1400b382df92399d186ee31fe95e",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 186,
+      "totalLines": 190,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/README.md": {
+      "filePath": "document/acceptance/20261030/README.md",
+      "contentHash": "e81339db578c8554d041b7942c0d800a223773ad54ea58a9e4ca6b1cd89c4597",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 19,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/api-browser.json": {
+      "filePath": "document/acceptance/20261030/api-browser.json",
+      "contentHash": "c05abaed5554aaf1a2f34d8d76ae912ab2cf0819822a561f73eb9a43d0ec5af1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 31,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/api-http.json": {
+      "filePath": "document/acceptance/20261030/api-http.json",
+      "contentHash": "6f00fab97acea43d0e0c98092502b9d7ff613301f3a05af4297cbabc271ea29b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 69,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/browser-all-fields-final.json": {
+      "filePath": "document/acceptance/20261030/browser-all-fields-final.json",
+      "contentHash": "99a1277bfe082a501ffd7dc629e2775a224bf6b0eaf62310464f27f57e3ef7dd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 5600,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/context-browser.json": {
+      "filePath": "document/acceptance/20261030/context-browser.json",
+      "contentHash": "7166e83f48abade094d9f917bde5b5cbdce8e005be6b40c916d9c5ea05c2b355",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 348,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/coordination-browser.json": {
+      "filePath": "document/acceptance/20261030/coordination-browser.json",
+      "contentHash": "a4457649645e260932e1da992a3ca26d8e746781481c55d20e9de63a7f7ed1d5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 56,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/dms-browser.json": {
+      "filePath": "document/acceptance/20261030/dms-browser.json",
+      "contentHash": "0c1f2cf8662687d8f089034d62b43b61bb709d5c61655c72d116257826f9685c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 91,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/etax-config-browser.json": {
+      "filePath": "document/acceptance/20261030/etax-config-browser.json",
+      "contentHash": "651dd245082b0862a13b30e0bcc175502d39858bff3473b31c31bdf7c5d3ee07",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 12,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/manifest.json": {
+      "filePath": "document/acceptance/20261030/manifest.json",
+      "contentHash": "54d6cb57e526b69630762aa0a61b39880135c6ec795b5482a0d7ed62283f6bf3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 97,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/matrix-paths.json": {
+      "filePath": "document/acceptance/20261030/matrix-paths.json",
+      "contentHash": "5d328827ecc6fccd5470a754a632d35fad59e31fcf3e49c8d46abaa8d5bf7648",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/pdf-render.json": {
+      "filePath": "document/acceptance/20261030/pdf-render.json",
+      "contentHash": "784b29bac51c6aa0575f76c2eb3a6d637f9dc02ab090ce87bb4ab3c6f7267076",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 20,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/permission-browser.json": {
+      "filePath": "document/acceptance/20261030/permission-browser.json",
+      "contentHash": "071a21e1bef1bf44a41cf0bf06f59d56cb9c82aada943ac35b1f66250714703a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 89,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/resilience-browser.json": {
+      "filePath": "document/acceptance/20261030/resilience-browser.json",
+      "contentHash": "721e095eee7cb2b61a9c85d1af2ad8c151a6b5c29bb1417eb83e5b9c63588d4f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 44,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/restore-drill.json": {
+      "filePath": "document/acceptance/20261030/restore-drill.json",
+      "contentHash": "cc561452bb19a219dd9b633dae15103d06e17c2a78ce58bb15a55b02a12751c2",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 9,
+      "hasStructuralAnalysis": false
+    },
+    "document/acceptance/20261030/viewport-browser.json": {
+      "filePath": "document/acceptance/20261030/viewport-browser.json",
+      "contentHash": "b7a38c3c8f2eb4a5c3b221571d8e294cdf0c862a8412c9cd8648e92e0df04ec9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 47,
       "hasStructuralAnalysis": false
     },
     "document/index.html": {
       "filePath": "document/index.html",
-      "contentHash": "7a724eed0e9cc23f327af20522b82e07dfb678f537e722a0bfe59617f7989b94",
+      "contentHash": "58007b5023e4dd67065cf05855003f55fb8c1ef25c5ea45f805771903b33413e",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 919,
+      "totalLines": 921,
       "hasStructuralAnalysis": false
     },
     "document/modules/00_architecture.md": {
@@ -66182,12 +67692,12 @@
     },
     "document/modules/README.md": {
       "filePath": "document/modules/README.md",
-      "contentHash": "d60b9704db02f2a2bc6b7fd90e9ab6ecb6c0e77db0d808c6de1b9cb5607d8358",
+      "contentHash": "b246be9c355163c35cc9345cafd8022326b94fb3087d1510bc277d7f4e125555",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 93,
+      "totalLines": 95,
       "hasStructuralAnalysis": false
     },
     "document/modules/SOURCE_MAP.md": {
@@ -66202,172 +67712,182 @@
     },
     "document/specs/01_system_architecture.json": {
       "filePath": "document/specs/01_system_architecture.json",
-      "contentHash": "ac90ed86cee18e044ac9ef64a67196bcadca2f682fbc96d4ec20a15be1cb022d",
+      "contentHash": "902c24645a7e7b3a9468110247dbb0a8b360a9e1a0b7d47c03cba6c070d5804f",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 44,
+      "totalLines": 268,
       "hasStructuralAnalysis": false
     },
     "document/specs/02_multitenancy_org_hierarchy.json": {
       "filePath": "document/specs/02_multitenancy_org_hierarchy.json",
-      "contentHash": "29c5dc33a4543a1da7e3f8fcaeeb54ccb1d28454ba0e5195556176e0afad7652",
+      "contentHash": "1ce0ccfa9bb6d41a1369759fcbee06a412ca7ca395c50d791816c01d8b9efce9",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 47,
+      "totalLines": 289,
       "hasStructuralAnalysis": false
     },
     "document/specs/03_business_core_workflow.json": {
       "filePath": "document/specs/03_business_core_workflow.json",
-      "contentHash": "69585d8fdb1c9bbfee14c51065a5e58a6cc5da913ea77a2f049f2e1469d0079c",
+      "contentHash": "849f531b56d62bfacdf08c4e8eaee104cf6c66996b5e9711e61bae55c0d12a08",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 59,
+      "totalLines": 251,
       "hasStructuralAnalysis": false
     },
     "document/specs/04_auth_session_rbac_sequence.json": {
       "filePath": "document/specs/04_auth_session_rbac_sequence.json",
-      "contentHash": "753f48e04b868e3ad0890ac1a535e8b15267a5a89970edd55927966c20ebafde",
+      "contentHash": "8ec00be6a9c95d5e7fc56dfe59470a6b5f9438945fbb9245b00aa975d3f0f5db",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 85,
+      "totalLines": 260,
       "hasStructuralAnalysis": false
     },
     "document/specs/05_invoice_creation_payment_sequence.json": {
       "filePath": "document/specs/05_invoice_creation_payment_sequence.json",
-      "contentHash": "06ed201f62abfaa600b0bdf73a139dae22fd90ddb5bbcaf9ea361c3cd61a9a8d",
+      "contentHash": "c78618fae98ca81e8ea76263fcaeeb46d4c232a3633776eb8952a00658b0204b",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 84,
+      "totalLines": 254,
       "hasStructuralAnalysis": false
     },
     "document/specs/06_erp_data_lineage_flow.json": {
       "filePath": "document/specs/06_erp_data_lineage_flow.json",
-      "contentHash": "8d5802c199ca5ed086afa275236ab3fb93bb912770a09e8d665b851eb1b36b6a",
+      "contentHash": "1ddaf6fcdcf206cf60aa19786d05649115b2af3f773ede616df8b2a7cf945a79",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 75,
+      "totalLines": 217,
       "hasStructuralAnalysis": false
     },
     "document/specs/07_deal_sales_lifecycle.json": {
       "filePath": "document/specs/07_deal_sales_lifecycle.json",
-      "contentHash": "f3e559e5e9e0f32ab6e296c8d2012f1ab02cd583a5c77f33ebc11c33a8d73263",
+      "contentHash": "c1be28ae74164e14543fe30afbda34ad1410289c3426baf304d637df96d5be85",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 67,
+      "totalLines": 174,
       "hasStructuralAnalysis": false
     },
     "document/specs/08_invoice_lifecycle.json": {
       "filePath": "document/specs/08_invoice_lifecycle.json",
-      "contentHash": "96096967018a84730b9b7461a832f684d1ede825a8103ee3310f9e0e5db6548b",
+      "contentHash": "b53c742ba8b7751fede0bf0d87487e4c046bb335a835aa7cc59574b8be74a3c2",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 65,
+      "totalLines": 152,
       "hasStructuralAnalysis": false
     },
     "document/specs/09_task_project_lifecycle.json": {
       "filePath": "document/specs/09_task_project_lifecycle.json",
-      "contentHash": "2780843feac0973ee6a37dc1fe3d429b38705e352e6208d831e336773ba6b49f",
+      "contentHash": "19fa6080a2cf14c5ac486f12ab914557975189c25b5092801a54255c98051087",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 65,
+      "totalLines": 153,
       "hasStructuralAnalysis": false
     },
     "document/specs/10_database_er_domain_model.json": {
       "filePath": "document/specs/10_database_er_domain_model.json",
-      "contentHash": "1ad41f392c52d2d565da46437a01f597d7edc8f1778451fd520f2f4e47a2fbc8",
+      "contentHash": "5dbf0ceca217cec1d6b3490975063aaf001211949840bdd52b4fd6f7ba47ae41",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 48,
+      "totalLines": 308,
       "hasStructuralAnalysis": false
     },
     "document/specs/11_payroll_policy_gl_flow.json": {
       "filePath": "document/specs/11_payroll_policy_gl_flow.json",
-      "contentHash": "573b795e295bd7604572bfb5ab511abfabbb0b38053319a29cb8acd788f5250a",
+      "contentHash": "88088f7e1239951c4984ff75090797bd727da3f1fe30fd5f60574b3857fc0f5f",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 62,
+      "totalLines": 254,
       "hasStructuralAnalysis": false
     },
     "document/specs/12_document_management_lifecycle.json": {
       "filePath": "document/specs/12_document_management_lifecycle.json",
-      "contentHash": "3157baeea06b4dd3241582eccdf7b2c92a93ef3a6dfd507e9d530164ae5b5057",
+      "contentHash": "e2cdccd4281f1906bc83a5b411423c269bf3b8a6c74342f2f0189304e2f4398d",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 68,
+      "totalLines": 186,
       "hasStructuralAnalysis": false
     },
     "document/specs/13_two_factor_auth_sequence.json": {
       "filePath": "document/specs/13_two_factor_auth_sequence.json",
-      "contentHash": "43f5a4a272663960f0ea76c9b9becd36a85d2b79b50a5d846d6a6c7a3e96f2ad",
+      "contentHash": "6f285fefd3396b35eced5bdaa9069a38c2bf819c3e683446997776def8924020",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 91,
+      "totalLines": 305,
       "hasStructuralAnalysis": false
     },
     "document/specs/14_approval_workflow_engine.json": {
       "filePath": "document/specs/14_approval_workflow_engine.json",
-      "contentHash": "1b96510b50cc50d6e7fe9c1faa6a767b76b1ed8b51737e95df27ab2201823433",
+      "contentHash": "08e33df9be6665e2a1a910d7066f36a463aa05db3ae81c5994b3d9aa4b07ca95",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 81,
+      "totalLines": 158,
       "hasStructuralAnalysis": false
     },
     "document/specs/15_payment_gateway_settlement.json": {
       "filePath": "document/specs/15_payment_gateway_settlement.json",
-      "contentHash": "f314d3bd5e39575c46791f689297cc977b7e53ce0d5580c305dc5d256e9833a6",
+      "contentHash": "4739c4e8dd2e01cfa31f9c6d3852655fc76f18ffacb6049574703055a9ad8e8e",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 107,
+      "totalLines": 307,
       "hasStructuralAnalysis": false
     },
     "document/specs/16_master_dialog_editor_lifecycle.json": {
       "filePath": "document/specs/16_master_dialog_editor_lifecycle.json",
-      "contentHash": "857cd77a3c000fe2fb21602ffc3c7f0c71619461ec74c249a0ad495815ac4954",
+      "contentHash": "9390c15708347811a8d68795db88cc74deb85b091a009c521a186d5e3a076c2c",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 81,
+      "totalLines": 158,
       "hasStructuralAnalysis": false
     },
     "document/specs/22_external_api_architecture.json": {
       "filePath": "document/specs/22_external_api_architecture.json",
-      "contentHash": "be0d7d9399beb672335e1975a23951aab0bee2e9a84949e9179166f46d00e789",
+      "contentHash": "45b206405725bfde5ddda31e44fa169a73504ad5006d7db51dc5b3011890415c",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 31,
+      "totalLines": 181,
+      "hasStructuralAnalysis": false
+    },
+    "document/specs/23_pos_server_configuration.json": {
+      "filePath": "document/specs/23_pos_server_configuration.json",
+      "contentHash": "c77d728e346e299c608534d416efb2e9c7a072b103593d0f136d9cd0f36880c9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 133,
       "hasStructuralAnalysis": false
     },
     "erp-dashboard-design-concept.md": {
@@ -66689,12 +68209,12 @@
     },
     "gpt.md": {
       "filePath": "gpt.md",
-      "contentHash": "5892c82432302cb3a8ce92d2a865135b008ccbbc4960cea901e2cfaa3cb73fa7",
+      "contentHash": "b3e50e1fac165ba6aeef30fdb9dd338991325f6b2d86d481fe4e8270e09391a7",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 418,
+      "totalLines": 428,
       "hasStructuralAnalysis": false
     },
     "grok.md": {
@@ -66729,13 +68249,140 @@
     },
     "pos/README.md": {
       "filePath": "pos/README.md",
-      "contentHash": "7474fdec11d3e6ccf22f7dfb570b74a90bd97b4e0a27e5921c16ac64f461a6a1",
+      "contentHash": "8933ff4e7efc8ec5b18cb8641936dec45ac39e6edd555d6af4d1c9658378406f",
       "functions": [],
       "classes": [],
       "imports": [],
       "exports": [],
-      "totalLines": 82,
+      "totalLines": 88,
       "hasStructuralAnalysis": false
+    },
+    "pos/app/Http/ConfigurationAccess.php": {
+      "filePath": "pos/app/Http/ConfigurationAccess.php",
+      "contentHash": "611a4a77654115baef2a31ae99333fe34a1c9bf587ef3d445e4ed26da825372c",
+      "functions": [
+        {
+          "name": "handle",
+          "params": [
+            "$request",
+            "$next"
+          ],
+          "exported": false,
+          "lineCount": 6
+        }
+      ],
+      "classes": [
+        {
+          "name": "ConfigurationAccess",
+          "methods": [
+            "handle"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "imports": [
+        {
+          "source": "Closure",
+          "specifiers": [
+            "Closure"
+          ]
+        },
+        {
+          "source": "Illuminate\\Http\\Request",
+          "specifiers": [
+            "Request"
+          ]
+        }
+      ],
+      "exports": [
+        "ConfigurationAccess"
+      ],
+      "totalLines": 17,
+      "hasStructuralAnalysis": true
+    },
+    "pos/app/Http/ConfigurationController.php": {
+      "filePath": "pos/app/Http/ConfigurationController.php",
+      "contentHash": "41293829d293923fa6a4f9b026bd73625c6b15befefec8d580e67d3a8dfa907f",
+      "functions": [
+        {
+          "name": "access",
+          "params": [
+            "$request"
+          ],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "show",
+          "params": [
+            "$request"
+          ],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "save",
+          "params": [
+            "$request",
+            "$section"
+          ],
+          "exported": false,
+          "lineCount": 33
+        }
+      ],
+      "classes": [
+        {
+          "name": "ConfigurationController",
+          "methods": [
+            "access",
+            "show",
+            "save"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 55
+        }
+      ],
+      "imports": [
+        {
+          "source": "Illuminate\\Http\\Request",
+          "specifiers": [
+            "Request"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\DB",
+          "specifiers": [
+            "DB"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\Hash",
+          "specifiers": [
+            "Hash"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Str",
+          "specifiers": [
+            "Str"
+          ]
+        },
+        {
+          "source": "Pos\\Models\\Staff",
+          "specifiers": [
+            "Staff"
+          ]
+        }
+      ],
+      "exports": [
+        "ConfigurationController"
+      ],
+      "totalLines": 66,
+      "hasStructuralAnalysis": true
     },
     "pos/app/Http/ConnectorAuthentication.php": {
       "filePath": "pos/app/Http/ConnectorAuthentication.php",
@@ -68985,7 +70632,7 @@
     },
     "pos/bootstrap/app.php": {
       "filePath": "pos/bootstrap/app.php",
-      "contentHash": "f06b99d63c52708e3885f055593fe3bc12e6b97e28cc75c010b72e32d2bbb846",
+      "contentHash": "a9fc9ce739881535cac0cac5c71e578a3a7911b749028436e034adac132f07ca",
       "functions": [],
       "classes": [],
       "imports": [
@@ -69869,7 +71516,7 @@
     },
     "pos/resources/pos.tsx": {
       "filePath": "pos/resources/pos.tsx",
-      "contentHash": "4d9bd80d7a61864d5603fe4c10fa43a67f21dce399e1d1fb24024ab05d38223a",
+      "contentHash": "1dd65ef411162556db1ea18efcaf0dae9404f9694a0aab0db71849bafeaf380e",
       "functions": [
         {
           "name": "api",
@@ -69884,7 +71531,7 @@
           "name": "App",
           "params": [],
           "exported": false,
-          "lineCount": 881
+          "lineCount": 882
         }
       ],
       "classes": [],
@@ -69928,7 +71575,17 @@
         }
       ],
       "exports": [],
-      "totalLines": 975,
+      "totalLines": 976,
+      "hasStructuralAnalysis": true
+    },
+    "pos/resources/views/configuration.blade.php": {
+      "filePath": "pos/resources/views/configuration.blade.php",
+      "contentHash": "1dd7744528e06cb7052dd518caebf7eb1c61fcd5ceefc0b6f972212b790765bb",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 42,
       "hasStructuralAnalysis": true
     },
     "pos/resources/views/menu.blade.php": {
@@ -69959,6 +71616,35 @@
       "imports": [],
       "exports": [],
       "totalLines": 19,
+      "hasStructuralAnalysis": true
+    },
+    "pos/routes/configuration.php": {
+      "filePath": "pos/routes/configuration.php",
+      "contentHash": "69828c816faa15df8426cbd4a75b557d6c30225c14a3ccac2a943ebf39d9f694",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "Illuminate\\Support\\Facades\\Route",
+          "specifiers": [
+            "Route"
+          ]
+        },
+        {
+          "source": "Pos\\Http\\ConfigurationAccess",
+          "specifiers": [
+            "ConfigurationAccess"
+          ]
+        },
+        {
+          "source": "Pos\\Http\\ConfigurationController",
+          "specifiers": [
+            "ConfigurationController"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 11,
       "hasStructuralAnalysis": true
     },
     "pos/routes/connector.php": {
@@ -70081,7 +71767,7 @@
     },
     "pos/routes/web.php": {
       "filePath": "pos/routes/web.php",
-      "contentHash": "c07c36ec64010381e17c4f82613668d5293fd8009983e782d8af321ad9f6f41d",
+      "contentHash": "89d48f2ac2355ea79ed64064485ba56fa53a9c09c377f2cbe0c647d68c0f5500",
       "functions": [],
       "classes": [],
       "imports": [
@@ -70183,7 +71869,7 @@
         }
       ],
       "exports": [],
-      "totalLines": 258,
+      "totalLines": 260,
       "hasStructuralAnalysis": true
     },
     "pos/tests/Browser/cash-movements.cjs": {
@@ -71049,6 +72735,121 @@
         "CheckpointTest"
       ],
       "totalLines": 126,
+      "hasStructuralAnalysis": true
+    },
+    "pos/tests/ConfigurationTest.php": {
+      "filePath": "pos/tests/ConfigurationTest.php",
+      "contentHash": "164d040c92675fc0470ffa0239ecf0f8dfbcbcd137a2451a56394aa1de967c3f",
+      "functions": [
+        {
+          "name": "createApplication",
+          "params": [],
+          "returnType": "Application",
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "setUp",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "test_manager_can_configure_only_own_branch_and_type_locks_after_terminal",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "test_configuration_rejects_cashier_wrong_password_and_nonlocal_access",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "test_staff_password_is_hashed_and_qualification_cannot_be_self_granted",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "test_configuration_is_blocked_in_production_and_without_login",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 8
+        }
+      ],
+      "classes": [
+        {
+          "name": "ConfigurationTest",
+          "methods": [
+            "createApplication",
+            "setUp",
+            "test_manager_can_configure_only_own_branch_and_type_locks_after_terminal",
+            "test_configuration_rejects_cashier_wrong_password_and_nonlocal_access",
+            "test_staff_password_is_hashed_and_qualification_cannot_be_self_granted",
+            "test_configuration_is_blocked_in_production_and_without_login"
+          ],
+          "properties": [
+            "manager"
+          ],
+          "exported": true,
+          "lineCount": 69
+        }
+      ],
+      "imports": [
+        {
+          "source": "Illuminate\\Contracts\\Console\\Kernel",
+          "specifiers": [
+            "Kernel"
+          ]
+        },
+        {
+          "source": "Illuminate\\Foundation\\Application",
+          "specifiers": [
+            "Application"
+          ]
+        },
+        {
+          "source": "Illuminate\\Foundation\\Testing\\RefreshDatabase",
+          "specifiers": [
+            "RefreshDatabase"
+          ]
+        },
+        {
+          "source": "Illuminate\\Foundation\\Testing\\TestCase",
+          "specifiers": [
+            "TestCase"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Facades\\DB",
+          "specifiers": [
+            "DB"
+          ]
+        },
+        {
+          "source": "Illuminate\\Support\\Str",
+          "specifiers": [
+            "Str"
+          ]
+        },
+        {
+          "source": "Pos\\Models\\Staff",
+          "specifiers": [
+            "Staff"
+          ]
+        }
+      ],
+      "exports": [
+        "ConfigurationTest"
+      ],
+      "totalLines": 82,
       "hasStructuralAnalysis": true
     },
     "pos/tests/PrescriptionTest.php": {

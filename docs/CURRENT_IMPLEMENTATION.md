@@ -1,5 +1,9 @@
 # Current Implementation Reference
 
+> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง**; Phase28.8 deferred.
+
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 **ล่าสุด 2026-10-27:** Phase28 local ผ่าน Gemini; configured ERP83/POS17 migrations, pending0 ทั้งคู่. [Phase28 runtime](PHASE_28_POS.md) · [Database upgrade](../document/DATABASE_UPGRADE_20261027.md). ผล regression หลัง migration fix46/422; ไม่ใช่ production sign-off.
 
 Baseline ก่อน Phase28 (2026-09-24): **Phase 1 - 26 (รวม Phase 18.1, 23.1, 23.2, 23.3, 24, 25, 26) และ Setup Wizard เสร็จสมบูรณ์และผ่านการตรวจรับ 100% (Complete & Closed)** — ครอบคลุม Core MVP, Commercial Docs, Tax Reports, Treasury, GL, Multi-Currency, Inventory, Payroll, DMS, 2FA, Workflows, Notifications, Self-Service Portals, Payment Gateway, System-wide Dialog Standard, Dashboard Redesign, HR Employee Master & Shifts & Reconciliation, e-Tax Gateway XML-DSig, Cash Flow Forecasting, AI OCR Document Ingestion (Local AI & Cloud Hubs), และ Web Setup Wizard. ผ่านการทดสอบ Full Backend Regression 380+ tests (3,680+ assertions ผ่าน 100%), Frontend Unit 23 tests, Pint/ESLint/Prettier/Vite production build 100% สะอาดสมบูรณ์.
@@ -12,7 +16,7 @@ Baseline ก่อน Phase28 (2026-09-24): **Phase 1 - 26 (รวม Phase 18.1
 | --- | --- |
 | Backend | PHP 8.3, Laravel 13, Inertia 2 |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, Headless UI |
-| Database | MySQL 8.0+ / MariaDB 10.5+ compatible, 58 migrations, UUID v7 / Ordered UUID |
+| Database | MySQL 8.0+ / MariaDB 10.5+ compatible, ERP83/POS17 migrations (configured snapshot 2026-10-27; ไม่ได้ตรวจฐานจริงซ้ำรอบนี้), UUID v7 / Ordered UUID |
 | Runtime drivers | database session/cache/queue, log mailer in local |
 | Locale / timezone | `th` locale; Laravel application timezone `UTC` (Organization timezone `Asia/Bangkok`) |
 | Auth | Laravel Breeze local auth, email verification, RBAC 7 บทบาท, optional organization 2FA TOTP (RFC 6238) |

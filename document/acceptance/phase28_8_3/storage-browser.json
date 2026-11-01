@@ -1,0 +1,20 @@
+{
+  "scope": "Actual Chrome IndexedDB/WebCrypto storage primitive only; no sale permits/PWA shell/server financial sync",
+  "cases": [
+    {
+      "name": "durable encrypted write and lock",
+      "result": "PASS",
+      "persistent": false
+    },
+    {
+      "name": "browser restart, incorrect passphrase, scope isolation and atomic cross-tab cap",
+      "result": "PASS"
+    },
+    {
+      "name": "clock rollback freezes authority; fresh online sample required after new context",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "serverStopped": true
+}

@@ -17,6 +17,11 @@ use Pos\Services\ReturnInspectionService;
 use Pos\Services\TaxDocumentService;
 use Pos\Support\LocalFeatureGate;
 
+require __DIR__.'/configuration.php';
+require __DIR__.'/membership.php';
+require __DIR__.'/offline.php';
+require __DIR__.'/delivery.php';
+
 Route::get('/', fn () => view('pos'));
 Route::middleware(['pos.local-menu', 'throttle:pos-public'])->group(function () {
     Route::get('/menu', fn () => view('menu'));
@@ -227,6 +232,10 @@ Route::middleware('pos.staff')->group(function () {
         }) : [];
         $refundData = ['refunds_enabled' => $refundsEnabled, 'refundable_sales' => $refundable, 'cash_movements_enabled' => app()->environment(['local', 'testing']) && config('pos.local_cash_movements_enabled') === true && $user->role === 'manager'];
         $branch = DB::table('pos_branches')->where('id', $user->branch_id)->firstOrFail();
+        $membershipEnabled = app()->environment(['local', 'testing']) && config('pos.local_membership_enabled') === true && $branch->active && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true);
+        $refundData['membership_enabled'] = $membershipEnabled;
+        $refundData['membership'] = $membershipEnabled ? app(\Pos\Services\MembershipService::class)->options($user) : ['publication_id' => null, 'members' => [], 'policies' => []];
+        $refundData['delivery_enabled'] = app()->environment(['local', 'testing']) && config('pos.local_delivery_enabled') === true && $branch->active && in_array($branch->business_type, ['retail', 'restaurant'], true) && in_array($user->role, ['cashier', 'manager'], true);
         $refundData['tax_documents_enabled'] = app()->environment(['local', 'testing']) && config('pos.local_tax_documents_enabled') === true && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true);
         $refundData['return_inspections_enabled'] = app()->environment(['local', 'testing']) && config('pos.local_return_inspections_enabled') === true && $user->role === 'manager' && $user->pharmacist_qualified && $branch->business_type === 'pharmacy' && $branch->active;
         $restaurantEnabled = app()->environment(['local', 'testing']) && config('pos.local_restaurant_enabled') === true && $branch->business_type === 'restaurant' && $branch->active;

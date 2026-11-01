@@ -1,0 +1,90 @@
+{
+  "run": "1793507812601",
+  "scope": "Single isolated SQLite app fixture; three business branches; synthetic data only; no real mTLS/devices",
+  "cases": [
+    {
+      "business": "retail",
+      "width": 1280,
+      "sale_id": "19f55ae2-639e-4509-9016-31cc801cb4bd",
+      "masked": true,
+      "blockedBeforePreview": true,
+      "cartInvalidatesPreview": true,
+      "total": "9.63",
+      "noHorizontalOverflow": true,
+      "lostResponseReplay": true
+    },
+    {
+      "business": "retail",
+      "width": 375,
+      "sale_id": "16395867-f25a-4b7a-b4d7-09b7d4a744cd",
+      "masked": true,
+      "blockedBeforePreview": true,
+      "cartInvalidatesPreview": true,
+      "total": "9.63",
+      "noHorizontalOverflow": true,
+      "lostResponseReplay": false
+    },
+    {
+      "business": "retail",
+      "enrollment": "pending_review",
+      "activeMembersUnchanged": true
+    },
+    {
+      "business": "restaurant",
+      "width": 1280,
+      "sale_id": "df395989-a6ab-4426-9776-fdb726a64dbf",
+      "masked": true,
+      "blockedBeforePreview": true,
+      "cartInvalidatesPreview": false,
+      "total": "9.63",
+      "noHorizontalOverflow": true,
+      "lostResponseReplay": false
+    },
+    {
+      "business": "restaurant",
+      "width": 375,
+      "sale_id": "2f79ca15-e630-4e85-9566-6a55c9dc878b",
+      "masked": true,
+      "blockedBeforePreview": true,
+      "cartInvalidatesPreview": false,
+      "total": "9.63",
+      "noHorizontalOverflow": true,
+      "lostResponseReplay": false
+    },
+    {
+      "business": "restaurant",
+      "enrollment": "pending_review",
+      "activeMembersUnchanged": true
+    },
+    {
+      "business": "pharmacy",
+      "width": 1280,
+      "sale_id": "a3d76f23-5016-4a68-a536-d0246214cd22",
+      "masked": true,
+      "blockedBeforePreview": true,
+      "cartInvalidatesPreview": true,
+      "total": "9.63",
+      "noHorizontalOverflow": true,
+      "lostResponseReplay": false
+    },
+    {
+      "business": "pharmacy",
+      "width": 375,
+      "sale_id": "f2866f94-a17a-4e77-952e-3241908ec18a",
+      "masked": true,
+      "blockedBeforePreview": true,
+      "cartInvalidatesPreview": true,
+      "total": "9.63",
+      "noHorizontalOverflow": true,
+      "lostResponseReplay": false
+    },
+    {
+      "business": "pharmacy",
+      "enrollment": "pending_review",
+      "activeMembersUnchanged": true
+    }
+  ],
+  "pageErrors": [],
+  "stage": "pharmacy/375",
+  "result": "PASS"
+}

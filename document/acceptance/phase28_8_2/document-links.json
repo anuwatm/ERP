@@ -1,0 +1,215 @@
+{
+  "result": "PASS",
+  "checks": [
+    {
+      "file": "document/PHASE_28_8_2_MEMBERSHIP.md",
+      "target": "acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "../../PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "../../../checklist.md",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "pos.junit.xml",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "erp.junit.xml",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "browser-report.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "source-verification.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "roundtrip.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "review-browser-report.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "signature-verification.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "synthetic-public.pem",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "signed-events.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "layout-report.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "cleanup.json",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "retail-1280.png",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "retail-375.png",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "restaurant-1280.png",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "restaurant-375.png",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "pharmacy-1280.png",
+      "exists": true
+    },
+    {
+      "file": "document/acceptance/phase28_8_2/README.md",
+      "target": "pharmacy-375.png",
+      "exists": true
+    },
+    {
+      "file": "README.md",
+      "target": "document/PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "README.md",
+      "target": "document/acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "backend/README.md",
+      "target": "../document/PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "backend/README.md",
+      "target": "../document/acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "pos/README.md",
+      "target": "../document/PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "pos/README.md",
+      "target": "../document/acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "PROJECT.md",
+      "target": "document/PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "PROJECT.md",
+      "target": "document/acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "ERP_FEATURE_PLAN.md",
+      "target": "document/PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "ERP_FEATURE_PLAN.md",
+      "target": "document/acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS.md",
+      "target": "PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS.md",
+      "target": "acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS_RETAIL.md",
+      "target": "PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS_RETAIL.md",
+      "target": "acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS_RESTAURANT.md",
+      "target": "PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS_RESTAURANT.md",
+      "target": "acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS_PHARMACY.md",
+      "target": "PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "document/README_POS_PHARMACY.md",
+      "target": "acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "checklist.md",
+      "target": "document/acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "checklist.md",
+      "target": "document/PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    },
+    {
+      "file": "gpt.md",
+      "target": "document/acceptance/phase28_8_2/README.md",
+      "exists": true
+    },
+    {
+      "file": "gpt.md",
+      "target": "document/PHASE_28_8_2_MEMBERSHIP.md",
+      "exists": true
+    }
+  ]
+}

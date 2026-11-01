@@ -118,14 +118,18 @@ export default function ReceiveGoodsDialog({
         );
     };
 
-    const isDirty =
-        form.data.purchase_order_id !== '' ||
-        form.data.warehouse_id !== '' ||
-        form.data.received_date !== today ||
-        form.data.note !== '' ||
-        form.data.items.length > 0;
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     function submit(event: FormEvent) {
         event.preventDefault();
@@ -155,7 +159,7 @@ export default function ReceiveGoodsDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Receive Goods (GRN)"
                 breadcrumb="Finance / Inventory"
                 entityLabel="Goods Receipt"

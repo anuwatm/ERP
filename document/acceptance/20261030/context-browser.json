@@ -1,0 +1,348 @@
+{
+  "scope": "Actual contextual forms; synthetic parents/portal only; no financial posting",
+  "cases": [
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/expenses",
+      "name": "Edit",
+      "checkedFields": 12,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/invoices",
+      "name": "Edit",
+      "checkedFields": 10,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/commercial-documents",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "New Division",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "Edit",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "New Department",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "Edit",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/portal",
+      "name": "Submit Vendor Bill",
+      "checkedFields": 6,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/expenses",
+      "name": "Edit",
+      "checkedFields": 12,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/invoices",
+      "name": "Edit",
+      "checkedFields": 10,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/commercial-documents",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "New Division",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "Edit",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "New Department",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "Edit",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/portal",
+      "name": "Submit Vendor Bill",
+      "checkedFields": 6,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/expenses",
+      "name": "Edit",
+      "checkedFields": 12,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/invoices",
+      "name": "Edit",
+      "checkedFields": 10,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/commercial-documents",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "New Division",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "Edit",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "New Department",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "Edit",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/portal",
+      "name": "Submit Vendor Bill",
+      "checkedFields": 6,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/expenses",
+      "name": "Edit",
+      "checkedFields": 12,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/invoices",
+      "name": "Edit",
+      "checkedFields": 10,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/commercial-documents",
+      "name": "Upload Proof",
+      "checkedFields": 1,
+      "file": true,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "New Division",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Divisions",
+      "name": "Edit",
+      "checkedFields": 2,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "New Department",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "tab": "Departments",
+      "name": "Edit",
+      "checkedFields": 3,
+      "file": false,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/portal",
+      "name": "Submit Vendor Bill",
+      "checkedFields": 6,
+      "file": false,
+      "result": "PASS"
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.48",
+  "status": "PASS"
+}

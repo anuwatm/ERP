@@ -3,6 +3,7 @@
 namespace Pos\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ShiftCashService
 {
@@ -17,6 +18,9 @@ class ShiftCashService
             $balance = bcsub($balance, (string) $amount, 2);
         }
         foreach (DB::table('pos_cash_movements')->where('shift_id', $shift->id)->get(['direction', 'amount']) as $move) {
+            $balance = $move->direction === 'in' ? bcadd($balance, (string) $move->amount, 2) : bcsub($balance, (string) $move->amount, 2);
+        }
+        foreach (Schema::hasTable('pos_delivery_cash') ? DB::table('pos_delivery_cash')->where('shift_id', $shift->id)->get(['direction', 'amount']) : [] as $move) {
             $balance = $move->direction === 'in' ? bcadd($balance, (string) $move->amount, 2) : bcsub($balance, (string) $move->amount, 2);
         }
 

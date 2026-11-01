@@ -1,0 +1,2 @@
+@font-face { font-family: "Sarabun"; font-style: normal; font-weight: 400; src: url("data:font/ttf;base64,{{ base64_encode(file_get_contents(resource_path('fonts/Sarabun-Regular.ttf'))) }}") format("truetype"); }
+@font-face { font-family: "Sarabun"; font-style: normal; font-weight: 700; src: url("data:font/ttf;base64,{{ base64_encode(file_get_contents(resource_path('fonts/Sarabun-Bold.ttf'))) }}") format("truetype"); }

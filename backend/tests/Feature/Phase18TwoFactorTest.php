@@ -14,12 +14,54 @@ use App\Support\DashboardLanding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use ReflectionMethod;
 use Tests\TestCase;
 
 class Phase18TwoFactorTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_setup_survives_invalid_code_and_refresh_then_displays_recovery_codes_once(): void
+    {
+        $user = User::factory()->create();
+        $this->enableTwoFactor($user);
+        $this->actingAsOrgUser($user)->withSession(['auth.password_confirmed_at' => time()]);
+        $this->get(route('two-factor.setup'))->assertOk();
+        $secret = session('two_factor_setup_secret');
+        $this->get(route('two-factor.setup'))->assertOk();
+        $this->assertSame($secret, session('two_factor_setup_secret'));
+        $wrong = $this->currentCode($secret) === '000000' ? '999999' : '000000';
+        $this->post(route('two-factor.setup.confirm'), ['code' => $wrong])->assertSessionHasErrors('code');
+        $this->assertSame($secret, session('two_factor_setup_secret'));
+        $this->withHeader('X-Inertia', 'true')->post(route('two-factor.setup.confirm'), ['code' => $this->currentCode($secret)])
+            ->assertStatus(409)->assertHeader('X-Inertia-Location', route('two-factor.recovery'));
+        $codes = session('two_factor_recovery_codes');
+        $this->assertCount(8, $codes);
+        $this->assertNull(session('two_factor_setup_secret'));
+        $this->assertTrue(Hash::check($codes[0], $user->fresh()->two_factor_recovery_codes[0]));
+        $this->flushHeaders()->get(route('two-factor.recovery'))->assertOk()->assertSee($codes[0])->assertHeader('Referrer-Policy', 'no-referrer');
+        $this->assertNull(session('two_factor_recovery_codes'));
+        $this->get(route('two-factor.recovery'))->assertRedirect(route('profile.edit'))->assertDontSee($codes[0]);
+    }
+
+    public function test_setup_secret_expires_and_cannot_confirm_after_expiry(): void
+    {
+        $user = User::factory()->create();
+        $this->enableTwoFactor($user);
+        $this->actingAsOrgUser($user)->withSession(['auth.password_confirmed_at' => time(), 'two_factor_setup_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_setup_expires_at' => time() - 1]);
+        $this->post(route('two-factor.setup.confirm'), ['code' => $this->currentCode('JBSWY3DPEHPK3PXP')])->assertSessionHasErrors('code');
+        $this->assertNull(session('two_factor_setup_secret'));
+        $this->assertNull($user->fresh()->two_factor_confirmed_at);
+    }
+
+    public function test_challenge_uses_pending_users_organization_trust_policy(): void
+    {
+        $user = User::factory()->create();
+        Setting::updateOrCreate(['org_id' => $user->org_id, 'key' => 'security.two_factor'], ['value_json' => ['enabled' => true, 'allow_trusted_devices' => false, 'trusted_device_days' => 14]]);
+        $this->withSession(['two_factor_pending_user_id' => $user->id])->get(route('two-factor.challenge'))
+            ->assertInertia(fn (Assert $page) => $page->component('Auth/TwoFactorChallenge')->where('allowTrustedDevices', false)->where('trustedDeviceDays', 14));
+    }
 
     public function test_privileged_user_must_pass_totp_after_password_login(): void
     {

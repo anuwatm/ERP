@@ -1,0 +1,506 @@
+[
+  {
+    "spec": "document\\specs\\01_system_architecture.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\01_system_architecture.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\01_system_architecture.html",
+      "specification": {
+        "sha256": "902c24645a7e7b3a9468110247dbb0a8b360a9e1a0b7d47c03cba6c070d5804f",
+        "bytes": 5739
+      },
+      "artifact": {
+        "sha256": "a5c121f490eb903ecee0f7aa9fe5d4a462cfb500e4a652acd9e7bbca23b12f55",
+        "bytes": 722543
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\02_multitenancy_org_hierarchy.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\02_multitenancy_org_hierarchy.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\02_multitenancy_org_hierarchy.html",
+      "specification": {
+        "sha256": "1ce0ccfa9bb6d41a1369759fcbee06a412ca7ca395c50d791816c01d8b9efce9",
+        "bytes": 5945
+      },
+      "artifact": {
+        "sha256": "04e81c36cf243bcbb00bdf9ab8e862002c0efcaf7ee74461f215a5e6bb4f771c",
+        "bytes": 722305
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\03_business_core_workflow.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "workflow",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\03_business_core_workflow.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\03_business_core_workflow.html",
+      "specification": {
+        "sha256": "849f531b56d62bfacdf08c4e8eaee104cf6c66996b5e9711e61bae55c0d12a08",
+        "bytes": 5422
+      },
+      "artifact": {
+        "sha256": "589674e09309b4e05a581bb68c6c3c1f3d4f7399b61fb1bb85bfc68f6d2df753",
+        "bytes": 722516
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\04_auth_session_rbac_sequence.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "sequence",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\04_auth_session_rbac_sequence.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\04_auth_session_rbac_sequence.html",
+      "specification": {
+        "sha256": "8ec00be6a9c95d5e7fc56dfe59470a6b5f9438945fbb9245b00aa975d3f0f5db",
+        "bytes": 5446
+      },
+      "artifact": {
+        "sha256": "4cb978296e54d864c81f6af7138d9f161700dfcc0e1f74bbd624828441b7d236",
+        "bytes": 725450
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\05_invoice_creation_payment_sequence.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "sequence",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\05_invoice_creation_payment_sequence.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\05_invoice_creation_payment_sequence.html",
+      "specification": {
+        "sha256": "c78618fae98ca81e8ea76263fcaeeb46d4c232a3633776eb8952a00658b0204b",
+        "bytes": 5555
+      },
+      "artifact": {
+        "sha256": "812cd0f51636c6faebb48ada6cf006ce8b1803f260fd39b2b87940b9e2558d48",
+        "bytes": 723874
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\06_erp_data_lineage_flow.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "dataflow",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\06_erp_data_lineage_flow.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\06_erp_data_lineage_flow.html",
+      "specification": {
+        "sha256": "1ddaf6fcdcf206cf60aa19786d05649115b2af3f773ede616df8b2a7cf945a79",
+        "bytes": 4882
+      },
+      "artifact": {
+        "sha256": "dd97730881c9d7f3b19aa346fe8b801fe0e65809d912dac37cc67ff51a9d40bb",
+        "bytes": 723776
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\07_deal_sales_lifecycle.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "lifecycle",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\07_deal_sales_lifecycle.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\07_deal_sales_lifecycle.html",
+      "specification": {
+        "sha256": "c1be28ae74164e14543fe30afbda34ad1410289c3426baf304d637df96d5be85",
+        "bytes": 3809
+      },
+      "artifact": {
+        "sha256": "0d0d614ff5a237e8452500129ee10d66705e8938f716ca6aab7a11ff30130472",
+        "bytes": 715826
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\08_invoice_lifecycle.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "lifecycle",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\08_invoice_lifecycle.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\08_invoice_lifecycle.html",
+      "specification": {
+        "sha256": "b53c742ba8b7751fede0bf0d87487e4c046bb335a835aa7cc59574b8be74a3c2",
+        "bytes": 3276
+      },
+      "artifact": {
+        "sha256": "38b21e6453dad943c9df9eabaa020de5c5b7ecc9ff8b53c0bc2e8c18a03477be",
+        "bytes": 713804
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\09_task_project_lifecycle.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "lifecycle",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\09_task_project_lifecycle.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\09_task_project_lifecycle.html",
+      "specification": {
+        "sha256": "19fa6080a2cf14c5ac486f12ab914557975189c25b5092801a54255c98051087",
+        "bytes": 3336
+      },
+      "artifact": {
+        "sha256": "aa47824114aa79801b688acbe5b16e4659e5c155078f23c2874a9c8ece25c7fd",
+        "bytes": 712770
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\10_database_er_domain_model.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\10_database_er_domain_model.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\10_database_er_domain_model.html",
+      "specification": {
+        "sha256": "5dbf0ceca217cec1d6b3490975063aaf001211949840bdd52b4fd6f7ba47ae41",
+        "bytes": 6152
+      },
+      "artifact": {
+        "sha256": "5f00d7e3c894cd78a9ba26b0942c1903bd81bc13956d0120a2dcfcf2e4abcb30",
+        "bytes": 723334
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\11_payroll_policy_gl_flow.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "workflow",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\11_payroll_policy_gl_flow.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\11_payroll_policy_gl_flow.html",
+      "specification": {
+        "sha256": "88088f7e1239951c4984ff75090797bd727da3f1fe30fd5f60574b3857fc0f5f",
+        "bytes": 5092
+      },
+      "artifact": {
+        "sha256": "e928ace8e0b42db8b99d89bb9ebfea8018d93a945a309fedd1c980275c8b1ec9",
+        "bytes": 719609
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\12_document_management_lifecycle.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "lifecycle",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\12_document_management_lifecycle.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\12_document_management_lifecycle.html",
+      "specification": {
+        "sha256": "e2cdccd4281f1906bc83a5b411423c269bf3b8a6c74342f2f0189304e2f4398d",
+        "bytes": 4442
+      },
+      "artifact": {
+        "sha256": "e03a4b1054a284a6e273ebf29f6560de2c4e7d85ed63741186f287c52bc46178",
+        "bytes": 716822
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\13_two_factor_auth_sequence.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "sequence",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\13_two_factor_auth_sequence.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\13_two_factor_auth_sequence.html",
+      "specification": {
+        "sha256": "6f285fefd3396b35eced5bdaa9069a38c2bf819c3e683446997776def8924020",
+        "bytes": 6607
+      },
+      "artifact": {
+        "sha256": "212b95587f93e433880e5ffeeedbba2f056877aa66fb1ddbe282ede2d470dbcf",
+        "bytes": 726873
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\14_approval_workflow_engine.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "lifecycle",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\14_approval_workflow_engine.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\14_approval_workflow_engine.html",
+      "specification": {
+        "sha256": "08e33df9be6665e2a1a910d7066f36a463aa05db3ae81c5994b3d9aa4b07ca95",
+        "bytes": 3861
+      },
+      "artifact": {
+        "sha256": "054d8e5b711fe6ca6ac62e5d8f2e821f294b598028234f848b60b4c2af167df8",
+        "bytes": 715255
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\15_payment_gateway_settlement.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "sequence",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\15_payment_gateway_settlement.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\15_payment_gateway_settlement.html",
+      "specification": {
+        "sha256": "4739c4e8dd2e01cfa31f9c6d3852655fc76f18ffacb6049574703055a9ad8e8e",
+        "bytes": 6599
+      },
+      "artifact": {
+        "sha256": "eb3e43341db7e1dc972870b48b7dcfe84165bd76cf9d082e4a625aa7dbb30d0e",
+        "bytes": 726368
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\16_master_dialog_editor_lifecycle.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "lifecycle",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\16_master_dialog_editor_lifecycle.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\16_master_dialog_editor_lifecycle.html",
+      "specification": {
+        "sha256": "9390c15708347811a8d68795db88cc74deb85b091a009c521a186d5e3a076c2c",
+        "bytes": 3941
+      },
+      "artifact": {
+        "sha256": "19de673b6639fe11cb17d001cfcd141fa3752affafc996d5ae14b790992b35f0",
+        "bytes": 715294
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\22_external_api_architecture.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\22_external_api_architecture.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\22_external_api_architecture.html",
+      "specification": {
+        "sha256": "45b206405725bfde5ddda31e44fa169a73504ad5006d7db51dc5b3011890415c",
+        "bytes": 4052
+      },
+      "artifact": {
+        "sha256": "47828b348827d1cbc0c036a619e57530b29d9ac0761c220573bad9c5fecfd34e",
+        "bytes": 718012
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "spec": "document\\specs\\23_pos_server_configuration.json",
+    "exitCode": 0,
+    "receipt": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "C:\\LocalDevine\\www\\ERP\\document\\specs\\23_pos_server_configuration.json",
+      "output": "C:\\LocalDevine\\www\\ERP\\document\\23_pos_server_configuration.html",
+      "specification": {
+        "sha256": "c77d728e346e299c608534d416efb2e9c7a072b103593d0f136d9cd0f36880c9",
+        "bytes": 2803
+      },
+      "artifact": {
+        "sha256": "250e3beccc505ae5d12dfeef22c71e8cb136e35e09f48a8b46a441716989b524",
+        "bytes": 714765
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  }
+]

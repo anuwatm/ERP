@@ -34,8 +34,17 @@ export function DocumentDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.title !== '' || form.data.file !== null;
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -66,7 +75,7 @@ export function DocumentDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Upload Document"
                 breadcrumb="Documents / Repository"
                 entityLabel="Document"
@@ -226,8 +235,17 @@ export function DocumentVersionDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.file !== null || form.data.change_note !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -258,7 +276,7 @@ export function DocumentVersionDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Add New Document Version"
                 breadcrumb="Documents / Versions"
                 entityLabel="Document Version"
@@ -348,8 +366,17 @@ export function DocumentLinkDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.linkable_id !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -379,7 +406,7 @@ export function DocumentLinkDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Link Document to Entity"
                 breadcrumb="Documents / Relations"
                 entityLabel="Document Link"
@@ -472,8 +499,17 @@ export function DocumentCategoryDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.code !== '' || form.data.name !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -507,7 +543,7 @@ export function DocumentCategoryDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Document Category"
                 breadcrumb="Documents / Governance / Categories"
                 entityLabel="Category"
@@ -650,8 +686,17 @@ export function RetentionPolicyDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.code !== '' || form.data.name !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -691,7 +736,7 @@ export function RetentionPolicyDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Retention Policy"
                 breadcrumb="Documents / Governance / Retention"
                 entityLabel="Retention Policy"

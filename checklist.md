@@ -1,5 +1,7 @@
 # ERP Phase Checklist
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. ผล Gemini 2026-10-27 เป็น baseline ก่อนเพิ่ม Config; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 ไฟล์นี้เป็น checklist กลางของโปรเจกต์. เมื่อทำ task ใดเสร็จ ให้เปลี่ยนจาก `[ ]` เป็น `[x]` พร้อมอัปเดตหมายเหตุถ้ามี.
 
 กฎบังคับ:
@@ -28,7 +30,7 @@
 | Phase 6 | Done | Reporting/filters/operational polish completed |
 | Phase 7 | Closed | Post-MVP implementation completed and phase closed: VAT UI, configurable numbering, suppliers, purchase orders, project members |
 | Phase 8 | Done | Production roadmap completed: PDF/50-Tawi, tax/WHT/aging exports, Purchase Tax from PO/Expenses/GRN, Inventory/GRN/adjustments, notifications/preferences |
-| Production Prep | Planned | Server readiness before real deployment: scheduler, queue worker, PDF Thai fonts, storage/upload limits |
+| Production Prep | Local tooling / runbooks ready; target acceptance pending | Server readiness before real deployment: scheduler, queue worker, PDF Thai fonts, storage/upload limits |
 | Phase 9 | Done | Commercial & Procurement Documents completed: Quotation, CN/DN, Billing Note, Delivery Order, Purchase Request, Voucher, print/PDF, permissions, audit, tests |
 | Phase 10 | Done | Treasury, Banking & Cash Management: bank accounts, statement reconciliation, petty cash, cheque/PDC, voucher proof, treasury reports, and feature tests completed |
 | Phase 11 | Done | General Ledger & Double-entry Accounting: COA, periods, immutable journals, source posting, reports, permissions, and regression validation completed |
@@ -51,7 +53,7 @@
 | Phase 24 | Done | e-Tax Invoice & RD Prep Gateway: XML-DSig RSA-SHA256, Provider adapter (rd_api/inet/sandbox), outbox job worker, HMAC webhook, in-flight inquiry |
 | Phase 25 | Done | Cash Flow Forecasting & Financial Health Analytics: Multi-scenario projection engine (Base/Best/Worst), AR/AP/Payroll curves, DSO, DPO, Current/Quick Ratio |
 | Phase 26 | Done | AI OCR Document Ingestion: Universal OpenAI-Compatible Vision (Ollama/LM Studio/OpenRouter/ChatGPT/Gemini), Draft Expense & Vendor Bill AP conversion with Open PO link, Tenant Isolation, Error Redaction, Cloud Compliance Policy |
-| Phase 27 | Planned (Vertical) | Manufacturing & Bill of Materials (BOM): multi-level BOM, work orders, stock issue & finished goods costing |
+| Phase 27 | Local implemented / target concurrency pending | Manufacturing & Bill of Materials (BOM): multi-level BOM, work orders, stock issue & finished goods costing |
 | Phase 28 | Local Complete / Production Pending | Gemini PASS; configured ERP/POS databases current; e-Tax provider/target network/hardware/MariaDB concurrency/UAT pending |
 
 ---
@@ -634,37 +636,39 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 ### Scheduler & Queue Worker
 
-- [ ] สร้างเอกสาร deployment สำหรับ Laravel Scheduler: `* * * * * cd /path/to/ERP/backend && php artisan schedule:run >> /dev/null 2>&1`
-- [ ] สร้างตัวอย่าง Supervisor/Systemd config สำหรับ `php artisan queue:work --tries=3`
-- [ ] เพิ่ม health check หรือคำสั่งตรวจสถานะ queue worker/scheduler สำหรับ production
-- [ ] ตรวจ `.env.example` ให้มี queue/mail/scheduler-related settings ครบ
-- [ ] เพิ่ม smoke test/manual checklist สำหรับ due soon/overdue invoice notifications หลังเปิด scheduler
+- [x] สร้างเอกสาร deployment สำหรับ Laravel Scheduler: `* * * * * cd /path/to/ERP/backend && php artisan schedule:run >> /dev/null 2>&1`
+- [x] สร้างตัวอย่าง Supervisor/Systemd config สำหรับ `php artisan queue:work --tries=3`
+- [x] เพิ่ม health check หรือคำสั่งตรวจสถานะ queue worker/scheduler สำหรับ production
+- [x] ตรวจ `.env.example` ให้มี queue/mail/scheduler-related settings ครบ
+- [x] เพิ่ม smoke test/manual checklist สำหรับ due soon/overdue invoice notifications หลังเปิด scheduler
+
+หลักฐานรอบ 2026-10-29: [runbook/templates/health](docs/PRODUCTION_RUNBOOK.md); health tests ผ่าน. ติ๊กเฉพาะ code/docs ที่สร้างและตรวจแล้ว ไม่ใช่เปิดระบบ production.
 
 ### Thai Fonts & PDF Production Hardening
 
-- [ ] เพิ่มแนวทางติดตั้ง Sarabun หรือ THSarabunNew สำหรับ DomPDF บน Linux production
-- [ ] เพิ่ม `@font-face` หรือ font registration path สำหรับ PDF templates หากเลือกฝัง font ใน repo/storage
-- [ ] ทดสอบ PDF ภาษาไทยบน Invoice, PO, 50-Tawi ว่าไม่เป็น `???` และสระไม่ลอยผิดปกติ
-- [ ] เพิ่มหมายเหตุเรื่อง font license/source ใน deployment docs
+- [x] เพิ่มแนวทางติดตั้ง Sarabun หรือ THSarabunNew สำหรับ DomPDF บน Linux production
+- [x] เพิ่ม `@font-face` หรือ font registration path สำหรับ PDF templates หากเลือกฝัง font ใน repo/storage
+- [x] Local Thai PDF: Invoice, PO, 50-Tawi อย่างละ1หน้า extractภาษาไทย/embedded Sarabun/ตรวจภาพแล้ว; target Linux font/storage permissions ยังรอตรวจจริง — docs/LOCAL_ACCEPTANCE_20261030.md
+- [x] เพิ่มหมายเหตุเรื่อง font license/source ใน deployment docs
 
 ### Uploads & File Storage
 
-- [ ] เพิ่ม deployment step: `php artisan storage:link`
-- [ ] ระบุค่าแนะนำ `upload_max_filesize`, `post_max_size`, `client_max_body_size`
+- [x] เพิ่ม deployment step: `php artisan storage:link`
+- [x] ระบุค่าแนะนำ `upload_max_filesize`, `post_max_size`, `client_max_body_size`
 - [ ] ตรวจ file upload path และ permission บน production storage
-- [ ] เพิ่ม smoke test/manual checklist สำหรับ upload/download logo, receipt, attachments
+- [x] เพิ่ม smoke test/manual checklist สำหรับ upload/download logo, receipt, attachments
 
 ### Environment Security, Backup & Release Gates
 
-- [ ] เพิ่ม production `.env` security checklist: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true`
+- [x] เพิ่ม production `.env` security checklist: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true`
 - [ ] ตรวจ session/cookie/domain settings ให้เหมาะกับ HTTPS production
-- [ ] จัดทำ Migration Backup & Rollback Plan ก่อนรัน migration บน Production
-- [ ] จัดทำ Deploy Smoke Test Checklist ตรวจสอบ Health check, Core routes, และ DB connection หลัง release
-- [ ] จัดทำ Failed-job Replay Runbook และระบบ Monitoring/Alerting สำหรับ Queue / Scheduler
-- [ ] จัดทำ Log Redaction Review ตรวจสอบว่าไม่มี Password, Token, 2FA Secret หรือ PII หลุดไปใน Log files
-- [ ] กำหนดนโยบาย automated database backup รายวัน
-- [ ] เพิ่ม restore drill checklist และทดสอบกู้คืนข้อมูล (Restore Verification) พร้อมบันทึกหลักฐานผลการทดสอบอย่างน้อย 1 รอบก่อน go-live
-- [ ] ระบุ retention policy และที่เก็บ backup แยกจาก production server
+- [x] จัดทำ Migration Backup & Rollback Plan ก่อนรัน migration บน Production
+- [x] จัดทำ Deploy Smoke Test Checklist ตรวจสอบ Health check, Core routes, และ DB connection หลัง release
+- [x] จัดทำ Failed-job Replay Runbook และระบบ Monitoring/Alerting สำหรับ Queue / Scheduler
+- [x] Local Log Redaction Review: single/daily processor และ focused tests ผ่าน; custom/emergency handlers และ log ปลายทางต้องตรวจใน go-live — docs/LOCAL_ACCEPTANCE_20261030.md
+- [x] กำหนดนโยบาย automated database backup รายวัน
+- [x] เพิ่ม restore drill checklist และทดสอบ synthetic SQLite backup/restore 163tables, quick_check=ok/FK0; target MySQL/POS DR และ owner sign-off ยังเป็น go-live gate
+- [x] ระบุ retention policy และที่เก็บ backup แยกจาก production server
 
 ---
 
@@ -995,10 +999,10 @@ Design doc: `docs/PHASE_8_PRODUCTION_DESIGN.md`
 
 - [x] เพิ่ม 2FA schema/model, setup/verify/recovery UI และ privileged challenge middleware
 - [x] เพิ่ม enforcement settings, audit log, rate limits และ security regression tests
-- [ ] Polish: Recovery code one-time display ผ่าน Inertia flash/dedicated UI โดยไม่ persist ลง browser history/log
-- [ ] Polish: เปลี่ยน invalid TOTP setup จาก `abort(422)` เป็น validation error แสดงใต้ช่องกรอกรหัส
-- [ ] Polish: เก็บ TOTP setup secret ไว้ใน session ระหว่างกรอกรหัสผิด และล้างเมื่อ verify สำเร็จหรือหมดอายุ
-- [ ] Polish: Challenge UI รับ `allow_trusted_devices` และ `trusted_device_days` จาก organization policy (ซ่อน checkbox เมื่อปิด และไม่ hardcode 30 วัน)
+- [x] Polish: Recovery code one-time display ผ่าน Inertia flash/dedicated UI โดยไม่ persist ลง browser history/log
+- [x] Polish: เปลี่ยน invalid TOTP setup จาก `abort(422)` เป็น validation error แสดงใต้ช่องกรอกรหัส
+- [x] Polish: เก็บ TOTP setup secret ไว้ใน session ระหว่างกรอกรหัสผิด และล้างเมื่อ verify สำเร็จหรือหมดอายุ
+- [x] Polish: Challenge UI รับ `allow_trusted_devices` และ `trusted_device_days` จาก organization policy (ซ่อน checkbox เมื่อปิด และไม่ hardcode 30 วัน)
 
 ---
 
@@ -1245,7 +1249,7 @@ Deals/Activities implementation แล้ว: ย้าย sidebar เป็น 
 
 ### 23.1.5 Compatibility & Verification — Closed (verified scope)
 
-ผู้ใช้อนุมัติวันที่ 2026-09-15 ให้ปิดเฉพาะขอบเขตที่ผ่าน และยอมรับงาน browser/network/performance เป็น deferred. รายการที่ยัง [ ] ด้านล่างย้ายเป็นงานติดตาม B01–B08 ใน docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md ไม่ถือว่าผ่านการทดสอบ. 23.1.6 ยังตรวจแยก.
+อัปเดต 2026-10-30: ทดสอบ B01–B08 ใน isolated Chrome/local fixture แล้ว; ดูผลรายกรณีและข้อจำกัดใน docs/PHASE_23_1_5_REMAINING_ACCEPTANCE.md. การอนุมัติ deferred วันที่2026-09-15 เป็นประวัติเดิม ไม่ใช่สถานะผลปัจจุบัน.
 
 - [x] คง API routes/methods, field names, payload types, nullable/default semantics และ server validation; เปลี่ยนสัญญา API เฉพาะเมื่อมีเหตุผลที่บันทึกและทดสอบแล้ว (คง RESTful routes, methods, request schemas และ validation rules เดิมทุกโมดูล 100%)
 - [x] ทดสอบ Create/Edit round-trip ทุกฟิลด์ รวม optional/hidden/readonly fields; prefill และ clear ค่าไม่ทำข้อมูลเดิมหายโดยไม่ตั้งใจ (ทดสอบผ่าน `Phase2315CompatibilityTest`, `Phase2314MasterDialogsTest`, `Phase231SalesDialogsTest` รองรับ prefill และ clear ฟิลด์ optional โดยไม่สูญเสียข้อมูลหลัก)
@@ -1254,18 +1258,18 @@ Deals/Activities implementation แล้ว: ย้าย sidebar เป็น 
 - ทดสอบ validation 422, forbidden/expired session, record removed/locked ระหว่างแก้ไข, network failure และ retry; ไม่แสดง success หรือปิด draft เมื่อบันทึกไม่สำเร็จ
   - [x] Backend 422 validation error handling (ทดสอบทั้ง session error redirect และ `postJson` assertStatus 422), forbidden/org isolation, submission key idempotency retry ผ่าน `Phase2315CompatibilityTest` (6 tests, 51 assertions) และชุดทดสอบ Phase 23.1 ทั้งหมด (`Phase231SalesDialogsTest`, `Phase2314MasterDialogsTest`, `Phase2315CompatibilityTest` รวม 17 tests, 259 assertions)
   - [x] Live browser error & draft retention verification บน Quotation dialog: กรอกแบบร่างข้อความยาวและ 2 line items โดยไม่ระบุลูกค้า -> กด Submit -> ระบบแสดงข้อผิดพลาด validation (`The customer id field is required.`) โดยไม่ปิด dialog, ไม่แสดงข้อความสำเร็จอันเป็นเท็จ, และข้อมูล draft ทั้งหมดถูกรักษาไว้ครบถ้วน 100% (บันทึกวิดีโอ `v02b_browser_acceptance_1789469550072.webp`)
-  - [ ] Client-side retry UI recovery ระหว่าง offline/network failure แยกตรวจใน comprehensive browser matrix
+  - [x] Local browser network/session recovery: responseหายหลังProduct/PDF commit, draft/fileอยู่, retry1record; sessionหาย→login/reconfirm→saveผ่าน — resilience-browser.json
 - ทดสอบ browser Create/Edit/Cancel/Discard/minimize/restore/resize, keyboard focus และ dirty navigation ในแต่ละกลุ่มฟอร์ม บน desktop/mobile และ light/dark
   - [x] Switch coordinator logic, dirty detection ครบทุก field (barcode, date, warehouse, lot, bin ฯลฯ), และ history navigation guard ผ่าน 23 unit tests (`editorSwitchGuard.test.mjs`, `historyGuard.test.mjs`, `editorComponents.test.mjs`)
   - [x] Live browser lifecycle verification:
     - Lot Barcode-only (`GPT-2315-DRAFT`) -> Minimize -> Switch -> Keep/Discard (บันทึกวิดีโอ `inventory_guard_test_1789458166903.webp`)
     - Stock Count Date-only (`2026-09-30`) -> Minimize -> Switch to Stock Transfer -> Modal แจ้งเตือน Keep (pill คงเดิม) / Discard (เปิด Transfer สะอาด) -> Clean switch คลังสินค้าปิดได้ทันทีโดยไม่แจ้งเตือน (บันทึกวิดีโอ `v02b_browser_acceptance_1789469550072.webp`)
     - Payroll Dialog บน Mobile Viewport 375x667: แก้ไขค่า draft แล้วกด Cancel -> Modal แจ้งเตือน Discard render สมบูรณ์ไม่ล้นหน้าจอ (375px) และปิดได้อย่างถูกต้อง
-  - [ ] การตรวจ physical browser matrix ครบทุกโมดูลที่เหลือ, responsive viewports (mobile 375px / desktop 1280px), และ light/dark theme
+  - [x] Chromeจริง + responsive emulation375/1280px light/dark: matrix284PASS,0FAIL;60NO_CREATEไม่นับผ่าน, contextual36, readonly14; ไม่ใช่ physical phone/browserทุกยี่ห้อ
 - ทดสอบชุดข้อมูลมาก/ชื่อยาว/ภาษาไทย/หลาย line items และ uploads; dialog ไม่ช้าเกินใช้งานและไม่เลื่อนหน้า background ระหว่างเปิด
   - [x] ข้อความภาษาไทย Unicode, entity names ขนาดยาว, ที่อยู่, และ multi-item tax/line calculations (multi-line 2 รายการรวมส่วนลดและ VAT 7% ตรวจสอบ assertCount 2 items, subtotal, tax_amount, total) ผ่านการทดสอบ backend schema & calculations ใน `Phase2315CompatibilityTest`
   - [x] Live browser runtime verification: ข้อความภาษาไทยขนาดยาวและ 2 line items บน Quotation dialog คำนวณยอดรวม Subtotal 3,500.00 THB ได้ทันที และ background scroll lock ทำงานจริงโดยใส่ `overflow: hidden` บน `document.body` พร้อมคลาส `antigravity-scroll-lock`
-  - [ ] Large dataset runtime rendering (ระดับ 1,000+ records) และ file upload latency บน live browser
+  - [x] Local Chrome1019products open3482ms; reference search1005; PDF110824bytes retry1427ms, error/file retention/retry1document; ไม่ใช้แทนproduction SLA
 - [x] รัน scoped feature tests ระหว่าง rollout และ full cross-module regression ก่อนปิด Phase พร้อม TypeScript, ESLint, Pint, production build และ diff checks (Full regression 316 passed / 2 skipped / 2,609 assertions, tsc 0 errors, ESLint 0 warnings, Pint passed, Vite build clean, Prettier passed)
 - [x] ทดสอบฐานข้อมูลบน isolated SQLite/MySQL ตามความเสี่ยง โดยไม่สร้างข้อมูลทดลองหรือรัน destructive migration บนฐานใช้งานจริง (ทดสอบบน isolated SQLite memory/test fixture `phase231-environment.php` ไม่กระทบ operational database)
 
@@ -1621,7 +1625,7 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 - [x] P6: Manufacturing/BOM/Work Orders → Document metadata/download ACL
 - [x] P7: ผู้ใช้ตัด salary/bank/sensitive และ Write APIs ทั้งหมดออก; integration key ใช้ GET/HEAD เท่านั้น
 - [x] Cross-cutting technical: cursor/watermark/reconciliation contracts และ automated tests ผ่าน Gemini review ตาม gemini.md section12 (2026-10-19)
-- [ ] Cross-cutting operational: Browser UAT pending; target integration/deployment/concurrent HTTP SLA deferred ตามผู้ใช้ ไม่ใช้ technical review แทน production acceptance
+- [x] External API local browser/HTTP acceptance: HTTP9, desktop/mobile key lifecycle2 (secret once, replacement narrower scope, revoke); target integration/deployment/concurrent HTTP SLA และ operational owner UAT ยังdeferred ไม่ใช้ local results แทน production acceptance
 
 ### HR & Employee API — รายละเอียด implementation / acceptance
 
@@ -1699,7 +1703,101 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 - [ ] Hardware printer/scanner, two-server integration, MariaDB concurrent quota/numbering/load/crash tests
 - [ ] Operational UAT/backup recovery drill/production SLO/monitoring-owner และ tax acceptance
 
-### 28.8 Deferred scope — ไม่รวม local cash release
+### 28.8 POS extensions — ลำดับงานตามผู้ใช้ 2026-10-30
 
-- [ ] Patient history/เวชระเบียน; QR payment/provider/late-callback acceptance; card/EDC/mixed tender; delivery/membership/promotions
-- [ ] Browser/PWA offline cache/device queue/numbering/quota/conflict recovery; shared-stock real-time reservation หรือ connection model ใหม่ต้อง design/authorize แยก
+28.8.1 และ28.8.2 พัฒนาและตรวจ local scope แล้วตามหลักฐานย่อย; 28.8.3 เป็นต้นไปยังเป็นแผน ไม่ถือว่าพัฒนาหรือทดสอบผ่าน. ให้เริ่ม 28.8.1–28.8.3 สำหรับทุกประเภท POS (ร้านขายของทั่วไป/ร้านอาหาร/ร้านขายยา). ไม่เปลี่ยนสถานะ local cash release เดิม.
+
+ปรับแผนตาม Gemini หมวด18 และ review ร่วมวันที่2026-10-30: รับข้อเสนอด้าน delivery settlement, member custody, offline security และ Restaurant server authority; ปรับข้อจำกัด storage, signing, quota, waste และ clinical guard ตามรายการด้านล่าง. ข้อที่ยังต้องกำหนดนโยบายเป็นงานออกแบบ ไม่ถือว่าอนุมัติรายละเอียดธุรกิจ/ภาษี/การแพทย์แล้ว.
+
+#### 28.8.1 Ordering / Delivery — shared core, เปิด Retail/Restaurant ก่อน; Pharmacy ปิด
+
+สถานะ2026-10-30: **Local operational scope complete** ตามขอบเขตที่ผู้ใช้ยืนยัน: prepaid cash + COD cash-custody, fees เป็น local policy รอตรวจรับ; ไม่สร้าง ABB/Payment/GL ของ COD อัตโนมัติ. ไม่ใช่ production/accounting acceptance. [คู่มือ/diagram](document/PHASE_28_8_1_DELIVERY.md) · [หลักฐาน](document/acceptance/phase28_8_1/README.md)
+
+- [x] Workflow/UI ตั้งแต่รับคำสั่งซื้อ, draft/edit, ready/reserve, dispatch/deliver, cancel/fail, manager retry และ physical return/inspection พร้อมผู้รับผิดชอบ
+- [x] Server authority, permission/branch scope, encrypted contact, audit, state/version guard และ durable idempotency; หลายแท็บ stale=409 และ lost-response retry ไม่ทำซ้ำ
+- [x] เชื่อม prepaid checkout/source sale เดิม ไม่เพิ่ม sale/VAT/payment/quota ซ้ำ; COD ใช้ server quote/shared reservation และ signed operational revisions เข้า ERP โดยไม่ post financial/inventory ซ้ำ
+- [x] Cash-only custody: แยกรับเงินลูกค้าจากรับเข้าลิ้นชัก; manager ส่งเงินเข้ากะเปิด/ข้ามกะได้โดยไม่แก้กะปิด. คืน custody ครั้งเดียวและตรวจเงินลิ้นชักเมื่อจ่ายคืนจากร้าน
+- [x] COD local document boundary ตามผู้ใช้ยืนยัน: ใบส่งของ/หลักฐาน custody แยกจาก ABB/FULL/Payment/GL; financial_status=policy_pending. Prepaid return อ้าง refund เดิม; ไม่ถือ failed ว่าคืนเงินแล้ว
+- [x] Delivery/packaging fees แยก net/tax/total, rounding และ server-allowed local tax rates; manager reauthentication. Accounting/tax mapping รอตรวจรับตามผู้ใช้. Promotion engine/eligibility แบบกำหนดรายกติกาอยู่28.8.2
+- [x] Retail รับคืนตรวจสภาพก่อน restock/destroy; prepaid original-cost inspection ใช้ refund/allocation เดิมและไม่คืน quota ที่ใช้แล้ว. COD ส่งสำเร็จยัง hold reservation รอ settlement policy
+- [x] Restaurant ใช้ takeaway/kitchen/recipe consumption เดิม; ปิด bill COD line ซ้ำ. อาหารปรุงแล้วกลับได้เฉพาะ waste ไม่คืนวัตถุดิบดีหรือตัดซ้ำ
+- [x] ปิด Pharmacy Delivery ทั้งเมนู/หน้า/API ครบ cashier/manager/pharmacist/kitchen ตามผู้ใช้; ไม่เปิด pharmacist delivery โดยปริยาย
+- [x] POS61tests/432assertions, ERP Phase28/Manufacturing62tests/509assertions; Chrome1280/375 สอง lifecycle ผ่าน collect/remit/return/refund/restock พร้อม stale/lost-response; actual signed POS→ERP35revisions + checkpoint verified/issues=[]
+
+**รอ release แยก:** ตรวจรับ COD/fees accounting/tax/ABB/FULL/COGS/account mapping และการ settle reserved stock ก่อนพัฒนา/เปิด financial posting. ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง, target two-server HTTP/mTLS หรือ MariaDB concurrency. POS2/ERP1 migrations ใหม่ยังไม่รันกับconfigured DB; local flags defaultfalse. Gemini review เดิมไม่ครอบคลุมโค้ดใหม่. ข้อจำกัดเหล่านี้ไม่ถูกติ๊กว่า production ผ่าน
+
+#### 28.8.2 Membership / Promotions — ทำก่อน, ทุก POS
+
+สถานะ 2026-11-01: **Local Complete — production gates remain**. ERP member master/encrypted enrollment/review, exclusive promotion/allocated rights, checkout/refund/Delivery และUIทุกPOS ผ่าน local acceptance. POS81/1851; ERP subset82/1937; browser1280/375สามประเภท, stale409/review/replay และRetail signed roundtrip10events ผ่าน. [หลักฐาน](document/acceptance/phase28_8_2/README.md) · [คู่มือ/diagram/retention](document/PHASE_28_8_2_MEMBERSHIP.md). ไม่แก้configuredDB/.env; ยังไม่ได้ทดสอบระบบจริง. Geminiตรวจlocal scopeแล้วตามgemini.mdหมวด9 (2026-11-01).
+
+- [x] กำหนดข้อมูลสมาชิก การสมัคร/ค้นหา/ผูกสมาชิกกับรายการขาย และขอบเขตข้อมูลระหว่างสาขา/องค์กร
+- [x] กำหนดกติกาโปรโมชัน: คุณสมบัติสมาชิก/สินค้า/สาขา ช่วงเวลา เงื่อนไขยอดซื้อ และสิทธิ์การใช้งาน
+- [x] กำหนดลำดับคำนวณ การใช้ร่วมกับส่วนลดอื่น ข้อจำกัดการใช้ และผลเมื่อยกเลิก/คืนสินค้า
+- [x] กำหนด member master/data custody: ERP เป็น master หรือรับ draft member จาก POS ผ่าน signed event/connector เดิม; ระบุการจับคู่สมาชิกซ้ำ/ข้ามสาขาและข้อมูลที่อนุญาตให้ sync โดยไม่มี POS write access เข้า ERP DB
+- [x] กำหนดข้อมูลสมาชิกที่ต้อง mask/encrypt, สิทธิ์เข้าถึงและretention; ไม่ส่งข้อมูลส่วนบุคคลเกินจำเป็นไป browser/log/public API
+- [x] กำหนดส่วนลดสมาชิก/โปรโมชันและการปัดเศษต่อline/ทั้งบิลให้สอดคล้องกันทุก POS; ออกแบบ trade discount ก่อน VAT ตามlocal policyที่ผู้ใช้ยืนยัน และจัดทำเอกสารให้ผู้รับผิดชอบบัญชี/ภาษีตรวจรับก่อนใช้จริง พร้อมทดสอบ ABB/FULL/GL และrefundตามยอดสุทธิที่ปันส่วนจริง ไม่ hardcode รหัสบัญชี
+- [x] กำหนด limited redemption/คูปองใช้ครั้งเดียวข้ามTerminal: ต้อง online check หรือมีสิทธิ์ที่ server จัดสรรเฉพาะเครื่องและตรวจซ้ำได้; ห้ามใช้สิทธิ์ส่วนกลางซ้ำขณะoffline พร้อมกำหนดการคืนสิทธิ์เมื่อvoid/refund
+- [x] กำหนดรายโปรโมชันว่า merchandise subtotal/delivery fee/packaging fee นับใน minimum spend และรับส่วนลดหรือไม่; ระบุฐานก่อน/หลังส่วนลดให้ชัด ใช้กติกาเดียวกันใน checkout/Delivery/ERP sync และsnapshotกติกาที่ใช้จริง
+- [x] เชื่อม cancelled/failed delivery ทั้งก่อนรับเงินCODและหลังส่ง กับ redemption release/reversal ตามนโยบาย; อ้างอิงสิทธิ์และคำสั่งซื้อเดิม ทำครั้งเดียวแม้retry/replay/หลายTerminal. แยกการคืนสิทธิ์คูปอง การคืนquotaที่ยังไม่ใช้ และการคืนStockจริง: ห้ามเพิ่มStockพร้อมขายจากสถานะfailedเพียงอย่างเดียว ต้องผ่านรับคืน/ตรวจสภาพ/ตัดสินwasteหรือrestockตามประเภทร้าน และไม่ลงrefund/reversalซ้ำ
+- [x] พัฒนาและทดสอบกติกากลางสำหรับทุก POS; ให้ server ตรวจยอดและสิทธิ์ ไม่เชื่อยอดจาก client
+
+**Release gates ก่อนproduction — อยู่นอกlocal acceptance:**
+
+- [ ] ตรวจรับบัญชี/ภาษีโปรโมชั่นและCOD/fees, privacy/consent/retention และkey custody/rotation สำหรับข้อมูลจริง
+- [ ] ทดสอบtwo-server/mTLS/MySQL-MariaDB concurrency และอุปกรณ์จริง
+- [ ] สำรอง/ทดสอบrestore และmigrate configuredDB พร้อมprovision keys/permissions จริง (code ERP87/POS21; รอบนี้ยังไม่รัน)
+
+#### 28.8.3 Browser / PWA offline — ทำก่อน, ทุก POS
+
+สถานะ2026-11-01: **In Progress — foundation**. ผู้ใช้ยืนยันcashเฉพาะquota/ราคาล่วงหน้า; defaults15นาที/20ธุรกรรม/10,000บาท Managerปรับได้; รหัสปลดล็อกdevice12ตัวอักษรไม่เก็บplaintext, ไม่มีrecovery; restart/clockผิดปกติต้องonlineใหม่; conflictรับเงินจริงให้Managerตรวจหลักฐานและรับเงินเข้ากะปัจจุบัน ใช้วันที่ตรวจรับสำหรับlocal รอaccounting/tax reviewจริง. มีdevice/inbox/conflict ledger, policy/Stockholds/slots API, encrypted IndexedDB และclock guardแล้ว แต่ยังไม่ต่อPWA UI/financial reconcile. [คู่มือ/งานต่อ](document/PHASE_28_8_3_OFFLINE.md) · [foundation evidence](document/acceptance/phase28_8_3/README.md). ยังไม่ติ๊กปิดรายการรวม ไม่migrateconfiguredDB (codePOS22/ERP87).
+
+- [ ] ออกแบบข้อมูลที่เก็บบนเครื่อง อายุข้อมูล ความปลอดภัย และการแยกองค์กร/สาขา/ผู้ใช้
+- [ ] ออกแบบคิวบนเครื่องให้คงอยู่หลังปิด/เปิดโปรแกรม พร้อมสถานะ pending/syncing/synced/failed/review และการ retry
+- [ ] กำหนดการออกเลขเอกสารและจัดสรร/ใช้ quota ต่อสาขา/Terminal/device ขณะ offline; ห้ามเลขซ้ำหรือใช้เกิน quota
+- [ ] เก็บ POS instance event/checkpoint private key ที่ POS Server เท่านั้น ไม่ส่งลง IndexedDB/localStorage/browser; แยก event signature ออกจาก e-Tax document signature และไม่อ้างว่า signed event ทำให้เอกสารภาษีลงนามแล้ว
+- [ ] กำหนด offline provisional receipt/transaction identity และช่วงเลขที่จัดสรรล่วงหน้า พร้อมขั้นตอน POS Server ตรวจรับ/ลงนามevent/ผูกhash chain และเชื่อมเอกสารจริงเมื่อsync; ไม่ถือ provisional receipt เป็น ABB/FULL ที่ตรวจรับแล้ว และไม่สร้างยอดขาย/VATซ้ำ
+- [ ] จัดสรร offline stock/สิทธิ์ quota จาก POS Server ต่อเครื่องอย่างไม่ทับซ้อน; ออกเลขไม่ซ้ำเพียงอย่างเดียวไม่ป้องกัน oversell. กำหนดอายุสิทธิ์ การป้องกันcopy/rollbackคิว การตรวจreplay และการคืนquotaหลังreconcile โดยไม่คืนสิทธิ์ที่อาจถูกใช้แล้วซ้ำ
+- [ ] กำหนด offline hard-blocks: Refund/Void บิลที่ยังไม่sync, FULL replacement ข้ามเครื่อง และงานที่ต้องตรวจสิทธิ์/สถานะล่าสุดจากserver; ยาที่recallหรือจำเป็นต้องตรวจใบสั่งยา/สถานะสดต้องblockเมื่อไม่มีหลักฐานล่าสุดตามนโยบาย ไม่ถือsnapshotเก่าว่ายังปลอดภัยเสมอ
+- [ ] Delivery online authority สำหรับรุ่นแรก: การdispatch/ยืนยันส่งสำเร็จ รับเงินCODคืนเข้าร้าน และรับคืนจากfailed delivery ต้องได้รับการตรวจรับจาก POS Server; browser offlineเก็บได้เพียงdraft/คำขอpending ไม่แสดงสถานะสำเร็จหรือเพิ่มยอดเงิน/Stockเอง. ใช้version/state guardและidempotencyป้องกันหลายเครื่องทำรายการเดียวกันซ้ำ; exclusive offline leaseเป็นข้อเสนอออกแบบแยก ไม่เปิดโดยปริยาย
+- [ ] เมื่อlogout/idle timeout/absolute timeout/เปลี่ยนกะ ห้ามลบ pending/failed/review queue; แยกสิทธิ์อ่าน/ถอดรหัสตามองค์กร/สาขา/บทบาท กำหนดkey custody/re-auth และสิทธิ์syncหลังsessionหมดอายุ ไม่เก็บplaintextหรือkeyถอดรหัสข้างข้อมูลโดยไม่มีการควบคุม
+- [ ] กำหนด max_offline_transactions/max_offline_amount/storage headroom และพฤติกรรมเมื่อเต็ม: ต้องเขียนคิวสำเร็จก่อนแสดงรับรายการสำเร็จ; หยุดรับรายการใหม่เมื่อเกินเพดานโดยรักษาคิวเดิม
+- [ ] ขอ Persistent Storage และตรวจผลอนุญาต/พื้นที่จริง; ไม่รับประกันbrowserจะอนุญาตหรือผู้ใช้ล้างข้อมูลไม่ได้. ออกแบบการแจ้งเตือนและrecovery เมื่อstorageถูกล้าง/evict/เขียนไม่ได้ พร้อมระบุรายการที่กู้จากserverได้หรือไม่ได้อย่างตรงจริง — อ้างอิง https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist
+- [ ] กำหนด sync/reconnect, idempotency/dedupe, acknowledgement และ recovery หลัง crash/response หาย โดยไม่ลงยอดขาย/VAT/Stock ซ้ำ
+- [ ] กำหนดนโยบาย conflict เมื่อราคา/โปรโมชัน/สิทธิ์สมาชิก/Stock/สถานะเอกสารเปลี่ยนระหว่าง offline; ระบุกรณี block/review และผู้มีสิทธิ์ตัดสิน
+- [ ] กำหนด clock skew/rollback guard: เก็บ client_created_at (เวลาที่clientอ้าง) และ server_received_at (เวลาที่POS Serverรับครั้งแรก; retryไม่เขียนทับ) แยกกัน พร้อม last trusted server timestamp/permit version. ใช้ performance.now() ประกอบตรวจelapsedในบริบทเดียวกันเท่านั้น ไม่ถือเป็นtrusted clockข้ามreload/restart/sleep หรือหลักฐานป้องกันการแก้browser
+- [ ] กำหนดอายุสิทธิ์offline/โปรโมชันจากนโยบายที่serverรับรอง; เมื่อพิสูจน์เวลา/อายุquotaไม่ได้ให้หยุดใช้สิทธิ์ที่ต้องพึ่งเวลาและส่งรายการที่มีอยู่เข้าreview ไม่เชื่อclient clockหรือserver_received_atว่าเป็นเวลาขายจริง. ห้ามลบหลักฐานหรือทิ้งรายการที่รับเงินแล้วเพราะclock skew ต้องรักษาคิวและให้ผู้มีสิทธิ์reconcileโดยไม่สร้างยอดซ้ำ
+- [ ] พัฒนาและทดสอบ offline/online/reconnect/retry/crash/conflict ครบทุกประเภท POS; ไม่ถือว่า queue ฝั่ง POS server เดิมเท่ากับ browser offline
+
+#### 28.8.4 Patient history / เวชระเบียน — เฉพาะ POS ร้านขายยา
+
+- [ ] กำหนดขอบเขตประวัติผู้ป่วย/เวชระเบียนและข้อมูลที่จำเป็นก่อนพัฒนา
+- [ ] ระบุ decision supersede: ข้อจำกัดไม่มีpatient historyใน28.1และsynthetic-only guardsเดิมเป็นbaselineของreleaseเดิม; รองรับเวชระเบียนจริงเมื่อโมดูล28.8.4พัฒนาและผ่านการตรวจรับพร้อมเปิดเฉพาะPharmacy ไม่เปิดใช้งานข้อมูลจริงจากการแก้checklistนี้
+- [ ] กำหนด custody ของข้อมูลสุขภาพที่ POS Server/private storage และการจัดการkey/backup; ระบุว่าจะเก็บเฉพาะPOSหรือsyncข้อมูลใดผ่านsigned event/authorized connector ไม่มี direct ERP DB write และไม่cacheเวชระเบียนในbrowserโดยอัตโนมัติ
+- [ ] เข้ารหัสข้อมูลสุขภาพ/ประวัติแพ้ยา/เลขประจำตัวที่กำหนด, maskตามสิทธิ์ และauditการอ่าน/แก้ไขด้วยmetadataเท่าที่จำเป็น; ไม่เก็บเนื้อหาเวชระเบียนในaudit/logดิบหรือเปิดผ่านpublic API
+- [ ] แยก Drug Allergy / Contraindication Guard อัตโนมัติเป็นข้อเสนอรอกำหนดขอบเขต แหล่งข้อมูลที่ตรวจรับและผู้รับผิดชอบเภสัชกร; ไม่รวมระบบวินิจฉัย/ตัดสินการใช้ยาอัตโนมัติโดยปริยายกับงานประวัติผู้ป่วย
+- [ ] เปิดฟังก์ชันเฉพาะ POS ประเภท Pharmacy; Retail/Restaurant ไม่แสดงเมนูและเรียก API ส่วนนี้ไม่ได้
+- [ ] กำหนดสิทธิ์ผู้ใช้งาน การแยกข้อมูล การเข้าถึง/audit และนโยบายเก็บข้อมูล พร้อมทดสอบการปิดกั้นข้ามประเภท POS
+
+#### 28.8.5 Kitchen queue / Seating queue & reservations — เฉพาะ POS ร้านอาหาร
+
+- [ ] ต่อยอด public menu/table-session + staff acceptance ที่มีใน Phase28: ลูกค้าสแกน QR Code ที่โต๊ะ เปิดเมนูบนมือถือ เลือกอาหาร/ขนาด/ตัวเลือก/จำนวน และส่งคำสั่งซื้อได้เอง
+- [ ] QR ผูกสาขา/โต๊ะ/table session ที่ถูกต้อง มีอายุและการเพิกถอน; ปิด session แล้ว QR เดิมต้องไม่ส่งออเดอร์เข้าลูกค้ารอบใหม่
+- [ ] แสดงราคาและสถานะพร้อมขายจาก POS server; ตรวจราคา/ตัวเลือก/ความพร้อมอีกครั้งก่อนรับออเดอร์ พร้อมแจ้งลูกค้าหากข้อมูลเปลี่ยน
+- [ ] เชื่อมออเดอร์จาก QR เข้าคิวครัวตามลำดับเมื่อรับออเดอร์ พร้อมแสดงผลรับคำสั่งซื้อและสถานะให้ลูกค้า; คง staff acceptance เดิมจนกว่าจะกำหนดนโยบาย auto-accept แยก
+- [ ] รองรับสั่งเพิ่มใน table session เดิมและหลายมือถือร่วมโต๊ะ; ป้องกันกดส่งซ้ำ/retry แล้วเกิดออเดอร์ซ้ำ และแยกคำสั่งซื้อข้ามโต๊ะ/สาขา
+- [ ] ทดสอบ QR menu/order บนมือถือ, QR หมดอายุ/ถูกเพิกถอน, โต๊ะปิด/เปิดรอบใหม่, เมนูหมด, network failure และ reconnect; การสั่งผ่าน QR ไม่รวม QR payment ที่ยังเลื่อนไว้
+- [ ] ระบบคิวทำอาหารเรียงตามลำดับรับออเดอร์ พร้อมเลขคิว เวลาเข้า และรายการอาหาร; กำหนดเงื่อนไขการจัดลำดับเมื่อมีการสั่งเพิ่ม/แก้ไขก่อนพัฒนา
+- [ ] กำหนดสถานะคิวครัวและสิทธิ์เปลี่ยนสถานะ: รอทำ/กำลังทำ/พร้อมเสิร์ฟ/เสิร์ฟแล้ว/ยกเลิก; เชื่อมกับ kitchen/table session เดิม โดยไม่ตัดวัตถุดิบหรือส่งงานซ้ำ
+- [ ] กำหนดสิทธิ์และเหตุผลกรณีข้ามคิว/พักคิว/เปลี่ยนลำดับ พร้อม audit trail; ไม่แซงคิวอัตโนมัติโดยไม่มีกติกาที่ตกลง
+- [ ] ระบบคิวรอที่นั่ง: จำนวนลูกค้า ลำดับคิว เวลาเข้า สถานะรอ/เรียกคิว/ได้ที่นั่ง/ยกเลิก/ไม่มา และการจัดโต๊ะตามจำนวนที่นั่ง
+- [ ] ระบบจองที่นั่ง/โต๊ะล่วงหน้า: วันเวลา จำนวนลูกค้า ข้อมูลติดต่อ สถานะจอง/ยืนยัน/มาถึง/ยกเลิก/ไม่มา; กำหนดระยะเวลาถือโต๊ะและนโยบายมาสายก่อนพัฒนา
+- [ ] กำหนดกติกาจัดสรรโต๊ะระหว่างผู้จองกับคิว walk-in; เชื่อมเมื่อเข้าที่นั่งกับ table session และคืนโต๊ะเมื่อพร้อมรับลูกค้ารอบใหม่
+- [ ] ป้องกันจอง/จัดโต๊ะซ้ำเมื่อหลาย Terminal ทำงานพร้อมกัน; กำหนดพฤติกรรมระหว่าง offline/sync และ conflict review
+- [ ] POS Server เป็นauthorityสำหรับ public QR order acceptance, table session และการจัดสรรโต๊ะจากwalk-in/reservation; browserที่ขาดการเชื่อมต่อเก็บได้เพียงคำขอรอตรวจรับ ไม่ยืนยันโต๊ะ/ส่งคิวครัวสำเร็จเอง และต้องแจ้งสถานะรอsyncโดยไม่สร้างsplit-brainเมื่อreconnect
+- [ ] การจองรอบนี้ไม่มี online deposit/pre-payment; ไม่สร้างpayment integrationเพิ่มเติมจากงานจองโต๊ะ และคงQR/Card/EDCไว้ใน28.8.6
+- [ ] เปิดเมนูและ API เฉพาะ Restaurant พร้อม permission/branch isolation; ทดสอบลำดับคิว การเปลี่ยนสถานะ การยกเลิก การชนกันของโต๊ะ และ reconnect โดยไม่สร้างคิวซ้ำ
+
+#### 28.8.6 ยังเลื่อนไว้ / ต้องออกแบบแยก
+
+- [ ] QR payment/provider/late-callback acceptance; card/EDC/mixed tender — ยังไม่รวมสามงานที่ให้ทำก่อน
+- [ ] Shared-stock real-time reservation หรือ connection model ใหม่ต้อง design/authorize แยก; ไม่ถือว่ารวมโดยอัตโนมัติใน offline sync

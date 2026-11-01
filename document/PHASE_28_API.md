@@ -1,5 +1,7 @@
 # Phase 28 — API and route inventory — 2026-10-27
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 Local implementation ผ่าน Gemini; ฐานตาม config อัปเดตแล้ว. ตารางด้านล่างอ่านจาก Laravel route metadata ปัจจุบัน. นี่ไม่ใช่ public ERP Write API และไม่นับรวมใน External Read API 62 GET paths
 
 ## Authentication and boundaries
@@ -90,3 +92,14 @@ Local implementation ผ่าน Gemini; ฐานตาม config อัปเ
 - Restaurant option เป็น configured SKU/BOM; passive `/state` polling ไม่ต่อ idle timeout. Pharmacy inspection ต้อง manager + `pharmacist_qualified=true` ทั้ง authority ฝั่ง POS/ERP
 
 Field schemas/validation ให้ยึด [POS staff routes](../pos/routes/web.php), [connector routes](../pos/routes/connector.php), [ERP controller](../backend/app/Http/Controllers/Admin/PosController.php), [ERP event services](../backend/app/Services/Pos) และ [POS services](../pos/app/Services). Credentials/tokens/private keys ไม่ใส่ในเอกสารตัวอย่าง
+
+## POS Config routes — 2026-10-29
+
+| Method | URI | Scope |
+| --- | --- | --- |
+| GET / HEAD | `/config` | manager / own branch / local-loopback |
+| POST | `/config/branch` | name/business_type + manager password |
+| POST | `/config/terminal` | code + manager password |
+| POST | `/config/staff` | name/email/password confirmation/role + manager password |
+
+ดู [contract/errors/security](POS_CONFIGURATION.md). Route POST จริงใช้ `/config/{section}` และ controller allowlist branch/terminal/staff เท่านั้น; ไม่ใช่ External Read API.

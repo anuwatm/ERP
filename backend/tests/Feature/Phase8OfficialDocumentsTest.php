@@ -138,7 +138,7 @@ class Phase8OfficialDocumentsTest extends TestCase
         $customer = Customer::create([
             'org_id' => $finance->org_id,
             'customer_code' => '000001',
-            'company_name' => 'PDF Customer',
+            'company_name' => 'ลูกค้าทดสอบภาษาไทย กิ่งแก้ว น้ำผึ้ง',
             'owner_id' => $finance->id,
         ]);
         $invoice = Invoice::create([
@@ -152,7 +152,7 @@ class Phase8OfficialDocumentsTest extends TestCase
             'balance_due' => 100,
             'currency' => 'THB',
         ]);
-        $invoice->items()->create(['org_id' => $finance->org_id, 'description' => 'PDF line', 'quantity' => 1, 'unit_price' => 100, 'line_total' => 100, 'sort_order' => 0]);
+        $invoice->items()->create(['org_id' => $finance->org_id, 'description' => 'ค่าบริการทดสอบภาษาไทย น้ำดื่ม กุ้ง', 'quantity' => 1, 'unit_price' => 100, 'line_total' => 100, 'sort_order' => 0]);
         $supplier = Supplier::create(['org_id' => $finance->org_id, 'supplier_code' => '000001', 'name' => 'PDF Supplier', 'status' => 'active']);
         $po = PurchaseOrder::create(['org_id' => $finance->org_id, 'supplier_id' => $supplier->id, 'po_no' => 'PO-PDF', 'status' => 'sent', 'order_date' => '2026-08-23', 'tax_mode' => 'no_tax', 'total' => 100, 'currency' => 'THB']);
         $po->items()->create(['org_id' => $finance->org_id, 'description' => 'PDF PO line', 'quantity' => 1, 'unit_price' => 100, 'line_total' => 100, 'sort_order' => 0]);
@@ -160,10 +160,14 @@ class Phase8OfficialDocumentsTest extends TestCase
         $invoiceResponse = $this->actingAsOrgUser($finance)->get(route('invoices.pdf', $invoice));
         $invoiceResponse->assertOk();
         $this->assertStringStartsWith('%PDF', $invoiceResponse->getContent());
+        $this->assertStringContainsString('Sarabun', $invoiceResponse->getContent());
+        $this->capturePdf('invoice', $invoiceResponse->getContent());
 
         $poResponse = $this->actingAsOrgUser($finance)->get(route('purchase-orders.pdf', $po));
         $poResponse->assertOk();
         $this->assertStringStartsWith('%PDF', $poResponse->getContent());
+        $this->assertStringContainsString('Sarabun', $poResponse->getContent());
+        $this->capturePdf('purchase-order', $poResponse->getContent());
     }
 
     public function test_withholding_certificate_pdf_download_is_org_scoped(): void
@@ -189,6 +193,8 @@ class Phase8OfficialDocumentsTest extends TestCase
         $response = $this->actingAsOrgUser($finance)->get(route('expenses.withholding-certificate', $expense));
         $response->assertOk();
         $this->assertStringStartsWith('%PDF', $response->getContent());
+        $this->assertStringContainsString('Sarabun', $response->getContent());
+        $this->capturePdf('withholding', $response->getContent());
 
         $this->actingAsOrgUser($other)
             ->get(route('expenses.withholding-certificate', $expense))
@@ -223,6 +229,18 @@ class Phase8OfficialDocumentsTest extends TestCase
         $this->actingAsOrgUser($finance)
             ->get(route('invoices.pdf', $invoice))
             ->assertForbidden();
+    }
+
+    private function capturePdf(string $name, string $contents): void
+    {
+        if (getenv('LOCAL_PDF_EVIDENCE') !== '1') {
+            return;
+        }
+        $directory = base_path('../temp/pdf-acceptance-20261029');
+        if (! is_dir($directory)) {
+            mkdir($directory, 0700, true);
+        }
+        file_put_contents($directory.'/'.$name.'.pdf', $contents);
     }
 
     private function attachRole(User $user, string $code, array $permissions): Role

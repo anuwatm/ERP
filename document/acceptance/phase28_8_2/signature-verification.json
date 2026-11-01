@@ -1,0 +1,6 @@
+{
+    "algorithm": "RSA-SHA256",
+    "verified": 26,
+    "failed": 0,
+    "scope": "All synthetic source outbox envelopes; independent ERP canonicalizer\/public-key verification, not all imported into ERP"
+}

@@ -14,6 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['pos.staff' => StaffAuthentication::class, 'pos.connector' => ConnectorAuthentication::class, 'pos.local-menu' => LocalPublicMenu::class]);
     })->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['manager_password', 'manager_email', 'token']);
+        $exceptions->dontFlash(['member_name', 'member_phone', 'manager_password', 'manager_email', 'token', 'password', 'password_confirmation', 'recipient', 'phone', 'address']);
         // Use Laravel's standard exception handler; production APP_DEBUG remains false.
     })->create();

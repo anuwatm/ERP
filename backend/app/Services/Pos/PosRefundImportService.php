@@ -95,6 +95,8 @@ class PosRefundImportService
         DB::table('pos_import_refunds')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $instance->id, 'source_refund_id' => $p['refund_id'], 'sale_id' => $sale->id, 'payload_hash' => $event['payload_hash'], 'source_snapshot' => PosCanonicalJson::encode($p), 'credit_note_id' => $note->id, 'payment_id' => $refundPayment->id, 'original_payment_id' => $payment->id, 'created_at' => now(), 'updated_at' => now()]);
         AuditLog::create(['org_id' => $instance->org_id, 'actor_user_id' => $instance->actor_id, 'action' => 'pos.refund.import', 'entity_type' => 'credit_debit_note', 'entity_id' => $note->id, 'after_json' => ['instance_id' => $instance->id, 'source_refund_id' => $p['refund_id'], 'source_sale_id' => $p['sale_id'], 'stock_return' => 'quarantine_only'], 'request_id' => (string) Str::uuid()]);
 
+        app(PosMembershipImportService::class)->releaseRefundedSale($instance, $sale);
+
         return ['status' => 'accepted', 'reason_code' => null, 'invoice_id' => $invoice->id];
     }
 }

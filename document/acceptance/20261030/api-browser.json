@@ -1,0 +1,31 @@
+{
+  "scope": "API key management UI; synthetic owner/keys; no live integration",
+  "cases": [
+    {
+      "width": 1280,
+      "result": "PASS",
+      "created": true,
+      "edited": true,
+      "oneTimeSecretCleared": true,
+      "secretAbsentAfterReload": true,
+      "httpRead": 200,
+      "narrowedViaReplacementKey": true,
+      "revokedStatus": 401,
+      "replacementRevokedStatus": 401
+    },
+    {
+      "width": 375,
+      "result": "PASS",
+      "created": true,
+      "edited": true,
+      "oneTimeSecretCleared": true,
+      "secretAbsentAfterReload": true,
+      "httpRead": 200,
+      "narrowedViaReplacementKey": true,
+      "revokedStatus": 401,
+      "replacementRevokedStatus": 401
+    }
+  ],
+  "errors": [],
+  "status": "PASS"
+}

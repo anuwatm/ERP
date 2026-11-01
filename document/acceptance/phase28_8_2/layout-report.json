@@ -1,0 +1,42 @@
+{
+  "scope": "Layout after button wrapping polish; no sale mutations",
+  "cases": [
+    {
+      "business": "retail",
+      "width": 1280,
+      "overflow": false,
+      "labelsFit": true
+    },
+    {
+      "business": "retail",
+      "width": 375,
+      "overflow": false,
+      "labelsFit": true
+    },
+    {
+      "business": "restaurant",
+      "width": 1280,
+      "overflow": false,
+      "labelsFit": true
+    },
+    {
+      "business": "restaurant",
+      "width": 375,
+      "overflow": false,
+      "labelsFit": true
+    },
+    {
+      "business": "pharmacy",
+      "width": 1280,
+      "overflow": false,
+      "labelsFit": true
+    },
+    {
+      "business": "pharmacy",
+      "width": 375,
+      "overflow": false,
+      "labelsFit": true
+    }
+  ],
+  "result": "PASS"
+}

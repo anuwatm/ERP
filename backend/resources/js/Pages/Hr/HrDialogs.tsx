@@ -38,13 +38,18 @@ export function LeaveRequestDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty =
-        form.data.leave_type_id !== '' ||
-        form.data.starts_on !== '' ||
-        form.data.ends_on !== '' ||
-        form.data.reason !== '';
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -73,7 +78,7 @@ export function LeaveRequestDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="New Leave Request"
                 breadcrumb="HR & Attendance / Leave"
                 entityLabel="Leave Request"
@@ -173,13 +178,18 @@ export function HrSummaryDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty =
-        form.data.user_id !== '' ||
-        form.data.period_start !== '' ||
-        form.data.period_end !== '' ||
-        form.data.cutoff_date !== '';
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -208,7 +218,7 @@ export function HrSummaryDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Attendance Summary"
                 breadcrumb="HR & Attendance / Summaries"
                 entityLabel="Attendance Summary"
@@ -313,13 +323,18 @@ export function ShiftDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty =
-        form.data.code !== '' ||
-        form.data.name !== '' ||
-        form.data.starts_at !== '09:00' ||
-        form.data.ends_at !== '18:00';
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -348,7 +363,7 @@ export function ShiftDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Work Shift"
                 breadcrumb="HR & Attendance / Configuration"
                 entityLabel="Work Shift"
@@ -463,8 +478,17 @@ export function LeaveTypeDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.code !== '' || form.data.name !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -497,7 +521,7 @@ export function LeaveTypeDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Leave Type"
                 breadcrumb="HR & Attendance / Configuration"
                 entityLabel="Leave Type"
@@ -612,8 +636,17 @@ export function WorkProfileDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.user_id !== '' || form.data.employee_code !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -642,7 +675,7 @@ export function WorkProfileDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Assign Employee Work Profile"
                 breadcrumb="HR & Attendance / Staff"
                 entityLabel="Work Profile"
@@ -762,8 +795,17 @@ export function HolidayDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty = form.data.holiday_date !== '' || form.data.name !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -793,7 +835,7 @@ export function HolidayDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Add Company Holiday"
                 breadcrumb="HR & Attendance / Calendar"
                 entityLabel="Holiday"

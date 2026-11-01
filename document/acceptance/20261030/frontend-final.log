@@ -1,0 +1,46 @@
+✔ dashboard filter keeps period state in the URL and rejects invalid custom ranges (4.5832ms)
+✔ dashboard widgets distinguish state, empty data, and hidden no-permission state (4.0628ms)
+✔ chart supports signed values, two series, text legend, and keyboard-accessible table fallback (0.6243ms)
+✔ layout, breakdown, progress, and list provide responsive and accessible shared vocabulary (51.968ms)
+✔ line-item errors are attached to their indexed cell, with accessible row actions (724.1993ms)
+✔ an attachment without an authorized URL stays text, selected file and status survive validation error (22.6216ms)
+✔ financial footer preserves authoritative currency and rounding strings, hides stale totals during errors (111.085ms)
+✔ older tax response cannot overwrite totals for the current draft (6.7695ms)
+✔ failed preview removes stale money; retry can succeed (0.7068ms)
+✔ closing a draft aborts pending work and ignores a late server response (0.3274ms)
+✔ V01 fix: isLotDirty catches barcode-only draft (GPT-2315-DRAFT reproduce) (92.6247ms)
+✔ V01 fix: isStockCountDirty catches count_date, warehouse_id and product_id changes (0.2966ms)
+✔ V01 fix: isBinDirty catches warehouse_id change even if code/name are empty (0.4216ms)
+✔ V01 fix: isStockTransferDirty catches inventory_lot_id, destination_warehouse_id, and transfer_date (0.3543ms)
+✔ isWarehouseDirty checks code and name (0.2453ms)
+✔ Coordinator: switching editor with dirty draft intercepts with confirmation, Keep preserves draft, Discard switches (1.3337ms)
+✔ Coordinator: clean draft switches immediately without prompting (0.2711ms)
+✔ Coordinator: processing draft blocks switching completely (0.22ms)
+✔ dirty Back restores current entry before asking; Keep preserves draft and history (3.691ms)
+✔ Discard replays Back once and allows the router to render the destination (3.6945ms)
+✔ Forward and multi-entry Back retain the same history destination (0.9513ms)
+✔ processing blocks navigation without prompting or rendering another page (0.4778ms)
+✔ replaceState preserves entry index and all Inertia payload fields (0.3965ms)
+✔ removing a blocker restores ordinary Back/Forward behavior (0.2937ms)
+✔ rapid Back attempts restore one editor without extra history entries (0.4215ms)
+✔ old React effect cleanup does not unregister a newer active editor (0.3106ms)
+✔ save finishing during restoration permits the original pending destination (0.3537ms)
+✔ E01 Branch: Create Branch is clean when all fields are empty defaults (2.0817ms)
+✔ E01 Branch: Create Branch catches draft when name is empty but phone/address/is_head_office changed (0.2288ms)
+✔ E01 Branch: Edit Branch is clean on initial load with existing record values (0.1682ms)
+✔ E01 Branch: Edit Branch is dirty when user clears name or changes other fields (0.1956ms)
+✔ E01 Division: Create Division is clean on default branch and empty name (0.2031ms)
+✔ E01 Division: Create Division is dirty when changing branch reference with empty name (49.5783ms)
+✔ E01 Division: Edit Division is clean on load and dirty on any modification (0.258ms)
+✔ E01 Department: Create Department is clean on initial selection and empty name (0.1982ms)
+✔ E01 Department: Create Department is dirty when changing branch or division with empty name (0.3226ms)
+✔ E01 Department: Edit Department is clean on load and dirty when modifying any field (0.3255ms)
+✔ E01 Discard Guard Flow: Discard vs Keep simulation (0.3383ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10426.5038

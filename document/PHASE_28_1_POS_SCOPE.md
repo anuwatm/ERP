@@ -1,5 +1,7 @@
 # Phase 28.1 — POS Scope & Requirement Decisions
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 สถานะ: Requirements Baseline Complete (2026-10-25); local design/implementation ผ่าน Geminiแล้ว 2026-10-27. Production acceptance ยัง pending
 
 อ้างอิง [checklist Phase 28.1](../checklist.md). เอกสารนี้เก็บ requirement baseline; ผล design/implementation acceptance และการอัปเดตฐานที่ผู้ใช้อนุมัติภายหลังให้ดู [current status](../docs/PHASE_28_POS.md)

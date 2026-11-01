@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Pos\Models\Staff;
 use Pos\Services\CheckoutService;
+use Pos\Services\DeliveryService;
 use Pos\Services\EntitlementAllocator;
 use Pos\Services\ManagerApproval;
+use Pos\Services\MembershipService;
 use Pos\Services\ProvisioningService;
 use Pos\Services\PublicMenuService;
 use Pos\Services\RestaurantService;
@@ -91,6 +93,29 @@ class RestaurantTest extends TestCase
     private function order(string $key, int $quantity = 2): array
     {
         return app(RestaurantService::class)->createOrder($this->cashier, ['terminal_id' => $this->terminal, 'catalog_version' => 'menu-v1', 'request_key' => $key, 'channel' => 'takeaway', 'items' => [['product_id' => $this->menu, 'quantity' => $quantity]]]);
+    }
+
+    public function test_cod_delivery_uses_existing_kitchen_and_waste_never_consumes_ingredients_twice(): void
+    {
+        config(['pos.local_delivery_enabled' => true]);
+        $service = app(DeliveryService::class);
+        $delivery = $service->create($this->cashier, ['request_key' => (string) Str::uuid(), 'settlement_mode' => 'cod', 'recipient' => 'Synthetic diner', 'phone' => '000-TEST', 'address' => 'Synthetic address', 'catalog_version' => 'menu-v1', 'items' => [['product_id' => $this->menu, 'quantity' => '1']]]);
+        $step = function (Staff $actor, string $action, array $data = []) use ($service, &$delivery) {
+            $delivery = $service->transition($actor, $delivery->id, $data + ['request_key' => (string) Str::uuid(), 'action' => $action, 'version' => $delivery->version]);
+        };
+        $step($this->cashier, 'ready', ['terminal_id' => $this->terminal]);
+        $line = $delivery->snapshot['kitchen_line_ids'][0];
+        $this->served($line);
+        $consumed = DB::table('pos_grants')->value('consumed_quantity');
+        $step($this->cashier, 'dispatch', ['courier_id' => $this->cashier->id]);
+        $step($this->cashier, 'fail', ['reason' => 'recipient_absent']);
+        $step($this->cashier, 'receive');
+        $step($this->manager, 'inspect', ['decision' => 'destroy', 'condition_verified' => true, 'manager_password' => 'synthetic-manager-password']);
+        $this->assertEquals($consumed, DB::table('pos_grants')->value('consumed_quantity'));
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'kitchen.consumed')->count());
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'kitchen.wasted')->count());
+        $this->assertDatabaseCount('pos_orders', 0);
+        $this->assertSame('wasted', DB::table('pos_kitchen_lines')->where('id', $line)->value('status'));
     }
 
     private function served(string $id): void
@@ -246,5 +271,23 @@ class RestaurantTest extends TestCase
         $this->assertDatabaseCount('pos_orders', 0);
         $types = DB::table('pos_outbox')->pluck('event_type')->all();
         $this->assertSame(['kitchen.consumed', 'kitchen.consumed', 'kitchen.wasted'], $types);
+    }
+
+    public function test_restaurant_promotion_uses_frozen_bill_and_never_consumes_ingredients_twice(): void
+    {
+        config(['pos.local_membership_enabled' => true]);
+        $p = ['id' => (string) Str::uuid(), 'version' => 1, 'mode' => 'fixed', 'value' => '2.00', 'currency' => 'THB', 'starts_at' => now()->subDay()->utc()->format('Y-m-d\TH:i:s\Z'), 'ends_at' => now()->addDay()->utc()->format('Y-m-d\TH:i:s\Z'), 'branch_ids' => [$this->branch], 'business_types' => ['restaurant'], 'member_required' => false, 'member_tiers' => [], 'product_ids' => [], 'minimum_spend' => '0.00', 'minimum_eligible_only' => true, 'minimum_components' => ['merchandise'], 'discount_components' => ['merchandise'], 'max_uses' => null, 'per_member_limit' => null, 'combination' => 'exclusive', 'refund_entitlement' => 'full_only'];
+        $pub = ['id' => (string) Str::uuid(), 'instance_id' => config('pos.instance_id'), 'branch_id' => $this->branch, 'version' => 1, 'created_at' => now()->utc()->toIso8601String(), 'valid_until' => now()->addMinutes(15)->utc()->toIso8601String(), 'members' => [], 'policies' => [['name' => 'Synthetic kitchen promotion', 'policy' => $p]], 'rights' => []];
+        app(MembershipService::class)->provision($pub['id'], $pub);
+        $order = $this->order('membership-kitchen', 1);
+        $this->served($order['line_ids'][0]);
+        $before = DB::table('pos_grants')->value('consumed_quantity');
+        $service = app(RestaurantService::class);
+        $bill = $service->billingInput($this->cashier, ['terminal_id' => $this->terminal, 'kitchen_line_ids' => $order['line_ids'], 'request_key' => 'member-bill', 'cash_tendered' => '20.00', 'membership_publication_id' => $pub['id'], 'promotion_id' => $p['id']]);
+        $sale = app(CheckoutService::class)->checkout($this->cashier, $bill);
+        $this->assertSame('8.56', $sale['total']);
+        $this->assertSame($before, DB::table('pos_grants')->value('consumed_quantity'));
+        $this->assertSame('prepared', $sale['lines'][0]['stock_effect']);
+        $this->assertDatabaseCount('pos_promotion_claims', 1);
     }
 }

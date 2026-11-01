@@ -1,0 +1,17 @@
+[Unit]
+Description=Company ERP queue worker
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/srv/company-erp/current/backend
+ExecStart=/usr/bin/php artisan queue:work --queue=default,etax --sleep=3 --tries=3 --timeout=60 --max-time=3600
+Restart=always
+RestartSec=5
+TimeoutStopSec=120
+KillSignal=SIGTERM
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

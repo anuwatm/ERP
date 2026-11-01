@@ -5402,41 +5402,7 @@
 
     <!-- Info Cards -->
     <div class="cards">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-dot emerald"></div>
-          <h3>Structured Hierarchy</h3>
-        </div>
-        <ul>
-          <li>&bull; Clear organizational chain: Organization -&gt; Branch -&gt; Division -&gt; Department -&gt; User</li>
-          <li>&bull; Display codes use clean 6-digit formatting (e.g. 000001)</li>
-          <li>&bull; 1 User strictly belongs to 1 Organization in MVP to ensure clean scoping</li>
-        </ul>
-      </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-dot rose"></div>
-          <h3>Tenant Security &amp; Scoping</h3>
-        </div>
-        <ul>
-          <li>&bull; Organization-owned records are filtered with org_id in controllers and services</li>
-          <li>&bull; Model binding is guarded before organization-scoped mutations</li>
-          <li>&bull; Authenticated requests use the user&#39;s organization context</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-dot cyan"></div>
-          <h3>7 Built-in RBAC Roles</h3>
-        </div>
-        <ul>
-          <li>&bull; Owner, Admin, Sales, Project Manager, Finance, Member, Viewer</li>
-          <li>&bull; Fine-grained permissions format: module.action (e.g., invoices.create)</li>
-          <li>&bull; Centralized authorization gates protect UI routes and backend mutations</li>
-        </ul>
-      </div>
     </div>
 
   </div>

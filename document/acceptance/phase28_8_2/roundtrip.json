@@ -1,0 +1,23 @@
+{
+    "scope": "Actual Retail POS signed envelopes into isolated ERP services; central test authority seeded from fixture publications; no HTTP\/mTLS acceptance",
+    "accepted_events": 10,
+    "sales": 7,
+    "pending_then_reviewed_requests": 3,
+    "net_per_sale": "9.00",
+    "vat_per_sale": "0.63",
+    "before_replay": {
+        "invoices": 7,
+        "payments": 7,
+        "journal_entries": 21,
+        "stock_movements": 8,
+        "pos_import_promotion_claims": 7
+    },
+    "after_replay": {
+        "invoices": 7,
+        "payments": 7,
+        "journal_entries": 21,
+        "stock_movements": 8,
+        "pos_import_promotion_claims": 7
+    },
+    "review_publication_version": 4
+}

@@ -141,12 +141,11 @@ PROMPT;
 
                 Log::warning('UniversalOpenAiVisionAdapter request failed', [
                     'status' => $response->status(),
-                    'error' => $sanitizedError,
                     'provider' => $config->provider_type,
                     'model' => $model,
                 ]);
 
-                throw new \RuntimeException("AI OCR provider returned error HTTP {$response->status()}: {$sanitizedError}");
+                throw new \RuntimeException("AI OCR provider returned error HTTP {$response->status()}.");
             }
 
             $responseJson = $response->json();
@@ -156,8 +155,8 @@ PROMPT;
 
             return $this->normalizeResult($extracted, $content);
         } catch (\Throwable $e) {
-            Log::error('UniversalOpenAiVisionAdapter exception', ['error' => OcrProcessingService::sanitizeErrorMessage($e->getMessage())]);
-            throw $e;
+            Log::error('UniversalOpenAiVisionAdapter exception', ['exception_type' => get_class($e)]);
+            throw new \RuntimeException('AI OCR provider request failed. Check provider configuration and status.');
         }
     }
 

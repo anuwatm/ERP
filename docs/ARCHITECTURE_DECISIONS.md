@@ -1,5 +1,7 @@
 # Architecture Decisions: MVP Overrides
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 เอกสารนี้เป็นข้อกำหนดบังคับสำหรับ implementation MVP และ override ข้อความที่ขัดกันใน `ERP_FEATURE_PLAN.md`, `docs/database/DATABASE.md` และ module documents. เมื่อเริ่ม migration ให้แก้ schema กลางตามเอกสารนี้ก่อน.
 
 ## AD-01: MVP ไม่เท่ากับ P0 ทั้งหมด

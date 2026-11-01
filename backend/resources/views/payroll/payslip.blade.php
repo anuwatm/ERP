@@ -1,4 +1,6 @@
-<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:DejaVu Sans,sans-serif;font-size:12px;color:#111}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border:1px solid #777;padding:7px;text-align:left}.right{text-align:right}.muted{color:#555}</style></head><body>
+<!doctype html><html><head><meta charset="utf-8"><style>
+@include('documents.pdf-fonts')
+body{font-family:"Sarabun",DejaVu Sans,sans-serif;font-size:12px;color:#111}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border:1px solid #777;padding:7px;text-align:left}.right{text-align:right}.muted{color:#555}</style></head><body>
 <h2>{{ $organization?->legal_name ?: $organization?->name ?: 'Organization' }}</h2><h3>Payroll Payslip</h3>
 <p>
     <strong>Employee:</strong> {{ $item->employee ? trim($item->employee->first_name . ' ' . ($item->employee->last_name ?? '')) : ($item->user?->name ?? 'Employee') }}

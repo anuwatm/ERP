@@ -1,0 +1,69 @@
+{
+  "scope": "Actual loopback HTTP; isolated synthetic SQLite; no production SLA or cross-request rate-limit claim",
+  "cases": [
+    {
+      "name": "missing credential",
+      "status": 401,
+      "expected": 401,
+      "latencyMs": 421,
+      "result": "PASS"
+    },
+    {
+      "name": "invalid credential",
+      "status": 401,
+      "expected": 401,
+      "latencyMs": 286,
+      "result": "PASS"
+    },
+    {
+      "name": "wrong scope",
+      "status": 403,
+      "expected": 403,
+      "latencyMs": 345,
+      "result": "PASS"
+    },
+    {
+      "name": "expired key",
+      "status": 401,
+      "expected": 401,
+      "latencyMs": 327,
+      "result": "PASS"
+    },
+    {
+      "name": "revoked key",
+      "status": 401,
+      "expected": 401,
+      "latencyMs": 355,
+      "result": "PASS"
+    },
+    {
+      "name": "invalid filter",
+      "status": 422,
+      "expected": 422,
+      "latencyMs": 382,
+      "result": "PASS"
+    },
+    {
+      "name": "read products",
+      "status": 200,
+      "expected": 200,
+      "latencyMs": 426,
+      "result": "PASS"
+    },
+    {
+      "name": "missing product",
+      "status": 404,
+      "expected": 404,
+      "latencyMs": 930,
+      "result": "PASS"
+    },
+    {
+      "name": "write forbidden",
+      "status": 405,
+      "expected": 405,
+      "latencyMs": 306,
+      "result": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

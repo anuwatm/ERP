@@ -41,7 +41,7 @@ export default function ProjectMembersDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetKey } = useSubmissionKey();
 
-    const isDirty = form.data.user_id !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
 
     const existingMemberUserIds = (project.members ?? []).map((m) => m.user_id);
@@ -58,7 +58,7 @@ export default function ProjectMembersDialog({
             preserveScroll: true,
             onSuccess: () => {
                 resetKey();
-                form.reset('user_id');
+                form.reset();
             },
         });
     }

@@ -1,0 +1,9 @@
+{
+  "scope": "Isolated synthetic SQLite only; not production DR or POS anchor/archive restoration",
+  "tables": 163,
+  "countsMatch": true,
+  "quickCheck": "ok",
+  "fkViolations": 0,
+  "products": 2010,
+  "backupSha256": "3ab0cd5efa2737d37caabf8af24898648bb9b3b91ec953795a532f868e2eaa3f"
+}

@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class EntitlementAllocator
 {
-    public function take(string $branchId, string $productId, string $quantity, string $timezone, ?string $reservationLine = null): array
+    public function take(string $branchId, string $productId, string $quantity, string $timezone, ?string $reservationLine = null, ?string $deliveryId = null, ?string $offlinePermitId = null): array
     {
         $this->lockBranch($branchId);
         abort_unless(preg_match('/^\d{1,10}(\.\d{1,4})?$/D', $quantity) && bccomp($quantity, '0', 4) > 0, 422, 'Invalid entitlement quantity.');
@@ -27,10 +27,16 @@ class EntitlementAllocator
                 continue;
             }
             $take = bccomp($available, $remaining, 4) > 0 ? $remaining : $available;
-            $column = $reservationLine === null ? 'consumed_quantity' : 'reserved_quantity';
+            $column = $reservationLine === null && $deliveryId === null && $offlinePermitId === null ? 'consumed_quantity' : 'reserved_quantity';
             DB::table('pos_grants')->where('id', $grant->id)->update([$column => bcadd((string) $grant->$column, $take, 4), 'updated_at' => now()]);
             if ($reservationLine !== null) {
                 DB::table('pos_kitchen_reservations')->insert(['id' => (string) Str::uuid(), 'line_id' => $reservationLine, 'grant_id' => $grant->id, 'epoch' => $grant->epoch, 'quantity' => $take, 'status' => 'reserved', 'created_at' => now(), 'updated_at' => now()]);
+            }
+            if ($deliveryId !== null) {
+                DB::table('pos_delivery_reservations')->insert(['id' => (string) Str::uuid(), 'delivery_id' => $deliveryId, 'grant_id' => $grant->id, 'epoch' => $grant->epoch, 'quantity' => $take, 'status' => 'reserved', 'created_at' => now(), 'updated_at' => now()]);
+            }
+            if ($offlinePermitId !== null) {
+                DB::table('pos_offline_reservations')->insert(['id' => (string) Str::uuid(), 'permit_id' => $offlinePermitId, 'grant_id' => $grant->id, 'product_id' => $productId, 'epoch' => $grant->epoch, 'quantity' => $take, 'consumed_quantity' => '0.0000', 'status' => 'reserved', 'created_at' => now(), 'updated_at' => now()]);
             }
             $allocations[] = ['grant_id' => $grant->id, 'epoch' => $grant->epoch, 'lot_id' => $grant->lot_id, 'quantity' => $take];
             abort_if(count($allocations) > 100, 422, 'Entitlement fragmentation exceeds the event limit.');

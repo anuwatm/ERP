@@ -1,0 +1,1761 @@
+[
+    {
+        "aggregate_id": "17eeb969-67bb-4c75-a088-27bc4a9fd9ec",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "e933f808-2f56-414c-91ab-304cf80ece68",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:20+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6b80bcac-b5a6-45d5-948a-f733858f9540",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "81c28337-b938-47c3-8dc4-4084c83bd161",
+                    "name": "Synthetic retail item",
+                    "pharmacist_id": null,
+                    "product_id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "f8335b3e-b9c9-40ff-b002-9c261e599fc5",
+                "evaluated_at": "2026-11-01T04:33:20+00:00",
+                "grant_id": null,
+                "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "508e701c7759e62d33fe7dbf4032392c1428b769edbd9789751745a791b94e00",
+                    "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:33:20+00:00",
+            "receipt_no": "RETAIL-M1-20261101-00000001",
+            "sale_id": "17eeb969-67bb-4c75-a088-27bc4a9fd9ec",
+            "shift_id": "34dbb077-6ef2-40f3-8939-c84ac56f7eeb",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "7e4ac452-bad4-48d9-abfc-07bb60e95cf8",
+            "total": "9.63"
+        },
+        "payload_hash": "7657cdc625f650f87db35c9dfd6293f832722198a21319754b815a832025e2c8",
+        "schema_version": 1,
+        "signature": "KJhorHhRCugYht6xu3DVxFtOexwfRTQ5Xk1MCrVqREfUaRO8IbUvq9mFySbSCDDVTnvbdVDTLLp0XpXcLahUYWuvL9WTotiRI+HnRxVHTNi2FdDxiJa7pHkcyt1w8YK5CzcuXWkeS8KCaMUJ5nI+s\/IlzU7GHJLd+qqz6KCk9\/Sqc9NwbY5LNgwpPaCn2IdNPuGLK5MqBRouPQgybCpZwwMYW9ISUKUZ8RxaUT1LlXq1TsF3W\/w+skFRD4JFRDTl+hjalo8XA1Ch495vpyHV2Uy0agwF28jaN0cRaj3QcqGVjlRLxGmXgbRbq4r7VxKFtSM1GcYba1oHDBzzP0VhOg==",
+        "source_sequence": 1
+    },
+    {
+        "aggregate_id": "72735946-67b4-418c-9eab-812a03234558",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "337d9ba0-0665-4d44-9207-3bf80de2594d",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:22+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6b80bcac-b5a6-45d5-948a-f733858f9540",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "6c95ea1c-f6e2-40a8-a631-a8e7dba9c8ed",
+                    "name": "Synthetic retail item",
+                    "pharmacist_id": null,
+                    "product_id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "ef43256c-0047-4d89-9301-51e581c1a187",
+                "evaluated_at": "2026-11-01T04:33:22+00:00",
+                "grant_id": null,
+                "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "508e701c7759e62d33fe7dbf4032392c1428b769edbd9789751745a791b94e00",
+                    "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:33:22+00:00",
+            "receipt_no": "RETAIL-M1-20261101-00000002",
+            "sale_id": "72735946-67b4-418c-9eab-812a03234558",
+            "shift_id": "34dbb077-6ef2-40f3-8939-c84ac56f7eeb",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "7e4ac452-bad4-48d9-abfc-07bb60e95cf8",
+            "total": "9.63"
+        },
+        "payload_hash": "69428a6c76be5b93a5843a93bca453f9d7c6e3484c08127311838d689abc3b70",
+        "schema_version": 1,
+        "signature": "vkllg8UEnSbtZ+7JKn0dSAazsNpYJwDM7eY2EehNeUSpQuM3G85nUGdUjB2sgU\/oj8ynAYKKrEjBf\/FtM98Nl2hdQtcnO\/mHw14Lje1PUq26LBNUhe8Mq+x3hlwKmaSICMFk+aeriJ3pw4ClnWpUNjBf7veiDWK1uErjoO8AsuQHvWGqYoTUO7AmLRGRmpHyXWCwFEs6yHRo4DGxv5\/JudDfFZYqTUTe9L1v\/pxr9quHPq6A3yBQejZgJ6EX82DIt3J9FiBo9IS8eSfSodfshyL9WnviDphnPOc6nI0IrHBi3Jg6wwWLRH8GFOU2rYUAuni\/+jNEbQdrlztWS9vQzQ==",
+        "source_sequence": 2
+    },
+    {
+        "aggregate_id": "2ba9b71a-7dc7-4f79-8f5c-1eafb6ceffc1",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "810a9ca4-d6ad-43a3-8a2e-029d80211ff6",
+        "event_type": "member.requested",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:23+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "envelope": {
+                "ciphertext": "m1iXeD8eOoMMyC+FZJxGyFVPGpiKziuq\/vTyBVhnvIeG\/CHdX4zd5t0T7zIxtkbQI6R3OGeHrRUbq6FVpFBYs+7WGvFab1P4QzJ9FOnymu5f",
+                "iv": "fov49HY0qEcI8zLa",
+                "key_id": "4e021b69f793ed333e5536ff13ff1dbf2fa71f29858506cdfc952182c262cebb",
+                "tag": "uk5h5pqWylzx3TQJdq6qfw==",
+                "wrapped_key": "hv8HooRBVk2Tnj3xqEijc1l04tXhm8S8CqO5iz3UC4n1jnFI20s3cUtrvvEefZnui22gFgNmXrj6uWLeAHGGip18f6VUiQWdJWKbmbL\/wk+1nuoVjS27lGttflE\/7qUi8hdmdqTRWNSJhdPkbq5JqXTHBMnzfKN2XJsAoCMPl5\/DhYdgWia5qtvQ7wJRa\/PbIy8yd9\/lPn+ZoPBxaPmPSRxnFSSXmFBnw4sUlfr8euk0EV8z96Ij+8qhcxw66dc\/DpTJ6ZvTJJDPamoFKk3oPFHSu\/Mv638q6uMChSd+TipkVsW\/InO+bPSBXW+Xd03dJKTagdgsNeifHcHcWVmPHQ=="
+            },
+            "occurred_at": "2026-11-01T04:33:23+00:00",
+            "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+            "request_id": "2ba9b71a-7dc7-4f79-8f5c-1eafb6ceffc1",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8"
+        },
+        "payload_hash": "30ab4749c3d5cbac82f383c0c08c94ec729e832985b7b2a4fbcd407759914821",
+        "schema_version": 1,
+        "signature": "Nt9MC2MSHhGIjZioHNH+530oOodn1n0Tt+HN\/vP8\/i\/V0WgiQFOXkaPyhYdHcqrMVcFc+kd8yBp\/kFMJfHgT8r7y+Zpp9cdVx8V6GsFcL0caDQFl\/+tEcUA99Uef7+Fv21\/92ahm1hkIfOBbHxktIzUEKyyscU8No4Ilc7rl+e77ylI37O31GGmPI+jEQ\/xmeiuFMSExzHT62+dH2z0UWFZppSXLxz8Rvh9etj48m7xeQ0AJ4tA46+xS6O7MhQOHe5M9lIM3L\/Fmeuf3hutm5qz9A1Aq42XB+kLT8wIEKj2iNdgtxzImAF7QTMM4eIMYon2WjmzgcsguGtqAigo7YA==",
+        "source_sequence": 3
+    },
+    {
+        "aggregate_id": "3da7fbdc-e1ac-4e0f-9c1a-60cf5a93706c",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "73a1c91d-1bc7-43e8-9d15-3c6e506ee7db",
+        "event_type": "kitchen.consumed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:27+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "catalog_version": "member-v1",
+            "consumption_id": "3da7fbdc-e1ac-4e0f-9c1a-60cf5a93706c",
+            "currency": "THB",
+            "ingredients": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6df6e4ce-3e34-435f-802a-76899b0b50c8",
+                            "lot_id": null,
+                            "quantity": "0.5000"
+                        }
+                    ],
+                    "product_id": "e99278cb-1209-4894-8b13-4b921bb2d61e",
+                    "quantity": "0.5000"
+                }
+            ],
+            "occurred_at": "2026-11-01T04:33:27+00:00",
+            "order_id": "ec645172-bd0c-4605-a2a0-4e0557cb16d8",
+            "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+            "purpose": "preparation",
+            "quantity": "1.0000",
+            "recipe_hash": "3a3194171a3badc97ac054836c7cdf1afcf7cfc170241f0226fea3b6ebd78cfb",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "unit": "piece"
+        },
+        "payload_hash": "8e3a6a78da767a578a5d74528a912a27ef13edc4ddefaf2564cfacf3336d6139",
+        "schema_version": 1,
+        "signature": "jkHEbnbrgCiNMoFxt79DcRQHXUh9irZLjSxYy4gq\/bx1rkgZAHPMYAxo4Wo0WVXvb4zR1Mo9yIbMoKg1Fgn5yJNqWPKkS\/ea\/3FWxFZD0tb1ZdDt9O0iIS2AIJyBPCmL7vPBBPycCpGKdGtH6kekxRcD6rI7\/nBkCN9jR4HIa678PMvbbksctZETDqWn7jXsoAOFdOMMqs5in7w3TwCXC8dGeJIkhwhzi7Vf8eNcTnZWJTwn4DbLkTdpaGU1DY2+OAMhpwf6gzmhfROmudtIaFhOL3lYWpcRHLGLixQ3IT5ZDO6uk+rW9ZBz2iVNfv0ixtusY3Qd7cMEGpCQ\/h5b4Q==",
+        "source_sequence": 4
+    },
+    {
+        "aggregate_id": "baca08b4-72ca-4f55-8ec4-546be9ea94d7",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "e59345f5-2f61-4199-9a40-cf318422c3ff",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:30+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [],
+                    "base_quantity": "1.0000",
+                    "base_step": "1.0000",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "kitchen_refs": [
+                        {
+                            "consumption_hash": "8e3a6a78da767a578a5d74528a912a27ef13edc4ddefaf2564cfacf3336d6139",
+                            "line_id": "3da7fbdc-e1ac-4e0f-9c1a-60cf5a93706c"
+                        }
+                    ],
+                    "line_id": "39950f8a-b049-44e0-acec-0999d2a516b9",
+                    "name": "Synthetic restaurant item",
+                    "pharmacist_id": null,
+                    "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                    "quantity": "1.0000",
+                    "stock_effect": "prepared",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "5a5ecc8a-3f1a-4ff0-ba5e-a0617810bb30",
+                "evaluated_at": "2026-11-01T04:33:30+00:00",
+                "grant_id": null,
+                "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                "publication_id": "6d9398b0-d300-4671-9207-a7fd907aa857",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "6004cadae33e77d1074544e6eef522780e98c5d813e71f2ff2c08082fcfa124c",
+                    "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:33:30+00:00",
+            "receipt_no": "RESTAURANT-M1-20261101-00000001",
+            "sale_id": "baca08b4-72ca-4f55-8ec4-546be9ea94d7",
+            "shift_id": "a8847e12-6855-4ce1-bb07-ae7ad966f0dc",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "total": "9.63"
+        },
+        "payload_hash": "fe9207d809661017f66754d970195b12ecf9f430f297d13f6554a32674a8f797",
+        "schema_version": 1,
+        "signature": "nzJsVe0O3wlEwTt2SQu5CTuaGpc\/GuZGiXHY0yi9jjnvmKxBvUoUEvBCQG4uXrUTWzfDbsHvRNcaLqS4dG+1i5xs1O8palsNbsK7ob4AKcZil44CV9X2UcUwQPMEgkiJyjDAcqWiN1r0oUrZ7d5RT580fxW1D\/Bm+oRkUAfSQhC8qBMs2uEHulOQzVFB52Ipw3fK8VZlhZhFdPl07EWHrgT6SYyNFbn1RknYiYPsY+6MXhCdTodTIW1MC2uIs0mi1lJ9m4PSoNyzCwc4PaP+gupVJBJmld2mflfzwjNk97gXkRZGKG0uAbV4p1NSZPZ8IfkaHEb2ov0aCzidZm9p\/g==",
+        "source_sequence": 5
+    },
+    {
+        "aggregate_id": "8291be54-fd9c-421c-8d4d-78bb8beec89b",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "fb9c26e6-37a7-4d88-a9b3-4d85b286349c",
+        "event_type": "kitchen.consumed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:32+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "catalog_version": "member-v1",
+            "consumption_id": "8291be54-fd9c-421c-8d4d-78bb8beec89b",
+            "currency": "THB",
+            "ingredients": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6df6e4ce-3e34-435f-802a-76899b0b50c8",
+                            "lot_id": null,
+                            "quantity": "0.5000"
+                        }
+                    ],
+                    "product_id": "e99278cb-1209-4894-8b13-4b921bb2d61e",
+                    "quantity": "0.5000"
+                }
+            ],
+            "occurred_at": "2026-11-01T04:33:32+00:00",
+            "order_id": "4a499a02-fc6d-47d6-99ba-35f77cf31727",
+            "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+            "purpose": "preparation",
+            "quantity": "1.0000",
+            "recipe_hash": "3a3194171a3badc97ac054836c7cdf1afcf7cfc170241f0226fea3b6ebd78cfb",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "unit": "piece"
+        },
+        "payload_hash": "7f81c9ddd19350210c038cce56aba4d90686c54638cd0871531638c5929a6b08",
+        "schema_version": 1,
+        "signature": "LLFkroFVpOxiQukAIlkiPCXSN1PgFTwjSYxkFRpJ5AjS6dKn\/pyXXs6sniIFOD6HSjqy0Ie\/8i3zEZyLkjyO+JGkeDJYdZC+KT8Y+KptjoLcW\/TcL7DjDN+dATqva5B3GMqrF2VIAVjzEpN6LuQpfhm5+K20bmvbeDn9F1Z50tvt2TsvtfJvsKradP1ymZZQOvmU9n6alIC1Nh9R8GdiQ1rNdQJp30Ldh4+piKRk3373BXPVPA1bq4Sf1N42WmGDOSmvjKsXJ6i+tgET0ZPoejI\/\/8X1WyVDzf\/2L3Qgz++Q3I1v7q7kb9Qp\/xNuf15czz61DC2hU7KPSvUWvBYz\/w==",
+        "source_sequence": 6
+    },
+    {
+        "aggregate_id": "12a2261d-e747-4b65-bf6b-920ea23ff189",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "7170c5d6-baed-4a70-a0d5-31e87cc56898",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:34+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [],
+                    "base_quantity": "1.0000",
+                    "base_step": "1.0000",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "kitchen_refs": [
+                        {
+                            "consumption_hash": "7f81c9ddd19350210c038cce56aba4d90686c54638cd0871531638c5929a6b08",
+                            "line_id": "8291be54-fd9c-421c-8d4d-78bb8beec89b"
+                        }
+                    ],
+                    "line_id": "a52d7a62-80c8-4d8a-b927-b2d75caf384e",
+                    "name": "Synthetic restaurant item",
+                    "pharmacist_id": null,
+                    "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                    "quantity": "1.0000",
+                    "stock_effect": "prepared",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "f2c63683-8196-447c-b2e4-44a30b7f1728",
+                "evaluated_at": "2026-11-01T04:33:34+00:00",
+                "grant_id": null,
+                "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                "publication_id": "6d9398b0-d300-4671-9207-a7fd907aa857",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "6004cadae33e77d1074544e6eef522780e98c5d813e71f2ff2c08082fcfa124c",
+                    "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:33:34+00:00",
+            "receipt_no": "RESTAURANT-M1-20261101-00000002",
+            "sale_id": "12a2261d-e747-4b65-bf6b-920ea23ff189",
+            "shift_id": "a8847e12-6855-4ce1-bb07-ae7ad966f0dc",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "total": "9.63"
+        },
+        "payload_hash": "4a55a940bf0d718f2b392ea449a6bd7507e66f451b54d03720a992a1cef282b7",
+        "schema_version": 1,
+        "signature": "h7evZCR0+LK5PHi4Z7aQuYQ8weGledOo\/8mQciA95JBKknmGqZjVI9w87tvqzpg3thYxHglDAPrSkw7ZaaFzyx0KHfF20rX8GQxAgYgsXnc3gdsLesyigM4PxE47EviVjHeF8SeUHQdb306JZLSqQR7nxERSAFSaExvoghnMBpaNbmbPO4weNij6UcMb5kFL6LqczUGce4sbOpQMdbf+JBofXEEzicz1R+Y25e68X9JZHvVUfizh2TtnXAVpccYaej\/nG8p8eVTkEvYyXsboe1wJozjlS3Miyix0JXDX2rlKIXwlmj3swNMy66clKYGkzZD54dyqjYDodPm6IYSm0A==",
+        "source_sequence": 7
+    },
+    {
+        "aggregate_id": "b9006f84-a0c2-472a-8f67-2d5f34578d03",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "713bd0cc-41d5-4078-bead-8325b3f031a8",
+        "event_type": "member.requested",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:35+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "envelope": {
+                "ciphertext": "c6E6xzXouCO2PgQVagpyK6Z1Z2zInlal2Hdq+ogBH3\/aStzMP\/Z0oZcR7u+XK7DOHVilONxjuW8qxbwoT1X4ricbWOpYrTuL+ucLe\/GpanZzNvuYbg==",
+                "iv": "jCiedP4DLULDWboD",
+                "key_id": "4e021b69f793ed333e5536ff13ff1dbf2fa71f29858506cdfc952182c262cebb",
+                "tag": "FO3g327J4Dneu2K78WoUYQ==",
+                "wrapped_key": "kvEuMPyYnOP5tIsIUUz053073SzsSyuG6+j827xvyuhjkZkbaSf3fYuwwYVQwXB5hhVzWfEePZCDBzZeOGfUUk\/Pa7YfowRbaZu7xj1iHFO6crTM39m1uuUeDI8c9KLlZ05495dHyr8FCDCyYB0RnG4y8OsD1lfUP+HAwLMCmBlMnHCbMIw6x7oZv9TiAEGvmWa7pq1mMxrMlfI5XDPGNk3OsvGsO9u137VD9yWtYR6L3wu8xCa6d\/udlZj+okfGdBXzO1DZYjpkz3yhgq+IZ0i7pBHtmRokXq1F+T6mRMPdzw4h7TcWKWR1R7AiLpZQO67QO9WfFb+h3JEBFuyLZQ=="
+            },
+            "occurred_at": "2026-11-01T04:33:35+00:00",
+            "publication_id": "6d9398b0-d300-4671-9207-a7fd907aa857",
+            "request_id": "b9006f84-a0c2-472a-8f67-2d5f34578d03",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc"
+        },
+        "payload_hash": "78a9436590ea5a16f327beeed996cad1f5f45ee2ca5fc1396946bd278292649d",
+        "schema_version": 1,
+        "signature": "5YjYC6HO0vTL5MFBnt3m7x116SB\/umRsfMh1smrL\/owhIwf5RNqb+9FtFnCgcd6krHZLpKzGKJux5o5NrSz\/NFPE1ZMlbiONq6a0mH8DyGPi6mjha9gPr7DR1Ng7bhFit8BqKFh8S1HTelBwxCK+NtfLZIqwWcGP5FOhO1effBwbI8nWjEr2AwqQYOyXhrxE6baSEgtoVj3buP3dA09k2L8yAlfJLWdRhqSI8tyiMt9Os430iaj6KxcaikC\/4NYs+iuPmEn\/rSPfB3BASbhn82Noe09Cm3QUJCgjuDGbdCZW+rzhd5siqk4C87nAnCxTNLTW4sihmpfv60ql2+bpKg==",
+        "source_sequence": 8
+    },
+    {
+        "aggregate_id": "9970a08d-81f3-4198-8cc9-2ce67a5b3ac2",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "3c786fba-6813-413c-9720-00492c1516e9",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:39+00:00",
+        "payload": {
+            "branch_id": "b7937039-d420-41d6-90f9-6f78c8f1f00a",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "f2732a60-0d14-4c15-8292-ce6d25b8aff3",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "ff66c87f-ea58-49fe-a1d9-7593cd177944",
+                    "name": "Synthetic pharmacy item",
+                    "pharmacist_id": null,
+                    "product_id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "3144639a-6455-42e7-9f5a-dfed11a970de",
+                "evaluated_at": "2026-11-01T04:33:39+00:00",
+                "grant_id": null,
+                "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                "publication_id": "61f89bc6-46ae-47c0-a0c5-5c3ac81c3f4c",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "06bcc7b3ffb1d888be009d0500bf021696bbe698ef30b082c6c34f022323d144",
+                    "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:33:39+00:00",
+            "receipt_no": "PHARMACY-M1-20261101-00000001",
+            "sale_id": "9970a08d-81f3-4198-8cc9-2ce67a5b3ac2",
+            "shift_id": "76f8fa22-2027-4682-bb8c-1b2fe9f1f989",
+            "staff_id": "d0c78ad3-18f6-42ed-a47a-f79a63ef9502",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "05b83d55-af9d-4213-9230-bdb97fae1756",
+            "total": "9.63"
+        },
+        "payload_hash": "0c74418e62074bbd9aa5d7318123fa1bb6380dcbb701ead7cf937ac426b745b4",
+        "schema_version": 1,
+        "signature": "pq+WElZhwrTzdOtmDfON0dznoQ+jZSgTzN5T1IJp91vaHnsvo4HCo9ttE0NUPpbdj9B3omf8TJhZAubAJXYSdqgKlL8CPm4\/L2HaSm9AyYFvqLprrZFJ3BCPO\/B+Z5kZbOQ7Fku3HJAbLDd21Bmb2+5zK6SmWLPZkEnfkxqmCGnTzNmGX5kTI4+PsEoRw6F6\/1+4Bw0Vvz9KxxfuFSLv1M0hoFG\/YHVmkZgq0pRC+7ExYC4s0SDWJUpGuEtGkNaDFZ9TpGVrY36T2Vzaf9nus+4apDY8IE3blZLvc02fEbnUotRby6pOHa4K8LdeC10sb1GVUU68lev719dugZEW\/Q==",
+        "source_sequence": 9
+    },
+    {
+        "aggregate_id": "b1c36f58-35e1-4735-a070-61e038aaea9f",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "182e39ae-8ee5-4d37-8fd7-dab87d83a887",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:40+00:00",
+        "payload": {
+            "branch_id": "b7937039-d420-41d6-90f9-6f78c8f1f00a",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "f2732a60-0d14-4c15-8292-ce6d25b8aff3",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "588a0277-d57d-4a49-8d17-cedb023e01e8",
+                    "name": "Synthetic pharmacy item",
+                    "pharmacist_id": null,
+                    "product_id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "4d6ae81b-8496-4975-bb9d-3719183d2e32",
+                "evaluated_at": "2026-11-01T04:33:40+00:00",
+                "grant_id": null,
+                "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                "publication_id": "61f89bc6-46ae-47c0-a0c5-5c3ac81c3f4c",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "06bcc7b3ffb1d888be009d0500bf021696bbe698ef30b082c6c34f022323d144",
+                    "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:33:40+00:00",
+            "receipt_no": "PHARMACY-M1-20261101-00000002",
+            "sale_id": "b1c36f58-35e1-4735-a070-61e038aaea9f",
+            "shift_id": "76f8fa22-2027-4682-bb8c-1b2fe9f1f989",
+            "staff_id": "d0c78ad3-18f6-42ed-a47a-f79a63ef9502",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "05b83d55-af9d-4213-9230-bdb97fae1756",
+            "total": "9.63"
+        },
+        "payload_hash": "f39b45f8480262e995758c053149757b3cee86cfb9b6659f0f6a11d2395589d4",
+        "schema_version": 1,
+        "signature": "XRE5VSgJsn7CWyq6F27tpP0ZR6Gn+gOpLlKIZg7H4sq2YHMBx04mVMGazyeoJQivm2V47gp34vZ+nhPKbEe5UvM51Cm1jIvSI+0jP+P4DbFzIS1TC7fNrvqtwAKaaLnnfROBaKcAjxDbRr90Ou50GVZ8v7x6rdPOLQzjRsoxDggQa4jgkuMKc\/Jsa0p15orHiU0VpGR5a+DrYkdVfUoJwAwf0eZ0U+lXEZqWlOCTNct9qtGkLX9nyIcDpEP9IjVJkQ84d65+fhcXENJ\/s5VTFDRC2dGxc4iRWHM8VHeVD5Ep2WhZF4pMqKMAyzzbTkoOehtb+amsC8GtyKPCP4u+pA==",
+        "source_sequence": 10
+    },
+    {
+        "aggregate_id": "ba9b8946-2e29-4561-b30e-c3434db880b8",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "c5a8f02f-7fa0-4c3c-abf5-8ccb61f5e7ad",
+        "event_type": "member.requested",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:33:41+00:00",
+        "payload": {
+            "branch_id": "b7937039-d420-41d6-90f9-6f78c8f1f00a",
+            "business_timezone": "Asia\/Bangkok",
+            "envelope": {
+                "ciphertext": "frm6ebKCd9yyI3kFv2FDq8sqG6waVLG+MSCcdEWpOgvnAEm9ti1BdQq27UzC03g\/luQMlXfKET8hP2PhW1abVWu2IDKel1+OGtz24nx8xJlXoNs=",
+                "iv": "zYOOE3pLtnzpGhYS",
+                "key_id": "4e021b69f793ed333e5536ff13ff1dbf2fa71f29858506cdfc952182c262cebb",
+                "tag": "UE91acI0a4HWQC1kik6WWw==",
+                "wrapped_key": "Vvwbs596MNE2k5mua2fuJBQN3XYU9ZZW3eG3WPUwifIVxaU1bVZC5yr7OWt0rQaxpv20A8jGykqPYQOBZuFMiLMWVaVSlSUJK4g5n6wc1mVkdYzAVZyer9mKv1z5SpI1rDLRTZCnnCBWzgSim1kynhU0TZAz4V0ySlKXq1AcxtAU504ossuN6dZvU8ty2GAcIfiqse4QnVl1C6yWHhjTSAbCEaRqlnZE4Yt06d81GwLx4BcTUsGMj2OxRoHBcqzW3gb2Cm3b4zoGvJJBOU6wD1WxPeFu1G\/gWMjhuzW+yKKlQ0YG373rq2XHY7cWZG98v5ADwTpM5W6YWut6YeIwzA=="
+            },
+            "occurred_at": "2026-11-01T04:33:41+00:00",
+            "publication_id": "61f89bc6-46ae-47c0-a0c5-5c3ac81c3f4c",
+            "request_id": "ba9b8946-2e29-4561-b30e-c3434db880b8",
+            "staff_id": "d0c78ad3-18f6-42ed-a47a-f79a63ef9502"
+        },
+        "payload_hash": "402906a995aa814ada016f2ba436ad70cfe655894a042a8f5a79a21773d63b30",
+        "schema_version": 1,
+        "signature": "ctADAzBht5nq8O2YXVFKSUan5tkegaqf92QuWGAD0IWLpuxzrgikgcHbDG33ct15p+Q11ucFHeF2fpQYw1pSHFLkaYOp7aTlJ+FOJybK\/RgO11jvvTOxubeDkwh7KBn5YwVmktgTg8DrnuTb4jNI518j8okeDoXW3OC+gD4XteF0D+c6217AMjHPzGTrBZGYYCLRaNAEG039AGsNO84usNRoTszMqsO2b\/nmRcE9v0E0hnz1ulRRtQlokgUcEvmnpOXyBO81zMB9Vq\/IFlqP58j8enEgIqEHn2yobJzIPK+kXNi1a2RMtjtig\/eD6CngsxcOwwY\/IlfofKYmGLPcfw==",
+        "source_sequence": 11
+    },
+    {
+        "aggregate_id": "fe4b15c6-1a24-4409-9010-e0070e79788e",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "ac5ea90c-ae14-4be4-8704-e7301f51d6c6",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:36:05+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6b80bcac-b5a6-45d5-948a-f733858f9540",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "598310dc-16c0-4f83-941c-f4964a26343a",
+                    "name": "Synthetic retail item",
+                    "pharmacist_id": null,
+                    "product_id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "20ad2425-9885-42a2-8e29-debe967f1c3c",
+                "evaluated_at": "2026-11-01T04:36:05+00:00",
+                "grant_id": null,
+                "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "508e701c7759e62d33fe7dbf4032392c1428b769edbd9789751745a791b94e00",
+                    "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:36:05+00:00",
+            "receipt_no": "RETAIL-M1-20261101-00000003",
+            "sale_id": "fe4b15c6-1a24-4409-9010-e0070e79788e",
+            "shift_id": "34dbb077-6ef2-40f3-8939-c84ac56f7eeb",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "7e4ac452-bad4-48d9-abfc-07bb60e95cf8",
+            "total": "9.63"
+        },
+        "payload_hash": "b42ca942b36277ccf9ca6aceb995f3134f119a10a1732fbfa59cc3fe1d1fdd46",
+        "schema_version": 1,
+        "signature": "vpT+bMyo4WKpgbESu\/5uHNkf\/jqcFV\/EHyMNMGHgDIzfkwse8CLoiX9+mA7YqwedcCHIGvGVuFUFH6DloKiuFRU3tUJjJDPfgu3TpVm8vHiqVlKDrid8LJmAJTtkb3tWmwbARTW3AkAzGx0QbaOAVCr0H6VU3fDN3TT3hIOa0KE4D1Z3aBepVUxcvimrlyIBm69usUcNIH4RvXOsFjqwzJqtO3jFU8TiMJJkZwL9O5g22CdW6\/yPEYonB3IN4wk\/V1fizbTQW3Zqhw50gTKSqAPZoJLWlrg48ksc8FlRanlFordDZaPgQyhjjU6p3MJ47IXBmCz8PpWHnBnvU2c7zg==",
+        "source_sequence": 12
+    },
+    {
+        "aggregate_id": "0a9ce8d6-b89a-4723-af5a-96090239c5ad",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "5824e009-0d95-428e-8e47-6e127bcaa5ed",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:36:07+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6b80bcac-b5a6-45d5-948a-f733858f9540",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "b4cb52e2-d548-4f84-b636-b8c538e4d4a4",
+                    "name": "Synthetic retail item",
+                    "pharmacist_id": null,
+                    "product_id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "fa769a1b-c565-4d33-8cd3-2acce378eb13",
+                "evaluated_at": "2026-11-01T04:36:07+00:00",
+                "grant_id": null,
+                "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "508e701c7759e62d33fe7dbf4032392c1428b769edbd9789751745a791b94e00",
+                    "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:36:07+00:00",
+            "receipt_no": "RETAIL-M1-20261101-00000004",
+            "sale_id": "0a9ce8d6-b89a-4723-af5a-96090239c5ad",
+            "shift_id": "34dbb077-6ef2-40f3-8939-c84ac56f7eeb",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "7e4ac452-bad4-48d9-abfc-07bb60e95cf8",
+            "total": "9.63"
+        },
+        "payload_hash": "a32bf68d1468690ea1c607cb3160f4bc8c7b7948ca2b774f362dc989f712c4d5",
+        "schema_version": 1,
+        "signature": "njvKT8vENbgvN8UiJtzLIMwXbA+GkMgq9k5fu9+q5hNmfSuDgKNWMQKXJMR7aL\/K4QTin7QgC7IEPWoYZH250UIpbUjegi1HZPdhnJa3bG10e\/mfjq81g6Fg2BdoMj1neTsW+BV8DWCZrLTBN3Z6Kd9K3fryLm1wj7+ArslKASdGktFMVmKZw35\/CFOPeRIXgCwLABD2f5Mpo\/1wY3hLGjz4mrWvRuOvnNVB0YvhklFlST7YAKNbbgiLs2aVN5CHe2vZur1D55yt9uJkCoO3x06sR+ylphQiiOhaVHblWhP5ZOT7MygxvnW\/836LKFM0uZ5mLB5grpocbiVNmtyBYg==",
+        "source_sequence": 13
+    },
+    {
+        "aggregate_id": "2e318e52-81f0-495a-b77c-bdd4eee74c1b",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "4f2300db-9b74-4b74-80dc-635fec13a316",
+        "event_type": "member.requested",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:36:09+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "envelope": {
+                "ciphertext": "Ctl24RfKoy+oo07MMtCguJSikzphVFkIamkejNpk91UUf994paWRBIPRQ8mu0e35zSTdK4k1CamRKhx1TFJdMwg8bJAtCcrzwFtXlILZBk5x",
+                "iv": "u8wZeCxEGucMZBHB",
+                "key_id": "4e021b69f793ed333e5536ff13ff1dbf2fa71f29858506cdfc952182c262cebb",
+                "tag": "6PlxjVbH6lnz1Ik66jmqvA==",
+                "wrapped_key": "jyqvOCE4Una5bL1+zvun1Kj8+qtmF+nzFXb0tuHXxRypb3UeE91hOHRptzBPUpFSPF8bmlJDcXGkvCml84owORruuzqqg9VM3vp9FW+mvEPaPNi7yNXX6pmUDY1X6GP0EYimdruFHMF4+\/lDp6oS2HHSR7T\/lIGqsBWTl9FO4jD\/mK6nWkOajgGFmqqjSzQfNnSsS0EunV+9Y9V9og8qMWCis3lTAT9IYLiaQEv8STbvWrM\/NuWwdshzbyLwmQbo0L8NKV5wZqlR+zQT9ByTLFVULstI6HPrjr6OicD4Lc0lN0GDRRAQCXoPD8VZ1BCmaVNtmGcBeWYQ3YU4LQAO4g=="
+            },
+            "occurred_at": "2026-11-01T04:36:09+00:00",
+            "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+            "request_id": "2e318e52-81f0-495a-b77c-bdd4eee74c1b",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8"
+        },
+        "payload_hash": "68bacf7c6a1ca1fcb9e82b8c74b422574617d0f3c18508b84829179bf872a7ae",
+        "schema_version": 1,
+        "signature": "NB0srP24144vZ\/TNeSeqdJxspivyavM+tEjEjXhlrKzXMPZOv6egIw7gMfLPE4tCRfT5Xx7N+6IWA\/jSH6\/h7B3dzzQkbR48ukqYLL4CpMnkmNATwu9rYRtntk6oyI9SnFWYzX0GyxI1azHmM8ZQUJAIuLCiH4AZYXBX\/D2bPArqPec07i73WEG2wgRmrJ3O8jUPbANoWcEz8Qz0cy78NTsbRa1f5mnLhRsibMwdHiSBaywqMs4vkMBBETvPbOAGQYQ2AswcYcDnGe9IUOEkixLV7ZoSNGRy+vsRsn8onx5gb6pmKAR4kbJ5mxNzzb6Q9itGR7hv+niBRVgNgITVgw==",
+        "source_sequence": 14
+    },
+    {
+        "aggregate_id": "19f55ae2-639e-4509-9016-31cc801cb4bd",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "e4646caf-82e5-4cd0-87a1-28992f97f722",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:04+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6b80bcac-b5a6-45d5-948a-f733858f9540",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "8b949b4a-9124-4914-9651-338b8bc5cad7",
+                    "name": "Synthetic retail item",
+                    "pharmacist_id": null,
+                    "product_id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "88f69c05-f17c-42a7-ae74-998edeae5aed",
+                "evaluated_at": "2026-11-01T04:37:04+00:00",
+                "grant_id": null,
+                "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "508e701c7759e62d33fe7dbf4032392c1428b769edbd9789751745a791b94e00",
+                    "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:37:04+00:00",
+            "receipt_no": "RETAIL-M1-20261101-00000005",
+            "sale_id": "19f55ae2-639e-4509-9016-31cc801cb4bd",
+            "shift_id": "34dbb077-6ef2-40f3-8939-c84ac56f7eeb",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "7e4ac452-bad4-48d9-abfc-07bb60e95cf8",
+            "total": "9.63"
+        },
+        "payload_hash": "9f25470b1804b3b1ce9e1efb5b9a6bd69e632eef0ca7fc68edea8c0e584d4b67",
+        "schema_version": 1,
+        "signature": "odZ4bsCZ3oiEkoFPMKakaAobthfmv+0nExtcDGiOUueGsYUfXJzTXJmAx\/WkM5cVpSy8s0ph3JFBs7eaHddEa\/p4EbBlH5L9bm0c4DsjLk1F0HMRHQxJ6OCKWRdLfHadwlSDcy3inmMabZrV9yoXFmxjk8uM4SP5esqpNEZOpkamAZHiODrvW0NYMnr5OqbJfqMGIj8GHM9w7dqTPTSZKojImacpQYeounMA5njGPIhPpaonL7omEzUHdh87SneVnViMg7YwbkbVcJ4glTSyiacbALnbsYYm3QBgkLIOXpbP9HcDTWRLNk4slaOY9sbA04GUAJaL+4zEP1mgg0vcFQ==",
+        "source_sequence": 15
+    },
+    {
+        "aggregate_id": "16395867-f25a-4b7a-b4d7-09b7d4a744cd",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "1a21ade5-1f2d-4ba9-8526-935e2dd294c4",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:07+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6b80bcac-b5a6-45d5-948a-f733858f9540",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "c1efbfe2-2e4c-4562-8a89-ea8140deb992",
+                    "name": "Synthetic retail item",
+                    "pharmacist_id": null,
+                    "product_id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "975bf87d-0bb2-4d38-a920-316e59d9bb1f",
+                "evaluated_at": "2026-11-01T04:37:07+00:00",
+                "grant_id": null,
+                "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "508e701c7759e62d33fe7dbf4032392c1428b769edbd9789751745a791b94e00",
+                    "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:37:07+00:00",
+            "receipt_no": "RETAIL-M1-20261101-00000006",
+            "sale_id": "16395867-f25a-4b7a-b4d7-09b7d4a744cd",
+            "shift_id": "34dbb077-6ef2-40f3-8939-c84ac56f7eeb",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "7e4ac452-bad4-48d9-abfc-07bb60e95cf8",
+            "total": "9.63"
+        },
+        "payload_hash": "064c61ab024ed3a85dd76dcadcb86c05fd43a311dcf787545c6c2122b6dc688b",
+        "schema_version": 1,
+        "signature": "sRJdHf3bBJoXIMkV9Kf5hXktvPkSRIVR7iAQLQrGW\/vJJV864ego2h1w7LcDHuMcqCv8GMVUujFmob6u4eMaPZi4e3ZhvRgiyBRt9j58yLiB3Z4Ar2jKOwB2875dysbUX1ZhzMn6lMfYrux1Qlj4eonGrJz0pFUBIOw83SzMpiArFRAGOrughSRnQchyFP++vLkxsi7C3I\/iVsSzcat0HZxK\/M3Kgbs3bv9Nwp6NBaRqVZBUNd3C6bATPryf18VGe+sbq3MchhhxLgG2fXlb4nsAHEiZNTWK6zv4tOKyVPqLB9Jiuxu4J1h17Y8AARJWzBWq\/YWowAamvcjqKDYQbQ==",
+        "source_sequence": 16
+    },
+    {
+        "aggregate_id": "a315b547-085a-4a47-bcfc-ab43931422f7",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "f814c833-8bb1-4bad-9d2e-22a69e3df474",
+        "event_type": "member.requested",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:09+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "envelope": {
+                "ciphertext": "UsFhXAsxq5K9WUAR0P7Qld8ailL4fVQWGOsLyZ7d9q\/chi1fJQfP1m3dCAr4LARD31oLca8m8TXKvq52HwPG4MixgAO22HrITEmp3OECpmiT",
+                "iv": "DA2UEnU\/KH\/6WGQ2",
+                "key_id": "4e021b69f793ed333e5536ff13ff1dbf2fa71f29858506cdfc952182c262cebb",
+                "tag": "otfo2AEpOHGzKbSSmhuhBQ==",
+                "wrapped_key": "PEI4GXGrwLI\/Rl7A0l9LUeW5KS8TMblN4T+kdgnebCqmYfn+O3Avttn+mbMjlPCzRPW8P0bpFovWlyEekrxpzEKvqqg2BCihp5ez9pppkOE3SlPbleC6e\/apd+irkSuvI5OV+Yk4BSqZHk\/CTiIti3x5U+Ku3qdxs7J64c45ZqfsAaXNDWv0OvDzpHN8tCc87TWKerww6JqHn7bUj5\/xFuid+z52v1UyYC6fwrbVPBt1aSucpD+e7EpIG\/YPuP4VOmM8sWp9v5U\/FiDfpuyKxkmZ84fw6e\/QsZm4VtSmteuz1i+GZiZ3iDjz8XSbDlfGzV0P6XLijakBQHDnR6Ergw=="
+            },
+            "occurred_at": "2026-11-01T04:37:09+00:00",
+            "publication_id": "11e9eb65-a28c-4ed1-b4e8-61c85cb8acd8",
+            "request_id": "a315b547-085a-4a47-bcfc-ab43931422f7",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8"
+        },
+        "payload_hash": "5238d18bdbec991a70da45f636cafcf457be57b5b5a3dc2dabc9eb88f41250d2",
+        "schema_version": 1,
+        "signature": "3R+a31+aUBAafHtguivXR4HE6hcXU1CqOn8XjgaotfmbytlrJGoIzovINip7WcXDbu9\/PMRtPGOA75E+J2WNGZJYUNaOr8L+M84WQ6kJpiD5dxSZHhSN9qujv2+U5n4t0REV4m1UxXq931Oi\/wZ1BAbkn2KZwDpBWDrWu2PJJeJXzea2y+7OQo\/xaWp4y0ftY9Wo438axLUBEDHonaEOk1fHXoJOmXco\/NNjPtMShoH2lSXmKtVHxB0ewCSOzS+DpGxvMrJZTsERxe+BAkd10QydmZ48duM2Yvt12oDqURmfsHiAIMy8NiO0psZ0auIGk0iEG0q3PwsSG9+GRLSspA==",
+        "source_sequence": 17
+    },
+    {
+        "aggregate_id": "0d43aa0d-ece9-4dd9-b652-318c6f0ce503",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "45db6e0f-c9ec-469a-9be0-adb594ecec9e",
+        "event_type": "kitchen.consumed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:13+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "catalog_version": "member-v1",
+            "consumption_id": "0d43aa0d-ece9-4dd9-b652-318c6f0ce503",
+            "currency": "THB",
+            "ingredients": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6df6e4ce-3e34-435f-802a-76899b0b50c8",
+                            "lot_id": null,
+                            "quantity": "0.5000"
+                        }
+                    ],
+                    "product_id": "e99278cb-1209-4894-8b13-4b921bb2d61e",
+                    "quantity": "0.5000"
+                }
+            ],
+            "occurred_at": "2026-11-01T04:37:13+00:00",
+            "order_id": "bd483358-228c-49ed-84b6-42b4b6fcb70e",
+            "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+            "purpose": "preparation",
+            "quantity": "1.0000",
+            "recipe_hash": "3a3194171a3badc97ac054836c7cdf1afcf7cfc170241f0226fea3b6ebd78cfb",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "unit": "piece"
+        },
+        "payload_hash": "93b650ac38342356b2ccb8a024adc9eca37c032b9e8fde6529f6c6c611886fd7",
+        "schema_version": 1,
+        "signature": "DYm2CHHwy\/fQLwiE1UPr0iTQwAmO24CSDuq7\/+e64HCTWiNLbXJusiF1Dw8SEhrPqsEcXyvJMmGjTSz7OkC1+phQsUHwOsuW\/042Y6iDTZMLD8LmTYGtERtkqkHunNwQAx5sh5hNVtFT3TtHZtPPYe7bsT4Xp44Ud0D8bQ2PjM4YmJMsZC8j4K\/Vyzuj99s3V1tONq23sUb7DeSJV4igK8\/Ttf3bMgWzHL3EVafU0GW96U+dAGBHzsJtiSJltlRSg2twJ69NlbvnZmx5lzP0nNoxXSIsanvRbMJPe9WijlWYmPOPBE6vTi2jCBxxX2Scl7leZkQyTBsZMCZfIy30jw==",
+        "source_sequence": 18
+    },
+    {
+        "aggregate_id": "df395989-a6ab-4426-9776-fdb726a64dbf",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "25c88d61-3a67-4067-a586-871b0a2b1e55",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:15+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [],
+                    "base_quantity": "1.0000",
+                    "base_step": "1.0000",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "kitchen_refs": [
+                        {
+                            "consumption_hash": "93b650ac38342356b2ccb8a024adc9eca37c032b9e8fde6529f6c6c611886fd7",
+                            "line_id": "0d43aa0d-ece9-4dd9-b652-318c6f0ce503"
+                        }
+                    ],
+                    "line_id": "fe3d2e2e-b52c-44a6-9a74-74851a490892",
+                    "name": "Synthetic restaurant item",
+                    "pharmacist_id": null,
+                    "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                    "quantity": "1.0000",
+                    "stock_effect": "prepared",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "90d9b1fc-a749-4954-9f95-38e37780a48b",
+                "evaluated_at": "2026-11-01T04:37:15+00:00",
+                "grant_id": null,
+                "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                "publication_id": "6d9398b0-d300-4671-9207-a7fd907aa857",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "6004cadae33e77d1074544e6eef522780e98c5d813e71f2ff2c08082fcfa124c",
+                    "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:37:15+00:00",
+            "receipt_no": "RESTAURANT-M1-20261101-00000003",
+            "sale_id": "df395989-a6ab-4426-9776-fdb726a64dbf",
+            "shift_id": "a8847e12-6855-4ce1-bb07-ae7ad966f0dc",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "total": "9.63"
+        },
+        "payload_hash": "60370fc93c32c519f51ab160b8b86e4aa5dd2fa56416f3b2e45a8002f36059fa",
+        "schema_version": 1,
+        "signature": "c1ToeWeBlXsXwlOpCDvVVgBRAVKuvGocn58dL9uX236qkidfoobqO8v7IAYzk\/0At7spRqQLQrAnVD548ToiXXqLr0DelLWnKXQ74AgvUbJaveOTnuOOqxXQ9ynvxtCPGIpdcoJ4EQ4a+BOrxYyrb7l2M+uw8Fj8tehU4KTbvFkJVKlFqIovRk3LeJVLrmF7I95g3Z+0qPoAFWVGGzfqRxKFTLAKPgKEx1MR\/DXAYcKMzUygUmIKF\/x15Jy8+CH9w5JVjf5FLqjo5kDVovcHqv51bbkH69U+nv8POZyX7PMTo5CMMufs4EOcWBgw3EL\/j+nHE1av5Z7aDhNASyDx6Q==",
+        "source_sequence": 19
+    },
+    {
+        "aggregate_id": "c29432f7-6722-4ed3-b941-8cdcfa24655a",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "343eb069-8bb1-4ecf-9c43-bcc7ae50f71c",
+        "event_type": "kitchen.consumed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:17+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "catalog_version": "member-v1",
+            "consumption_id": "c29432f7-6722-4ed3-b941-8cdcfa24655a",
+            "currency": "THB",
+            "ingredients": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6df6e4ce-3e34-435f-802a-76899b0b50c8",
+                            "lot_id": null,
+                            "quantity": "0.5000"
+                        }
+                    ],
+                    "product_id": "e99278cb-1209-4894-8b13-4b921bb2d61e",
+                    "quantity": "0.5000"
+                }
+            ],
+            "occurred_at": "2026-11-01T04:37:17+00:00",
+            "order_id": "d2e2575f-ed13-4890-a9e4-7d58d052a11f",
+            "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+            "purpose": "preparation",
+            "quantity": "1.0000",
+            "recipe_hash": "3a3194171a3badc97ac054836c7cdf1afcf7cfc170241f0226fea3b6ebd78cfb",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "unit": "piece"
+        },
+        "payload_hash": "9b6ae28c398468d15fb2b285063500a8d02f538630e9954390bb62bcb88b7326",
+        "schema_version": 1,
+        "signature": "QHYg2OaU7M9CfdV86XAH\/ii4Sfb5pqpZLKZKKBHfHc0Q00NLHzCysJxRX72UBLWNYVLgv8m2Uu2GlhMWP+06b5qfz7NtvTR6j3EylLb9YJ9YlrrcB7m+tS3BLtrUSlLEZtZuLHo4vcD0BXUuBPOzWbXg4zTvTvkstcI4TCwq5HPivLTXyXsxYgvRjt0Z+oxVKFUgLN7\/XcvkEi9r6mfo4xuVAgsWwhwEUInPYIJp+d6ozispTiF9v3VHjJDolHudStwR5uJt6RPhCcqr8ZkaKfMBJfYU5N7uHH4mB6D2LDNVnVszXMG+t\/GnbJBsV8f5qlgifPSmicHR4HsPrZK3MQ==",
+        "source_sequence": 20
+    },
+    {
+        "aggregate_id": "2f79ca15-e630-4e85-9566-6a55c9dc878b",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "19537ea7-19aa-451e-9e4a-d4c2742e15c0",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:19+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [],
+                    "base_quantity": "1.0000",
+                    "base_step": "1.0000",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "kitchen_refs": [
+                        {
+                            "consumption_hash": "9b6ae28c398468d15fb2b285063500a8d02f538630e9954390bb62bcb88b7326",
+                            "line_id": "c29432f7-6722-4ed3-b941-8cdcfa24655a"
+                        }
+                    ],
+                    "line_id": "d8058511-4145-4462-8f8b-fd25caa7d299",
+                    "name": "Synthetic restaurant item",
+                    "pharmacist_id": null,
+                    "product_id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                    "quantity": "1.0000",
+                    "stock_effect": "prepared",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "1a232471-e1e0-4bc4-8f89-fdb4cea518eb",
+                "evaluated_at": "2026-11-01T04:37:19+00:00",
+                "grant_id": null,
+                "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                "publication_id": "6d9398b0-d300-4671-9207-a7fd907aa857",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "89a27193-c988-46eb-b65f-a05a9d564788",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "0294b379-65fc-4bbf-b75d-8c349b88427c",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "6004cadae33e77d1074544e6eef522780e98c5d813e71f2ff2c08082fcfa124c",
+                    "promotion_id": "acb945af-7e78-48fe-8a29-b0b3c01d75a1",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:37:19+00:00",
+            "receipt_no": "RESTAURANT-M1-20261101-00000004",
+            "sale_id": "2f79ca15-e630-4e85-9566-6a55c9dc878b",
+            "shift_id": "a8847e12-6855-4ce1-bb07-ae7ad966f0dc",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "e6f36515-6552-4136-9b3e-2f22604d3e05",
+            "total": "9.63"
+        },
+        "payload_hash": "35b84497c19c37f40d697a8fc08252278dcbcbf4bd9251817b8fca33706e960b",
+        "schema_version": 1,
+        "signature": "4VyocNgxF13NdiW5SPc56j5rA7qNPT8a5HH1asc3baNmUlS\/71S9EhrrskLp2ru5aeYFhGYgunC0mX+1c96fQzPV8XRdcBSyVuonpqRsMpT+g6NWdAviKovWgkqVAl2mznni4N54jSro4Max4Rl5OwpwsPeMcH8GBIPhyzKAT6E20Y7r20U0ng3qhlMIFH9Gi374m6Ry2\/pDOl8Udynwf2RTCpGUexy4HDNCU8qTPDEqYTKHT\/6TGcWu6YOiEwAcMZQvlYQyt7uE\/wlHbC39RfJ6rOblChID8sXD76Q3FDF3ZCWnpA7Lw2d7ejN9eveuqS36M9iOM7f8kk1BO5PcCw==",
+        "source_sequence": 21
+    },
+    {
+        "aggregate_id": "563dab12-1268-4693-8fc6-c063e1566cd6",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "1a84e0df-bd71-4017-87c9-cf4ff7e730dc",
+        "event_type": "member.requested",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:20+00:00",
+        "payload": {
+            "branch_id": "ea13dc31-05f3-4d05-88ad-2dc76fb0b655",
+            "business_timezone": "Asia\/Bangkok",
+            "envelope": {
+                "ciphertext": "lSUWXyRUuXiRwqMCuIMtGv+jcexMWhDVZFqUwkw9Lf2h1CJ9Kj47hY2VDIU44Z69dURNgpRd\/ISYwaJUAt1CR6wMhtsZinytn4IHmTpQhszWxVqW5w==",
+                "iv": "Mxy\/cPGkufwyx9EZ",
+                "key_id": "4e021b69f793ed333e5536ff13ff1dbf2fa71f29858506cdfc952182c262cebb",
+                "tag": "veZH0pOh6G3oWu\/vm2vhyw==",
+                "wrapped_key": "N62NlbMmxXS4hkJ+HgfpaLiCE7HfzBBOUJsOI1mWN21gnuagRVDpsfXsVgFGeNAgzVYt5UZ0u5UU\/Ce7e6zzmxM+U77wjFerBamjriU3wKNIPY\/jJYgUH6zQ+Wbjv0NbkWbm7CiwzJawI4gN3SjpzDD+szbZo2+ja8yPmAyxmIkBstqULowuHQgOyZKwKvEhHYLADbpVW0HDBKnDCg2aH84\/cVPysiw0m30\/t1ECpz5mZLbcTvGlVnbZhwku7PrmW3OknV9tZXz4SAiSYng1E6IZ+h8LnU6i8IVMoyVHGeJdzxWL5PJUmjWzY1Pn3HWJha4JHorLTRGFiNXRUimmyQ=="
+            },
+            "occurred_at": "2026-11-01T04:37:20+00:00",
+            "publication_id": "6d9398b0-d300-4671-9207-a7fd907aa857",
+            "request_id": "563dab12-1268-4693-8fc6-c063e1566cd6",
+            "staff_id": "5c4155e7-8802-4720-8350-2737162265bc"
+        },
+        "payload_hash": "ce1b413fc3fc4ba287f31a143ec72041a094c6537acb4c28b08fbf97cacdf674",
+        "schema_version": 1,
+        "signature": "zOZFBfd+BxE5C+qgdp5MI9JRGudq+T5oJ7oEBX17UJBnqIqhPbi8GcizqqMbOxI9N\/9q4dlpgUpwvFeEItS\/l6i5FNwI4W\/OOyvY+vdWx1qzcfb77lvospeX5+ugT\/hTG6y1nqn6lV8uvgoCzDNL4f4iuuFr0jA5s6zvBnKd3NSPfWD6O3vQcGWNELqn42X\/Zl7oa\/AYkT2d6ziBTX4xjTJ77TuFljbz\/aJfwgnMJAG49J+mtdERNJ\/E5VFB12qHhnmjI41hCP7UX0xJYH7HZMSHLQVcG2LwinMfiQHUmLB7rt68dYvZ9Wjk8Kx9av7+ZRWYcx2lrdXYc6unrP70uA==",
+        "source_sequence": 22
+    },
+    {
+        "aggregate_id": "a3d76f23-5016-4a68-a536-d0246214cd22",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "d107b692-eb32-4d5f-9bce-4be620a11313",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:25+00:00",
+        "payload": {
+            "branch_id": "b7937039-d420-41d6-90f9-6f78c8f1f00a",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "f2732a60-0d14-4c15-8292-ce6d25b8aff3",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "9207335a-e9a5-4b96-b136-4e25c1f8c674",
+                    "name": "Synthetic pharmacy item",
+                    "pharmacist_id": null,
+                    "product_id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "cdcd6eeb-d626-4207-99a6-2189ce301711",
+                "evaluated_at": "2026-11-01T04:37:25+00:00",
+                "grant_id": null,
+                "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                "publication_id": "61f89bc6-46ae-47c0-a0c5-5c3ac81c3f4c",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "06bcc7b3ffb1d888be009d0500bf021696bbe698ef30b082c6c34f022323d144",
+                    "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:37:25+00:00",
+            "receipt_no": "PHARMACY-M1-20261101-00000003",
+            "sale_id": "a3d76f23-5016-4a68-a536-d0246214cd22",
+            "shift_id": "76f8fa22-2027-4682-bb8c-1b2fe9f1f989",
+            "staff_id": "d0c78ad3-18f6-42ed-a47a-f79a63ef9502",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "05b83d55-af9d-4213-9230-bdb97fae1756",
+            "total": "9.63"
+        },
+        "payload_hash": "16e5caa71f7248bcb5145d4973c141dca1831bad60ecd42af592d713dd737ad0",
+        "schema_version": 1,
+        "signature": "iRXlyWyfJEe5JXWahSkHuqGQvPeLPVd5mVcNa1Vb5wDFmJP\/NubhWDPMEqRgJ\/WQ5t44OMmdA9YKMYbnw0HNoWlkqyN272zO5xrfmV2FPpwk9ORH8seQB3hEziH\/T4f2BPA6F3P\/so2Fxef7DdrRwM4LU5CvI8FnGSh6g5\/IkdIx4aHny1zUNES255N46cT3knVC4zoKrg3vtQS3pWiFbq1qT6ZTFK5eU1MAZhaJBmwLYd2SZkeJPRZFLdDQ7tdD\/ppnAXvn2J91PhmaNrtCB5jupUsyBEM4hCsZ0NiQ5DL0xEZz7oXwswKNqF8QOKXINCqsSa8WMjI8TLeJsLVhjw==",
+        "source_sequence": 23
+    },
+    {
+        "aggregate_id": "f2866f94-a17a-4e77-952e-3241908ec18a",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "a6f9fd02-1bff-4d3c-8781-9326ba0ee104",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:31+00:00",
+        "payload": {
+            "branch_id": "b7937039-d420-41d6-90f9-6f78c8f1f00a",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "f2732a60-0d14-4c15-8292-ce6d25b8aff3",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "572b0fd6-3ce4-4742-8e0d-ac9fd383ee9c",
+                    "name": "Synthetic pharmacy item",
+                    "pharmacist_id": null,
+                    "product_id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "40012df4-95ab-4cb9-bf5b-b73a9f91a2ac",
+                "evaluated_at": "2026-11-01T04:37:31+00:00",
+                "grant_id": null,
+                "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                "publication_id": "61f89bc6-46ae-47c0-a0c5-5c3ac81c3f4c",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "b648187f-d6b9-4c42-995a-032429dfe05b",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "88005f60-bc03-49e1-8a94-19cea7dc636a",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "06bcc7b3ffb1d888be009d0500bf021696bbe698ef30b082c6c34f022323d144",
+                    "promotion_id": "974eb5a3-38f7-4ab9-b9d1-0c071bb53bd0",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:37:31+00:00",
+            "receipt_no": "PHARMACY-M1-20261101-00000004",
+            "sale_id": "f2866f94-a17a-4e77-952e-3241908ec18a",
+            "shift_id": "76f8fa22-2027-4682-bb8c-1b2fe9f1f989",
+            "staff_id": "d0c78ad3-18f6-42ed-a47a-f79a63ef9502",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "05b83d55-af9d-4213-9230-bdb97fae1756",
+            "total": "9.63"
+        },
+        "payload_hash": "bcb3ec29c7de5a4e23e4e1c64df651e134f14ec2826dc6dfc45e5c61a8fee3b2",
+        "schema_version": 1,
+        "signature": "jBO9AjZHQIpzjOPE0HL9O3DXeVYJo\/sV\/XOVuhUixAcIDZUQJNzkwn4cZRd7mWq3i7QMudmXsZzWjv+LzyzkDE0DksFLKctcem7+IljfVf4IK0sTI3sH1moQ5Dvn52i8HcaeZXmvLRPO4DHJ\/uO0aObirjH4BkVqbsXGAxlQpsJIY9i2YUxukGqVyyvH0yRObF9sqFaVQ4RBWw+vdsKiyw3vPi2Y1kweEu34aQWs5wPUaJuQkupUX0kL6xmtA7eGwhLW7MQL4MYeRZOS6oa4TZwE9gI1\/\/Ti\/1f3EFCXlU71nQ3ZxQVmOQbBHCsNKoIjlnf5KI\/4ITKeCVFtNDgiJQ==",
+        "source_sequence": 24
+    },
+    {
+        "aggregate_id": "f6e9b7c5-5437-45f7-88ec-7fd97d6f23b4",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "6972e950-2ec3-4493-acf6-a9bbe4d0b9cd",
+        "event_type": "member.requested",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:37:32+00:00",
+        "payload": {
+            "branch_id": "b7937039-d420-41d6-90f9-6f78c8f1f00a",
+            "business_timezone": "Asia\/Bangkok",
+            "envelope": {
+                "ciphertext": "M72p3CJb1M\/BaBuc3LGL\/VQnWeBHivhyT5qr88n3lhtz2qJJN88\/sVbDZ6xEL6UCe6dh5nAPfEBfCf3n53urdtGaNj5dwHiRtkRMZBqHW0nagMk=",
+                "iv": "ExcBAsWAy26jFjCX",
+                "key_id": "4e021b69f793ed333e5536ff13ff1dbf2fa71f29858506cdfc952182c262cebb",
+                "tag": "FnvK\/WbV\/CIbVMiNIfmIrQ==",
+                "wrapped_key": "YuyD3FcogWRn8o5AgsUtwNZmfegbUx3bQoWj5squkNwI6wVj2Pam6gaSwiJN6xE9t8ZIPzfNNKXVHflWRwcuNUlUL++\/7ztK6viH1wxL4kta3krO5clnhuaqpy7EDyFceA0NbfPr4udYXPbhnNND8TB34wnJveoNaZpeE3YzeIaUw\/ze0JbkQ0aQodKumJT0YRuLlXF54zkUH+wR8tK3ZNqkUBJNO4yodGlid7T7XyEKTrbK+MXWbUtPB26D4mt5HAt7EQ3R6SiFNrut46TqYMKnhDZNkR4e6y7amB73MN491D0PbdOLVzgU42TJ3yJ30co3AIHsy93aqP0xSWn3Hw=="
+            },
+            "occurred_at": "2026-11-01T04:37:32+00:00",
+            "publication_id": "61f89bc6-46ae-47c0-a0c5-5c3ac81c3f4c",
+            "request_id": "f6e9b7c5-5437-45f7-88ec-7fd97d6f23b4",
+            "staff_id": "d0c78ad3-18f6-42ed-a47a-f79a63ef9502"
+        },
+        "payload_hash": "41437f88ff2fdf89946c05bbc306ea207ccc5d92c3687b09e192ed603a4976df",
+        "schema_version": 1,
+        "signature": "lFkdWf6TE1mXZb1aWpvvXhKVbBnP6z7mmqa5SFcw4J0m+qF8gPOzFwQ0sbI\/K07J1LM7d3hczJRM0txgYmGDeHnUk3fGFyhPdApl+4merkAdf9NHDuBDlFp80Y64UIqVcmub7YsDW0r0Hm2bg5\/zJ3HTOQ5mFWwa6HSvQ+UnUJdSIJAnKR0P3b3kvEZ0mZ6w05oZwx71CNKvPF5OihYkv\/\/WtIXZnGWQ3\/0L+zORgCRD6ZN6QIQkBh\/CPURaaWG9J6nkk0Muu\/cLER7wytBnlGepQfDcozF7t6lUpPnouKibTpGTRDNT+W2H3FbK9f7CUbnzwYU\/MA8CBqvFI\/pZyA==",
+        "source_sequence": 25
+    },
+    {
+        "aggregate_id": "db98453d-dabf-405d-8daa-c760ed80f0ed",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "db8d03eb-4c64-47d2-a5ed-d2db907bab07",
+        "event_type": "sale.completed",
+        "instance_id": "22222222-2222-4222-8222-222222222222",
+        "key_id": "membership-fixture",
+        "occurred_at": "2026-11-01T04:40:46+00:00",
+        "payload": {
+            "branch_id": "582569e4-add9-4819-b7d3-aad69e2cb74b",
+            "business_timezone": "Asia\/Bangkok",
+            "cash_tendered": "20.00",
+            "catalog_version": "member-v1",
+            "change": "10.37",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "6b80bcac-b5a6-45d5-948a-f733858f9540",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "1.00",
+                    "line_id": "aaf8f64c-3715-44bc-8600-3610e7766d8b",
+                    "name": "Synthetic retail item",
+                    "pharmacist_id": null,
+                    "product_id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                    "quantity": "1",
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "tax_rate": "7.00",
+                    "total": "9.63",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "membership": {
+                "claim_id": "7f1d10a2-31a4-444a-9357-4bdefef560b1",
+                "evaluated_at": "2026-11-01T04:40:46+00:00",
+                "grant_id": null,
+                "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                "publication_id": "b4165ae2-b1d8-4669-8afc-ff1dd763114c",
+                "quote": {
+                    "discount_amount": "1.00",
+                    "discount_basis": "10.00",
+                    "lines": [
+                        {
+                            "discount_amount": "1.00",
+                            "id": "4f11e6fa-aa9b-40a7-8f5d-06de72101260",
+                            "kind": "merchandise",
+                            "net": "9.00",
+                            "original_net": "10.00",
+                            "tax_amount": "0.63",
+                            "tax_rate": "7.00",
+                            "total": "9.63"
+                        }
+                    ],
+                    "member_id": "47900024-4859-46ac-b9d4-5b4ff727d226",
+                    "minimum_basis": "10.00",
+                    "policy_hash": "508e701c7759e62d33fe7dbf4032392c1428b769edbd9789751745a791b94e00",
+                    "promotion_id": "69cd1b23-39b8-434b-8bbf-422ca88a414f",
+                    "requires_entitlement": false,
+                    "subtotal": "9.00",
+                    "tax_amount": "0.63",
+                    "total": "9.63",
+                    "version": 1
+                }
+            },
+            "occurred_at": "2026-11-01T04:40:46+00:00",
+            "receipt_no": "RETAIL-M1-20261101-00000007",
+            "sale_id": "db98453d-dabf-405d-8daa-c760ed80f0ed",
+            "shift_id": "34dbb077-6ef2-40f3-8939-c84ac56f7eeb",
+            "staff_id": "e95cb45f-27ee-4d08-b4b1-d6d1340ba6c8",
+            "subtotal": "9.00",
+            "tax_amount": "0.63",
+            "terminal_id": "7e4ac452-bad4-48d9-abfc-07bb60e95cf8",
+            "total": "9.63"
+        },
+        "payload_hash": "48682214d423a9fee6cb4f484c4e3969390be04fe5e236c4559808dc187cf3d5",
+        "schema_version": 1,
+        "signature": "oJ77HVhqIrkJdlhP9z5slVLZHIULwegptFE\/O3\/1JeSFNY5ZKs\/uPP71JZ59NjmHLkfMD2fwdLKhrFW6IyS+OJ0pt2l6ST4d8Kj8hUdg0imIlNPayWtrO6WlDV8O2nHa+G6x5OeoRb\/ej1aNqk2lvlhM\/SVGy5phoEMShxc3ugxHvF0AcDkFePwEnQ6nguUcpzZg0y7j4wogaUhN2eeIHpZR6lo+5xOkYd2ddNn5NuBzkGBWVIUOcsSSjvW9VsVdxA9fw4\/hhU2lnSQXonEysOKjz4E7zJTi9UArQtx62bv1qWIK5J692NVR0G\/hNi49dDfL7BC12LXJXAjPNnxWVw==",
+        "source_sequence": 26
+    }
+]

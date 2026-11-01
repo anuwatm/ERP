@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\LocalDevine\www\ERP\pos\phpunit.xml" tests="6" assertions="53" errors="0" failures="0" skipped="0" time="6.208544">
+    <testsuite name="POS" tests="6" assertions="53" errors="0" failures="0" skipped="0" time="6.208544">
+      <testsuite name="Pos\Tests\CheckoutTest" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" tests="2" assertions="19" errors="0" failures="0" skipped="0" time="2.792742">
+        <testcase name="test_offline_permit_reserves_stock_and_document_slots_without_posting_or_expiry_reclaim" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1006" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="15" time="2.076789"/>
+        <testcase name="test_offline_permit_cannot_authorize_clinical_items_even_for_pharmacist" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1046" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="4" time="0.715954"/>
+      </testsuite>
+      <testsuite name="Pos\Tests\OfflineIngressTest" file="C:\LocalDevine\www\ERP\pos\tests\OfflineIngressTest.php" tests="4" assertions="34" errors="0" failures="0" skipped="0" time="3.415801">
+        <testcase name="test_evidence_survives_replay_and_untrusted_clock_without_posting_financials" file="C:\LocalDevine\www\ERP\pos\tests\OfflineIngressTest.php" line="58" class="Pos\Tests\OfflineIngressTest" classname="Pos.Tests.OfflineIngressTest" assertions="12" time="0.408775"/>
+        <testcase name="test_conflicting_identity_preserves_both_payloads_and_first_received_time" file="C:\LocalDevine\www\ERP\pos\tests\OfflineIngressTest.php" line="79" class="Pos\Tests\OfflineIngressTest" classname="Pos.Tests.OfflineIngressTest" assertions="6" time="0.439757"/>
+        <testcase name="test_disabled_capability_and_inactive_staff_fail_closed" file="C:\LocalDevine\www\ERP\pos\tests\OfflineIngressTest.php" line="99" class="Pos\Tests\OfflineIngressTest" classname="Pos.Tests.OfflineIngressTest" assertions="3" time="0.510150"/>
+        <testcase name="test_http_scope_auth_and_manager_policy_reauthentication" file="C:\LocalDevine\www\ERP\pos\tests\OfflineIngressTest.php" line="119" class="Pos\Tests\OfflineIngressTest" classname="Pos.Tests.OfflineIngressTest" assertions="13" time="2.057120"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

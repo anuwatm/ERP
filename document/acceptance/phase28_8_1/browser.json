@@ -1,0 +1,54 @@
+{
+  "scope": "Synthetic local Chrome; no real payment/provider/operational DB",
+  "cases": [
+    {
+      "width": 1280,
+      "deliveryId": "d4f88231-a79c-4663-a654-65a8a6921d60",
+      "result": "PASS",
+      "checked": [
+        "create",
+        "fees",
+        "reserve",
+        "stale-version-409",
+        "dispatch",
+        "deliver",
+        "lost-response-after-commit",
+        "retry",
+        "collect-once",
+        "remit",
+        "receive-return",
+        "custody-refund-once",
+        "manager-restock",
+        "db-no-sale-payment",
+        "slip",
+        "horizontal-containment"
+      ]
+    },
+    {
+      "width": 375,
+      "deliveryId": "f97c8366-b80b-4681-90d5-fe703509985d",
+      "result": "PASS",
+      "checked": [
+        "create",
+        "fees",
+        "reserve",
+        "stale-version-409",
+        "dispatch",
+        "deliver",
+        "lost-response-after-commit",
+        "retry",
+        "collect-once",
+        "remit",
+        "receive-return",
+        "custody-refund-once",
+        "manager-restock",
+        "db-no-sale-payment",
+        "slip",
+        "horizontal-containment"
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "stage": "inspect",
+  "status": "PASS"
+}

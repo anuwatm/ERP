@@ -1,0 +1,11 @@
+PHPUnit 12.5.31 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.1
+Configuration: C:\LocalDevine\www\ERP\backend\phpunit.xml
+
+
+Dashboard performance: {"dashboard":{"queries":48,"milliseconds":300.52},"executive.dashboard":{"queries":41,"milliseconds":235.02},"finance.dashboard":{"queries":25,"milliseconds":52.28},"delivery.dashboard":{"queries":35,"milliseconds":439.3},"sales.dashboard":{"queries":41,"milliseconds":67.09},"my-work.dashboard":{"queries":13,"milliseconds":44.46},"procurement.dashboard":{"queries":22,"milliseconds":58.92},"hr.dashboard":{"queries":14,"milliseconds":32.97},"portal.customer":{"queries":15,"milliseconds":56.77},"portal.supplier":{"queries":14,"milliseconds":49.86}}
+Time: 04:15.430, Memory: 134.00 MB
+
+OK, but some tests were skipped!
+Tests: 538, Assertions: 9424, Skipped: 2.

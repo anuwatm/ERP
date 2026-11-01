@@ -1,6 +1,9 @@
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useSubmissionKey from '@/Hooks/useSubmissionKey';
 import DataTable from '@/Components/UI/DataTable';
 import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -389,14 +392,28 @@ function EmployeeDialog({
         : empty;
     const form = useForm<Form>(initial);
     const [accountId, setAccountId] = useState('');
+    const [minimized, setMinimized] = useState(false);
+    const guard = useDiscardGuard(open && form.isDirty, form.processing);
+    const submission = useSubmissionKey();
+    const resetClose = () => {
+        form.reset();
+        form.clearErrors();
+        setAccountId('');
+        setMinimized(false);
+        submission.reset();
+        close();
+    };
     if (!open) return null;
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        const options = { preserveScroll: true, onSuccess: close };
+        const options = { preserveScroll: true, onSuccess: resetClose };
         if (employee) {
             form.patch(route('hr.employees.update', employee.id), options);
         } else {
-            form.post(route('hr.employees.store'), options);
+            form.post(route('hr.employees.store'), {
+                ...options,
+                headers: submission.headers(),
+            });
         }
     };
     const selectControl =
@@ -419,211 +436,230 @@ function EmployeeDialog({
         </label>
     );
     return (
-        <CreateEditDialog
-            open={open}
-            minimized={false}
-            onMinimize={() => {}}
-            onClose={close}
-            title={employee ? 'Edit Employee' : 'New Employee'}
-            breadcrumb="HR / Employees"
-            entityLabel="Employee"
-            draftLabel={employee?.employee_code ?? 'New employee'}
-            storageKey="employee-editor-size"
-            status="Draft"
-            formId="employee-form"
-            processing={form.processing}
-            saveLabel="Save Employee"
-            errors={form.errors}
-            onSubmit={submit}
-        >
-            {() => (
-                <div className="grid gap-4 p-5 sm:grid-cols-2">
-                    {input('employee_code', 'Employee code')}
-                    {input('first_name', 'First name')}
-                    {input('last_name', 'Last name')}
-                    {input('nickname', 'Nickname')}
-                    {input('email', 'Email', 'email')}
-                    {input('phone', 'Phone')}
-                    <PositionCombobox
-                        value={form.data.position_id}
-                        positions={positionsList}
-                        departmentId={form.data.department_id}
-                        onChange={(posId, posName) => {
-                            form.setData({
-                                ...form.data,
-                                position_id: posId,
-                                position_title: posName,
-                            });
-                        }}
-                        onPositionCreated={(newPos) => {
-                            setPositionsList((prev) => [...prev, newPos]);
-                        }}
-                        error={form.errors.position_id}
-                    />
-                    {input('national_id', 'National ID / Passport')}
-                    {input('tax_id', 'Tax ID')}
-                    {input('bank_name', 'Bank name')}
-                    {input('bank_account_number', 'Bank account number')}
-                    {input('started_on', 'Start date', 'date')}
-                    {input('probation_ends_on', 'Probation ends', 'date')}
-                    {input('resigned_on', 'Resigned on', 'date')}
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Employment type
-                        <select
-                            value={form.data.employment_type}
-                            onChange={(e) =>
-                                form.setData('employment_type', e.target.value)
-                            }
-                            className={selectControl}
-                        >
-                            <option value="monthly">Monthly</option>
-                            <option value="daily">Daily</option>
-                            <option value="hourly">Hourly</option>
-                            <option value="contractor">Contractor</option>
-                        </select>
-                    </label>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Status
-                        <select
-                            value={form.data.employment_status}
-                            onChange={(e) =>
-                                form.setData(
-                                    'employment_status',
-                                    e.target.value,
-                                )
-                            }
-                            className={selectControl}
-                        >
-                            {[
-                                'probation',
-                                'active',
-                                'suspended',
-                                'resigned',
-                                'terminated',
-                            ].map((x) => (
-                                <option key={x}>{x}</option>
-                            ))}
-                        </select>
-                    </label>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Branch
-                        <select
-                            value={form.data.branch_id}
-                            onChange={(e) =>
-                                form.setData('branch_id', e.target.value)
-                            }
-                            className={selectControl}
-                        >
-                            <option value="">None</option>
-                            {branches.map((x) => (
-                                <option key={x.id} value={x.id}>
-                                    {x.code} — {x.name}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Division
-                        <select
-                            value={form.data.division_id}
-                            onChange={(e) =>
-                                form.setData('division_id', e.target.value)
-                            }
-                            className={selectControl}
-                        >
-                            <option value="">None</option>
-                            {divisions
-                                .filter(
-                                    (x) =>
-                                        !form.data.branch_id ||
-                                        x.branch_id === form.data.branch_id,
-                                )
-                                .map((x) => (
-                                    <option key={x.id} value={x.id}>
-                                        {x.code} — {x.name}
-                                    </option>
-                                ))}
-                        </select>
-                    </label>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Department
-                        <select
-                            value={form.data.department_id}
-                            onChange={(e) =>
-                                form.setData('department_id', e.target.value)
-                            }
-                            className={selectControl}
-                        >
-                            <option value="">None</option>
-                            {departments
-                                .filter(
-                                    (x) =>
-                                        !form.data.division_id ||
-                                        x.division_id === form.data.division_id,
-                                )
-                                .map((x) => (
-                                    <option key={x.id} value={x.id}>
-                                        {x.code} — {x.name}
-                                    </option>
-                                ))}
-                        </select>
-                    </label>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Manager
-                        <select
-                            value={form.data.manager_id}
-                            onChange={(e) =>
-                                form.setData('manager_id', e.target.value)
-                            }
-                            className={selectControl}
-                        >
-                            <option value="">None</option>
-                            {employees
-                                .filter((x) => x.id !== employee?.id)
-                                .map((x) => (
-                                    <option key={x.id} value={x.id}>
-                                        {x.employee_code} — {x.first_name}
-                                    </option>
-                                ))}
-                        </select>
-                    </label>
-                    {employee && !employee.user_id && (
+        <>
+            <DiscardChangesDialog
+                open={guard.confirming}
+                onKeep={guard.keep}
+                onDiscard={guard.discard}
+            />
+            <CreateEditDialog
+                open={open}
+                minimized={minimized}
+                onMinimize={setMinimized}
+                onClose={() => guard.request(resetClose)}
+                title={employee ? 'Edit Employee' : 'New Employee'}
+                breadcrumb="HR / Employees"
+                entityLabel="Employee"
+                draftLabel={employee?.employee_code ?? 'New employee'}
+                storageKey="employee-editor-size"
+                status="Draft"
+                formId="employee-form"
+                processing={form.processing}
+                saveLabel="Save Employee"
+                errors={form.errors}
+                onSubmit={submit}
+            >
+                {() => (
+                    <div className="grid gap-4 p-5 sm:grid-cols-2">
+                        {input('employee_code', 'Employee code')}
+                        {input('first_name', 'First name')}
+                        {input('last_name', 'Last name')}
+                        {input('nickname', 'Nickname')}
+                        {input('email', 'Email', 'email')}
+                        {input('phone', 'Phone')}
+                        <PositionCombobox
+                            value={form.data.position_id}
+                            positions={positionsList}
+                            departmentId={form.data.department_id}
+                            onChange={(posId, posName) => {
+                                form.setData({
+                                    ...form.data,
+                                    position_id: posId,
+                                    position_title: posName,
+                                });
+                            }}
+                            onPositionCreated={(newPos) => {
+                                setPositionsList((prev) => [...prev, newPos]);
+                            }}
+                            error={form.errors.position_id}
+                        />
+                        {input('national_id', 'National ID / Passport')}
+                        {input('tax_id', 'Tax ID')}
+                        {input('bank_name', 'Bank name')}
+                        {input('bank_account_number', 'Bank account number')}
+                        {input('started_on', 'Start date', 'date')}
+                        {input('probation_ends_on', 'Probation ends', 'date')}
+                        {input('resigned_on', 'Resigned on', 'date')}
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Link ERP account
+                            Employment type
                             <select
-                                value={accountId}
-                                onChange={(e) => setAccountId(e.target.value)}
+                                value={form.data.employment_type}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'employment_type',
+                                        e.target.value,
+                                    )
+                                }
                                 className={selectControl}
                             >
-                                <option value="">Select account</option>
-                                {accounts.map((x) => (
+                                <option value="monthly">Monthly</option>
+                                <option value="daily">Daily</option>
+                                <option value="hourly">Hourly</option>
+                                <option value="contractor">Contractor</option>
+                            </select>
+                        </label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Status
+                            <select
+                                value={form.data.employment_status}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'employment_status',
+                                        e.target.value,
+                                    )
+                                }
+                                className={selectControl}
+                            >
+                                {[
+                                    'probation',
+                                    'active',
+                                    'suspended',
+                                    'resigned',
+                                    'terminated',
+                                ].map((x) => (
+                                    <option key={x}>{x}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Branch
+                            <select
+                                value={form.data.branch_id}
+                                onChange={(e) =>
+                                    form.setData('branch_id', e.target.value)
+                                }
+                                className={selectControl}
+                            >
+                                <option value="">None</option>
+                                {branches.map((x) => (
                                     <option key={x.id} value={x.id}>
-                                        {x.name} ({x.status})
+                                        {x.code} — {x.name}
                                     </option>
                                 ))}
                             </select>
-                            {accountId && (
-                                <button
-                                    type="button"
-                                    className="mt-2 text-sm text-indigo-600 dark:text-indigo-400"
-                                    onClick={() =>
-                                        router.patch(
-                                            route('hr.employees.account.link', {
-                                                employee: employee.id,
-                                            }),
-                                            { user_id: accountId },
-                                            { preserveScroll: true },
-                                        )
-                                    }
-                                >
-                                    Link selected account
-                                </button>
-                            )}
                         </label>
-                    )}
-                </div>
-            )}
-        </CreateEditDialog>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Division
+                            <select
+                                value={form.data.division_id}
+                                onChange={(e) =>
+                                    form.setData('division_id', e.target.value)
+                                }
+                                className={selectControl}
+                            >
+                                <option value="">None</option>
+                                {divisions
+                                    .filter(
+                                        (x) =>
+                                            !form.data.branch_id ||
+                                            x.branch_id === form.data.branch_id,
+                                    )
+                                    .map((x) => (
+                                        <option key={x.id} value={x.id}>
+                                            {x.code} — {x.name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Department
+                            <select
+                                value={form.data.department_id}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'department_id',
+                                        e.target.value,
+                                    )
+                                }
+                                className={selectControl}
+                            >
+                                <option value="">None</option>
+                                {departments
+                                    .filter(
+                                        (x) =>
+                                            !form.data.division_id ||
+                                            x.division_id ===
+                                                form.data.division_id,
+                                    )
+                                    .map((x) => (
+                                        <option key={x.id} value={x.id}>
+                                            {x.code} — {x.name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Manager
+                            <select
+                                value={form.data.manager_id}
+                                onChange={(e) =>
+                                    form.setData('manager_id', e.target.value)
+                                }
+                                className={selectControl}
+                            >
+                                <option value="">None</option>
+                                {employees
+                                    .filter((x) => x.id !== employee?.id)
+                                    .map((x) => (
+                                        <option key={x.id} value={x.id}>
+                                            {x.employee_code} — {x.first_name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </label>
+                        {employee && !employee.user_id && (
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Link ERP account
+                                <select
+                                    value={accountId}
+                                    onChange={(e) =>
+                                        setAccountId(e.target.value)
+                                    }
+                                    className={selectControl}
+                                >
+                                    <option value="">Select account</option>
+                                    {accounts.map((x) => (
+                                        <option key={x.id} value={x.id}>
+                                            {x.name} ({x.status})
+                                        </option>
+                                    ))}
+                                </select>
+                                {accountId && (
+                                    <button
+                                        type="button"
+                                        className="mt-2 text-sm text-indigo-600 dark:text-indigo-400"
+                                        onClick={() =>
+                                            router.patch(
+                                                route(
+                                                    'hr.employees.account.link',
+                                                    {
+                                                        employee: employee.id,
+                                                    },
+                                                ),
+                                                { user_id: accountId },
+                                                { preserveScroll: true },
+                                            )
+                                        }
+                                    >
+                                        Link selected account
+                                    </button>
+                                )}
+                            </label>
+                        )}
+                    </div>
+                )}
+            </CreateEditDialog>
+        </>
     );
 }
 

@@ -1,0 +1,47 @@
+{
+  "scope": "Chrome responsive emulation; actual Product dialog; no physical mobile keyboard claim",
+  "cases": [
+    {
+      "width": 1280,
+      "theme": "light",
+      "resizedWidth": 900,
+      "expanded": true,
+      "tabSteps": 24,
+      "draftRetained": true,
+      "headerContained": true,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "resizedWidth": 900,
+      "expanded": true,
+      "tabSteps": 24,
+      "draftRetained": true,
+      "headerContained": true,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "resizedWidth": 320,
+      "expanded": false,
+      "tabSteps": 24,
+      "draftRetained": true,
+      "headerContained": true,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "resizedWidth": 320,
+      "expanded": false,
+      "tabSteps": 24,
+      "draftRetained": true,
+      "headerContained": true,
+      "result": "PASS"
+    }
+  ],
+  "errors": [],
+  "status": "PASS"
+}

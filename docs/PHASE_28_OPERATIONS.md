@@ -1,5 +1,7 @@
 # Phase 28 — Local setup / operations — 2026-10-27
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 Local accepted; configured schemas current. ยังไม่มี POS staff/orders. เอกสารนี้ไม่อนุมัติ production/network/hardware/e-Tax เพิ่ม
 
 ## First setup

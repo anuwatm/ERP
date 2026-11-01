@@ -1,5 +1,11 @@
 # ERP Feature Plan
 
+> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](document/PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](document/acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](docs/LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง**; baselineนี้ไม่รวม28.8.1/28.8.2ที่ตรวจlocalภายหลัง.
+
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 > **สถานะ: planning history และ backlog.** ความสามารถที่ implement แล้วให้ดู [`docs/CURRENT_IMPLEMENTATION.md`](./docs/CURRENT_IMPLEMENTATION.md) และสถานะ phase ให้ดู [`checklist.md`](./checklist.md). ห้ามใช้ไฟล์นี้ตัดสินว่า feature ปัจจุบันยังไม่ implement.
 
 แผนนี้สรุปจากการเทียบแนวคิดของ ERP open-source หลายตัว เช่น BoomBigNose Company OS, ERPNext, IDURAR, FreshGerium, Hubleto, RKBM, Maruf ERP, Aureus ERP แล้วปรับให้เหมาะกับการทำระบบ ERP ใหม่แบบเริ่มเล็ก ใช้งานจริงได้ และค่อยขยาย

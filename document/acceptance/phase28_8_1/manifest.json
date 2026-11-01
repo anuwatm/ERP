@@ -1,0 +1,95 @@
+{
+  "scope": "Synthetic Phase28.8.1 local acceptance; no private key/session/database",
+  "files": [
+    {
+      "path": "browser.json",
+      "bytes": 1208,
+      "sha256": "5f81ac587cbd2fa7c90b4d2528b60a521789b28d3651d10db974feb5756a7490"
+    },
+    {
+      "path": "browser.log",
+      "bytes": 1334,
+      "sha256": "62502f811c8e57eaab6fad0b4e216e9f98101aab96bcbcce19af197eac7c89d9"
+    },
+    {
+      "path": "cleanup.json",
+      "bytes": 202,
+      "sha256": "615fdc947e6a45ff27e97224f78b8af1515eb47fdf5bd5bac2c992597579029e"
+    },
+    {
+      "path": "erp-regression.log",
+      "bytes": 310,
+      "sha256": "19d2a6f2a42e28559730c1669f0285ebdf1c8d0678ec493bb16cdf9d13d0f571"
+    },
+    {
+      "path": "frontend-check.log",
+      "bytes": 527,
+      "sha256": "e337b50411939b0421467370133cb1d520906510f2773f274c39ce2dea276d1c"
+    },
+    {
+      "path": "php-style.log",
+      "bytes": 35,
+      "sha256": "acbf5da6385237b6f4cd342c4454d93f6c4df8bfcf1687838edb3b651981c4e1"
+    },
+    {
+      "path": "php-syntax.log",
+      "bytes": 2027,
+      "sha256": "ada97c1dc4b80fd8c0dbb2b66a479bb67740675e54d463e73ebb0e319e33869a"
+    },
+    {
+      "path": "pos-regression.log",
+      "bytes": 306,
+      "sha256": "35a59e728e6cfd7d02cc7c0109fe1fcd5fe4c6db19a4c0029f6327ef6230312c"
+    },
+    {
+      "path": "README.md",
+      "bytes": 6874,
+      "sha256": "8e009f6f5c634ab290abae48d875ec78acbbe0673662f5be36c6d70e0c13b71b"
+    },
+    {
+      "path": "roundtrip.json",
+      "bytes": 754,
+      "sha256": "1e339acde51f19b33f2e38364a84c7b8b4ed437db256bb8a2c8422507e2350e9"
+    },
+    {
+      "path": "roundtrip.log",
+      "bytes": 564,
+      "sha256": "8e9ee6a0102c048bfa4931625421ce754e0a66fa5693fd93f8f82612a992b30a"
+    },
+    {
+      "path": "signature-verification.json",
+      "bytes": 140,
+      "sha256": "a70e9ec3f5708baccad5d1246592cd52d80d3bc394fdcf6232d13ec64598bce8"
+    },
+    {
+      "path": "signed-checkpoint.json",
+      "bytes": 7179,
+      "sha256": "b01066352fe880db8f68e3be04601ca620507a24a808aa2ef03216d30deb9c3d"
+    },
+    {
+      "path": "signed-revisions.json",
+      "bytes": 62694,
+      "sha256": "5683d643ece2627229337579300e9b91c47f47f27317339ebb6e861243abc077"
+    },
+    {
+      "path": "style-files.txt",
+      "bytes": 1149,
+      "sha256": "de44f95c388e52d15c13b90f4a2ca6ca23169b5b86e0e821c2638264d689712b"
+    },
+    {
+      "path": "synthetic-public.pem",
+      "bytes": 451,
+      "sha256": "82cf9d5231d01eccae45a1068072864ecbe1d65950d9a7c2fa69ab53c40d6ff1"
+    },
+    {
+      "path": "viewport-1280.png",
+      "bytes": 66715,
+      "sha256": "dc0a94def1d676dc594d307ec65fed6dd579c1afdf34e7634f22c5c4738bc81b"
+    },
+    {
+      "path": "viewport-375.png",
+      "bytes": 34843,
+      "sha256": "34e98fc63e12cee44378e783d87a1180ee0bdf30615069d0025bc698fe34454f"
+    }
+  ]
+}

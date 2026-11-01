@@ -1,5 +1,7 @@
 # Phase 28.2 — POS Architecture & Contract — Local Accepted
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 สถานะล่าสุด2026-10-27: Local implementation/architecture ผ่าน Geminiหมวด17. ฐานตามconfig migrateแล้ว; production/provider/network gates ยัง pending. [Current runtime](../docs/PHASE_28_POS.md) · [API](PHASE_28_API.md) · [Schema](PHASE_28_DATABASE.md). Design decisions ด้านล่างเป็น baseline2026-10-25; ให้ยึด current runtime เมื่อขัดกัน
 
 ฐาน requirement: [D01–D10](PHASE_28_1_POS_SCOPE.md), [checklist 28.2](../checklist.md), [Gemini section 15](../gemini.md). ผู้ใช้ยืนยันรอบนี้ว่ายังไม่มี e-Tax provider. Signing-owner selector และ local ABB/FULL/schema พัฒนาแล้ว; actual signing certificate/provider contract ยังไม่เลือกแทนผู้ใช้

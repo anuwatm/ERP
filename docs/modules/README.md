@@ -1,5 +1,7 @@
 # ERP Modules Documentation
 
+> 2026-10-29: [POS Config](../../document/POS_CONFIGURATION.md) เป็นหน้าผู้จัดการ local/loopback แยกจาก ERP installer. ไม่สร้างสาขา/manager คนแรกหรือแก้ .env/keys ผ่านหน้านี้. ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 เอกสารรายละเอียดแยกตาม module  
 **Project lock:** [`../../PROJECT.md`](../../PROJECT.md) · **MVP:** [`../../MVP_SCOPE.md`](../../MVP_SCOPE.md)  
 **Schema runtime:** migrations ใน `backend/database/migrations`; ภาพรวมที่ sync แล้ว: [`../../document/DATABASE_ERD.md`](../../document/DATABASE_ERD.md)

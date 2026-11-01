@@ -1,5 +1,7 @@
 # Setup Wizard สำหรับติดตั้งบน Web Server
 
+> 2026-10-29: [POS Config](../document/POS_CONFIGURATION.md) เป็นหน้าผู้จัดการ local/loopback แยกจาก ERP installer. ไม่สร้างสาขา/manager คนแรกหรือแก้ .env/keys ผ่านหน้านี้. ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 Wizard อยู่ที่ `backend/setup/` และ public entry อยู่ที่ `backend/public/setup/index.php`. หลัง deploy ให้เปิด `/setup`.
 
 ## Deployment bundle

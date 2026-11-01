@@ -734,3 +734,14 @@ Route::post('/pos-integration/{instance}/grants', [PosController::class, 'grant'
 Route::get('/pos-integration/{instance}/reconciliation', [PosController::class, 'reconciliation'])->middleware(['auth', 'verified', 'permission:pos.reconcile', 'throttle:30,1'])->name('pos.reconciliation');
 Route::post('/pos-integration/{instance}/pause', [PosController::class, 'pause'])->middleware(['auth', 'verified', 'permission:pos.manage', 'password.confirm', 'throttle:10,1'])->name('pos.pause');
 Route::post('/pos-events/{inbox}/replay', [PosController::class, 'replay'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.replay');
+
+Route::middleware(['auth', 'verified', 'permission:pos.manage', 'throttle:30,1'])->prefix('pos-membership')->name('pos-membership.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\PosMembershipController::class, 'index'])->name('index');
+    Route::middleware('password.confirm')->group(function () {
+        foreach (['register', 'promotion', 'allocate', 'publish'] as $action) {
+            Route::post('/'.$action, [\App\Http\Controllers\PosMembershipController::class, $action])->name($action);
+        }
+        Route::post('/requests/{id}', [\App\Http\Controllers\PosMembershipController::class, 'decide'])->name('decide');
+        Route::get('/requests/{id}/contact', [\App\Http\Controllers\PosMembershipController::class, 'contact'])->name('contact');
+    });
+});

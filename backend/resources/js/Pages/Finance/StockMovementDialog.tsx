@@ -48,16 +48,19 @@ export default function StockMovementDialog({
     initialProductId?: string;
     onClose: () => void;
 }) {
-    const form = useForm<MovementForm>({
+    const movementDefaults = (): MovementForm => ({
         product_id: initialProductId,
         movement_type: 'adjustment_in',
         movement_date: today,
         quantity: '',
-        unit_cost: '',
+        unit_cost: products.find((p) => p.id === initialProductId)?.cost
+            ? String(products.find((p) => p.id === initialProductId)?.cost)
+            : '',
         warehouse_id: '',
         note: '',
     });
 
+    const form = useForm<MovementForm>(movementDefaults());
     const [minimized, setMinimized] = useState(false);
     const [barcode, setBarcode] = useState('');
     const [scanResult, setScanResult] = useState('');
@@ -65,27 +68,28 @@ export default function StockMovementDialog({
 
     useEffect(() => {
         if (open) {
-            if (initialProductId) {
-                form.setData('product_id', initialProductId);
-                const prod = products.find((p) => p.id === initialProductId);
-                if (prod && prod.cost) {
-                    form.setData('unit_cost', String(prod.cost));
-                }
-            }
+            const data = movementDefaults();
+            form.setDefaults(data);
+            form.setData(data);
+            form.clearErrors();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, initialProductId]);
 
-    const isDirty =
-        form.data.product_id !== initialProductId ||
-        form.data.movement_type !== 'adjustment_in' ||
-        form.data.movement_date !== today ||
-        form.data.quantity !== '' ||
-        form.data.unit_cost !== '' ||
-        form.data.warehouse_id !== '' ||
-        form.data.note !== '';
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        setBarcode('');
+        setScanResult('');
+        onClose();
+    };
 
     const scan = () => {
         const product = products.find(
@@ -136,7 +140,7 @@ export default function StockMovementDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Post Stock Movement"
                 breadcrumb="Finance / Inventory"
                 entityLabel="Stock Adjustment"

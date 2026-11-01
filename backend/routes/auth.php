@@ -41,6 +41,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('two-factor/setup', [TwoFactorController::class, 'setup'])->middleware('password.confirm')->name('two-factor.setup');
+    Route::get('two-factor/recovery-codes', [TwoFactorController::class, 'recoveryCodes'])->middleware('password.confirm')->name('two-factor.recovery');
     Route::post('two-factor/setup', [TwoFactorController::class, 'confirmSetup'])->middleware(['password.confirm', 'throttle:5,1'])->name('two-factor.setup.confirm');
     Route::post('users/{user}/two-factor/reset', [TwoFactorController::class, 'resetByOwner'])->middleware(['password.confirm', 'throttle:5,1'])->name('two-factor.reset');
     Route::get('verify-email', EmailVerificationPromptController::class)

@@ -15,6 +15,7 @@ class ConnectorAuthentication
             && hash_equals(strtolower($fingerprint), strtolower((string) $request->server('SSL_CLIENT_FINGERPRINT'))), 401, 'Connector authentication required.');
         abort_unless(config('pos.instance_id') && hash_equals((string) config('pos.instance_id'), (string) $request->header('X-POS-Instance')), 403, 'Instance scope mismatch.');
         $scope = match (true) {
+            $request->isMethod('PUT') && $request->is('connector/v1/membership/*') => 'membership:publish',
             $request->isMethod('PUT') && $request->is('connector/v1/tax-profile') => 'tax:publish',
             $request->isMethod('GET') && $request->is('connector/v1/checkpoint') => 'checkpoint:read',
             $request->isMethod('PUT') && $request->is('connector/v1/checkpoints/*/ack') => 'checkpoint:ack',

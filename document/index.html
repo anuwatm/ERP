@@ -238,23 +238,25 @@
   </style>
 </head>
 <body>
+  <p style="padding:12px;text-align:center"><a href="../docs/LOCAL_ACCEPTANCE_20261030.md">Local acceptance 2026-10-30</a> · diagram18/18 · ยังไม่ได้ทดสอบกับระบบจริง · Phase28.8 deferred</p>
   <div class="container">
     <header class="header">
       <div class="badge-pill">Interactive Archify Diagrams</div>
       <h1>Company OS / Lightweight ERP</h1>
       <p class="subtitle">
-        ศูนย์รวมไดอะแกรมระบบทั้งหมด: สถาปัตยกรรม (Architecture), เวิร์กโฟลว์ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow) และวงจรสถานะ (Lifecycle)
+        <a href="DIAGRAM_NOTES.md">รายละเอียดประกอบ diagram</a> · ศูนย์รวมไดอะแกรมระบบทั้งหมด: สถาปัตยกรรม (Architecture), เวิร์กโฟลว์ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow) และวงจรสถานะ (Lifecycle)
       </p>
     </header>
 
-    <div class="section-title">Phase 28 — Local Complete / Production Pending (2026-10-27)</div>
+    <div class="section-title">Phase 28 + POS Config — Local / Production Pending (2026-10-29)</div>
+<section class="diagram-card" style="padding:20px"><h2>23 — POS Server และ Config</h2><p>ผู้จัดการตั้งค่าสาขา ประเภทกิจการ Terminal และพนักงานเฉพาะสาขาตน (local/loopback). POS 45 tests / 268 assertions; Gemini เดิมยังไม่รับรองโค้ด Config ใหม่. ยังไม่ทดสอบระบบ/อุปกรณ์จริง.</p><a href="23_pos_server_configuration.html" class="btn-open">เปิด Diagram</a> <a href="POS_CONFIGURATION.md" class="btn-json">คู่มือ Config</a> <a href="specs/23_pos_server_configuration.json" class="btn-json">JSON Spec</a></section>
     <div class="categories">
       <div class="diagram-card">
         <div class="card-top">
           <span class="type-tag type-architecture">Current documentation</span>
           <h2 class="card-title">Standalone POS &amp; ERP Connector</h2>
           <p class="card-desc">Gemini local PASS; configured ERP/POS databases current. Retail, Restaurant, Pharmacy, local ABB/FULL, checkpoint/archive/recovery พร้อมใน local. e-Tax provider, target network/hardware และ production UAT ยัง pending</p>
-          <div class="card-meta"><span class="meta-chip">ERP: 83 migrations / 0 pending</span><span class="meta-chip">POS: 17 migrations / 0 pending</span></div>
+          <div class="card-meta"><span class="meta-chip">ERP: 83 / pending0 (snapshot27Oct)</span><span class="meta-chip">POS: 17 / pending0 (snapshot27Oct)</span></div>
         </div>
         <div class="card-actions">
           <a href="../docs/PHASE_28_POS.md" class="btn-open">สถานะและคู่มือ &rarr;</a>

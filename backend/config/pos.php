@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'membership_fee_tax_rates' => ['0.00', '7.00'],
+    'local_membership_enabled' => env('POS_LOCAL_MEMBERSHIP_ENABLED', false),
+    'member_lookup_key' => env('POS_MEMBER_LOOKUP_KEY'),
+    'member_enrollment_private_key_path' => env('POS_MEMBER_ENROLLMENT_PRIVATE_KEY_PATH'),
+    'local_delivery_enabled' => env('POS_LOCAL_DELIVERY_ENABLED', false),
     'local_admin_sync_enabled' => env('POS_LOCAL_ADMIN_SYNC_ENABLED', false),
     'local_tax_documents_enabled' => env('POS_LOCAL_TAX_DOCUMENTS_ENABLED', false),
     'local_checkpoints_enabled' => env('POS_LOCAL_CHECKPOINTS_ENABLED', false),

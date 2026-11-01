@@ -1,0 +1,6 @@
+# Example only. Replace release path/user. Install EITHER systemd OR Supervisor for workers.
+* * * * * www-data cd /srv/company-erp/current/backend && /usr/bin/php artisan schedule:run >> /var/log/company-erp/scheduler.log 2>&1
+# Health monitor must alert on nonzero exit; disabled heartbeats are NOT healthy.
+*/2 * * * * www-data cd /srv/company-erp/current/backend && /usr/bin/php artisan ops:health >> /var/log/company-erp/health.log 2>&1
+# Deploy backup script/credential file before enabling this example.
+15 2 * * * root /usr/local/sbin/company-erp-backup >> /var/log/company-erp/backup.log 2>&1

@@ -1,0 +1,17 @@
+{
+  "Sarabun-Regular.ttf": {
+    "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Regular.ttf",
+    "sha256": "226d4f368fbc0457990ddef2692679badfd2c1a4e89e5ac4d43c10ba7743b2f1",
+    "bytes": 90220
+  },
+  "Sarabun-Bold.ttf": {
+    "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Bold.ttf",
+    "sha256": "d38308ca27d067b9a1b79006337c1f9a66c29aa016d96a9d88d3801da7fa83b9",
+    "bytes": 89804
+  },
+  "OFL.txt": {
+    "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/OFL.txt",
+    "sha256": "b26cae1321380296ba8311b632a397d5eac11b47197f9d0aa0b9310f1531ad60",
+    "bytes": 4387
+  }
+}

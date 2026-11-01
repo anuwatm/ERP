@@ -1,0 +1,17 @@
+{
+  "scope": "Local synthetic ERP review result and publication-change UI; direct fixture CLI refresh, no mTLS",
+  "pageErrors": [],
+  "reviewVisible": true,
+  "staleStatus": 409,
+  "staleCreatedNothing": true,
+  "refreshedAndRepriced": true,
+  "before": {
+    "sales": 6,
+    "claims": 6
+  },
+  "after": {
+    "sales": 7,
+    "claims": 7
+  },
+  "result": "PASS"
+}

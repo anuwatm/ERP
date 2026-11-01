@@ -1,0 +1,44 @@
+{
+  "scope": "Synthetic product create; actual HTTP browser; not load SLA",
+  "cases": [
+    {
+      "id": "B06",
+      "records": 1019,
+      "openMs": 3482,
+      "result": "PASS"
+    },
+    {
+      "id": "B04",
+      "lostResponseAfterCommit": true,
+      "draftRetained": true,
+      "failureNotice": true,
+      "retryRows": 1,
+      "result": "PASS"
+    },
+    {
+      "id": "B05-session",
+      "draftRetained": true,
+      "loginInSecondTab": true,
+      "passwordReconfirmed": true,
+      "result": "PASS"
+    },
+    {
+      "id": "B07",
+      "lostResponseAfterCommit": true,
+      "mime": "application/pdf",
+      "bytes": 110824,
+      "retryMs": 1427,
+      "draftAndFileRetained": true,
+      "retryDocuments": 1,
+      "result": "PASS"
+    }
+  ],
+  "pageErrors": [],
+  "commitStatuses": [
+    302,
+    302
+  ],
+  "uploadRowsBeforeLostResponse": 1,
+  "uploadCommitLocation": "/documents",
+  "status": "PASS"
+}

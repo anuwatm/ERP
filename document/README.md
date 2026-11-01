@@ -1,5 +1,9 @@
 # Company OS / Lightweight ERP — System Diagrams & Architecture
 
+> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](../docs/LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง**; Phase28.8 deferred.
+
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 **คู่มือใช้งาน POS:** [วิธีเปิดใช้และเลือกประเภทร้าน](README_POS.md) — ร้านค้าทั่วไป ร้านอาหาร และร้านขายยา พร้อมคู่มือแยกแต่ละประเภทใน `document/`
 
 **Phase 28 implementation:** [Work Register / Authorization / Results](PHASE_28_IMPLEMENTATION_STATUS.md) · [POS workspace](../pos/README.md) — Gemini ตรวจรับ local แล้ว; ฐาน ERP/POS ตาม config อัปเดตแล้ว. การเชื่อมต่อระบบและอุปกรณ์จริงยังไม่ได้ทดสอบ ดูหมายเหตุท้าย README นี้
@@ -12,7 +16,7 @@
 
 **คู่มืออ่านโค้ดทีละโมดูล (2026-10-24):** [Module Reference — Architecture, workflows, source map และข้อจำกัด implementation](modules/README.md)
 
-**Full Understand Pipeline (2026-10-24):** [ผลวิเคราะห์ 861 ไฟล์ พร้อม Knowledge Graph, 9 layers และ guided tour 15 ขั้น](UNDERSTAND_PIPELINE.md)
+**Understand ปัจจุบัน (2026-10-30):** [pipeline/coverage/ข้อจำกัด](UNDERSTAND_PIPELINE.md), รวม POS Config และ local closeout; จำนวนจริงอยู่ใน .ua/analysis-report.json. Diagram HTML ปัจจุบันดูหมายเลข23.
 
 **API Reference:** [API_Document](API_Document.md) — ครบ62 GET endpoints พร้อมข้อมูลที่ดึงได้ วิธีเรียก ตัวอย่าง output ความหมาย fields/scopes/parameters และ error reference
 

@@ -94,10 +94,10 @@ class PosCheckpointService
     {
         $p = $event['payload'];
         $table = match ($event['event_type']) {
-            'sale.completed' => 'pos_import_sales', 'sale.refunded' => 'pos_import_refunds', 'cash.moved' => 'pos_import_cash_movements', 'kitchen.consumed' => 'pos_import_kitchen_consumptions', 'kitchen.wasted' => 'pos_import_kitchen_waste', 'return.inspected' => 'pos_import_return_inspections', 'tax.document_issued' => 'pos_import_tax_documents', default => null
+            'member.requested' => 'pos_import_member_requests', 'delivery.updated' => 'pos_import_delivery_revisions', 'sale.completed' => 'pos_import_sales', 'sale.refunded' => 'pos_import_refunds', 'cash.moved' => 'pos_import_cash_movements', 'kitchen.consumed' => 'pos_import_kitchen_consumptions', 'kitchen.wasted' => 'pos_import_kitchen_waste', 'return.inspected' => 'pos_import_return_inspections', 'tax.document_issued' => 'pos_import_tax_documents', default => null
         };
         $key = match ($event['event_type']) {
-            'sale.completed' => 'source_sale_id', 'sale.refunded' => 'source_refund_id', 'cash.moved' => 'source_cash_movement_id', 'kitchen.consumed' => 'source_line_id', 'kitchen.wasted' => 'source_waste_id', 'return.inspected' => 'source_inspection_id', 'tax.document_issued' => 'source_document_id', default => null
+            'member.requested' => 'source_request_id', 'delivery.updated' => 'source_revision_id', 'sale.completed' => 'source_sale_id', 'sale.refunded' => 'source_refund_id', 'cash.moved' => 'source_cash_movement_id', 'kitchen.consumed' => 'source_line_id', 'kitchen.wasted' => 'source_waste_id', 'return.inspected' => 'source_inspection_id', 'tax.document_issued' => 'source_document_id', default => null
         };
         if (! $table) {
             $issues[] = ['code' => 'unrecognized_event_type', 'event_id' => $event['event_id']];

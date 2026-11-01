@@ -1,5 +1,7 @@
 # Phase 28 — Implementation work register
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 **Current acceptance:** [Geminiหมวด17](../gemini.md) local PASS; configured ERP/POS pending0 และ migration-fix regression46/422. [Current summary](../docs/PHASE_28_POS.md) · [API](PHASE_28_API.md) · [Schema](PHASE_28_DATABASE.md) · [Operations](../docs/PHASE_28_OPERATIONS.md). เนื้อหา dated work log ด้านล่างเป็นประวัติ ต้องไม่ใช้ pending statements เก่าแทนสถานะปัจจุบัน.
 
 สถานะล่าสุด 2026-10-27: Gemini ตรวจรับ local PASS ตาม gemini.md หมวด 17. อัปเดตฐาน ERP/POS ตาม config แล้วตามคำสั่งผู้ใช้; ดู [database upgrade](DATABASE_UPGRADE_20261027.md). ยังไม่ใช่ production sign-off. ให้ยึด [handoff ล่าสุด](PHASE_28_LOCAL_ACCEPTANCE.md) เมื่อขัดกับประวัติด้านล่าง

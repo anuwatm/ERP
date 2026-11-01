@@ -23,16 +23,24 @@ use App\Services\ChartOfAccountProvisioner;
 use App\Services\InventoryMovementService;
 use App\Services\Pos\PosCheckpointService;
 use App\Services\Pos\PosImportService;
+use App\Services\Pos\PosMemberRequestImportService;
+use App\Services\Pos\PosMembershipMasterService;
+use App\Services\Pos\PosMembershipPublicationService;
 use App\Services\Pos\PosQuotaRecoveryService;
 use App\Services\Pos\PosRecipeSnapshotService;
 use App\Services\Pos\PosReconciliationService;
 use App\Services\Pos\PosTransport;
 use App\Support\PosCanonicalJson;
+use Company\Pos\MemberEnvelope;
+use Company\Pos\PromotionCalculator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Tests\TestCase;
 
 class Phase28PosImportTest extends TestCase
@@ -95,6 +103,91 @@ class Phase28PosImportTest extends TestCase
         $this->assertSame(3, JournalEntry::count());
         $this->assertSame(1, StockMovement::where('movement_type', 'pos_sale')->count());
         $this->assertSame(8.0, (float) StockMovement::sum('quantity'));
+    }
+
+    private function deliveryEvent(int $version, string $delivery): array
+    {
+        $source = $this->event['payload'];
+        $id = (string) Str::uuid();
+        $p = ['revision_id' => $id, 'delivery_id' => $delivery, 'branch_id' => $source['branch_id'], 'staff_id' => $source['staff_id'], 'version' => $version, 'status' => $version === 1 ? 'draft' : 'ready', 'settlement_mode' => 'cod', 'source_sale_id' => null, 'currency' => 'THB', 'quote_total' => '10.70', 'cash_collected' => '0.00', 'cash_remitted' => '0.00', 'cash_refunded' => '0.00', 'inventory_status' => 'reserved', 'financial_status' => 'policy_pending', 'snapshot_hash' => str_repeat('a', 64), 'occurred_at' => $source['occurred_at'], 'business_timezone' => 'Asia/Bangkok'];
+        $event = array_replace($this->event, ['event_id' => (string) Str::uuid(), 'event_type' => 'delivery.updated', 'aggregate_id' => $id, 'source_sequence' => $version, 'payload' => $p, 'payload_hash' => hash('sha256', PosCanonicalJson::encode($p))]);
+        unset($event['signature']);
+        openssl_sign(PosCanonicalJson::encode($event), $signature, openssl_pkey_get_private($this->pem), OPENSSL_ALGO_SHA256);
+
+        return $event + ['signature' => base64_encode($signature)];
+    }
+
+    public function test_delivery_revisions_are_signed_ordered_and_never_post_cash_sales_or_stock(): void
+    {
+        config(['pos.local_delivery_enabled' => true]);
+        DB::table('pos_instances')->where('id', $this->instance)->update(['business_type' => 'retail']);
+        DB::table('pos_staff_authorities')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $this->instance, 'source_staff_id' => $this->event['payload']['staff_id'], 'role' => 'cashier', 'active' => true]);
+        $id = (string) Str::uuid();
+        $first = $this->deliveryEvent(1, $id);
+        $second = $this->deliveryEvent(2, $id);
+        $service = app(PosImportService::class);
+        $service->receive($this->instance, [$second], 2);
+        $this->assertSame('dependency_pending', $service->process($this->instance, $second['event_id'])['status']);
+        $service->receive($this->instance, [$first], 2);
+        $this->assertSame('accepted', $service->process($this->instance, $first['event_id'])['status']);
+        $this->mock(PosTransport::class, function ($mock) {
+            $mock->shouldReceive('request')->with($this->instance, 'events', \Mockery::type('array'))->once()->andReturn(['events' => [], 'next_cursor' => 2]);
+            $mock->shouldReceive('request')->with($this->instance, 'result', \Mockery::type('array'), \Mockery::type('string'))->andReturn(['status' => 'recorded']);
+        });
+        $this->artisan('pos:sync', ['instance' => $this->instance])->assertExitCode(0);
+        $this->assertSame('accepted', DB::table('pos_sync_inbox')->where('event_id', $second['event_id'])->value('status'));
+        $this->assertSame('accepted', $service->process($this->instance, $second['event_id'])['status']);
+        $this->assertSame('policy_pending', $service->process($this->instance, $second['event_id'])['financial_status']);
+        $fourth = $this->deliveryEvent(4, $id);
+        $service->receive($this->instance, [$fourth], 4);
+        $this->assertSame('dependency_pending', $service->process($this->instance, $fourth['event_id'])['status']);
+        $this->mock(PosTransport::class, function ($mock) {
+            $mock->shouldReceive('request')->with($this->instance, 'events', \Mockery::type('array'))->twice()->andReturn(['events' => [], 'next_cursor' => 4]);
+            $mock->shouldReceive('request')->with($this->instance, 'result', \Mockery::type('array'), \Mockery::type('string'))->andReturn(['status' => 'recorded']);
+        });
+        $this->artisan('pos:sync', ['instance' => $this->instance])->assertExitCode(0);
+        $this->assertSame(1, DB::table('pos_sync_inbox')->where('event_id', $fourth['event_id'])->value('attempts'));
+        $third = $this->deliveryEvent(3, $id);
+        $service->receive($this->instance, [$third], 4);
+        $this->assertSame('accepted', $service->process($this->instance, $third['event_id'])['status']);
+        $this->artisan('pos:sync', ['instance' => $this->instance])->assertExitCode(0);
+        $this->assertSame('accepted', DB::table('pos_sync_inbox')->where('event_id', $fourth['event_id'])->value('status'));
+        $this->assertDatabaseCount('pos_import_delivery_revisions', 4);
+        $this->assertSame(0, Invoice::count());
+        $this->assertSame(0, Payment::count());
+        $this->assertSame(0, JournalEntry::count());
+        $this->assertSame(1, StockMovement::count());
+        $this->assertSame(0.0, (float) DB::table('pos_stock_entitlements')->sum('consumed_quantity'));
+    }
+
+    public function test_disabled_delivery_worker_does_not_require_the_new_delivery_table(): void
+    {
+        config(['pos.local_delivery_enabled' => false]);
+        Schema::drop('pos_import_delivery_revisions');
+        $this->mock(PosTransport::class, function ($mock) {
+            $mock->shouldReceive('request')->with($this->instance, 'events', \Mockery::type('array'))->once()->andReturn(['events' => [], 'next_cursor' => 0]);
+        });
+        $this->artisan('pos:sync', ['instance' => $this->instance])->assertExitCode(0);
+    }
+
+    public function test_delivery_import_rejects_unknown_staff_and_forged_signatures_and_pharmacy(): void
+    {
+        config(['pos.local_delivery_enabled' => true]);
+        $event = $this->deliveryEvent(1, (string) Str::uuid());
+        $service = app(PosImportService::class);
+        $service->receive($this->instance, [$event], 1);
+        $this->assertSame('needs_review', $service->process($this->instance, $event['event_id'])['status']);
+        $this->assertDatabaseCount('pos_import_delivery_revisions', 0);
+        DB::table('pos_staff_authorities')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $this->instance, 'source_staff_id' => $this->event['payload']['staff_id'], 'role' => 'manager', 'active' => true]);
+        $event['event_id'] = (string) Str::uuid();
+        $event['source_sequence'] = 2; // Deliberately not re-signed.
+        $service->receive($this->instance, [$event], 2);
+        $this->assertSame('needs_review', $service->process($this->instance, $event['event_id'])['status']);
+        DB::table('pos_instances')->where('id', $this->instance)->update(['business_type' => 'pharmacy']);
+        $event = $this->deliveryEvent(3, (string) Str::uuid());
+        $service->receive($this->instance, [$event], 3);
+        $this->assertSame('needs_review', $service->process($this->instance, $event['event_id'])['status']);
+        $this->assertDatabaseCount('pos_import_delivery_revisions', 0);
     }
 
     public function test_stock_shortage_keeps_financial_evidence_and_retry_finishes_inventory_only(): void
@@ -270,15 +363,28 @@ class Phase28PosImportTest extends TestCase
 
     public function test_pharmacy_inspection_waits_for_refund_then_restores_original_cost_once_without_quota(): void
     {
-        config(['pos.local_refunds_enabled' => true, 'pos.local_return_inspections_enabled' => true]);
+        $this->verifyInspectionReturn(false);
+    }
+
+    public function test_retail_delivery_inspection_without_lot_restores_original_cost_once(): void
+    {
+        $this->verifyInspectionReturn(true);
+    }
+
+    private function verifyInspectionReturn(bool $retail): void
+    {
+        config(['pos.local_delivery_enabled' => $retail, 'pos.local_refunds_enabled' => true, 'pos.local_return_inspections_enabled' => true]);
         $instance = DB::table('pos_instances')->first();
-        DB::table('pos_instances')->where('id', $instance->id)->update(['business_type' => 'pharmacy']);
+        DB::table('pos_instances')->where('id', $instance->id)->update(['business_type' => $retail ? 'retail' : 'pharmacy']);
         $source = $this->event['payload'];
         $line = $source['lines'][0];
-        $lot = InventoryLot::create(['org_id' => $instance->org_id, 'product_id' => $line['product_id'], 'lot_no' => 'SYNTHETIC-RETURN', 'expires_at' => now()->addMonth()]);
-        DB::table('pos_stock_entitlements')->update(['inventory_lot_id' => $lot->id]);
-        StockMovement::query()->update(['inventory_lot_id' => $lot->id]);
-        $this->event['payload']['lines'][0]['allocations'][0]['lot_id'] = $lot->id;
+        $lot = null;
+        if (! $retail) {
+            $lot = InventoryLot::create(['org_id' => $instance->org_id, 'product_id' => $line['product_id'], 'lot_no' => 'SYNTHETIC-RETURN', 'expires_at' => now()->addMonth()]);
+            DB::table('pos_stock_entitlements')->update(['inventory_lot_id' => $lot->id]);
+            StockMovement::query()->update(['inventory_lot_id' => $lot->id]);
+            $this->event['payload']['lines'][0]['allocations'][0]['lot_id'] = $lot->id;
+        }
         $this->event['payload']['lines'][0]['conversion_factor'] = '1.0000';
         $this->event['payload']['lines'][0]['conversion_version'] = 'base';
         $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($this->event['payload']));
@@ -286,10 +392,10 @@ class Phase28PosImportTest extends TestCase
         $service = app(PosImportService::class);
         $service->receive($this->instance, [$this->event], 1);
         $this->assertSame('accepted', $service->process($this->instance, $this->event['event_id'])['status']);
-        DB::table('pos_staff_authorities')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $instance->id, 'source_staff_id' => $source['staff_id'], 'role' => 'manager', 'active' => true, 'pharmacist_qualified' => true]);
+        DB::table('pos_staff_authorities')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $instance->id, 'source_staff_id' => $source['staff_id'], 'role' => 'manager', 'active' => true, 'pharmacist_qualified' => ! $retail]);
         $refundId = (string) Str::uuid();
         $inspectionId = (string) Str::uuid();
-        $inspection = ['inspection_id' => $inspectionId, 'sale_id' => $source['sale_id'], 'refund_id' => $refundId, 'source_line_id' => $line['line_id'], 'grant_id' => $line['allocations'][0]['grant_id'], 'base_quantity' => '1.0000', 'decision' => 'restock', 'packaging_intact' => true, 'storage_verified' => true, 'lot_verified' => true, 'reason' => 'Synthetic intact return', 'branch_id' => $source['branch_id'], 'staff_id' => $source['staff_id'], 'product_id' => $line['product_id'], 'lot_id' => $lot->id, 'occurred_at' => $source['occurred_at'], 'business_timezone' => 'Asia/Bangkok'];
+        $inspection = ['inspection_id' => $inspectionId, 'sale_id' => $source['sale_id'], 'refund_id' => $refundId, 'source_line_id' => $line['line_id'], 'grant_id' => $line['allocations'][0]['grant_id'], 'base_quantity' => '1.0000', 'decision' => 'restock', 'packaging_intact' => true, 'storage_verified' => true, 'lot_verified' => true, 'reason' => 'Synthetic intact return', 'branch_id' => $source['branch_id'], 'staff_id' => $source['staff_id'], 'product_id' => $line['product_id'], 'lot_id' => $lot?->id, 'occurred_at' => $source['occurred_at'], 'business_timezone' => 'Asia/Bangkok'];
         $this->event = array_merge($this->event, ['event_id' => (string) Str::uuid(), 'source_sequence' => 2, 'event_type' => 'return.inspected', 'aggregate_id' => $inspectionId, 'payload' => $inspection, 'payload_hash' => hash('sha256', PosCanonicalJson::encode($inspection))]);
         $this->sign();
         $inspectionEvent = $this->event;
@@ -547,7 +653,9 @@ class Phase28PosImportTest extends TestCase
         $this->assertSame(2.0, (float) DB::table('pos_stock_entitlements')->sum('consumed_quantity'));
         $user = User::find(DB::table('pos_instances')->value('actor_id'));
         $this->permission($user, ['tax_reports.view', 'payments.reverse', 'invoices.void', 'invoices.view']);
-        $this->actingAs($user)->get('/tax-reports')->assertOk()->assertInertia(fn ($page) => $page->has('salesRows', 2)->where('salesRows.0.total', '21.40')->where('salesRows.1.total', '-10.70'));
+        // Select the source business date explicitly; UTC and Bangkok can be in different months.
+        $reportDate = Carbon::parse($source['occurred_at'])->setTimezone($source['business_timezone'])->toDateString();
+        $this->actingAs($user)->get('/tax-reports?'.http_build_query(['date_from' => $reportDate, 'date_to' => $reportDate]))->assertOk()->assertInertia(fn ($page) => $page->has('salesRows', 2)->where('salesRows.0.total', '21.40')->where('salesRows.1.total', '-10.70'));
         $this->withSession(['auth.password_confirmed_at' => time()])->postJson('/payments/'.DB::table('pos_import_sales')->value('payment_id').'/reverse')->assertUnprocessable();
         $this->get('/invoices/'.$invoice->id.'/print')->assertOk()->assertViewHas('document', fn ($document) => $document['title'] === 'POS Ledger Copy' && $document['total'] === '21.40');
         $refund['refund_id'] = (string) Str::uuid();
@@ -886,5 +994,259 @@ class Phase28PosImportTest extends TestCase
         $this->assertSame(3.0, (float) StockMovement::where('product_id', $f['ingredient'])->sum('quantity'));
         $this->assertSame(0, Invoice::count());
         $this->assertSame(0, Payment::count());
+    }
+
+    private function membershipPublicationFixture(): array
+    {
+        config(['pos.local_membership_enabled' => true, 'pos.member_lookup_key' => str_repeat('synthetic-key-', 4)]);
+        $instance = DB::table('pos_instances')->where('id', $this->instance)->first();
+        $actor = User::findOrFail($instance->actor_id);
+        $this->permission($actor, ['pos.manage']);
+        $master = app(PosMembershipMasterService::class);
+        $member = $master->register($actor, ['request_key' => (string) Str::uuid(), 'name' => 'Synthetic Member เท่านั้น', 'phone' => '0000000101', 'tier' => 'standard', 'consent_confirmed' => true]);
+        $p = ['id' => (string) Str::uuid(), 'version' => 1, 'mode' => 'fixed', 'value' => '2.00', 'currency' => $this->event['payload']['currency'], 'starts_at' => now()->subDay()->utc()->format('Y-m-d\TH:i:s\Z'), 'ends_at' => now()->addDay()->utc()->format('Y-m-d\TH:i:s\Z'), 'branch_ids' => [$instance->branch_id], 'business_types' => ['retail', 'restaurant', 'pharmacy'], 'member_required' => true, 'member_tiers' => ['standard'], 'product_ids' => [], 'minimum_spend' => '0.00', 'minimum_eligible_only' => true, 'minimum_components' => ['merchandise'], 'discount_components' => ['merchandise'], 'max_uses' => 1, 'per_member_limit' => 1, 'combination' => 'exclusive', 'refund_entitlement' => 'full_only'];
+        $rule = $master->definePromotion($actor, 'Synthetic Promotion', $p);
+        $publisher = app(PosMembershipPublicationService::class);
+        $request = (string) Str::uuid();
+        $rights = $publisher->allocate($actor, $this->instance, $rule, $member['member_id'], 1, $request);
+        $this->assertSame($rights, $publisher->allocate($actor, $this->instance, $rule, $member['member_id'], 1, $request));
+        DB::table('pos_staff_authorities')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $this->instance, 'source_staff_id' => $this->event['payload']['staff_id'], 'role' => 'manager', 'active' => true]);
+        $pub = $publisher->create($actor, $this->instance, [$member['member_id']], [$rule]);
+
+        return compact('pub', 'p', 'actor', 'member', 'rule', 'rights');
+    }
+
+    private function applyMembershipEvent(array $fixture): void
+    {
+        $p = &$this->event['payload'];
+        $p['occurred_at'] = now()->utc()->toIso8601String();
+        $q = (new PromotionCalculator)->quote($fixture['p'], [['id' => $p['lines'][0]['product_id'], 'kind' => 'merchandise', 'product_id' => $p['lines'][0]['product_id'], 'net' => '20.00', 'tax_rate' => '7.00']], ['branch_id' => $p['branch_id'], 'business_type' => 'retail', 'currency' => $p['currency'], 'manual_discount_applied' => false, 'member' => ['id' => $fixture['member']['member_id'], 'tier' => 'standard', 'status' => 'active', 'valid_until' => Carbon::parse($fixture['pub']['valid_until'])->utc()->format('Y-m-d\TH:i:s\Z')]], now()->toDateTimeImmutable());
+        $p['subtotal'] = '18.00';
+        $p['tax_amount'] = '1.26';
+        $p['total'] = '19.26';
+        $p['change'] = '10.74';
+        $p['lines'][0] = array_replace($p['lines'][0], ['discount_amount' => '2.00', 'subtotal' => '18.00', 'tax_amount' => '1.26', 'total' => '19.26']);
+        $p['membership'] = ['publication_id' => $fixture['pub']['id'], 'member_id' => $fixture['member']['member_id'], 'promotion_id' => $fixture['p']['id'], 'claim_id' => (string) Str::uuid(), 'grant_id' => $fixture['rights'][0], 'quote' => $q, 'evaluated_at' => $p['occurred_at']];
+        $this->event['occurred_at'] = $p['occurred_at'];
+        $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($p));
+        $this->sign();
+    }
+
+    public function test_membership_promotion_posts_net_vat_and_gl_once_and_global_grants_are_bounded(): void
+    {
+        $f = $this->membershipPublicationFixture();
+        $this->applyMembershipEvent($f);
+        $service = app(PosImportService::class);
+        $service->receive($this->instance, [$this->event], 1);
+        $this->assertSame('accepted', $service->process($this->instance, $this->event['event_id'])['status']);
+        $this->assertSame('accepted', $service->process($this->instance, $this->event['event_id'])['status']);
+        $this->assertSame('19.26', Invoice::first()->total);
+        $this->assertSame('1.26', Invoice::first()->tax_amount);
+        $this->assertSame('19.26', Payment::first()->amount);
+        $this->assertDatabaseCount('pos_import_promotion_claims', 1);
+        $this->assertDatabaseCount('journal_entries', 3);
+        $cipher = DB::table('pos_members')->value('contact');
+        $this->assertStringNotContainsString('0000000101', $cipher);
+        $this->assertStringNotContainsString('Synthetic Member', $cipher);
+        $this->assertStringNotContainsString('0000000101', json_encode($f['pub']));
+        try {
+            app(PosMembershipPublicationService::class)->allocate($f['actor'], $this->instance, $f['rule'], $f['member']['member_id'], 1, (string) Str::uuid());
+            $this->fail('Central limit exceeded.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+    }
+
+    public function test_forged_promotion_allocation_is_rejected_before_financial_posting(): void
+    {
+        $f = $this->membershipPublicationFixture();
+        $this->applyMembershipEvent($f);
+        $this->event['payload']['membership']['quote']['discount_amount'] = '3.00';
+        $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($this->event['payload']));
+        $this->sign();
+        $service = app(PosImportService::class);
+        $service->receive($this->instance, [$this->event], 1);
+        $this->assertSame('needs_review', $service->process($this->instance, $this->event['event_id'])['status']);
+        $this->assertDatabaseCount('invoices', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('pos_import_promotion_claims', 0);
+    }
+
+    public function test_promotion_grant_reuse_waits_for_signed_full_refund_then_worker_resumes(): void
+    {
+        $f = $this->membershipPublicationFixture();
+        $this->applyMembershipEvent($f);
+        $first = $this->event;
+        $service = app(PosImportService::class);
+        $service->receive($this->instance, [$first], 1);
+        $this->assertSame('accepted', $service->process($this->instance, $first['event_id'])['status']);
+        $this->event['event_id'] = (string) Str::uuid();
+        $this->event['source_sequence'] = 3;
+        $this->event['aggregate_id'] = (string) Str::uuid();
+        $this->event['payload']['sale_id'] = $this->event['aggregate_id'];
+        $this->event['payload']['lines'][0]['line_id'] = (string) Str::uuid();
+        $this->event['payload']['membership']['claim_id'] = (string) Str::uuid();
+        $this->event['payload']['receipt_no'] = 'B1-T1-0002';
+        $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($this->event['payload']));
+        $this->sign();
+        $second = $this->event;
+        $service->receive($this->instance, [$second], 3);
+        $this->assertSame('dependency_pending', $service->process($this->instance, $second['event_id'])['status']);
+        $this->assertDatabaseCount('invoices', 1);
+        config(['pos.local_refunds_enabled' => true]);
+        $source = $first['payload'];
+        $refund = ['refund_id' => (string) Str::uuid(), 'sale_id' => $source['sale_id'], 'branch_id' => $source['branch_id'], 'terminal_id' => $source['terminal_id'], 'shift_id' => $source['shift_id'], 'staff_id' => $source['staff_id'], 'currency' => $source['currency'], 'reason' => 'customer_return', 'subtotal' => '18.00', 'tax_amount' => '1.26', 'total' => '19.26', 'occurred_at' => $source['occurred_at'], 'business_timezone' => 'Asia/Bangkok', 'lines' => [['source_line_id' => $source['lines'][0]['line_id'], 'product_id' => $source['lines'][0]['product_id'], 'quantity' => '2.0000', 'returned_quantity' => '0.0000', 'subtotal' => '18.00', 'tax_amount' => '1.26', 'total' => '19.26', 'return_status' => 'not_returned']]];
+        $this->event = array_replace($first, ['event_id' => (string) Str::uuid(), 'source_sequence' => 2, 'event_type' => 'sale.refunded', 'aggregate_id' => $refund['refund_id'], 'payload' => $refund, 'payload_hash' => hash('sha256', PosCanonicalJson::encode($refund))]);
+        $this->sign();
+        $service->receive($this->instance, [$this->event], 3);
+        $this->assertSame('accepted', $service->process($this->instance, $this->event['event_id'])['status']);
+        $this->mock(PosTransport::class, function ($mock) {
+            $mock->shouldReceive('request')->with($this->instance, 'membership', \Mockery::type('array'), \Mockery::type('string'))->andReturn(['status' => 'accepted']);
+            $mock->shouldReceive('request')->with($this->instance, 'events', \Mockery::type('array'))->once()->andReturn(['events' => [], 'next_cursor' => 3]);
+            $mock->shouldReceive('request')->with($this->instance, 'result', \Mockery::type('array'), \Mockery::type('string'))->andReturn(['status' => 'recorded']);
+        });
+        $this->artisan('pos:sync', ['instance' => $this->instance])->assertExitCode(0);
+        $this->assertSame('accepted', DB::table('pos_sync_inbox')->where('event_id', $second['event_id'])->value('status'));
+        $this->assertDatabaseCount('pos_import_promotion_claims', 2);
+        $this->assertSame(1, DB::table('pos_import_promotion_claims')->whereNotNull('released_at')->count());
+        $this->assertDatabaseCount('invoices', 2);
+        $this->assertSame('0.00', Invoice::findOrFail(DB::table('pos_import_sales')->where('source_sale_id', $source['sale_id'])->value('invoice_id'))->total);
+    }
+
+    public function test_member_enrollment_is_sealed_pending_until_explicit_erp_review_and_masked_afterwards(): void
+    {
+        $f = $this->membershipPublicationFixture();
+        $path = tempnam(sys_get_temp_dir(), 'synthetic-enrollment-');
+        try {
+            $options = ['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA];
+            $configPath = dirname(PHP_BINARY).'/extras/ssl/openssl.cnf';
+            if (is_file($configPath)) {
+                $options['config'] = $configPath;
+            }
+            $key = openssl_pkey_new($options);
+            openssl_pkey_export($key, $private, null, $options);
+            file_put_contents($path, $private);
+            config(['pos.member_enrollment_private_key_path' => $path]);
+            $pub = app(PosMembershipPublicationService::class)->create($f['actor'], $this->instance, [$f['member']['member_id']], [$f['rule']]);
+            $requestId = (string) Str::uuid();
+            $contact = ['name' => 'Synthetic Pending Member', 'phone' => '0000000102', 'consent_confirmed' => true];
+            $sealed = (new MemberEnvelope)->seal($pub['enrollment_key']['public_key'], $contact, $this->instance.'|'.$pub['branch_id'].'|'.$requestId);
+            $this->assertStringNotContainsString($contact['name'], json_encode($sealed));
+            $this->assertStringNotContainsString($contact['phone'], json_encode($sealed));
+            $payload = ['request_id' => $requestId, 'branch_id' => $pub['branch_id'], 'staff_id' => $this->event['payload']['staff_id'], 'publication_id' => $pub['id'], 'envelope' => $sealed, 'occurred_at' => now()->utc()->toIso8601String(), 'business_timezone' => 'Asia/Bangkok'];
+            $this->event = array_replace($this->event, ['event_type' => 'member.requested', 'aggregate_id' => $requestId, 'payload' => $payload, 'occurred_at' => $payload['occurred_at'], 'payload_hash' => hash('sha256', PosCanonicalJson::encode($payload))]);
+            $this->sign();
+            $service = app(PosImportService::class);
+            $service->receive($this->instance, [$this->event], 1);
+            $result = $service->process($this->instance, $this->event['event_id']);
+            $this->assertSame('accepted', $result['status']);
+            $this->assertSame('pending_review', $result['member_status']);
+            $this->assertDatabaseCount('pos_members', 1);
+            $row = DB::table('pos_import_member_requests')->first();
+            $this->assertStringNotContainsString($contact['name'], $row->contact);
+            $this->assertStringNotContainsString($contact['phone'], $row->source_snapshot);
+            $review = app(PosMemberRequestImportService::class);
+            $approved = $review->decide($f['actor'], $row->id, 'approve', null);
+            $this->assertSame($approved, $review->decide($f['actor'], $row->id, 'approve', null));
+            $this->assertDatabaseCount('pos_members', 2);
+            $updated = app(PosMembershipPublicationService::class)->forSync($this->instance, true, $f['actor']);
+            $this->assertContains($approved['member_id'], array_column($updated['members'], 'member_id'));
+            $this->assertSame('approved', $updated['decisions'][0]['status']);
+            $this->assertStringNotContainsString($contact['phone'], json_encode($updated));
+            $this->actingAsOrgUser($f['actor'])->get(route('pos-membership.index'))->assertOk()->assertDontSee($contact['name'])->assertDontSee($contact['phone']);
+            $this->withSession(['auth.password_confirmed_at' => time()])->get(route('pos-membership.contact', $row->id))->assertOk()->assertJsonPath('phone', $contact['phone'])->assertHeader('Cache-Control', 'no-store, private');
+        } finally {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+    }
+
+    public function test_membership_master_scopes_org_and_never_silently_merges_duplicate_contacts(): void
+    {
+        $f = $this->membershipPublicationFixture();
+        $master = app(PosMembershipMasterService::class);
+        try {
+            $master->register($f['actor'], ['request_key' => (string) Str::uuid(), 'name' => 'Synthetic Duplicate', 'phone' => '000-000-0101', 'tier' => 'standard', 'consent_confirmed' => true]);
+            $this->fail('Phone duplicate auto-created.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $other = User::factory()->create();
+        $this->permission($other, ['pos.manage']);
+        $member = $master->register($other, ['request_key' => (string) Str::uuid(), 'name' => 'Other Synthetic', 'phone' => '0000000101', 'tier' => 'standard', 'consent_confirmed' => true]);
+        $this->assertNotSame($f['member']['member_id'], $member['member_id']);
+        $matches = $master->candidates($other, '0000000101');
+        $this->assertCount(1, $matches);
+        $this->assertSame($member['member_id'], $matches[0]['member_id']);
+        $instance = DB::table('pos_instances')->where('id', $this->instance)->first();
+        $this->expectException(ModelNotFoundException::class);
+        $master->memberForBranch($other, $f['member']['member_id'], $instance->branch_id);
+    }
+
+    public function test_delivery_promotion_claim_survives_publication_expiry_and_releases_only_after_inspection(): void
+    {
+        $f = $this->membershipPublicationFixture();
+        config(['pos.local_delivery_enabled' => true]);
+        $id = (string) Str::uuid();
+        $base = $this->deliveryEvent(1, $id);
+        $product = $this->event['payload']['lines'][0]['product_id'];
+        $evaluated = now()->utc()->toIso8601String();
+        $basis = [['id' => $product, 'kind' => 'merchandise', 'product_id' => $product, 'net' => '10.00', 'tax_rate' => '7.00']];
+        $q = (new PromotionCalculator)->quote($f['p'], $basis, ['branch_id' => $base['payload']['branch_id'], 'business_type' => 'retail', 'currency' => 'THB', 'manual_discount_applied' => false, 'member' => ['id' => $f['member']['member_id'], 'tier' => 'standard', 'status' => 'active', 'valid_until' => Carbon::parse($f['pub']['valid_until'])->utc()->format('Y-m-d\TH:i:s\Z')]], now()->toDateTimeImmutable());
+        $proof = ['publication_id' => $f['pub']['id'], 'member_id' => $f['member']['member_id'], 'promotion_id' => $f['p']['id'], 'claim_id' => (string) Str::uuid(), 'grant_id' => $f['rights'][0], 'quote' => $q, 'evaluated_at' => $evaluated];
+        $service = app(PosImportService::class);
+        $sequence = 0;
+        foreach (['draft', 'ready', 'dispatched', 'failed', 'return_review', 'returned'] as $offset => $status) {
+            if ($status === 'dispatched') {
+                $this->travel(16)->minutes();
+            }
+            $this->event = $base;
+            $this->event['event_id'] = (string) Str::uuid();
+            $this->event['aggregate_id'] = (string) Str::uuid();
+            $this->event['source_sequence'] = ++$sequence;
+            $p = $base['payload'];
+            $p['revision_id'] = $this->event['aggregate_id'];
+            $p['version'] = $offset + 1;
+            $p['status'] = $status;
+            $p['quote_total'] = $status === 'draft' ? '10.70' : '8.56';
+            $p['occurred_at'] = now()->utc()->toIso8601String();
+            if ($status !== 'draft') {
+                $p += ['membership' => $proof, 'promotion_lines' => $basis, 'promotion_catalog_version' => 'v1', 'promotion_cart' => [['product_id' => $product, 'quantity' => '1', 'unit' => 'pcs']], 'membership_released' => $status === 'returned'];
+                $p['fees_total'] = '0.00';
+            }
+            $p['inventory_status'] = $status === 'returned' ? 'returned_inspected' : 'reserved';
+            $this->event['payload'] = $p;
+            $this->event['occurred_at'] = $p['occurred_at'];
+            $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($p));
+            $this->sign();
+            $service->receive($this->instance, [$this->event], $sequence);
+            $this->assertSame('accepted', $service->process($this->instance, $this->event['event_id'])['status']);
+            if ($status === 'failed' || $status === 'return_review') {
+                $this->assertSame($proof['grant_id'], DB::table('pos_import_promotion_claims')->value('active_slot'));
+            }
+            if ($status === 'failed') {
+                // A signed cancellation after dispatch cannot bypass physical return inspection.
+                $this->event['event_id'] = (string) Str::uuid();
+                $this->event['aggregate_id'] = (string) Str::uuid();
+                $this->event['source_sequence'] = ++$sequence;
+                $forged = $p;
+                $forged['revision_id'] = $this->event['aggregate_id'];
+                $forged['version']++;
+                $forged['status'] = 'cancelled';
+                $forged['membership_released'] = true;
+                $this->event['payload'] = $forged;
+                $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($forged));
+                $this->sign();
+                $service->receive($this->instance, [$this->event], $sequence);
+                $this->assertSame('needs_review', $service->process($this->instance, $this->event['event_id'])['status']);
+                $this->assertSame($proof['grant_id'], DB::table('pos_import_promotion_claims')->value('active_slot'));
+            }
+        }
+        $this->assertNull(DB::table('pos_import_promotion_claims')->value('active_slot'));
+        $this->assertDatabaseCount('invoices', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseCount('journal_entries', 0);
+        $this->assertDatabaseCount('stock_movements', 1);
     }
 }

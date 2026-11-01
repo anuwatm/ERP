@@ -62,14 +62,20 @@ export default function DeliveryOrderDialog({
     const [scanResult, setScanResult] = useState('');
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty =
-        form.data.invoice_id !== '' ||
-        form.data.warehouse_id !== '' ||
-        form.data.delivery_date !== today ||
-        form.data.receiver_name !== '' ||
-        form.data.note !== '';
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        setBarcode('');
+        setScanResult('');
+        onClose();
+    };
 
     const selectedInvoice = invoices.find(
         (invoice) => invoice.id === form.data.invoice_id,
@@ -119,7 +125,7 @@ export default function DeliveryOrderDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Delivery Order"
                 breadcrumb="Finance / Commercial Documents"
                 entityLabel="Delivery Order"

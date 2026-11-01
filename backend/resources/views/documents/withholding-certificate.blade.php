@@ -4,8 +4,10 @@
     <meta charset="utf-8">
     <title>Withholding Tax Certificate {{ $expense['expense_no'] }}</title>
     <style>
+@include('documents.pdf-fonts')
+
         @page { size: A4; margin: 16mm; }
-        body { color: #111827; font-family: "DejaVu Sans", Tahoma, Arial, sans-serif; font-size: 12px; line-height: 1.5; }
+        body { color: #111827; font-family: "Sarabun", "DejaVu Sans", sans-serif; font-size: 12px; line-height: 1.5; }
         h1 { font-size: 22px; margin: 0; text-align: center; }
         h2 { font-size: 16px; margin: 4px 0 18px; text-align: center; }
         .box { border: 1px solid #111827; margin-top: 12px; padding: 10px; }
@@ -17,6 +19,7 @@
         .right { text-align: right; }
         .signatures { display: grid; gap: 48px; grid-template-columns: 1fr 1fr; margin-top: 72px; }
         .signature { border-top: 1px solid #111827; padding-top: 8px; text-align: center; }
+        @include('documents.pdf-layout')
     </style>
 </head>
 <body>

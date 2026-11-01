@@ -1,0 +1,110 @@
+const { chromium } = require('C:/Users/anuwat/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const fs = require('fs');
+const assert = require('node:assert/strict');
+const base = 'http://127.0.0.1:8139';
+const report = { scope: 'Actual Inventory/Payroll/Product pages; isolated fixture', cases: [], errors: [] };
+(async () => {
+    const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', headless: true });
+    try {
+        const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+        await context.route('**/*', r => r.request().url().startsWith(base + '/') ? r.continue() : r.abort());
+        const page = await context.newPage(); page.setDefaultTimeout(15000);
+        page.on('pageerror', e => report.errors.push(e.message));
+        await page.goto(base + '/login');
+        await page.locator('[name=email]').fill('remaining-owner@fixture.test');
+        await page.locator('[name=password]').fill('local-acceptance-password');
+        await page.locator('button[type=submit]').click();
+        await page.waitForURL(u => !u.pathname.includes('login'), { timeout: 60000 });
+        for (const [path, first, second] of [
+            ['/inventory-operations', '+ Warehouse', '+ Lot'],
+            ['/payroll', 'New Employee Profile', 'Create Payroll Run'],
+        ]) {
+            await page.goto(base + path);
+            await page.getByRole('button', { name: first, exact: true }).first().click();
+            await page.getByRole('dialog').last().getByRole('button', { name: /^Minimize .* dialog$/ }).click();
+            await page.getByRole('button', { name: second, exact: true }).first().click();
+            await page.getByRole('dialog').last().locator('header').waitFor({ state: 'visible' });
+            assert.equal(await page.getByRole('button', { name: 'Discard changes', exact: true }).count(), 0);
+            await page.getByRole('dialog').last().getByRole('button', { name: /^Close .* dialog$/ }).click();
+            report.cases.push({ id: 'B02-clean', path, result: 'PASS' });
+        }
+        await page.goto(base + '/inventory-operations');
+        await page.getByRole('button', { name: '+ Lot', exact: true }).click();
+        const searchStarted = performance.now();
+        await page.locator('#lot-product-id').fill('Synthetic product 1005');
+        await page.getByRole('option').filter({ hasText: 'Synthetic product 1005' }).click();
+        const searchMs = Math.round(performance.now() - searchStarted);
+        assert((await page.locator('#lot-product-id').inputValue()).includes('Synthetic product 1005'));
+        report.cases.push({ id: 'B06-reference-search', catalogRecords: 1005, searchMs, result: 'PASS' });
+        await page.getByRole('dialog').last().getByRole('button', { name: /^Close .* dialog$/ }).click();
+        await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+        await page.getByRole('button', { name: '+ Warehouse', exact: true }).click();
+        await page.locator('#wh-code').fill('SYN-' + Date.now());
+        await page.locator('#wh-name').fill('Synthetic processing warehouse');
+        await page.evaluate(async () => { await window.axios.post('/confirm-password', { password: 'local-acceptance-password' }); });
+        let pendingRoute, posts = 0;
+        let acceptRoute;
+        const requestHeld = new Promise(resolve => acceptRoute = resolve);
+        const hold = async r => {
+            if (r.request().method() !== 'POST') return r.continue();
+            posts++; pendingRoute = r; acceptRoute();
+        };
+        await page.route(base + '/warehouses', hold);
+        await page.getByRole('button', { name: 'Create Warehouse', exact: true }).first().click();
+        await requestHeld;
+        const processingDialog = page.getByRole('dialog').last();
+        assert(await processingDialog.getByRole('button', { name: /^Close .* dialog$/ }).isDisabled());
+        assert(await processingDialog.getByRole('button', { name: /^Minimize .* dialog$/ }).isDisabled());
+        assert(await processingDialog.getByRole('button', { name: 'Saving...', exact: true }).first().isDisabled());
+        await page.keyboard.press('Escape');
+        assert.equal(await page.locator('#wh-name').inputValue(), 'Synthetic processing warehouse');
+        assert.equal(posts, 1);
+        await pendingRoute.continue();
+        await page.locator('#wh-name').waitFor({ state: 'detached' });
+        await page.unroute(base + '/warehouses', hold);
+        report.cases.push({ id: 'B02-processing', closeBlocked: true, minimizeBlocked: true, escapeBlocked: true, posts, result: 'PASS' });
+        await page.goto(base + '/goods-receipts');
+        await page.getByPlaceholder('Scan barcode or enter SKU').fill('LOCAL-00001');
+        await page.getByRole('button', { name: 'Scan', exact: true }).click();
+        await page.getByRole('button', { name: 'Adjust Stock', exact: true }).click();
+        await page.waitForFunction(() => Number(document.querySelector('#sm-unit-cost')?.value) === 5);
+        await page.getByRole('dialog').last().getByRole('button', { name: /^Close .* dialog$/ }).click();
+        assert.equal(await page.getByRole('button', { name: 'Discard changes', exact: true }).count(), 0);
+        report.cases.push({ id: 'stock-prefill-clean', cost: 5, noFalseDirtyPrompt: true, result: 'PASS' });
+        await page.goto(base + '/expenses');
+        await page.getByRole('button', { name: '+ New Expense', exact: true }).click();
+        const expenseDate = page.getByRole('dialog').last().locator('input[type=date]').first();
+        const defaultDate = await expenseDate.inputValue();
+        const changedDate = defaultDate === '2026-10-28' ? '2026-10-27' : '2026-10-28';
+        await expenseDate.fill(changedDate);
+        await page.getByRole('dialog').last().getByRole('button', { name: /^Close .* dialog$/ }).click();
+        await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
+        assert.equal(await expenseDate.inputValue(), changedDate);
+        await page.getByRole('dialog').last().getByRole('button', { name: /^Close .* dialog$/ }).click();
+        await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+        await page.getByRole('button', { name: '+ New Expense', exact: true }).click();
+        assert.equal(await expenseDate.inputValue(), defaultDate);
+        await page.getByRole('dialog').last().getByRole('button', { name: /^Close .* dialog$/ }).click();
+        report.cases.push({ id: 'expense-date-only', dateGuard: true, keepPreserves: true, discardResets: true, projectControlNotExposed: true, result: 'PASS' });
+        await page.goto(base + '/dashboard');
+        await page.locator('a[href="' + base + '/products"],a[href="/products"]').first().click();
+        await page.waitForURL(base + '/products');
+        await page.getByRole('button', { name: '+ Create Item', exact: true }).click();
+        await page.locator('#products-name').fill('Synthetic navigation draft');
+        await page.getByRole('dialog').last().getByRole('button', { name: /^Minimize .* dialog$/ }).click();
+        await page.evaluate(() => history.back());
+        await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
+        await page.getByRole('button', { name: /^Restore .* draft$/ }).click();
+        assert.equal(await page.locator('#products-name').inputValue(), 'Synthetic navigation draft');
+        const y = await page.evaluate(() => scrollY);
+        await page.mouse.move(20, 450); await page.mouse.wheel(0, 500);
+        await page.waitForTimeout(100); assert.equal(await page.evaluate(() => scrollY), y);
+        await page.getByRole('dialog').last().getByRole('button', { name: /^Close .* dialog$/ }).click();
+        await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+        await page.mouse.move(900, 600); await page.mouse.wheel(0, 500); await page.waitForTimeout(150);
+        assert(await page.evaluate(() => scrollY) > y);
+        report.cases.push({ id: 'B03-history', keepDraft: true, result: 'PASS' }, { id: 'B08', lockedWhileOpen: true, scrollRestoredAfterClose: true, result: 'PASS' });
+        report.status = 'PASS'; await context.close();
+    } catch (e) { report.status = 'FAIL'; report.error = e.message; process.exitCode = 1; }
+    finally { await browser.close(); fs.writeFileSync('temp/remaining-20261029/coordination-browser.json', JSON.stringify(report, null, 2)); console.log(JSON.stringify(report)); }
+})();

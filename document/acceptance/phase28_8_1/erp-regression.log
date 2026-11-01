@@ -1,0 +1,10 @@
+PHPUnit 12.5.31 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.1
+Configuration: C:\LocalDevine\www\ERP\backend\phpunit.xml
+
+..............................................................    62 / 62 (100%)
+
+Time: 00:54.718, Memory: 94.00 MB
+
+[30;42mOK (62 tests, 509 assertions)[0m

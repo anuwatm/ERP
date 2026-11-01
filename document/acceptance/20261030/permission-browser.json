@@ -1,0 +1,89 @@
+{
+  "scope": "Read-only role; isolated synthetic user",
+  "cases": [
+    {
+      "width": 1280,
+      "path": "/products",
+      "http": 403,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "path": "/customers",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "path": "/projects",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "path": "/tasks",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "path": "/roles",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "path": "/settings/organization-structure",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 1280,
+      "directWriteStatus": 403,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "path": "/products",
+      "http": 403,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "path": "/customers",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "path": "/projects",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "path": "/tasks",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "path": "/roles",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "path": "/settings/organization-structure",
+      "enabledWrites": 0,
+      "result": "PASS"
+    },
+    {
+      "width": 375,
+      "directWriteStatus": 403,
+      "result": "PASS"
+    }
+  ],
+  "errors": [],
+  "status": "PASS"
+}

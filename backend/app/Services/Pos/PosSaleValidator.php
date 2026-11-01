@@ -20,6 +20,7 @@ class PosSaleValidator
         validator($event['payload'], ['lines.*' => 'array:line_id,product_id,name,quantity,tax_rate,subtotal,discount_amount,tax_amount,total,allocations,unit,unit_price,base_quantity,base_step,conversion_factor,conversion_version,pharmacist_id,stock_effect,kitchen_refs', 'lines.*.allocations.*' => 'array:grant_id,epoch,lot_id,quantity', 'lines.*.kitchen_refs.*' => 'array:line_id,consumption_hash'])->validate();
         $p = validator($event['payload'], ['sale_id' => 'required|uuid', 'branch_id' => 'required|uuid', 'terminal_id' => 'required|uuid', 'shift_id' => 'required|uuid', 'staff_id' => 'required|uuid', 'receipt_no' => 'required|string|max:100', 'catalog_version' => 'required|string|max:80', 'currency' => 'required|string|size:3', 'subtotal' => $this->money(), 'tax_amount' => $this->money(), 'total' => $this->money(), 'cash_tendered' => $this->money(), 'change' => $this->money(), 'occurred_at' => 'required|date', 'business_timezone' => 'required|in:Asia/Bangkok', 'lines' => 'required|array|min:1|max:100', 'lines.*.line_id' => 'required|uuid|distinct', 'lines.*.product_id' => 'required|uuid|distinct', 'lines.*.quantity' => $this->quantity(), 'lines.*.unit_price' => $this->money(), 'lines.*.subtotal' => $this->money(), 'lines.*.tax_amount' => $this->money(), 'lines.*.total' => $this->money(), 'lines.*.tax_rate' => ['required', 'string', 'regex:/^\d{1,2}(\.\d{1,2})?$/D'], 'lines.*.unit' => 'required|string|max:30', 'lines.*.name' => 'required|string|max:255', 'lines.*.allocations' => 'present|array|max:100', 'lines.*.allocations.*.grant_id' => 'required|uuid', 'lines.*.allocations.*.epoch' => 'required|integer|min:1', 'lines.*.allocations.*.quantity' => $this->quantity(), 'lines.*.allocations.*.lot_id' => 'nullable|uuid'])->validate();
         $p = array_merge($p, validator($event['payload'], ['discount_approval_id' => 'sometimes|uuid', 'discount_approved_by' => 'sometimes|uuid', 'discount_approved_at' => 'sometimes|date'])->validate());
+        $p = array_merge($p, validator($event['payload'], ['membership' => 'sometimes|array'])->validate());
         abort_unless($p['sale_id'] === $event['aggregate_id'] && $p['branch_id'] === $instance->branch_id && in_array($p['terminal_id'], json_decode($instance->terminal_ids, true), true) && $p['occurred_at'] === $event['occurred_at'], 403, 'POS sale scope mismatch.');
         Branch::where('org_id', $instance->org_id)->findOrFail($instance->branch_id);
         Warehouse::where('org_id', $instance->org_id)->findOrFail($instance->warehouse_id);
@@ -33,6 +34,13 @@ class PosSaleValidator
         $published = json_decode($catalog->payload, true, flags: JSON_THROW_ON_ERROR);
         abort_unless(hash_equals($catalog->payload_hash, hash('sha256', PosCanonicalJson::encode($published))), 409, 'ERP catalog evidence conflict.');
         $items = collect($published['items'])->keyBy('product_id');
+        $promotion = null;
+        if (isset($p['membership'])) {
+            abort_unless(DB::table('pos_staff_authorities')->where('pos_instance_id', $instance->id)->where('source_staff_id', $p['staff_id'])->where('active', true)->whereIn('role', ['cashier', 'manager', 'pharmacist'])->exists(), 403, 'Registered membership staff required.');
+            $basis = array_map(fn ($line) => ['id' => $line['product_id'], 'kind' => 'merchandise', 'product_id' => $line['product_id'], 'net' => bcadd(bcmul($line['quantity'], $line['unit_price'], 8), '0.005', 2), 'tax_rate' => $line['tax_rate']], $p['lines']);
+            $promotion = app(PosMembershipImportService::class)->validate($instance, $p['membership'], $basis, $p['occurred_at']);
+        }
+        $promotionDiscounts = array_column($promotion['lines'] ?? [], 'discount_amount', 'id');
         $subtotal = '0.00';
         $tax = '0.00';
         $discountTotal = '0.00';
@@ -84,7 +92,10 @@ class PosSaleValidator
             $lineSubtotal = bcadd(bcmul($line['quantity'], $unit['price'], 8), '0.005', 2);
             $discount = $line['discount_amount'] ?? '0.00';
             $maximum = bcdiv(bcmul($lineSubtotal, $item['max_manager_discount_pct'] ?? '0.00', 8), '100', 2);
-            abort_if(bccomp($discount, $maximum, 2) > 0 || bccomp($discount, $lineSubtotal, 2) > 0, 422, 'POS discount exceeds published manager policy.');
+            abort_if(($promotion === null && bccomp($discount, $maximum, 2) > 0) || bccomp($discount, $lineSubtotal, 2) > 0, 422, 'POS discount exceeds published policy.');
+            if ($promotion !== null) {
+                abort_unless(bccomp($discount, $promotionDiscounts[$line['product_id']] ?? '-1', 2) === 0, 422, 'Promotion allocation differs from server calculation.');
+            }
             $lineSubtotal = bcsub($lineSubtotal, $discount, 2);
             $discountTotal = bcadd($discountTotal, $discount, 2);
             $lineTax = bcadd(bcdiv(bcmul($lineSubtotal, $item['tax_rate'], 8), '100', 8), '0.005', 2);
@@ -105,7 +116,10 @@ class PosSaleValidator
             $subtotal = bcadd($subtotal, $lineSubtotal, 2);
             $tax = bcadd($tax, $lineTax, 2);
         }
-        if (bccomp($discountTotal, '0', 2) > 0) {
+        if ($promotion !== null) {
+            abort_if(isset($p['discount_approval_id']) || isset($p['discount_approved_by']) || isset($p['discount_approved_at']), 422, 'Promotion cannot stack with manager discount.');
+            abort_unless(bccomp($discountTotal, $promotion['discount_amount'], 2) === 0, 422, 'Promotion total mismatch.');
+        } elseif (bccomp($discountTotal, '0', 2) > 0) {
             abort_unless(app()->environment(['local', 'testing']) && config('pos.local_discounts_enabled') === true && isset($p['discount_approval_id'], $p['discount_approved_by'], $p['discount_approved_at']), 403, 'POS discount approval required.');
             $approved = Carbon::parse($p['discount_approved_at'])->utc();
             abort_unless($approved->lte($occurred) && $approved->gte($occurred->copy()->subMinutes(5)) && DB::table('pos_staff_authorities')->where('pos_instance_id', $instance->id)->where('source_staff_id', $p['discount_approved_by'])->where('role', 'manager')->where('active', true)->exists(), 403, 'POS discount manager authority or approval time invalid.');

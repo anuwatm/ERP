@@ -86,6 +86,15 @@ export default function CreateEditDialog({
         );
     };
     const label = entityLabel.toLowerCase();
+    useEffect(() => {
+        if (!open || minimized || suspended) return;
+        const failed = () =>
+            setRequestError(
+                'เชื่อมต่อไม่สำเร็จ ยังยืนยันผลการบันทึกไม่ได้ กรุณาตรวจเครือข่ายแล้วลองบันทึกอีกครั้ง',
+            );
+        window.addEventListener('app:network-failure', failed);
+        return () => window.removeEventListener('app:network-failure', failed);
+    }, [open, minimized, suspended]);
     useLayoutEffect(() => {
         processingRef.current = processing;
         if (!processing) submitting.current = false;

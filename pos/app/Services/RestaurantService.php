@@ -3,6 +3,7 @@
 namespace Pos\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Pos\Models\Staff;
 use Pos\Support\CanonicalJson;
@@ -232,7 +233,7 @@ class RestaurantService
 
     public function billingInput(Staff $staff, array $input): array
     {
-        $d = validator($input, ['terminal_id' => 'required|uuid', 'request_key' => 'required|string|max:100', 'cash_tendered' => 'required|string|max:20', 'kitchen_line_ids' => 'required|array|min:1|max:100', 'kitchen_line_ids.*' => 'required|uuid|distinct', 'discount_approval_id' => 'sometimes|uuid'])->validate();
+        $d = validator($input, ['terminal_id' => 'required|uuid', 'request_key' => 'required|string|max:100', 'cash_tendered' => 'required|string|max:20', 'kitchen_line_ids' => 'required|array|min:1|max:100', 'kitchen_line_ids.*' => 'required|uuid|distinct', 'discount_approval_id' => 'sometimes|uuid', 'member_id' => 'sometimes|nullable|uuid', 'promotion_id' => 'sometimes|nullable|uuid', 'membership_publication_id' => 'sometimes|nullable|uuid'])->validate();
 
         return DB::transaction(function () use ($staff, $d) {
             $this->actor($staff, ['cashier', 'manager'], $d['terminal_id']);
@@ -240,7 +241,7 @@ class RestaurantService
             $existing = DB::table('pos_orders')->where('branch_id', $staff->branch_id)->where('staff_id', $staff->id)->where('request_key', $d['request_key'])->first();
             $bill = $this->bill($staff, $d['kitchen_line_ids'], $existing?->id);
 
-            return ['terminal_id' => $d['terminal_id'], 'request_key' => $d['request_key'], 'cash_tendered' => $d['cash_tendered'], 'catalog_version' => $bill['catalog_version'], 'items' => $bill['items'], 'kitchen_line_ids' => $d['kitchen_line_ids']] + (isset($d['discount_approval_id']) ? ['discount_approval_id' => $d['discount_approval_id']] : []);
+            return ['terminal_id' => $d['terminal_id'], 'request_key' => $d['request_key'], 'cash_tendered' => $d['cash_tendered'], 'catalog_version' => $bill['catalog_version'], 'items' => $bill['items'], 'kitchen_line_ids' => $d['kitchen_line_ids']] + array_intersect_key($d, array_flip(['member_id', 'promotion_id', 'membership_publication_id'])) + (isset($d['discount_approval_id']) ? ['discount_approval_id' => $d['discount_approval_id']] : []);
         });
     }
 
@@ -273,6 +274,7 @@ class RestaurantService
 
     private function bill(Staff $staff, array $ids, ?string $alreadyBilledSale = null): array
     {
+        abort_if(Schema::hasTable('pos_delivery_kitchen_lines') && DB::table('pos_delivery_kitchen_lines')->whereIn('line_id', $ids)->exists(), 409, 'COD delivery portions are held for financial review and cannot be billed again.');
         $lines = DB::table('pos_kitchen_lines')->whereIn('id', $ids)->whereIn('order_id', DB::table('pos_kitchen_orders')->where('branch_id', $staff->branch_id)->select('id'))->orderBy('id')->lockForUpdate()->get();
         abort_unless($lines->count() === count($ids), 404);
         $version = null;

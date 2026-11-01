@@ -64,4 +64,4 @@ flowchart TD
 4. **Data Isolation & Privacy Guard:**
    - ไม่มีการเปิดเผยตัวเลขยอดเงินสดรวมดิบ (Unreconciled Cash Balance) สู่ภายนอก โดยคำนวณจาก Delta การหมุนเวียนและโมเดลสมมติฐานที่ปิดความเสี่ยง
 
-ดูรายละเอียด implementation และ controller ได้ที่ [`backend/app/Services/Finance/CashFlowForecastService.php`](file:///c:/LocalDevine/www/ERP/backend/app/Services/Finance/CashFlowForecastService.php).
+ดูรายละเอียด implementation และ controller ได้ที่ [`backend/app/Services/Finance/CashFlowForecastService.php`](../backend/app/Services/Finance/CashFlowForecastService.php).

@@ -80,6 +80,7 @@ class RefundService
                 DB::table('pos_refund_lines')->insert(['id' => (string) Str::uuid(), 'refund_id' => $id, 'order_item_id' => $line['source_line_id'], 'quantity' => $line['quantity'], 'returned_quantity' => $line['returned_quantity'], 'subtotal' => $line['subtotal'], 'tax_amount' => $line['tax_amount'], 'total' => $line['total'], 'return_status' => $line['return_status'], 'created_at' => now(), 'updated_at' => now()]);
             }
             app(OutboxService::class)->append('sale.refunded', $id, $snapshot);
+            app(MembershipService::class)->releaseRefundedSale($order);
             DB::table('pos_audit')->insert(['actor_id' => $staff->id, 'branch_id' => $staff->branch_id, 'action' => 'sale.local_refund', 'source_id' => $id, 'metadata' => CanonicalJson::encode(['sale_id' => $order->id, 'reason' => $command['reason']]), 'created_at' => now()]);
 
             return $snapshot;

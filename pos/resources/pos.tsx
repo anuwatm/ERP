@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./pos.css";
 import RestaurantPanel, { RestaurantState } from "./RestaurantPanel";
 import ReturnInspectionPanel from "./ReturnInspectionPanel";
+import MembershipPicker, {MembershipOptions, MembershipSelection} from './MembershipPicker';
 import TaxDocumentsPanel from "./TaxDocumentsPanel";
 
 type Product = {
@@ -33,6 +34,9 @@ type Product = {
   };
 };
 type State = RestaurantState & {
+  delivery_enabled: boolean;
+  membership_enabled: boolean;
+  membership: MembershipOptions;
   staff: { name: string; role: string };
   terminals: { id: string; code: string }[];
   catalog_version: string | null;
@@ -103,6 +107,7 @@ function App() {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [membershipSelection, setMembershipSelection] = useState<MembershipSelection | null>(null);
   const [requestKey, setRequestKey] = useState(() => crypto.randomUUID());
   const [kitchenSync, setKitchenSync] = useState("");
   const [unitChoices, setUnitChoices] = useState<Record<string, string>>({});
@@ -212,6 +217,7 @@ function App() {
           .includes(search.toLowerCase()),
     ) || [];
   const items = Object.entries(cart).filter(([, q]) => Number(q) > 0);
+  const membershipCart = {catalog_version: state?.catalog_version, items: items.map(([product_id, quantity]) => ({product_id, quantity, unit: unitChoices[product_id] || state?.items.find(p => p.product_id === product_id)?.unit}))};
   const discountRequested = items.some(
     ([id]) => discountAmounts[id]?.trim() && Number(discountAmounts[id]) !== 0,
   );
@@ -225,6 +231,9 @@ function App() {
         {state && (
           <div>
             {state.staff.name}
+            {state.staff.role === "manager" && <a href="/config">ตั้งค่า POS</a>}
+            {state.delivery_enabled && <a href="/deliveries">จัดส่ง</a>}
+            {state.membership_enabled && <a href="/membership">สมาชิก</a>}
             <button
               disabled={busy}
               onClick={() =>
@@ -775,7 +784,8 @@ function App() {
                     </button>
                   </div>
                 ))}
-                {state.discounts_enabled && items.length > 0 && (
+                {state.membership_enabled && items.length > 0 && <MembershipPicker data={state.membership} disabled={busy} manualDiscount={!!discountRequested} input={membershipCart} onChange={setMembershipSelection} refresh={reload} />}
+                {state.discounts_enabled && !membershipSelection?.payload.promotion_id && items.length > 0 && (
                   <form
                     className="discount"
                     onSubmit={(e) => {
@@ -880,6 +890,7 @@ function App() {
                     busy ||
                     !items.length ||
                     !state.catalog_version ||
+                    (!!membershipSelection && (!membershipSelection.ready || membershipSelection.cartKey !== JSON.stringify(membershipCart))) ||
                     (!!discountRequested && !discountApproval)
                   }
                   onClick={() =>
@@ -897,6 +908,7 @@ function App() {
                               ?.unit,
                         })),
                         cash_tendered: cash,
+                        ...(membershipSelection?.payload || {}),
                         ...(customerRequest
                           ? { customer_request_id: customerRequest }
                           : {}),
@@ -905,6 +917,7 @@ function App() {
                           : {}),
                       });
                       setReceipt(result);
+                      setMembershipSelection(null);
                       setCart({});
                       setUnitChoices({});
                       setCustomerRequest(null);

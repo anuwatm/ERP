@@ -1,0 +1,20 @@
+[
+  {
+    "file": "invoice.pdf",
+    "pages": 1,
+    "hasThai": true,
+    "hasQuestionMarks": false
+  },
+  {
+    "file": "purchase-order.pdf",
+    "pages": 1,
+    "hasThai": true,
+    "hasQuestionMarks": false
+  },
+  {
+    "file": "withholding.pdf",
+    "pages": 1,
+    "hasThai": true,
+    "hasQuestionMarks": false
+  }
+]

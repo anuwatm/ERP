@@ -1,5 +1,7 @@
 # คู่มือทำความเข้าใจ ERP ทีละโมดูล
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 วิเคราะห์จาก source ใน working tree ณ **2026-10-24 (Asia/Bangkok)**; HEAD `b03c393c19762a09862b4a7aab688f1fe47dcdb3`
 
 เอกสารชุดนี้ใช้อ้างอิงก่อนแก้โค้ด: หน้าที่, routes/permissions, entities, workflows/statuses, dependencies, frontend, schema และ tests ที่เกี่ยวข้อง พร้อมข้อจำกัดที่อ่านพบใน implementation

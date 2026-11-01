@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Phase 28 — POS Server และหน้า Config (2026-10-29)",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "branch-browsers",
+      "type": "frontend",
+      "label": "เครื่องขาย / จอครัว",
+      "sublabel": "บัญชีและ Terminal แยกสาขา",
+      "pos": [
+        40,
+        310
+      ],
+      "size": [
+        210,
+        76
+      ]
+    },
+    {
+      "id": "pos-server",
+      "type": "backend",
+      "label": "POS Server",
+      "sublabel": "Retail / Restaurant / Pharmacy",
+      "pos": [
+        410,
+        310
+      ],
+      "size": [
+        230,
+        76
+      ]
+    },
+    {
+      "id": "erp-connector",
+      "type": "backend",
+      "label": "ERP + Connector",
+      "sublabel": "ERP เริ่ม pull / publish",
+      "pos": [
+        800,
+        310
+      ],
+      "size": [
+        230,
+        76
+      ]
+    },
+    {
+      "id": "manager-config",
+      "type": "security",
+      "label": "ผู้จัดการ · /config",
+      "sublabel": "local / loopback / own branch",
+      "pos": [
+        410,
+        90
+      ],
+      "size": [
+        230,
+        76
+      ]
+    },
+    {
+      "id": "pos-database",
+      "type": "database",
+      "label": "ฐาน POS แยกจาก ERP",
+      "sublabel": "สาขา / Staff / Terminal / Audit",
+      "pos": [
+        410,
+        540
+      ],
+      "size": [
+        230,
+        76
+      ]
+    },
+    {
+      "id": "erp-database",
+      "type": "database",
+      "label": "ฐาน ERP",
+      "sublabel": "Catalog / quota / GL / authority",
+      "pos": [
+        800,
+        540
+      ],
+      "size": [
+        230,
+        76
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "browser-pos",
+      "from": "branch-browsers",
+      "to": "pos-server",
+      "label": "หน้า /",
+      "variant": "emphasis"
+    },
+    {
+      "id": "erp-pull",
+      "from": "erp-connector",
+      "to": "pos-server",
+      "label": "HTTPS mTLS",
+      "variant": "security"
+    },
+    {
+      "id": "config-pos",
+      "from": "manager-config",
+      "to": "pos-server",
+      "label": "ยืนยันรหัสผ่าน",
+      "variant": "security",
+      "labelDy": 24
+    },
+    {
+      "id": "pos-store",
+      "from": "pos-server",
+      "to": "pos-database",
+      "label": "Transaction + audit",
+      "labelDy": 24
+    },
+    {
+      "id": "erp-store",
+      "from": "erp-connector",
+      "to": "erp-database",
+      "label": "Import / ledger",
+      "labelDy": 24
+    }
+  ]
+}

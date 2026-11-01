@@ -1,5 +1,11 @@
 # README — ใช้ POS ร้านขายของทั่วไป
 
+> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **Phase28.8.1 — 2026-10-30:** Delivery local: /deliveries → รับรายการ → ready จอง quota → dispatch/deliver → collect → manager remit. รับคืนต้อง receive/inspect ก่อน restock; COD ไม่สร้างเอกสารการเงินอัตโนมัติ. [คู่มือ/diagram](PHASE_28_8_1_DELIVERY.md). **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 > **หมายเหตุ:** ทดสอบระดับ local เท่านั้น ยังไม่ได้ทดสอบกับเครื่องพิมพ์ เครื่องสแกน เครือข่าย หรือระบบจริง
 
 ## เรียกใช้

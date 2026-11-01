@@ -1,0 +1,91 @@
+{
+  "scope": "Isolated synthetic fixture; actual DMS dialogs",
+  "cases": [
+    {
+      "width": 1280,
+      "theme": "light",
+      "button": "New Category",
+      "changedField": "#cat-renewal-days",
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "button": "New Retention Policy",
+      "changedField": "#ret-days",
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "button": "Upload Document",
+      "changedField": "#doc-change-note",
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "button": "New Category",
+      "changedField": "#cat-renewal-days",
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "button": "New Retention Policy",
+      "changedField": "#ret-days",
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "button": "Upload Document",
+      "changedField": "#doc-change-note",
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "button": "New Category",
+      "changedField": "#cat-renewal-days",
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "button": "New Retention Policy",
+      "changedField": "#ret-days",
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "button": "Upload Document",
+      "changedField": "#doc-change-note",
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "button": "New Category",
+      "changedField": "#cat-renewal-days",
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "button": "New Retention Policy",
+      "changedField": "#ret-days",
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "button": "Upload Document",
+      "changedField": "#doc-change-note",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "status": "PASS"
+}

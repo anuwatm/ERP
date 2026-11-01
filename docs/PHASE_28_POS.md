@@ -1,5 +1,7 @@
 # Phase 28 — Standalone POS: current implementation
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 **Local Complete — Gemini PASS (2026-10-27); configured ERP/POS databases current; Production Pending.**
 
 อ้างอิงผลรับรอง [Gemini หมวด 17](../gemini.md#17-ผลการตรวจรับงาน-phase-28-ฉบับสมบูรณ์สำหรับสภาพแวดล้อม-local-phase-28-local-acceptance-sign-off--2026-10-27). สถานะนี้ครอบคลุม local implementation ไม่ใช่ production/e-Tax certification

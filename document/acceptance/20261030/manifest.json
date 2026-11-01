@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-30",
+  "scope": "Synthetic local evidence; no production certification",
+  "artifacts": [
+    {
+      "file": "api-browser.json",
+      "bytes": 749,
+      "sha256": "c05abaed5554aaf1a2f34d8d76ae912ab2cf0819822a561f73eb9a43d0ec5af1"
+    },
+    {
+      "file": "api-http.json",
+      "bytes": 1378,
+      "sha256": "6f00fab97acea43d0e0c98092502b9d7ff613301f3a05af4297cbabc271ea29b"
+    },
+    {
+      "file": "backend-final-focused.log",
+      "bytes": 213,
+      "sha256": "220ff81be431bae5b66487a7e3e52ea3dc29de6c9b4dc0fdf47cfa2bbb6b5938"
+    },
+    {
+      "file": "backend-regression-final.log",
+      "bytes": 839,
+      "sha256": "4460acb6a54880c8f6d8a4355795e10b267427c23fddc6bbb399e5149c9955b4"
+    },
+    {
+      "file": "browser-all-fields-final.json",
+      "bytes": 130866,
+      "sha256": "99a1277bfe082a501ffd7dc629e2775a224bf6b0eaf62310464f27f57e3ef7dd"
+    },
+    {
+      "file": "context-browser.json",
+      "bytes": 7560,
+      "sha256": "7166e83f48abade094d9f917bde5b5cbdce8e005be6b40c916d9c5ea05c2b355"
+    },
+    {
+      "file": "coordination-browser.json",
+      "bytes": 1139,
+      "sha256": "a4457649645e260932e1da992a3ca26d8e746781481c55d20e9de63a7f7ed1d5"
+    },
+    {
+      "file": "dms-browser.json",
+      "bytes": 1984,
+      "sha256": "0c1f2cf8662687d8f089034d62b43b61bb709d5c61655c72d116257826f9685c"
+    },
+    {
+      "file": "etax-config-browser.json",
+      "bytes": 281,
+      "sha256": "651dd245082b0862a13b30e0bcc175502d39858bff3473b31c31bdf7c5d3ee07"
+    },
+    {
+      "file": "frontend-final.log",
+      "bytes": 3616,
+      "sha256": "08cba6f684900215ab4d8a3437b63cff017e5e582d53c5ee65baffd60294fc31"
+    },
+    {
+      "file": "matrix-paths.json",
+      "bytes": 753,
+      "sha256": "5d328827ecc6fccd5470a754a632d35fad59e31fcf3e49c8d46abaa8d5bf7648"
+    },
+    {
+      "file": "pdf-render.json",
+      "bytes": 341,
+      "sha256": "784b29bac51c6aa0575f76c2eb3a6d637f9dc02ab090ce87bb4ab3c6f7267076"
+    },
+    {
+      "file": "permission-browser.json",
+      "bytes": 1622,
+      "sha256": "071a21e1bef1bf44a41cf0bf06f59d56cb9c82aada943ac35b1f66250714703a"
+    },
+    {
+      "file": "pos-regression.log",
+      "bytes": 294,
+      "sha256": "0b768b0641960af0f87a600768d3bd06ccf5200857ebebe8775b516716e5a266"
+    },
+    {
+      "file": "README.md",
+      "bytes": 2142,
+      "sha256": "e81339db578c8554d041b7942c0d800a223773ad54ea58a9e4ca6b1cd89c4597"
+    },
+    {
+      "file": "resilience-browser.json",
+      "bytes": 923,
+      "sha256": "721e095eee7cb2b61a9c85d1af2ad8c151a6b5c29bb1417eb83e5b9c63588d4f"
+    },
+    {
+      "file": "restore-drill.json",
+      "bytes": 297,
+      "sha256": "cc561452bb19a219dd9b633dae15103d06e17c2a78ce58bb15a55b02a12751c2"
+    },
+    {
+      "file": "viewport-browser.json",
+      "bytes": 1009,
+      "sha256": "b7a38c3c8f2eb4a5c3b221571d8e294cdf0c862a8412c9cd8648e92e0df04ec9"
+    }
+  ]
+}

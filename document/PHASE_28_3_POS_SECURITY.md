@@ -1,5 +1,7 @@
 # Phase 28.3 — Network / Authentication / Security
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 สถานะล่าสุด2026-10-27: Local security implementation ผ่าน Geminiหมวด17; [current status](../docs/PHASE_28_POS.md). Target firewall/mTLS/real credentials/network isolation และ production/UAT ยัง pending. Configured DB migratedแล้ว ไม่ใช่ network acceptance
 
 อ้างอิง [Scope](PHASE_28_1_POS_SCOPE.md), [Architecture Draft](PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md), [Security Requirements](../docs/SECURITY_REQUIREMENTS.md) และ [checklist](../checklist.md). เป็นข้อเสนอที่ตรวจรับได้ ยังไม่ได้ติดตั้ง firewall, สร้างบัญชีจริง, ออก credential หรือพิสูจน์ network isolation. Local design/code ได้รับการอนุมัติและตรวจรับแล้ว; ตาราง target controls ด้านล่างยังต้องพิสูจน์บนสภาพแวดล้อมจริง

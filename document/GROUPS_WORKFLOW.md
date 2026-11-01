@@ -1,5 +1,7 @@
 # คู่มือและผังการทำงาน 7 กลุ่มโมดูลหลัก (Domain Group Workflows — 35 Modules)
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 เอกสารนี้รวบรวม **Diagram ผังการทำงาน, วงจรสถานะ (Lifecycle), และลำดับการทำงาน (Sequence)** ของทั้ง **7 กลุ่มงานหลัก ครอบคลุม 35 โมดูลทั้งหมด** ของระบบ Company OS / Lightweight ERP พร้อมคำอธิบายภาษาไทยอย่างละเอียดในทุกขั้นตอน ครอบคลุมทั้ง Position Master, Bulk Import, Overnight Shifts, 1.5x/2x/3x OT Rates, e-Tax Gateway, Cash Flow Forecasting, AI OCR Ingestion และ Setup Wizard
 
 ---

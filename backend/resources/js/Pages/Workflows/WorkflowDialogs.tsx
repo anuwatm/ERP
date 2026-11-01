@@ -46,12 +46,18 @@ export function WorkflowDefinitionDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty =
-        form.data.code !== '' ||
-        form.data.name !== '' ||
-        form.data.steps.length > 1;
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -105,7 +111,7 @@ export function WorkflowDefinitionDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Approval Workflow"
                 breadcrumb="Workflows / Definitions"
                 entityLabel="Workflow"
@@ -349,9 +355,17 @@ export function WorkflowDelegationDialog({
     const [minimized, setMinimized] = useState(false);
     const { headers, reset: resetSubmissionKey } = useSubmissionKey();
 
-    const isDirty =
-        form.data.delegate_user_id !== '' || form.data.starts_at !== '';
+    const isDirty = open && form.isDirty;
     const guard = useDiscardGuard(isDirty, form.processing);
+
+    const close = () => {
+        if (form.processing) return;
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -387,7 +401,7 @@ export function WorkflowDelegationDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title="Create Approval Delegation"
                 breadcrumb="Workflows / Delegation"
                 entityLabel="Delegation"

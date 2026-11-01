@@ -306,7 +306,7 @@ class DashboardController extends Controller
 
         if (isset($widgets['finance']['revenue']) || isset($widgets['finance']['expense'])) {
             $end = CarbonImmutable::parse($filters['end_date'] ?? DashboardDate::now()->toDateString())->endOfMonth();
-            $start = $end->subMonths(11)->startOfMonth();
+            $start = $end->startOfMonth()->subMonths(11);
             if (! empty($filters['start_date'])) {
                 $start = max($start, CarbonImmutable::parse($filters['start_date'])->startOfMonth());
             }

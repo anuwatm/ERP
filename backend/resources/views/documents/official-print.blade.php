@@ -4,9 +4,11 @@
     <meta charset="utf-8">
     <title>{{ $document['title'] }} {{ $document['number'] }}</title>
     <style>
+@include('documents.pdf-fonts')
+
         @page { size: A4; margin: 14mm; }
         * { box-sizing: border-box; }
-        body { color: #111827; font-family: "DejaVu Sans", Tahoma, Arial, sans-serif; font-size: 12px; line-height: 1.45; margin: 0; }
+        body { color: #111827; font-family: "Sarabun", "DejaVu Sans", sans-serif; font-size: 12px; line-height: 1.45; margin: 0; }
         .toolbar { background: #111827; color: white; display: {{ ($pdf ?? false) ? 'none' : 'flex' }}; justify-content: space-between; left: 0; padding: 10px 18px; position: sticky; right: 0; top: 0; z-index: 2; }
         .toolbar button { background: white; border: 0; border-radius: 4px; color: #111827; cursor: pointer; font-weight: 700; padding: 6px 12px; }
         .sheet { margin: 18px auto; max-width: 794px; min-height: 1123px; padding: 28px; position: relative; }
@@ -35,6 +37,9 @@
             .sheet { margin: 0; max-width: none; padding: 0; }
             body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
         }
+        @if($pdf ?? false)
+            @include('documents.pdf-layout')
+        @endif
     </style>
 </head>
 <body>

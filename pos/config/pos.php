@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'local_browser_offline_enabled' => env('POS_LOCAL_BROWSER_OFFLINE_ENABLED', false),
+    'local_membership_enabled' => env('POS_LOCAL_MEMBERSHIP_ENABLED', false),
+    'local_delivery_enabled' => env('POS_LOCAL_DELIVERY_ENABLED', false),
+    'delivery_fee_tax_rates' => ['0.00', '7.00'], // Local candidates only; no automatic tax/GL posting.
     'backlog_alert_count' => (int) env('POS_BACKLOG_ALERT_COUNT', 1000),
     'backlog_alert_minutes' => (int) env('POS_BACKLOG_ALERT_MINUTES', 60),
     'minimum_disk_free_bytes' => (int) env('POS_MINIMUM_DISK_FREE_BYTES', 268435456),

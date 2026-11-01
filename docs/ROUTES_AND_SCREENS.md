@@ -1,5 +1,9 @@
 # Routes and Screens by Phase
 
+> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง**; Phase28.8 deferred.
+
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 เอกสารนี้เป็น route/screen reference ของ implementation ปัจจุบัน. Source of truth คือ `backend/routes/web.php`; route ที่เป็น write action ต้องผ่าน permission, password confirmation และ throttle ตามที่ประกาศใน source.
 
 ## Route Style

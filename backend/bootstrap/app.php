@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->dontFlash(['member_name', 'member_phone']);
         $exceptions->report(function (Throwable $exception) {
             $request = request();
             if ($request->is('api/v1', 'api/v1/*')) {

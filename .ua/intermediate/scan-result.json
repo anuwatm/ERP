@@ -1,29 +1,6 @@
 {
-  "name": "ERP",
-  "description": "Company OS / Lightweight ERP สำหรับ SME เชื่อมงานขาย การเงิน คลังสินค้า โครงการ บุคลากร และ Standalone POS ที่ใช้ Core ร่วมสำหรับ Retail/Restaurant/Pharmacy โดยแยกแอปและฐานข้อมูลพร้อม ERP outbound connector. หมายเหตุ: โปรเจกต์มีไฟล์มากกว่า100ไฟล์ การจำกัดโฟลเดอร์ช่วยลดเวลาวิเคราะห์ได้",
-  "languages": [
-    "config",
-    "css",
-    "example",
-    "html",
-    "javascript",
-    "json",
-    "markdown",
-    "php",
-    "txt",
-    "typescript",
-    "unknown",
-    "xml",
-    "yaml"
-  ],
-  "frameworks": [
-    "Laravel",
-    "React",
-    "Inertia.js",
-    "Vite",
-    "Tailwind CSS",
-    "PHPUnit"
-  ],
+  "scriptCompleted": true,
+  "contentDigest": "078b54b45cf59a58c65c6caf8c6ff10ae2ab01f5cc9b6f88f121e74b907b07ae",
   "files": [
     {
       "path": ".htaccess",
@@ -34,7 +11,7 @@
     {
       "path": "ERP_FEATURE_PLAN.md",
       "language": "markdown",
-      "sizeLines": 1121,
+      "sizeLines": 1125,
       "fileCategory": "docs"
     },
     {
@@ -46,19 +23,19 @@
     {
       "path": "PROJECT.md",
       "language": "markdown",
-      "sizeLines": 205,
+      "sizeLines": 209,
       "fileCategory": "docs"
     },
     {
       "path": "README.md",
       "language": "markdown",
-      "sizeLines": 423,
+      "sizeLines": 427,
       "fileCategory": "docs"
     },
     {
       "path": "backend/.env.example",
       "language": "config",
-      "sizeLines": 79,
+      "sizeLines": 86,
       "fileCategory": "config"
     },
     {
@@ -76,7 +53,7 @@
     {
       "path": "backend/README.md",
       "language": "markdown",
-      "sizeLines": 58,
+      "sizeLines": 68,
       "fileCategory": "docs"
     },
     {
@@ -274,7 +251,7 @@
     {
       "path": "backend/app/Http/Controllers/Auth/TwoFactorController.php",
       "language": "php",
-      "sizeLines": 114,
+      "sizeLines": 143,
       "fileCategory": "code"
     },
     {
@@ -650,9 +627,21 @@
       "fileCategory": "code"
     },
     {
+      "path": "backend/app/Jobs/OperationsHeartbeat.php",
+      "language": "php",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
       "path": "backend/app/Jobs/SubmitETaxDocument.php",
       "language": "php",
       "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/app/Logging/RedactOperationalLogs.php",
+      "language": "php",
+      "sizeLines": 41,
       "fileCategory": "code"
     },
     {
@@ -1762,7 +1751,7 @@
     {
       "path": "backend/app/Services/Ocr/UniversalOpenAiVisionAdapter.php",
       "language": "php",
-      "sizeLines": 261,
+      "sizeLines": 260,
       "fileCategory": "code"
     },
     {
@@ -2140,13 +2129,19 @@
     {
       "path": "backend/config/logging.php",
       "language": "php",
-      "sizeLines": 132,
+      "sizeLines": 135,
       "fileCategory": "code"
     },
     {
       "path": "backend/config/mail.php",
       "language": "php",
       "sizeLines": 118,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/config/operations.php",
+      "language": "php",
+      "sizeLines": 8,
       "fileCategory": "code"
     },
     {
@@ -2762,6 +2757,18 @@
       "fileCategory": "markup"
     },
     {
+      "path": "backend/resources/fonts/OFL.txt",
+      "language": "txt",
+      "sizeLines": 93,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "backend/resources/fonts/manifest.json",
+      "language": "json",
+      "sizeLines": 17,
+      "fileCategory": "config"
+    },
+    {
       "path": "backend/resources/js/Components/ApplicationLogo.tsx",
       "language": "typescript",
       "sizeLines": 13,
@@ -2858,6 +2865,12 @@
       "fileCategory": "code"
     },
     {
+      "path": "backend/resources/js/Components/NetworkFailureNotice.tsx",
+      "language": "typescript",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
       "path": "backend/resources/js/Components/PrimaryButton.tsx",
       "language": "typescript",
       "sizeLines": 28,
@@ -2902,7 +2915,7 @@
     {
       "path": "backend/resources/js/Components/UI/CreateEditDialog.tsx",
       "language": "typescript",
-      "sizeLines": 414,
+      "sizeLines": 423,
       "fileCategory": "code"
     },
     {
@@ -3112,7 +3125,7 @@
     {
       "path": "backend/resources/js/Pages/Auth/TwoFactorChallenge.tsx",
       "language": "typescript",
-      "sizeLines": 52,
+      "sizeLines": 60,
       "fileCategory": "code"
     },
     {
@@ -3178,7 +3191,7 @@
     {
       "path": "backend/resources/js/Pages/Documents/DocumentDialogs.tsx",
       "language": "typescript",
-      "sizeLines": 788,
+      "sizeLines": 833,
       "fileCategory": "code"
     },
     {
@@ -3226,19 +3239,19 @@
     {
       "path": "backend/resources/js/Pages/Finance/DeliveryOrderDialog.tsx",
       "language": "typescript",
-      "sizeLines": 265,
+      "sizeLines": 271,
       "fileCategory": "code"
     },
     {
       "path": "backend/resources/js/Pages/Finance/ETax.tsx",
       "language": "typescript",
-      "sizeLines": 640,
+      "sizeLines": 706,
       "fileCategory": "code"
     },
     {
       "path": "backend/resources/js/Pages/Finance/ExpenseEditorDialog.tsx",
       "language": "typescript",
-      "sizeLines": 369,
+      "sizeLines": 359,
       "fileCategory": "code"
     },
     {
@@ -3358,13 +3371,13 @@
     {
       "path": "backend/resources/js/Pages/Finance/ReceiveGoodsDialog.tsx",
       "language": "typescript",
-      "sizeLines": 360,
+      "sizeLines": 364,
       "fileCategory": "code"
     },
     {
       "path": "backend/resources/js/Pages/Finance/StockMovementDialog.tsx",
       "language": "typescript",
-      "sizeLines": 318,
+      "sizeLines": 322,
       "fileCategory": "code"
     },
     {
@@ -3418,13 +3431,13 @@
     {
       "path": "backend/resources/js/Pages/Hr/Employees.tsx",
       "language": "typescript",
-      "sizeLines": 842,
+      "sizeLines": 878,
       "fileCategory": "code"
     },
     {
       "path": "backend/resources/js/Pages/Hr/HrDialogs.tsx",
       "language": "typescript",
-      "sizeLines": 838,
+      "sizeLines": 880,
       "fileCategory": "code"
     },
     {
@@ -3628,7 +3641,7 @@
     {
       "path": "backend/resources/js/Pages/Workflows/WorkflowDialogs.tsx",
       "language": "typescript",
-      "sizeLines": 476,
+      "sizeLines": 490,
       "fileCategory": "code"
     },
     {
@@ -3676,7 +3689,7 @@
     {
       "path": "backend/resources/js/app.tsx",
       "language": "typescript",
-      "sizeLines": 28,
+      "sizeLines": 34,
       "fileCategory": "code"
     },
     {
@@ -3692,15 +3705,21 @@
       "fileCategory": "code"
     },
     {
+      "path": "backend/resources/views/auth/recovery-codes.blade.php",
+      "language": "php",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
       "path": "backend/resources/views/documents/commercial-print.blade.php",
       "language": "php",
-      "sizeLines": 80,
+      "sizeLines": 86,
       "fileCategory": "code"
     },
     {
       "path": "backend/resources/views/documents/official-print.blade.php",
       "language": "php",
-      "sizeLines": 154,
+      "sizeLines": 159,
       "fileCategory": "code"
     },
     {
@@ -3710,9 +3729,21 @@
       "fileCategory": "code"
     },
     {
+      "path": "backend/resources/views/documents/pdf-fonts.blade.php",
+      "language": "php",
+      "sizeLines": 2,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/resources/views/documents/pdf-layout.blade.php",
+      "language": "php",
+      "sizeLines": 27,
+      "fileCategory": "code"
+    },
+    {
       "path": "backend/resources/views/documents/withholding-certificate.blade.php",
       "language": "php",
-      "sizeLines": 77,
+      "sizeLines": 80,
       "fileCategory": "code"
     },
     {
@@ -3724,19 +3755,19 @@
     {
       "path": "backend/resources/views/payroll/payslip.blade.php",
       "language": "php",
-      "sizeLines": 17,
+      "sizeLines": 19,
       "fileCategory": "code"
     },
     {
       "path": "backend/routes/auth.php",
       "language": "php",
-      "sizeLines": 74,
+      "sizeLines": 75,
       "fileCategory": "code"
     },
     {
       "path": "backend/routes/console.php",
       "language": "php",
-      "sizeLines": 245,
+      "sizeLines": 247,
       "fileCategory": "code"
     },
     {
@@ -3749,6 +3780,12 @@
       "path": "backend/routes/gateway.php",
       "language": "php",
       "sizeLines": 14,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/routes/operations.php",
+      "language": "php",
+      "sizeLines": 42,
       "fileCategory": "code"
     },
     {
@@ -3778,7 +3815,7 @@
     {
       "path": "backend/setup/README.md",
       "language": "markdown",
-      "sizeLines": 19,
+      "sizeLines": 21,
       "fileCategory": "docs"
     },
     {
@@ -3833,6 +3870,96 @@
       "path": "backend/tests/Browser/prepare-phase232.php",
       "language": "php",
       "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/prepare-remaining-api.php",
+      "language": "php",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/prepare-remaining-records.php",
+      "language": "php",
+      "sizeLines": 63,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/prepare-remaining.php",
+      "language": "php",
+      "sizeLines": 32,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-api-ui.cjs",
+      "language": "javascript",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-api.cjs",
+      "language": "javascript",
+      "sizeLines": 40,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-contexts.cjs",
+      "language": "javascript",
+      "sizeLines": 83,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-coordination.cjs",
+      "language": "javascript",
+      "sizeLines": 110,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-dms.cjs",
+      "language": "javascript",
+      "sizeLines": 51,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-environment.php",
+      "language": "php",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-etax.cjs",
+      "language": "javascript",
+      "sizeLines": 38,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-matrix.cjs",
+      "language": "javascript",
+      "sizeLines": 341,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-permissions.cjs",
+      "language": "javascript",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-resilience.cjs",
+      "language": "javascript",
+      "sizeLines": 113,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-router.php",
+      "language": "php",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Browser/remaining-viewport.cjs",
+      "language": "javascript",
+      "sizeLines": 47,
       "fileCategory": "code"
     },
     {
@@ -3962,6 +4089,18 @@
       "fileCategory": "code"
     },
     {
+      "path": "backend/tests/Feature/OperationalLogRedactionTest.php",
+      "language": "php",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "backend/tests/Feature/OperationsHealthTest.php",
+      "language": "php",
+      "sizeLines": 34,
+      "fileCategory": "code"
+    },
+    {
       "path": "backend/tests/Feature/Phase10BankAccountsTest.php",
       "language": "php",
       "sizeLines": 117,
@@ -4048,7 +4187,7 @@
     {
       "path": "backend/tests/Feature/Phase18TwoFactorTest.php",
       "language": "php",
-      "sizeLines": 144,
+      "sizeLines": 186,
       "fileCategory": "code"
     },
     {
@@ -4288,13 +4427,13 @@
     {
       "path": "backend/tests/Feature/Phase5EndToEndTest.php",
       "language": "php",
-      "sizeLines": 449,
+      "sizeLines": 458,
       "fileCategory": "code"
     },
     {
       "path": "backend/tests/Feature/Phase5ExecutiveDashboardTest.php",
       "language": "php",
-      "sizeLines": 292,
+      "sizeLines": 306,
       "fileCategory": "code"
     },
     {
@@ -4336,7 +4475,7 @@
     {
       "path": "backend/tests/Feature/Phase8OfficialDocumentsTest.php",
       "language": "php",
-      "sizeLines": 243,
+      "sizeLines": 261,
       "fileCategory": "code"
     },
     {
@@ -4474,7 +4613,7 @@
     {
       "path": "checklist.md",
       "language": "markdown",
-      "sizeLines": 1705,
+      "sizeLines": 1709,
       "fileCategory": "docs"
     },
     {
@@ -4484,15 +4623,39 @@
       "fileCategory": "docs"
     },
     {
+      "path": "deploy/backup-mysql.sh",
+      "language": "shell",
+      "sizeLines": 18,
+      "fileCategory": "script"
+    },
+    {
+      "path": "deploy/cron/company-erp.cron",
+      "language": "cron",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "deploy/supervisor/company-erp.conf",
+      "language": "conf",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "deploy/systemd/company-erp-worker.service",
+      "language": "service",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
       "path": "docs/ARCHITECTURE_DECISIONS.md",
       "language": "markdown",
-      "sizeLines": 122,
+      "sizeLines": 124,
       "fileCategory": "docs"
     },
     {
       "path": "docs/CURRENT_IMPLEMENTATION.md",
       "language": "markdown",
-      "sizeLines": 78,
+      "sizeLines": 82,
       "fileCategory": "docs"
     },
     {
@@ -4553,6 +4716,12 @@
       "path": "docs/EXTERNAL_SUMMARY_API_CHECKLIST.md",
       "language": "markdown",
       "sizeLines": 273,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/LOCAL_ACCEPTANCE_20261030.md",
+      "language": "markdown",
+      "sizeLines": 47,
       "fileCategory": "docs"
     },
     {
@@ -4630,7 +4799,7 @@
     {
       "path": "docs/PHASE_23_1_FORM_INVENTORY.md",
       "language": "markdown",
-      "sizeLines": 2037,
+      "sizeLines": 2039,
       "fileCategory": "docs"
     },
     {
@@ -4702,13 +4871,13 @@
     {
       "path": "docs/PHASE_28_OPERATIONS.md",
       "language": "markdown",
-      "sizeLines": 40,
+      "sizeLines": 42,
       "fileCategory": "docs"
     },
     {
       "path": "docs/PHASE_28_POS.md",
       "language": "markdown",
-      "sizeLines": 35,
+      "sizeLines": 37,
       "fileCategory": "docs"
     },
     {
@@ -4724,21 +4893,33 @@
       "fileCategory": "docs"
     },
     {
+      "path": "docs/PRODUCTION_RUNBOOK.md",
+      "language": "markdown",
+      "sizeLines": 55,
+      "fileCategory": "docs"
+    },
+    {
       "path": "docs/README.md",
       "language": "markdown",
-      "sizeLines": 67,
+      "sizeLines": 69,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/REMAINING_WORK_20261029.md",
+      "language": "markdown",
+      "sizeLines": 22,
       "fileCategory": "docs"
     },
     {
       "path": "docs/ROUTES_AND_SCREENS.md",
       "language": "markdown",
-      "sizeLines": 321,
+      "sizeLines": 325,
       "fileCategory": "docs"
     },
     {
       "path": "docs/SECURITY_REQUIREMENTS.md",
       "language": "markdown",
-      "sizeLines": 110,
+      "sizeLines": 112,
       "fileCategory": "docs"
     },
     {
@@ -4750,13 +4931,13 @@
     {
       "path": "docs/SETUP_WIZARD.md",
       "language": "markdown",
-      "sizeLines": 27,
+      "sizeLines": 29,
       "fileCategory": "docs"
     },
     {
       "path": "docs/VALIDATION_RULES.md",
       "language": "markdown",
-      "sizeLines": 130,
+      "sizeLines": 132,
       "fileCategory": "docs"
     },
     {
@@ -4966,7 +5147,7 @@
     {
       "path": "docs/modules/README.md",
       "language": "markdown",
-      "sizeLines": 95,
+      "sizeLines": 97,
       "fileCategory": "docs"
     },
     {
@@ -4990,67 +5171,187 @@
     {
       "path": "document/01_system_architecture.html",
       "language": "html",
-      "sizeLines": 14701,
+      "sizeLines": 14667,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/01_system_architecture.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/01_system_architecture.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/02_multitenancy_org_hierarchy.html",
       "language": "html",
-      "sizeLines": 14704,
+      "sizeLines": 14670,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/02_multitenancy_org_hierarchy.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/02_multitenancy_org_hierarchy.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/03_business_core_workflow.html",
       "language": "html",
-      "sizeLines": 14711,
+      "sizeLines": 14674,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/03_business_core_workflow.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/03_business_core_workflow.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/04_auth_session_rbac_sequence.html",
       "language": "html",
-      "sizeLines": 14768,
+      "sizeLines": 14734,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/04_auth_session_rbac_sequence.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/04_auth_session_rbac_sequence.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/05_invoice_creation_payment_sequence.html",
       "language": "html",
-      "sizeLines": 14758,
+      "sizeLines": 14724,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/05_invoice_creation_payment_sequence.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/05_invoice_creation_payment_sequence.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/06_erp_data_lineage_flow.html",
       "language": "html",
-      "sizeLines": 14716,
+      "sizeLines": 14682,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/06_erp_data_lineage_flow.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/06_erp_data_lineage_flow.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/07_deal_sales_lifecycle.html",
       "language": "html",
-      "sizeLines": 14655,
+      "sizeLines": 14621,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/07_deal_sales_lifecycle.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/07_deal_sales_lifecycle.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/08_invoice_lifecycle.html",
       "language": "html",
-      "sizeLines": 14637,
+      "sizeLines": 14603,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/08_invoice_lifecycle.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/08_invoice_lifecycle.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/09_task_project_lifecycle.html",
       "language": "html",
-      "sizeLines": 14626,
+      "sizeLines": 14592,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/09_task_project_lifecycle.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/09_task_project_lifecycle.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/10_database_er_domain_model.html",
       "language": "html",
-      "sizeLines": 14717,
+      "sizeLines": 14683,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/10_database_er_domain_model.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/10_database_er_domain_model.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/11_payroll_policy_gl_flow.html",
       "language": "html",
-      "sizeLines": 14701,
+      "sizeLines": 14664,
       "fileCategory": "markup"
     },
     {
@@ -5068,32 +5369,92 @@
     {
       "path": "document/12_document_management_lifecycle.html",
       "language": "html",
-      "sizeLines": 14655,
+      "sizeLines": 14621,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/12_document_management_lifecycle.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/12_document_management_lifecycle.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/13_two_factor_auth_sequence.html",
       "language": "html",
-      "sizeLines": 14792,
+      "sizeLines": 14758,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/13_two_factor_auth_sequence.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/13_two_factor_auth_sequence.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/14_approval_workflow_engine.html",
       "language": "html",
-      "sizeLines": 14640,
+      "sizeLines": 14606,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/14_approval_workflow_engine.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/14_approval_workflow_engine.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/15_payment_gateway_settlement.html",
       "language": "html",
-      "sizeLines": 14785,
+      "sizeLines": 14751,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/15_payment_gateway_settlement.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/15_payment_gateway_settlement.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/16_master_dialog_editor_lifecycle.html",
       "language": "html",
-      "sizeLines": 14640,
+      "sizeLines": 14606,
       "fileCategory": "markup"
+    },
+    {
+      "path": "document/16_master_dialog_editor_lifecycle.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/16_master_dialog_editor_lifecycle.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
     },
     {
       "path": "document/17_hr_employee_attendance_payroll.md",
@@ -5128,7 +5489,7 @@
     {
       "path": "document/22_external_api_architecture.html",
       "language": "html",
-      "sizeLines": 14645,
+      "sizeLines": 14646,
       "fileCategory": "markup"
     },
     {
@@ -5150,15 +5511,33 @@
       "fileCategory": "config"
     },
     {
+      "path": "document/23_pos_server_configuration.html",
+      "language": "html",
+      "sizeLines": 14604,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/23_pos_server_configuration.visual-check.html",
+      "language": "html",
+      "sizeLines": 32,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "document/23_pos_server_configuration.visual-check.json",
+      "language": "json",
+      "sizeLines": 482,
+      "fileCategory": "config"
+    },
+    {
       "path": "document/API_Document.md",
       "language": "markdown",
-      "sizeLines": 5280,
+      "sizeLines": 5282,
       "fileCategory": "docs"
     },
     {
       "path": "document/DATABASE_ERD.md",
       "language": "markdown",
-      "sizeLines": 1645,
+      "sizeLines": 1647,
       "fileCategory": "docs"
     },
     {
@@ -5168,33 +5547,63 @@
       "fileCategory": "docs"
     },
     {
+      "path": "document/DIAGRAM_DELIVERY_20261029.json",
+      "language": "json",
+      "sizeLines": 506,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/DIAGRAM_NOTES.md",
+      "language": "markdown",
+      "sizeLines": 390,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "document/DIAGRAM_VISUAL_CHECK_20261029.json",
+      "language": "json",
+      "sizeLines": 8750,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/DOCUMENTATION_UPDATE_20261029.md",
+      "language": "markdown",
+      "sizeLines": 32,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "document/DOCUMENT_LINK_CHECK_20261029.json",
+      "language": "json",
+      "sizeLines": 5,
+      "fileCategory": "config"
+    },
+    {
       "path": "document/GROUPS_WORKFLOW.md",
       "language": "markdown",
-      "sizeLines": 1192,
+      "sizeLines": 1194,
       "fileCategory": "docs"
     },
     {
       "path": "document/PHASE_28_1_POS_SCOPE.md",
       "language": "markdown",
-      "sizeLines": 48,
+      "sizeLines": 50,
       "fileCategory": "docs"
     },
     {
       "path": "document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md",
       "language": "markdown",
-      "sizeLines": 210,
+      "sizeLines": 212,
       "fileCategory": "docs"
     },
     {
       "path": "document/PHASE_28_3_POS_SECURITY.md",
       "language": "markdown",
-      "sizeLines": 132,
+      "sizeLines": 134,
       "fileCategory": "docs"
     },
     {
       "path": "document/PHASE_28_API.md",
       "language": "markdown",
-      "sizeLines": 92,
+      "sizeLines": 105,
       "fileCategory": "docs"
     },
     {
@@ -5206,25 +5615,25 @@
     {
       "path": "document/PHASE_28_DATABASE.md",
       "language": "markdown",
-      "sizeLines": 114,
+      "sizeLines": 116,
       "fileCategory": "docs"
     },
     {
       "path": "document/PHASE_28_IMPLEMENTATION_STATUS.md",
       "language": "markdown",
-      "sizeLines": 91,
+      "sizeLines": 93,
       "fileCategory": "docs"
     },
     {
       "path": "document/PHASE_28_LOCAL_ACCEPTANCE.md",
       "language": "markdown",
-      "sizeLines": 60,
+      "sizeLines": 62,
       "fileCategory": "docs"
     },
     {
       "path": "document/PHASE_28_LOCAL_TEST_SECURITY.md",
       "language": "markdown",
-      "sizeLines": 55,
+      "sizeLines": 57,
       "fileCategory": "docs"
     },
     {
@@ -5234,45 +5643,147 @@
       "fileCategory": "docs"
     },
     {
+      "path": "document/POS_CONFIGURATION.md",
+      "language": "markdown",
+      "sizeLines": 77,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "document/POS_CONFIG_GEMINI_REVIEW_20261029.md",
+      "language": "markdown",
+      "sizeLines": 42,
+      "fileCategory": "docs"
+    },
+    {
       "path": "document/README.md",
       "language": "markdown",
-      "sizeLines": 839,
+      "sizeLines": 843,
       "fileCategory": "docs"
     },
     {
       "path": "document/README_POS.md",
       "language": "markdown",
-      "sizeLines": 145,
+      "sizeLines": 159,
       "fileCategory": "docs"
     },
     {
       "path": "document/README_POS_PHARMACY.md",
       "language": "markdown",
-      "sizeLines": 76,
+      "sizeLines": 78,
       "fileCategory": "docs"
     },
     {
       "path": "document/README_POS_RESTAURANT.md",
       "language": "markdown",
-      "sizeLines": 75,
+      "sizeLines": 77,
       "fileCategory": "docs"
     },
     {
       "path": "document/README_POS_RETAIL.md",
       "language": "markdown",
-      "sizeLines": 60,
+      "sizeLines": 62,
       "fileCategory": "docs"
     },
     {
       "path": "document/UNDERSTAND_PIPELINE.md",
       "language": "markdown",
-      "sizeLines": 185,
+      "sizeLines": 189,
       "fileCategory": "docs"
+    },
+    {
+      "path": "document/acceptance/20261030/README.md",
+      "language": "markdown",
+      "sizeLines": 18,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "document/acceptance/20261030/api-browser.json",
+      "language": "json",
+      "sizeLines": 30,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/api-http.json",
+      "language": "json",
+      "sizeLines": 68,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/browser-all-fields-final.json",
+      "language": "json",
+      "sizeLines": 5599,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/context-browser.json",
+      "language": "json",
+      "sizeLines": 347,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/coordination-browser.json",
+      "language": "json",
+      "sizeLines": 55,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/dms-browser.json",
+      "language": "json",
+      "sizeLines": 90,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/etax-config-browser.json",
+      "language": "json",
+      "sizeLines": 11,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/manifest.json",
+      "language": "json",
+      "sizeLines": 96,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/matrix-paths.json",
+      "language": "json",
+      "sizeLines": 0,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/pdf-render.json",
+      "language": "json",
+      "sizeLines": 19,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/permission-browser.json",
+      "language": "json",
+      "sizeLines": 88,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/resilience-browser.json",
+      "language": "json",
+      "sizeLines": 43,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/restore-drill.json",
+      "language": "json",
+      "sizeLines": 8,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/acceptance/20261030/viewport-browser.json",
+      "language": "json",
+      "sizeLines": 46,
+      "fileCategory": "config"
     },
     {
       "path": "document/index.html",
       "language": "html",
-      "sizeLines": 918,
+      "sizeLines": 920,
       "fileCategory": "markup"
     },
     {
@@ -5422,7 +5933,7 @@
     {
       "path": "document/modules/README.md",
       "language": "markdown",
-      "sizeLines": 92,
+      "sizeLines": 94,
       "fileCategory": "docs"
     },
     {
@@ -5434,103 +5945,109 @@
     {
       "path": "document/specs/01_system_architecture.json",
       "language": "json",
-      "sizeLines": 43,
+      "sizeLines": 267,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/02_multitenancy_org_hierarchy.json",
       "language": "json",
-      "sizeLines": 46,
+      "sizeLines": 288,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/03_business_core_workflow.json",
       "language": "json",
-      "sizeLines": 58,
+      "sizeLines": 250,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/04_auth_session_rbac_sequence.json",
       "language": "json",
-      "sizeLines": 84,
+      "sizeLines": 259,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/05_invoice_creation_payment_sequence.json",
       "language": "json",
-      "sizeLines": 83,
+      "sizeLines": 253,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/06_erp_data_lineage_flow.json",
       "language": "json",
-      "sizeLines": 74,
+      "sizeLines": 216,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/07_deal_sales_lifecycle.json",
       "language": "json",
-      "sizeLines": 66,
+      "sizeLines": 173,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/08_invoice_lifecycle.json",
       "language": "json",
-      "sizeLines": 64,
+      "sizeLines": 151,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/09_task_project_lifecycle.json",
       "language": "json",
-      "sizeLines": 64,
+      "sizeLines": 152,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/10_database_er_domain_model.json",
       "language": "json",
-      "sizeLines": 47,
+      "sizeLines": 307,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/11_payroll_policy_gl_flow.json",
       "language": "json",
-      "sizeLines": 61,
+      "sizeLines": 253,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/12_document_management_lifecycle.json",
       "language": "json",
-      "sizeLines": 67,
+      "sizeLines": 185,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/13_two_factor_auth_sequence.json",
       "language": "json",
-      "sizeLines": 90,
+      "sizeLines": 304,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/14_approval_workflow_engine.json",
       "language": "json",
-      "sizeLines": 80,
+      "sizeLines": 157,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/15_payment_gateway_settlement.json",
       "language": "json",
-      "sizeLines": 106,
+      "sizeLines": 306,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/16_master_dialog_editor_lifecycle.json",
       "language": "json",
-      "sizeLines": 80,
+      "sizeLines": 157,
       "fileCategory": "config"
     },
     {
       "path": "document/specs/22_external_api_architecture.json",
       "language": "json",
-      "sizeLines": 30,
+      "sizeLines": 180,
+      "fileCategory": "config"
+    },
+    {
+      "path": "document/specs/23_pos_server_configuration.json",
+      "language": "json",
+      "sizeLines": 132,
       "fileCategory": "config"
     },
     {
@@ -5584,7 +6101,7 @@
     {
       "path": "gpt.md",
       "language": "markdown",
-      "sizeLines": 417,
+      "sizeLines": 427,
       "fileCategory": "docs"
     },
     {
@@ -5608,8 +6125,20 @@
     {
       "path": "pos/README.md",
       "language": "markdown",
-      "sizeLines": 81,
+      "sizeLines": 87,
       "fileCategory": "docs"
+    },
+    {
+      "path": "pos/app/Http/ConfigurationAccess.php",
+      "language": "php",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": "pos/app/Http/ConfigurationController.php",
+      "language": "php",
+      "sizeLines": 65,
+      "fileCategory": "code"
     },
     {
       "path": "pos/app/Http/ConnectorAuthentication.php",
@@ -6010,7 +6539,13 @@
     {
       "path": "pos/resources/pos.tsx",
       "language": "typescript",
-      "sizeLines": 974,
+      "sizeLines": 975,
+      "fileCategory": "code"
+    },
+    {
+      "path": "pos/resources/views/configuration.blade.php",
+      "language": "php",
+      "sizeLines": 41,
       "fileCategory": "code"
     },
     {
@@ -6032,6 +6567,12 @@
       "fileCategory": "code"
     },
     {
+      "path": "pos/routes/configuration.php",
+      "language": "php",
+      "sizeLines": 10,
+      "fileCategory": "code"
+    },
+    {
       "path": "pos/routes/connector.php",
       "language": "php",
       "sizeLines": 81,
@@ -6046,7 +6587,7 @@
     {
       "path": "pos/routes/web.php",
       "language": "php",
-      "sizeLines": 257,
+      "sizeLines": 259,
       "fileCategory": "code"
     },
     {
@@ -6152,6 +6693,12 @@
       "fileCategory": "code"
     },
     {
+      "path": "pos/tests/ConfigurationTest.php",
+      "language": "php",
+      "sizeLines": 81,
+      "fileCategory": "code"
+    },
+    {
       "path": "pos/tests/PrescriptionTest.php",
       "language": "php",
       "sizeLines": 125,
@@ -6206,9 +6753,64 @@
       "fileCategory": "code"
     }
   ],
-  "totalFiles": 1030,
-  "filteredByIgnore": 127,
+  "totalFiles": 1125,
+  "filteredByIgnore": 107,
   "estimatedComplexity": "very-large",
+  "failures": [],
+  "stats": {
+    "filesScanned": 1125,
+    "byCategory": {
+      "code": 859,
+      "docs": 155,
+      "config": 71,
+      "markup": 39,
+      "script": 1
+    },
+    "byLanguage": {
+      "unknown": 8,
+      "markdown": 152,
+      "config": 3,
+      "php": 649,
+      "json": 64,
+      "javascript": 38,
+      "xml": 3,
+      "yaml": 1,
+      "txt": 3,
+      "css": 2,
+      "typescript": 160,
+      "example": 1,
+      "shell": 1,
+      "cron": 1,
+      "conf": 1,
+      "service": 1,
+      "html": 37
+    }
+  },
+  "name": "ERP",
+  "description": "ERP หลายองค์กรและ POS แยกสาขา ครอบคลุม local configuration, ธุรกรรม, เอกสาร, สิทธิ์ และ operations tooling โดยไม่อ้าง live acceptance",
+  "languages": [
+    "config",
+    "css",
+    "example",
+    "html",
+    "javascript",
+    "json",
+    "markdown",
+    "php",
+    "txt",
+    "typescript",
+    "unknown",
+    "xml",
+    "yaml"
+  ],
+  "frameworks": [
+    "Laravel",
+    "React",
+    "Inertia.js",
+    "Vite",
+    "Tailwind CSS",
+    "PHPUnit"
+  ],
   "importMap": {
     ".htaccess": [],
     "ERP_FEATURE_PLAN.md": [],
@@ -7015,10 +7617,12 @@
     "backend/app/Http/Requests/ProfileUpdateRequest.php": [
       "backend/app/Models/User.php"
     ],
+    "backend/app/Jobs/OperationsHeartbeat.php": [],
     "backend/app/Jobs/SubmitETaxDocument.php": [
       "backend/app/Models/ETaxDocument.php",
       "backend/app/Services/ETax/ETaxProviderGatewayService.php"
     ],
+    "backend/app/Logging/RedactOperationalLogs.php": [],
     "backend/app/Mail/ErpNotificationMail.php": [],
     "backend/app/Mail/PayslipMail.php": [
       "backend/app/Models/PayrollItem.php"
@@ -8004,8 +8608,11 @@
     "backend/config/database.php": [],
     "backend/config/external_api.php": [],
     "backend/config/filesystems.php": [],
-    "backend/config/logging.php": [],
+    "backend/config/logging.php": [
+      "backend/app/Logging/RedactOperationalLogs.php"
+    ],
     "backend/config/mail.php": [],
+    "backend/config/operations.php": [],
     "backend/config/pos.php": [],
     "backend/config/queue.php": [],
     "backend/config/services.php": [],
@@ -8132,6 +8739,8 @@
     "backend/public/setup/index.php": [],
     "backend/public/setup/system-requirements.php": [],
     "backend/resources/css/app.css": [],
+    "backend/resources/fonts/OFL.txt": [],
+    "backend/resources/fonts/manifest.json": [],
     "backend/resources/js/Components/ApplicationLogo.tsx": [],
     "backend/resources/js/Components/Checkbox.tsx": [],
     "backend/resources/js/Components/DangerButton.tsx": [],
@@ -8163,6 +8772,7 @@
     "backend/resources/js/Components/InputLabel.tsx": [],
     "backend/resources/js/Components/Modal.tsx": [],
     "backend/resources/js/Components/NavLink.tsx": [],
+    "backend/resources/js/Components/NetworkFailureNotice.tsx": [],
     "backend/resources/js/Components/PrimaryButton.tsx": [],
     "backend/resources/js/Components/ResponsiveNavLink.tsx": [],
     "backend/resources/js/Components/SecondaryButton.tsx": [],
@@ -8508,8 +9118,11 @@
       "backend/resources/js/Components/SecondaryButton.tsx",
       "backend/resources/js/Components/UI/Badge.tsx",
       "backend/resources/js/Components/UI/Card.tsx",
+      "backend/resources/js/Components/UI/CreateEditDialog.tsx",
       "backend/resources/js/Components/UI/DataTable.tsx",
+      "backend/resources/js/Components/UI/DiscardChangesDialog.tsx",
       "backend/resources/js/Components/UI/PageHeader.tsx",
+      "backend/resources/js/Hooks/useDiscardGuard.ts",
       "backend/resources/js/Layouts/AuthenticatedLayout.tsx"
     ],
     "backend/resources/js/Pages/Finance/ExpenseEditorDialog.tsx": [
@@ -8777,7 +9390,10 @@
       "backend/resources/js/Components/SecondaryButton.tsx",
       "backend/resources/js/Components/UI/CreateEditDialog.tsx",
       "backend/resources/js/Components/UI/DataTable.tsx",
+      "backend/resources/js/Components/UI/DiscardChangesDialog.tsx",
       "backend/resources/js/Components/UI/PageHeader.tsx",
+      "backend/resources/js/Hooks/useDiscardGuard.ts",
+      "backend/resources/js/Hooks/useSubmissionKey.ts",
       "backend/resources/js/Layouts/AuthenticatedLayout.tsx",
       "backend/resources/js/Pages/Hr/Partials/EmployeeImportDialog.tsx"
     ],
@@ -9002,14 +9618,18 @@
     "backend/resources/js/Utils/format.ts": [],
     "backend/resources/js/app.tsx": [
       "backend/resources/css/app.css",
+      "backend/resources/js/Components/NetworkFailureNotice.tsx",
       "backend/resources/js/Support/historyGuard.ts",
       "backend/resources/js/bootstrap.ts"
     ],
     "backend/resources/js/bootstrap.ts": [],
     "backend/resources/views/app.blade.php": [],
+    "backend/resources/views/auth/recovery-codes.blade.php": [],
     "backend/resources/views/documents/commercial-print.blade.php": [],
     "backend/resources/views/documents/official-print.blade.php": [],
     "backend/resources/views/documents/payment-qr.blade.php": [],
+    "backend/resources/views/documents/pdf-fonts.blade.php": [],
+    "backend/resources/views/documents/pdf-layout.blade.php": [],
     "backend/resources/views/documents/withholding-certificate.blade.php": [],
     "backend/resources/views/emails/erp-notification.blade.php": [],
     "backend/resources/views/payroll/payslip.blade.php": [],
@@ -9055,6 +9675,9 @@
     "backend/routes/gateway.php": [
       "backend/app/Http/Controllers/Api/ETaxWebhookController.php",
       "backend/app/Http/Controllers/GatewayController.php"
+    ],
+    "backend/routes/operations.php": [
+      "backend/app/Jobs/OperationsHeartbeat.php"
     ],
     "backend/routes/summaries.php": [
       "backend/app/Http/Controllers/Api/SummaryController.php",
@@ -9156,6 +9779,50 @@
       "backend/app/Models/User.php",
       "backend/app/Services/PortalAccessService.php"
     ],
+    "backend/tests/Browser/prepare-remaining-api.php": [
+      "backend/app/Models/IntegrationApiKey.php",
+      "backend/app/Models/User.php"
+    ],
+    "backend/tests/Browser/prepare-remaining-records.php": [
+      "backend/app/Models/AssetCategory.php",
+      "backend/app/Models/Branch.php",
+      "backend/app/Models/ChartOfAccount.php",
+      "backend/app/Models/Customer.php",
+      "backend/app/Models/Deal.php",
+      "backend/app/Models/Department.php",
+      "backend/app/Models/Division.php",
+      "backend/app/Models/Expense.php",
+      "backend/app/Models/FixedAsset.php",
+      "backend/app/Models/Invoice.php",
+      "backend/app/Models/Permission.php",
+      "backend/app/Models/PortalUser.php",
+      "backend/app/Models/Project.php",
+      "backend/app/Models/Role.php",
+      "backend/app/Models/Supplier.php",
+      "backend/app/Models/Task.php",
+      "backend/app/Models/User.php",
+      "backend/app/Models/Voucher.php",
+      "backend/app/Services/PortalAccessService.php"
+    ],
+    "backend/tests/Browser/prepare-remaining.php": [
+      "backend/app/Models/Permission.php",
+      "backend/app/Models/Product.php",
+      "backend/app/Models/Role.php",
+      "backend/app/Models/User.php",
+      "backend/app/Services/OrganizationProvisioner.php"
+    ],
+    "backend/tests/Browser/remaining-api-ui.cjs": [],
+    "backend/tests/Browser/remaining-api.cjs": [],
+    "backend/tests/Browser/remaining-contexts.cjs": [],
+    "backend/tests/Browser/remaining-coordination.cjs": [],
+    "backend/tests/Browser/remaining-dms.cjs": [],
+    "backend/tests/Browser/remaining-environment.php": [],
+    "backend/tests/Browser/remaining-etax.cjs": [],
+    "backend/tests/Browser/remaining-matrix.cjs": [],
+    "backend/tests/Browser/remaining-permissions.cjs": [],
+    "backend/tests/Browser/remaining-resilience.cjs": [],
+    "backend/tests/Browser/remaining-router.php": [],
+    "backend/tests/Browser/remaining-viewport.cjs": [],
     "backend/tests/Concerns/ActsAsOrgUser.php": [
       "backend/app/Models/Organization.php",
       "backend/app/Models/User.php"
@@ -9377,6 +10044,12 @@
       "backend/app/Models/Setting.php",
       "backend/app/Models/User.php",
       "backend/app/Services/NotificationOutboxService.php"
+    ],
+    "backend/tests/Feature/OperationalLogRedactionTest.php": [
+      "backend/app/Logging/RedactOperationalLogs.php"
+    ],
+    "backend/tests/Feature/OperationsHealthTest.php": [
+      "backend/app/Jobs/OperationsHeartbeat.php"
     ],
     "backend/tests/Feature/Phase10BankAccountsTest.php": [
       "backend/app/Models/AuditLog.php",
@@ -10134,6 +10807,10 @@
     "backend/vite.config.js": [],
     "checklist.md": [],
     "create-edit-dialog-template-concept.md": [],
+    "deploy/backup-mysql.sh": [],
+    "deploy/cron/company-erp.cron": [],
+    "deploy/supervisor/company-erp.conf": [],
+    "deploy/systemd/company-erp-worker.service": [],
     "docs/ARCHITECTURE_DECISIONS.md": [],
     "docs/CURRENT_IMPLEMENTATION.md": [],
     "docs/DESIGN_SYSTEM.md": [],
@@ -10146,6 +10823,7 @@
     "docs/EXTERNAL_READ_API.md": [],
     "docs/EXTERNAL_SUMMARY_API.md": [],
     "docs/EXTERNAL_SUMMARY_API_CHECKLIST.md": [],
+    "docs/LOCAL_ACCEPTANCE_20261030.md": [],
     "docs/PHASE_10_TREASURY_DESIGN.md": [],
     "docs/PHASE_11_GL_DESIGN.md": [],
     "docs/PHASE_12_ETAX_DESIGN.md": [],
@@ -10174,7 +10852,9 @@
     "docs/PHASE_28_POS.md": [],
     "docs/PHASE_7_POST_MVP_DESIGN.md": [],
     "docs/PHASE_ACCEPTANCE_CRITERIA.md": [],
+    "docs/PRODUCTION_RUNBOOK.md": [],
     "docs/README.md": [],
+    "docs/REMAINING_WORK_20261029.md": [],
     "docs/ROUTES_AND_SCREENS.md": [],
     "docs/SECURITY_REQUIREMENTS.md": [],
     "docs/SEED_DATA.md": [],
@@ -10219,23 +10899,53 @@
     "docs/openapi/external-summary-v1.json": [],
     "docs/phase231-inventory.manifest.json": [],
     "document/01_system_architecture.html": [],
+    "document/01_system_architecture.visual-check.html": [],
+    "document/01_system_architecture.visual-check.json": [],
     "document/02_multitenancy_org_hierarchy.html": [],
+    "document/02_multitenancy_org_hierarchy.visual-check.html": [],
+    "document/02_multitenancy_org_hierarchy.visual-check.json": [],
     "document/03_business_core_workflow.html": [],
+    "document/03_business_core_workflow.visual-check.html": [],
+    "document/03_business_core_workflow.visual-check.json": [],
     "document/04_auth_session_rbac_sequence.html": [],
+    "document/04_auth_session_rbac_sequence.visual-check.html": [],
+    "document/04_auth_session_rbac_sequence.visual-check.json": [],
     "document/05_invoice_creation_payment_sequence.html": [],
+    "document/05_invoice_creation_payment_sequence.visual-check.html": [],
+    "document/05_invoice_creation_payment_sequence.visual-check.json": [],
     "document/06_erp_data_lineage_flow.html": [],
+    "document/06_erp_data_lineage_flow.visual-check.html": [],
+    "document/06_erp_data_lineage_flow.visual-check.json": [],
     "document/07_deal_sales_lifecycle.html": [],
+    "document/07_deal_sales_lifecycle.visual-check.html": [],
+    "document/07_deal_sales_lifecycle.visual-check.json": [],
     "document/08_invoice_lifecycle.html": [],
+    "document/08_invoice_lifecycle.visual-check.html": [],
+    "document/08_invoice_lifecycle.visual-check.json": [],
     "document/09_task_project_lifecycle.html": [],
+    "document/09_task_project_lifecycle.visual-check.html": [],
+    "document/09_task_project_lifecycle.visual-check.json": [],
     "document/10_database_er_domain_model.html": [],
+    "document/10_database_er_domain_model.visual-check.html": [],
+    "document/10_database_er_domain_model.visual-check.json": [],
     "document/11_payroll_policy_gl_flow.html": [],
     "document/11_payroll_policy_gl_flow.visual-check.html": [],
     "document/11_payroll_policy_gl_flow.visual-check.json": [],
     "document/12_document_management_lifecycle.html": [],
+    "document/12_document_management_lifecycle.visual-check.html": [],
+    "document/12_document_management_lifecycle.visual-check.json": [],
     "document/13_two_factor_auth_sequence.html": [],
+    "document/13_two_factor_auth_sequence.visual-check.html": [],
+    "document/13_two_factor_auth_sequence.visual-check.json": [],
     "document/14_approval_workflow_engine.html": [],
+    "document/14_approval_workflow_engine.visual-check.html": [],
+    "document/14_approval_workflow_engine.visual-check.json": [],
     "document/15_payment_gateway_settlement.html": [],
+    "document/15_payment_gateway_settlement.visual-check.html": [],
+    "document/15_payment_gateway_settlement.visual-check.json": [],
     "document/16_master_dialog_editor_lifecycle.html": [],
+    "document/16_master_dialog_editor_lifecycle.visual-check.html": [],
+    "document/16_master_dialog_editor_lifecycle.visual-check.json": [],
     "document/17_hr_employee_attendance_payroll.md": [],
     "document/18_etax_gateway_pipeline.md": [],
     "document/19_cash_flow_forecasting_engine.md": [],
@@ -10245,9 +10955,17 @@
     "document/22_external_api_architecture.md": [],
     "document/22_external_api_architecture.visual-check.html": [],
     "document/22_external_api_architecture.visual-check.json": [],
+    "document/23_pos_server_configuration.html": [],
+    "document/23_pos_server_configuration.visual-check.html": [],
+    "document/23_pos_server_configuration.visual-check.json": [],
     "document/API_Document.md": [],
     "document/DATABASE_ERD.md": [],
     "document/DATABASE_UPGRADE_20261027.md": [],
+    "document/DIAGRAM_DELIVERY_20261029.json": [],
+    "document/DIAGRAM_NOTES.md": [],
+    "document/DIAGRAM_VISUAL_CHECK_20261029.json": [],
+    "document/DOCUMENTATION_UPDATE_20261029.md": [],
+    "document/DOCUMENT_LINK_CHECK_20261029.json": [],
     "document/GROUPS_WORKFLOW.md": [],
     "document/PHASE_28_1_POS_SCOPE.md": [],
     "document/PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md": [],
@@ -10259,12 +10977,29 @@
     "document/PHASE_28_LOCAL_ACCEPTANCE.md": [],
     "document/PHASE_28_LOCAL_TEST_SECURITY.md": [],
     "document/PHASE_28_REVIEW_ATTEMPT_20261027.md": [],
+    "document/POS_CONFIGURATION.md": [],
+    "document/POS_CONFIG_GEMINI_REVIEW_20261029.md": [],
     "document/README.md": [],
     "document/README_POS.md": [],
     "document/README_POS_PHARMACY.md": [],
     "document/README_POS_RESTAURANT.md": [],
     "document/README_POS_RETAIL.md": [],
     "document/UNDERSTAND_PIPELINE.md": [],
+    "document/acceptance/20261030/README.md": [],
+    "document/acceptance/20261030/api-browser.json": [],
+    "document/acceptance/20261030/api-http.json": [],
+    "document/acceptance/20261030/browser-all-fields-final.json": [],
+    "document/acceptance/20261030/context-browser.json": [],
+    "document/acceptance/20261030/coordination-browser.json": [],
+    "document/acceptance/20261030/dms-browser.json": [],
+    "document/acceptance/20261030/etax-config-browser.json": [],
+    "document/acceptance/20261030/manifest.json": [],
+    "document/acceptance/20261030/matrix-paths.json": [],
+    "document/acceptance/20261030/pdf-render.json": [],
+    "document/acceptance/20261030/permission-browser.json": [],
+    "document/acceptance/20261030/resilience-browser.json": [],
+    "document/acceptance/20261030/restore-drill.json": [],
+    "document/acceptance/20261030/viewport-browser.json": [],
     "document/index.html": [],
     "document/modules/00_architecture.md": [],
     "document/modules/01_foundation_organization.md": [],
@@ -10309,6 +11044,7 @@
     "document/specs/15_payment_gateway_settlement.json": [],
     "document/specs/16_master_dialog_editor_lifecycle.json": [],
     "document/specs/22_external_api_architecture.json": [],
+    "document/specs/23_pos_server_configuration.json": [],
     "erp-dashboard-design-concept.md": [],
     "examples/external-api/build-openapi.mjs": [],
     "examples/external-api/smoke.mjs": [
@@ -10328,6 +11064,10 @@
     "index.php": [],
     "pos/.env.example": [],
     "pos/README.md": [],
+    "pos/app/Http/ConfigurationAccess.php": [],
+    "pos/app/Http/ConfigurationController.php": [
+      "pos/app/Models/Staff.php"
+    ],
     "pos/app/Http/ConnectorAuthentication.php": [],
     "pos/app/Http/LocalPublicMenu.php": [
       "pos/app/Services/PublicMenuService.php"
@@ -10457,9 +11197,14 @@
       "pos/resources/TaxDocumentsPanel.tsx",
       "pos/resources/pos.css"
     ],
+    "pos/resources/views/configuration.blade.php": [],
     "pos/resources/views/menu.blade.php": [],
     "pos/resources/views/pos.blade.php": [],
     "pos/resources/views/tax-document.blade.php": [],
+    "pos/routes/configuration.php": [
+      "pos/app/Http/ConfigurationAccess.php",
+      "pos/app/Http/ConfigurationController.php"
+    ],
     "pos/routes/connector.php": [
       "pos/app/Services/CheckpointService.php",
       "pos/app/Services/LotRecallService.php",
@@ -10539,6 +11284,9 @@
       "pos/app/Services/OutboxService.php",
       "pos/app/Services/RecoveryFenceService.php",
       "pos/app/Support/CanonicalJson.php"
+    ],
+    "pos/tests/ConfigurationTest.php": [
+      "pos/app/Models/Staff.php"
     ],
     "pos/tests/PrescriptionTest.php": [
       "pos/app/Models/Staff.php",

@@ -37,6 +37,7 @@ class PosController extends Controller
             'integrityConflicts' => DB::table('pos_sync_conflicts')->whereIn('pos_instance_id', $ids)->count(),
             'transportEnabled' => false,
             'canReconcile' => $request->user()->hasPermissionCode('pos.reconcile'),
+            'membershipEnabled' => app()->environment(['local', 'testing']) && config('pos.local_membership_enabled') === true,
             'canManage' => $request->user()->hasPermissionCode('pos.manage'),
             'taxDocumentsEnabled' => app()->environment(['local', 'testing']) && config('pos.local_tax_documents_enabled') === true,
             'productOptions' => $request->user()->hasPermissionCode('pos.manage') ? DB::table('products')->where('org_id', $request->user()->org_id)->whereNull('deleted_at')->where('is_active', true)->orderBy('name')->limit(500)->get(['id', 'name', 'sku']) : [],

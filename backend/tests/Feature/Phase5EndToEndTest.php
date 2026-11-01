@@ -250,7 +250,7 @@ class Phase5EndToEndTest extends TestCase
             );
     }
 
-    public function test_security_review_has_no_sensitive_audit_payload_and_no_export_notification_or_public_api_routes(): void
+    public function test_security_review_has_no_sensitive_audit_payload_and_guards_current_export_notification_and_api_routes(): void
     {
         $owner = User::factory()->create(['person_id' => '1234567890123']);
         $this->attachRole($owner, 'owner', ['users.create']);
@@ -277,11 +277,20 @@ class Phase5EndToEndTest extends TestCase
         $this->assertStringNotContainsString('secret', $auditPayload);
         $this->assertStringNotContainsString('9876543210123', $auditPayload);
 
-        $uris = collect(Route::getRoutes())->map(fn ($route) => $route->uri())->values();
-        $this->assertFalse($uris->contains(fn (string $uri) => Str::startsWith($uri, 'api/') && ! Str::startsWith($uri, 'api/gateway/')));
-        $this->assertFalse($uris->contains(fn (string $uri) => str_contains($uri, 'export') && ! Str::startsWith($uri, 'tax-reports/') && ! Str::startsWith($uri, 'payroll/')));
-        $this->assertFalse($uris->contains(fn (string $uri) => $uri === 'notifications' || Str::startsWith($uri, 'notifications/')));
-        $this->assertFalse($uris->contains(fn (string $uri) => $uri === 'notification-settings' || Str::startsWith($uri, 'notification-settings/')));
+        // Later accepted phases intentionally added these routes. Assert their
+        // boundaries instead of asserting that the features do not exist.
+        $apiRoutes = collect(Route::getRoutes())->filter(fn ($route) => Str::startsWith($route->uri(), 'api/v1/'));
+        $this->assertNotEmpty($apiRoutes);
+        foreach ($apiRoutes as $route) {
+            $this->assertSame([], array_diff($route->methods(), ['GET', 'HEAD']));
+            $this->assertStringContainsString(\App\Http\Middleware\AuthenticateIntegrationKey::class, implode(',', app('router')->gatherRouteMiddleware($route)));
+        }
+        foreach (Route::getRoutes() as $route) {
+            if (! Str::startsWith($route->uri(), 'api/') && (str_contains($route->uri(), 'export') || Str::startsWith($route->uri(), ['notifications', 'notification-settings']))) {
+                $this->assertContains(\Illuminate\Auth\Middleware\Authenticate::class, app('router')->gatherRouteMiddleware($route));
+            }
+        }
+        $this->getJson('/api/v1/products')->assertUnauthorized();
     }
 
     public function test_production_invite_does_not_flash_plain_token(): void

@@ -2,6 +2,7 @@
 
 namespace Pos\Tests;
 
+use Company\Pos\MemberEnvelope;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,8 +14,13 @@ use Illuminate\Support\Str;
 use Pos\Models\Staff;
 use Pos\Services\CashMovementService;
 use Pos\Services\CheckoutService;
+use Pos\Services\DeliveryService;
 use Pos\Services\DiscountService;
 use Pos\Services\ManagerApproval;
+use Pos\Services\MemberDraftService;
+use Pos\Services\MembershipService;
+use Pos\Services\OfflineIngressService;
+use Pos\Services\OfflinePermitService;
 use Pos\Services\PharmacyPolicy;
 use Pos\Services\PrescriptionScanner;
 use Pos\Services\PrescriptionService;
@@ -98,6 +104,65 @@ class CheckoutTest extends TestCase
         $public = openssl_pkey_get_details(openssl_pkey_get_private(file_get_contents($this->keyPath)))['key'];
         $this->assertSame(1, openssl_verify(CanonicalJson::encode($event), $signature, $public, OPENSSL_ALGO_SHA256));
         $this->assertSame(hash('sha256', CanonicalJson::encode($event['payload'])), $event['payload_hash']);
+    }
+
+    public function test_delivery_of_a_real_cash_sale_keeps_original_quota_payment_and_signed_event(): void
+    {
+        config(['pos.local_delivery_enabled' => true]);
+        $sale = app(CheckoutService::class)->checkout($this->staff, $this->input());
+        $before = DB::table('pos_grants')->get()->toJson();
+        $service = app(DeliveryService::class);
+        $delivery = $service->create($this->staff, ['request_key' => (string) Str::uuid(), 'settlement_mode' => 'prepaid_cash', 'sale_id' => $sale['sale_id'], 'recipient' => 'Synthetic recipient', 'phone' => '000-TEST', 'address' => 'Synthetic address']);
+        foreach (['ready', 'dispatch', 'deliver'] as $action) {
+            $delivery = $service->transition($this->staff, $delivery->id, ['request_key' => (string) Str::uuid(), 'version' => $delivery->version, 'action' => $action] + ($action === 'dispatch' ? ['courier_id' => $this->staff->id] : []));
+        }
+        $this->assertSame('delivered', $delivery->status);
+        $this->assertSame($before, DB::table('pos_grants')->get()->toJson());
+        $this->assertDatabaseCount('pos_orders', 1);
+        $this->assertDatabaseCount('pos_payments', 1);
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'sale.completed')->count());
+        $this->assertSame('sale.completed', json_decode(DB::table('pos_outbox')->value('envelope'), true)['event_type']);
+    }
+
+    public function test_prepaid_delivery_return_reuses_source_refund_and_retail_inspection_without_quota_reclaim(): void
+    {
+        config(['pos.local_delivery_enabled' => true, 'pos.local_refunds_enabled' => true, 'pos.local_return_inspections_enabled' => true]);
+        $sale = app(CheckoutService::class)->checkout($this->staff, $this->input());
+        $this->staff->update(['role' => 'manager']);
+        $service = app(DeliveryService::class);
+        $delivery = $service->create($this->staff, ['request_key' => (string) Str::uuid(), 'settlement_mode' => 'prepaid_cash', 'sale_id' => $sale['sale_id'], 'recipient' => 'Synthetic recipient', 'phone' => '000-TEST', 'address' => 'Synthetic address']);
+        foreach (['ready', 'dispatch', 'fail', 'receive', 'refund_prepaid', 'inspect'] as $action) {
+            $delivery = $service->transition($this->staff, $delivery->id, ['request_key' => (string) Str::uuid(), 'version' => $delivery->version, 'action' => $action, 'courier_id' => $this->staff->id, 'terminal_id' => $this->terminal, 'reason' => 'recipient_absent', 'decision' => 'restock', 'condition_verified' => true, 'manager_password' => 'long-test-password']);
+        }
+        $this->assertSame('returned', $delivery->status);
+        $this->assertDatabaseCount('pos_refunds', 1);
+        $this->assertDatabaseCount('pos_return_inspections', 1);
+        $this->assertEquals(2, DB::table('pos_grants')->value('consumed_quantity'));
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'sale.refunded')->count());
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'return.inspected')->count());
+    }
+
+    public function test_delivery_links_an_existing_full_original_refund_without_refunding_twice(): void
+    {
+        config(['pos.local_delivery_enabled' => true, 'pos.local_refunds_enabled' => true, 'pos.local_return_inspections_enabled' => true]);
+        $sale = app(CheckoutService::class)->checkout($this->staff, $this->input());
+        $this->staff->update(['role' => 'manager']);
+        $service = app(DeliveryService::class);
+        $delivery = $service->create($this->staff, ['request_key' => (string) Str::uuid(), 'settlement_mode' => 'prepaid_cash', 'sale_id' => $sale['sale_id'], 'recipient' => 'Synthetic recipient', 'phone' => '000-TEST', 'address' => 'Synthetic address']);
+        foreach (['ready', 'dispatch', 'fail', 'receive', 'refund_prepaid', 'inspect'] as $action) {
+            if ($action === 'refund_prepaid') {
+                $refunds = app(RefundService::class);
+                $command = $refunds->command(['order_id' => $sale['sale_id'], 'terminal_id' => $this->terminal, 'request_key' => 'external-full', 'reason' => 'customer_return', 'items' => array_map(fn ($line) => ['line_id' => $line['line_id'], 'quantity' => $line['quantity'], 'returned_quantity' => $line['quantity']], $sale['lines'])]);
+                $refunds->refund($this->staff, $command, ManagerApproval::verify($this->staff, 'long-test-password', $command));
+            }
+            $delivery = $service->transition($this->staff, $delivery->id, ['request_key' => (string) Str::uuid(), 'version' => $delivery->version, 'action' => $action, 'courier_id' => $this->staff->id, 'terminal_id' => $this->terminal, 'reason' => 'recipient_absent', 'decision' => 'restock', 'condition_verified' => true, 'manager_password' => 'long-test-password']);
+        }
+        $this->assertSame('returned', $delivery->status);
+        $this->assertDatabaseCount('pos_refunds', 1);
+        $this->assertDatabaseCount('pos_return_inspections', 1);
+        $this->assertEquals(2, DB::table('pos_grants')->value('consumed_quantity'));
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'sale.refunded')->count());
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'return.inspected')->count());
     }
 
     public function test_partial_refunds_are_source_linked_deduplicated_and_quarantined(): void
@@ -666,5 +731,336 @@ class CheckoutTest extends TestCase
     private function input(string $key = 'checkout-one'): array
     {
         return ['terminal_id' => $this->terminal, 'request_key' => $key, 'catalog_version' => 'v1', 'items' => [['product_id' => $this->product, 'quantity' => '2.0000']], 'cash_tendered' => '30.00'];
+    }
+
+    private function membershipFixture(array $overrides = []): array
+    {
+        config(['pos.local_membership_enabled' => true]);
+        $member = (string) Str::uuid();
+        $policy = ['id' => (string) Str::uuid(), 'version' => 1, 'mode' => 'fixed', 'value' => '2.00', 'currency' => 'THB', 'starts_at' => now()->subDay()->utc()->format('Y-m-d\TH:i:s\Z'), 'ends_at' => now()->addDay()->utc()->format('Y-m-d\TH:i:s\Z'), 'branch_ids' => [$this->branch], 'business_types' => ['retail', 'restaurant', 'pharmacy'], 'member_required' => true, 'member_tiers' => ['standard'], 'product_ids' => [], 'minimum_spend' => '0.00', 'minimum_eligible_only' => true, 'minimum_components' => ['merchandise'], 'discount_components' => ['merchandise'], 'max_uses' => 1, 'per_member_limit' => 1, 'combination' => 'exclusive', 'refund_entitlement' => 'full_only'];
+        $policy = array_replace($policy, $overrides);
+        $pub = ['id' => (string) Str::uuid(), 'instance_id' => config('pos.instance_id'), 'branch_id' => $this->branch, 'version' => 1, 'created_at' => now()->utc()->toIso8601String(), 'valid_until' => now()->addMinutes(15)->utc()->toIso8601String(), 'members' => [['member_id' => $member, 'code' => 'SYNTHETIC', 'name_masked' => 'S***', 'phone_masked' => '***0101', 'tier' => 'standard', 'status' => 'active']], 'policies' => [['name' => 'Synthetic promotion', 'policy' => $policy]], 'rights' => [['id' => (string) Str::uuid(), 'promotion_id' => $policy['id'], 'policy_version' => 1, 'member_id' => $member]]];
+        app(MembershipService::class)->provision($pub['id'], $pub);
+
+        return $pub;
+    }
+
+    private function memberInput(array $pub): array
+    {
+        return $this->input() + ['membership_publication_id' => $pub['id'], 'member_id' => $pub['members'][0]['member_id'], 'promotion_id' => $pub['policies'][0]['policy']['id']];
+    }
+
+    public function test_promotion_claim_is_atomic_across_terminals_and_replay_and_full_refund(): void
+    {
+        $pub = $this->membershipFixture();
+        $input = $this->memberInput($pub);
+        $input['items'][0]['quantity'] = '1';
+        $checkout = app(CheckoutService::class);
+        $sale = $checkout->checkout($this->staff, $input);
+        $this->assertSame('8.56', $sale['total']);
+        $this->assertSame('2.00', $sale['lines'][0]['discount_amount']);
+        $this->assertSame(CanonicalJson::encode($sale), CanonicalJson::encode($checkout->checkout($this->staff, $input)));
+        app(MembershipService::class)->provision($pub['id'], $pub);
+        $this->assertSame($sale['membership']['claim_id'], DB::table('pos_promotion_rights')->value('used_by'));
+        $terminal = (string) Str::uuid();
+        DB::table('pos_terminals')->insert(['id' => $terminal, 'branch_id' => $this->branch, 'code' => 'T2']);
+        $checkout->openShift($this->staff, $terminal, '0');
+        $second = $input;
+        $second['terminal_id'] = $terminal;
+        $second['request_key'] = (string) Str::uuid();
+        try {
+            $checkout->checkout($this->staff, $second);
+            $this->fail('Allocated right used twice.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $this->assertDatabaseCount('pos_orders', 1);
+        $this->staff->update(['role' => 'manager']);
+        config(['pos.local_refunds_enabled' => true]);
+        $refunds = app(RefundService::class);
+        $command = $refunds->command(['order_id' => $sale['sale_id'], 'terminal_id' => $this->terminal, 'request_key' => 'membership-full', 'reason' => 'customer_return', 'items' => [['line_id' => $sale['lines'][0]['line_id'], 'quantity' => '1', 'returned_quantity' => '1']]]);
+        $approval = ManagerApproval::verify($this->staff, 'long-test-password', $command);
+        $refunds->refund($this->staff, $command, $approval);
+        $refunds->refund($this->staff, $command, $approval);
+        $this->assertNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $this->assertDatabaseCount('pos_refunds', 1);
+        $again = $checkout->checkout($this->staff, $second);
+        $this->assertNotSame($sale['membership']['claim_id'], $again['membership']['claim_id']);
+        $this->assertDatabaseCount('pos_promotion_claims', 2);
+        $this->assertEquals(2, DB::table('pos_grants')->value('consumed_quantity'));
+    }
+
+    public function test_partial_refund_retains_promotion_right_until_cumulative_full_refund(): void
+    {
+        $pub = $this->membershipFixture();
+        $sale = app(CheckoutService::class)->checkout($this->staff, $this->memberInput($pub));
+        $this->staff->update(['role' => 'manager']);
+        config(['pos.local_refunds_enabled' => true]);
+        $refunds = app(RefundService::class);
+        foreach (['partial-one', 'partial-two'] as $key) {
+            $command = $refunds->command(['order_id' => $sale['sale_id'], 'terminal_id' => $this->terminal, 'request_key' => $key, 'reason' => 'customer_return', 'items' => [['line_id' => $sale['lines'][0]['line_id'], 'quantity' => '1', 'returned_quantity' => '0']]]);
+            $refund = $refunds->refund($this->staff, $command, ManagerApproval::verify($this->staff, 'long-test-password', $command));
+            $this->assertSame('9.63', $refund['total']);
+            if ($key === 'partial-one') {
+                $this->assertNotNull(DB::table('pos_promotion_rights')->value('used_by'));
+            }
+        }
+        $this->assertNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $this->assertEquals(2, DB::table('pos_grants')->value('consumed_quantity'));
+    }
+
+    public function test_failed_checkout_rolls_back_promotion_right_and_stale_publication_fails_closed(): void
+    {
+        $pub = $this->membershipFixture();
+        $input = $this->memberInput($pub);
+        $input['cash_tendered'] = '0';
+        try {
+            app(CheckoutService::class)->checkout($this->staff, $input);
+            $this->fail('Insufficient cash accepted.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(422, $e->getStatusCode());
+        }
+        $this->assertNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $this->assertDatabaseCount('pos_promotion_claims', 0);
+        $this->assertEquals(0, DB::table('pos_grants')->value('consumed_quantity'));
+        $this->travel(16)->minutes();
+        try {
+            app(CheckoutService::class)->checkout($this->staff, $this->memberInput($pub));
+            $this->fail('Expired membership accepted.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+    }
+
+    public function test_pharmacy_promotion_keeps_pharmacist_and_unit_conversion_guards(): void
+    {
+        $this->pharmacyCatalog();
+        $pub = $this->membershipFixture();
+        $input = $this->memberInput($pub);
+        $input['catalog_version'] = 'pharmacy-v1';
+        $input['items'][0]['unit'] = 'strip';
+        $input['items'][0]['quantity'] = '1';
+        $input['cash_tendered'] = '100.00';
+        try {
+            app(CheckoutService::class)->checkout($this->staff, $input);
+            $this->fail('Cashier dispensed pharmacist-only item through membership.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(403, $e->getStatusCode());
+        }
+        $this->assertNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $this->staff->update(['role' => 'pharmacist']);
+        $sale = app(CheckoutService::class)->checkout($this->staff, $input);
+        $this->assertSame('83.46', $sale['total']);
+        $this->assertSame('10.0000', $sale['lines'][0]['base_quantity']);
+        $this->assertSame($this->staff->id, $sale['lines'][0]['pharmacist_id']);
+    }
+
+    public function test_promotion_abb_full_preserve_net_tax_and_never_double_sale_or_redemption(): void
+    {
+        $pub = $this->membershipFixture();
+        config(['pos.local_tax_documents_enabled' => true]);
+        $service = app(TaxDocumentService::class);
+        $service->provision(['branch_id' => $this->branch, 'version' => 'member-issuer-v1', 'seller_name' => 'Synthetic seller', 'seller_tax_id' => '0000000000000', 'seller_address' => 'Synthetic address', 'seller_branch_no' => '00000']);
+        $sale = app(CheckoutService::class)->checkout($this->staff, $this->memberInput($pub));
+        $abb = DB::table('pos_tax_documents')->firstOrFail();
+        $snapshot = json_decode($abb->snapshot, true);
+        $this->assertSame('19.26', $snapshot['total']);
+        $this->assertSame('1.26', $snapshot['tax_amount']);
+        $full = $service->issue($this->staff, ['sale_id' => $sale['sale_id'], 'terminal_id' => $this->terminal, 'kind' => 'FULL', 'request_key' => 'member-full', 'buyer' => ['name' => 'Synthetic buyer', 'tax_id' => '0000000000000', 'branch_no' => '00000', 'address' => 'Synthetic address']]);
+        $this->assertSame($abb->id, $full['replaces_document_id']);
+        $this->assertSame('19.26', $full['total']);
+        $this->assertDatabaseCount('pos_orders', 1);
+        $this->assertDatabaseCount('pos_payments', 1);
+        $this->assertDatabaseCount('pos_promotion_claims', 1);
+    }
+
+    public function test_cod_promotion_fees_failed_retry_and_inspected_return_keep_stock_and_coupon_separate(): void
+    {
+        $pub = $this->membershipFixture(['mode' => 'percent', 'value' => '10.00', 'minimum_spend' => '17.00', 'minimum_components' => ['merchandise', 'delivery', 'packaging'], 'discount_components' => ['merchandise', 'delivery', 'packaging']]);
+        config(['pos.local_delivery_enabled' => true]);
+        $this->staff->update(['role' => 'manager']);
+        $service = app(DeliveryService::class);
+        $delivery = $service->create($this->staff, ['request_key' => (string) Str::uuid(), 'settlement_mode' => 'cod', 'recipient' => 'Synthetic receiver', 'phone' => '000-TEST', 'address' => 'Synthetic address', 'catalog_version' => 'v1', 'items' => [['product_id' => $this->product, 'quantity' => '1']]]);
+        $step = function (string $action, array $data = []) use ($service, &$delivery) {
+            $delivery = $service->transition($this->staff, $delivery->id, $data + ['action' => $action, 'request_key' => (string) Str::uuid(), 'version' => $delivery->version]);
+        };
+        $step('fees', ['delivery_fee' => '5.00', 'delivery_tax_rate' => '0.00', 'packaging_fee' => '2.00', 'packaging_tax_rate' => '0.00', 'manager_password' => 'long-test-password']);
+        $step('membership', ['membership_publication_id' => $pub['id'], 'member_id' => $pub['members'][0]['member_id'], 'promotion_id' => $pub['policies'][0]['policy']['id']]);
+        $this->assertSame('9.63', $delivery->snapshot['total']);
+        $this->assertSame('6.30', $delivery->snapshot['fees_total']);
+        $this->assertNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $step('ready', ['terminal_id' => $this->terminal]);
+        $claim = $delivery->snapshot['membership']['claim_id'];
+        $this->assertSame($claim, DB::table('pos_promotion_rights')->value('used_by'));
+        $step('dispatch', ['courier_id' => $this->staff->id]);
+        $step('fail', ['reason' => 'recipient_absent']);
+        $this->assertSame($claim, DB::table('pos_promotion_rights')->value('used_by'));
+        $this->assertEquals(1, DB::table('pos_grants')->value('reserved_quantity'));
+        $this->travel(16)->minutes();
+        $step('retry', ['manager_password' => 'long-test-password']);
+        $step('dispatch', ['courier_id' => $this->staff->id]);
+        $step('fail', ['reason' => 'recipient_absent']);
+        $step('receive');
+        $this->assertSame($claim, DB::table('pos_promotion_rights')->value('used_by'));
+        $step('inspect', ['decision' => 'restock', 'condition_verified' => true, 'manager_password' => 'long-test-password']);
+        $this->assertNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $this->assertEquals(0, DB::table('pos_grants')->value('reserved_quantity'));
+        $this->assertEquals(0, DB::table('pos_grants')->value('consumed_quantity'));
+        $this->assertDatabaseCount('pos_orders', 0);
+        $this->assertDatabaseCount('pos_payments', 0);
+    }
+
+    public function test_cod_full_cash_refund_restores_coupon_but_does_not_make_uninspected_stock_sellable(): void
+    {
+        $pub = $this->membershipFixture();
+        config(['pos.local_delivery_enabled' => true]);
+        $this->staff->update(['role' => 'manager']);
+        $service = app(DeliveryService::class);
+        $delivery = $service->create($this->staff, ['request_key' => (string) Str::uuid(), 'settlement_mode' => 'cod', 'recipient' => 'Synthetic receiver', 'phone' => '000-TEST', 'address' => 'Synthetic address', 'catalog_version' => 'v1', 'items' => [['product_id' => $this->product, 'quantity' => '1']]]);
+        $step = function (string $action, array $data = []) use ($service, &$delivery) {
+            $delivery = $service->transition($this->staff, $delivery->id, $data + ['action' => $action, 'request_key' => (string) Str::uuid(), 'version' => $delivery->version]);
+        };
+        $step('membership', ['membership_publication_id' => $pub['id'], 'member_id' => $pub['members'][0]['member_id'], 'promotion_id' => $pub['policies'][0]['policy']['id']]);
+        $step('ready', ['terminal_id' => $this->terminal]);
+        $step('dispatch', ['courier_id' => $this->staff->id]);
+        $step('deliver');
+        $step('collect', ['amount' => '8.56']);
+        $step('receive');
+        $this->assertNotNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $step('refund', ['manager_password' => 'long-test-password']);
+        $this->assertNull(DB::table('pos_promotion_rights')->value('used_by'));
+        $this->assertEquals(1, DB::table('pos_grants')->value('reserved_quantity'));
+        $this->assertEquals(0, DB::table('pos_grants')->value('consumed_quantity'));
+        $this->assertDatabaseCount('pos_payments', 0);
+        $this->assertDatabaseCount('pos_refunds', 0);
+    }
+
+    public function test_member_enrollment_stays_encrypted_and_pending_until_published_review(): void
+    {
+        $pub = $this->membershipFixture();
+        $options = ['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA];
+        $configuration = dirname(PHP_BINARY).'/extras/ssl/openssl.cnf';
+        if (is_file($configuration)) {
+            $options['config'] = $configuration;
+        }
+        $key = openssl_pkey_new($options);
+        $private = '';
+        openssl_pkey_export($key, $private, null, $options);
+        $public = openssl_pkey_get_details($key)['key'];
+        $pub['id'] = (string) Str::uuid();
+        $pub['version'] = 2;
+        $pub['enrollment_key'] = ['id' => hash('sha256', $public), 'public_key' => $public];
+        $membership = app(MembershipService::class);
+        $membership->provision($pub['id'], $pub);
+        $input = ['request_key' => (string) Str::uuid(), 'member_name' => 'Synthetic enrollment', 'member_phone' => '0000000102', 'consent_confirmed' => true];
+        $service = app(MemberDraftService::class);
+        $draft = $service->submit($this->staff, $input);
+        $this->assertSame('pending_review', $draft['status']);
+        $this->assertSame($draft, $service->submit($this->staff, $input));
+        $row = DB::table('pos_member_drafts')->where('id', $draft['request_id'])->first();
+        $this->assertStringNotContainsString($input['member_name'], $row->contact);
+        $this->assertStringNotContainsString($input['member_phone'], $row->contact);
+        $event = DB::table('pos_outbox')->where('event_type', 'member.requested')->first();
+        $this->assertNotNull($event);
+        $this->assertSame(1, DB::table('pos_outbox')->where('event_type', 'member.requested')->count());
+        $payload = json_decode($event->envelope, true, flags: JSON_THROW_ON_ERROR)['payload'];
+        $this->assertStringNotContainsString($input['member_phone'], $event->envelope);
+        $opened = (new MemberEnvelope)->open($private, $payload['envelope'], config('pos.instance_id').'|'.$this->branch.'|'.$draft['request_id']);
+        $this->assertSame($input['member_phone'], $opened['phone']);
+        $this->assertNotContains($draft['request_id'], array_column($membership->options($this->staff)['members'], 'member_id'));
+        $member = (string) Str::uuid();
+        $pub['id'] = (string) Str::uuid();
+        $pub['version'] = 3;
+        $pub['members'][] = ['member_id' => $member, 'code' => 'NEW-SYNTHETIC', 'name_masked' => 'S***', 'phone_masked' => '***0102', 'tier' => 'standard', 'status' => 'active'];
+        $pub['decisions'] = [['request_id' => $draft['request_id'], 'status' => 'approved', 'member_id' => $member]];
+        $membership->provision($pub['id'], $pub);
+        $this->assertSame('approved', $service->submit($this->staff, $input)['status']);
+        $this->assertContains($member, array_column($membership->options($this->staff)['members'], 'member_id'));
+    }
+
+    public function test_membership_publication_rejects_changed_identity_and_invalid_encryption_key(): void
+    {
+        $pub = $this->membershipFixture();
+        $membership = app(MembershipService::class);
+        $membership->provision($pub['id'], $pub);
+        $this->assertSame(1, DB::table('pos_membership_publications')->count());
+        $pub['members'][0]['tier'] = 'gold';
+        try {
+            $membership->provision($pub['id'], $pub);
+            $this->fail('Changed immutable publication accepted.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $pub['id'] = (string) Str::uuid();
+        $pub['version'] = 2;
+        $pub['enrollment_key'] = ['id' => str_repeat('a', 64), 'public_key' => 'not a public key'];
+        try {
+            $membership->provision($pub['id'], $pub);
+            $this->fail('Invalid enrollment encryption key accepted.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(422, $e->getStatusCode());
+        }
+        $this->assertSame(1, DB::table('pos_membership_publications')->count());
+    }
+
+    public function test_offline_permit_reserves_stock_and_document_slots_without_posting_or_expiry_reclaim(): void
+    {
+        config(['pos.local_browser_offline_enabled' => true]);
+        $this->staff->update(['role' => 'manager']);
+        $service = app(OfflinePermitService::class);
+        $policy = $service->configure($this->staff, ['expected_version' => 0, 'permit_minutes' => 15, 'max_offline_transactions' => 20, 'max_offline_amount' => '10000.00', 'product_ids' => [$this->product]]);
+        $this->assertSame(1, $policy['version']);
+        $this->staff->update(['role' => 'cashier']);
+        $device = (string) Str::uuid();
+        app(OfflineIngressService::class)->register($this->staff, ['device_id' => $device, 'terminal_id' => $this->terminal, 'label' => 'Synthetic offline device']);
+        $input = ['device_id' => $device, 'request_key' => (string) Str::uuid(), 'items' => [['product_id' => $this->product, 'quantity' => '1']]];
+        $permit = $service->issue($this->staff, $input);
+        $this->assertCount(20, $permit['slots']);
+        $this->assertTrue($permit['provisional_only']);
+        $this->assertFalse($permit['reconciliation_available']);
+        $this->assertSame('1.0000', bcadd((string) DB::table('pos_grants')->value('reserved_quantity'), '0', 4));
+        $this->assertSame('0.0000', bcadd((string) DB::table('pos_grants')->value('consumed_quantity'), '0', 4));
+        try {
+            app(CheckoutService::class)->checkout($this->staff, $this->input());
+            $this->fail('Online checkout consumed offline-held quota.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(422, $e->getStatusCode());
+        }
+        $this->travel(16)->minutes();
+        $this->assertSame(CanonicalJson::encode($permit), CanonicalJson::encode($service->issue($this->staff, $input)));
+        $input['request_key'] = (string) Str::uuid();
+        try {
+            $service->issue($this->staff, $input);
+            $this->fail('Expiry automatically reclaimed unresolved offline quota.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $this->assertDatabaseCount('pos_offline_permits', 1);
+        $this->assertDatabaseCount('pos_offline_reservations', 1);
+        $this->assertDatabaseCount('pos_offline_slots', 20);
+        $this->assertDatabaseCount('pos_orders', 0);
+        $this->assertDatabaseCount('pos_payments', 0);
+        $this->assertDatabaseCount('pos_outbox', 0);
+    }
+
+    public function test_offline_permit_cannot_authorize_clinical_items_even_for_pharmacist(): void
+    {
+        config(['pos.local_browser_offline_enabled' => true]);
+        $this->pharmacyCatalog();
+        $this->staff->update(['role' => 'manager']);
+        $service = app(OfflinePermitService::class);
+        $service->configure($this->staff, ['expected_version' => 0, 'permit_minutes' => 15, 'max_offline_transactions' => 20, 'max_offline_amount' => '10000.00', 'product_ids' => [$this->product]]);
+        $this->staff->update(['role' => 'pharmacist']);
+        $device = (string) Str::uuid();
+        app(OfflineIngressService::class)->register($this->staff, ['device_id' => $device, 'terminal_id' => $this->terminal, 'label' => 'Synthetic pharmacy device']);
+        try {
+            $service->issue($this->staff, ['device_id' => $device, 'request_key' => (string) Str::uuid(), 'items' => [['product_id' => $this->product, 'quantity' => '1']]]);
+            $this->fail('Clinical item received offline cash authority.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(422, $e->getStatusCode());
+        }
+        $this->assertDatabaseCount('pos_offline_permits', 0);
+        $this->assertDatabaseCount('pos_offline_reservations', 0);
+        $this->assertEquals(0, DB::table('pos_grants')->sum('reserved_quantity'));
     }
 }

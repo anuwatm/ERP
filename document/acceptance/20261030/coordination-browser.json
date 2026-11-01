@@ -1,0 +1,56 @@
+{
+  "scope": "Actual Inventory/Payroll/Product pages; isolated fixture",
+  "cases": [
+    {
+      "id": "B02-clean",
+      "path": "/inventory-operations",
+      "result": "PASS"
+    },
+    {
+      "id": "B02-clean",
+      "path": "/payroll",
+      "result": "PASS"
+    },
+    {
+      "id": "B06-reference-search",
+      "catalogRecords": 1005,
+      "searchMs": 1148,
+      "result": "PASS"
+    },
+    {
+      "id": "B02-processing",
+      "closeBlocked": true,
+      "minimizeBlocked": true,
+      "escapeBlocked": true,
+      "posts": 1,
+      "result": "PASS"
+    },
+    {
+      "id": "stock-prefill-clean",
+      "cost": 5,
+      "noFalseDirtyPrompt": true,
+      "result": "PASS"
+    },
+    {
+      "id": "expense-date-only",
+      "dateGuard": true,
+      "keepPreserves": true,
+      "discardResets": true,
+      "projectControlNotExposed": true,
+      "result": "PASS"
+    },
+    {
+      "id": "B03-history",
+      "keepDraft": true,
+      "result": "PASS"
+    },
+    {
+      "id": "B08",
+      "lockedWhileOpen": true,
+      "scrollRestoredAfterClose": true,
+      "result": "PASS"
+    }
+  ],
+  "errors": [],
+  "status": "PASS"
+}

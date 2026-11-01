@@ -1,5 +1,15 @@
 # Company OS / Lightweight ERP
 
+> **Phase28.8.3 In Progress — 2026-11-01:** เริ่มoffline foundation/Stockquota/encrypted browser queue/clock guard. [สถานะและงานต่อ](document/PHASE_28_8_3_OFFLINE.md). ยังไม่พร้อมรับเงินoffline และยังไม่migrateฐานใช้งานจริง
+
+> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](document/PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](document/acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **Phase28.8.1 local 2026-10-30:** Retail/Restaurant Delivery พร้อม workflow/COD custody/fees/returns/signed sync. [คู่มือและ diagram](document/PHASE_28_8_1_DELIVERY.md) · [หลักฐาน](document/acceptance/phase28_8_1/README.md). POS61tests; ERP Phase28/Manufacturing62tests; browser1280/375 ผ่าน. Pharmacy Delivery ปิด; financial posting รอ policy review; **ยังไม่ได้ทดสอบกับระบบจริง**. ดูสถานะสมาชิก/โปรโมชัน28.8.2ด้านบน
+
+> **Baseline ก่อน Delivery:** [ผลปิด local core](docs/LOCAL_ACCEPTANCE_20261030.md): ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL, diagram18/18. ตัวเลข baseline ไม่ใช่ผลรัน full suite รอบ Delivery.
+
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 ระบบบริหารองค์กรสำหรับ SME บริษัทบริการ ทีมโครงการ และธุรกิจจัดซื้อ/คลังสินค้า เชื่อมข้อมูลลูกค้า การขาย การเงิน โครงการ สินค้าคงคลัง และบุคลากรในระบบเดียว รองรับหลายองค์กรด้วยการแยกข้อมูลและสิทธิ์ผู้ใช้งาน
 
 ## ความสามารถหลัก

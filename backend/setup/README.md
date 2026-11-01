@@ -1,5 +1,7 @@
 # ERP Setup Wizard
 
+> 2026-10-29: [POS Config](../../document/POS_CONFIGURATION.md) เป็นหน้าผู้จัดการ local/loopback แยกจาก ERP installer. ไม่สร้างสาขา/manager คนแรกหรือแก้ .env/keys ผ่านหน้านี้. ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 เปิด wizard ได้ที่ `/setup` หลัง copy release folder ขึ้น server แล้ว. รองรับทั้ง Document Root ที่ `backend/public` และ repository root (ผ่าน `setup/index.php`).
 
 เปิด `/setup/system-requirements.php` เพื่อตรวจ requirement แบบละเอียดได้โดยไม่ต้องใช้ token หน้านี้ไม่แสดงค่าลับหรือ `phpinfo()`; ทุก Failed/Warning มีคำแนะนำ และปุ่ม Fix มีเฉพาะการสร้าง `storage/` หรือ `bootstrap/cache/` ที่ยังไม่มีและสร้างได้จาก web-server user การตรวจ database credential อยู่ใน wizard.

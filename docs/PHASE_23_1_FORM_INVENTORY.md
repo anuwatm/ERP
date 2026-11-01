@@ -1,5 +1,7 @@
 # Phase 23.1 — Form Inventory & Final Rollout Reconciliation
 
+> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง**; Phase28.8 deferred.
+
 ## 1. ประวัติการสำรวจตั้งต้น (Baseline Discovery Inventory — 2026-09-11)
 
 ตรวจจาก source วันที่ 2026-09-11; **เป็นจำนวนที่สำรวจตั้งต้น ไม่ใช่จำนวนที่เปลี่ยนแล้วในขณะนั้น**.

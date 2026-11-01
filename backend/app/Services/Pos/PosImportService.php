@@ -62,8 +62,10 @@ class PosImportService
                 }
                 abort_if($inbox->attempts >= config('pos.max_attempts'), 422, 'POS retry limit reached; authorized replay required.');
                 $event = json_decode($inbox->received_bytes, true, flags: JSON_THROW_ON_ERROR);
-                if (in_array($event['event_type'] ?? null, ['sale.refunded', 'cash.moved', 'kitchen.consumed', 'kitchen.wasted', 'return.inspected', 'tax.document_issued'], true)) {
+                if (in_array($event['event_type'] ?? null, ['sale.refunded', 'cash.moved', 'kitchen.consumed', 'kitchen.wasted', 'return.inspected', 'tax.document_issued', 'delivery.updated', 'member.requested'], true)) {
                     $owner = match ($event['event_type']) {
+                        'member.requested' => PosMemberRequestImportService::class,
+                        'delivery.updated' => PosDeliveryImportService::class,
                         'sale.refunded' => PosRefundImportService::class, 'cash.moved' => PosCashMovementImportService::class, 'return.inspected' => PosReturnInspectionImportService::class, 'tax.document_issued' => PosTaxDocumentImportService::class, default => PosKitchenImportService::class
                     };
                     $result = app($owner)->import($instance, $event);
@@ -81,6 +83,9 @@ class PosImportService
                     $mapping = PosAccountMapping::forSale($instanceId, $sale->id);
                 } else {
                     $mapping = PosAccountMapping::forInstance($instanceId);
+                    if (isset($payload['membership'])) {
+                        app(PosMembershipImportService::class)->accept($instance, 'sale', $payload['sale_id'], $payload['membership']);
+                    }
                     abort_if(isset($payload['discount_approval_id']) && DB::table('pos_import_sales')->where('pos_instance_id', $instanceId)->where('discount_approval_id', $payload['discount_approval_id'])->exists(), 409, 'POS discount approval already used by another sale.');
                     $sale = $this->postFinancial($instance, $payload, $event['payload_hash'], $date, $mapping);
                 }

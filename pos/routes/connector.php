@@ -11,6 +11,10 @@ use Pos\Services\TaxDocumentService;
 use Pos\Support\CanonicalJson;
 
 Route::middleware(['pos.connector', 'throttle:pos-connector'])->group(function () {
+    Route::put('membership/{id}', function (Request $r, string $id, \Pos\Services\MembershipService $service) {
+        $service->provision($id, $r->all());
+        return response()->json(['status' => 'accepted']);
+    });
     Route::put('tax-profile', function (Request $r, TaxDocumentService $service) {
         $service->provision($r->all());
 

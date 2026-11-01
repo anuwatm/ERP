@@ -1,5 +1,7 @@
 # Security Requirements: MVP + Enabled Features
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 เอกสารนี้เป็นข้อกำหนด security สำหรับ implementation ปัจจุบัน. ข้อความที่อ้าง MVP/Post-MVP เป็น baseline ประวัติ; ตรวจ behavior จริงจาก middleware, policy, service และ tests.
 
 ## 1. Authentication

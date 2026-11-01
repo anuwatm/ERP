@@ -1,0 +1,12 @@
+{
+  "scope": "e-Tax configuration UI; isolated fixture; mock configuration only; no provider call",
+  "cases": [
+    {
+      "modeSaved": "mock",
+      "serverNormalizedSignature": "none",
+      "reopenUsesServerValues": true,
+      "result": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

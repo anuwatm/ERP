@@ -29,6 +29,7 @@ export default function Pos({
     integrityConflicts,
     canReconcile,
     canManage,
+    membershipEnabled = false,
     taxSigningOwnerId,
     taxSigningOwners,
     recallsEnabled,
@@ -45,6 +46,7 @@ export default function Pos({
     integrityConflicts: number;
     canReconcile: boolean;
     canManage: boolean;
+    membershipEnabled?: boolean;
     taxSigningOwnerId: string | null;
     taxSigningOwners: { id: string; name: string }[];
     recallsEnabled: boolean;
@@ -93,6 +95,7 @@ export default function Pos({
                     Transport จริงยังไม่เปิด · รอ provision ปลายทาง · e-Tax
                     ยังไม่ผ่าน acceptance
                 </p>
+                {canManage && membershipEnabled && <p><a href="/pos-membership" className="text-blue-700 underline">สมาชิกและโปรโมชัน POS</a></p>}
                 {canManage && recallsEnabled && (
                     <form
                         className="space-y-4 rounded bg-white p-6 shadow"

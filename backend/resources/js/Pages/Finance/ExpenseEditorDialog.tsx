@@ -90,7 +90,7 @@ export default function ExpenseEditorDialog({
     useEffect(() => {
         if (!open) return;
         if (expense) {
-            form.setData({
+            const data: ExpenseForm = {
                 category: expense.category,
                 title: expense.title,
                 amount: expense.amount,
@@ -104,34 +104,27 @@ export default function ExpenseEditorDialog({
                 supplier_id: expense.supplier_id ?? '',
                 receipt: null,
                 note: expense.note ?? '',
-            });
+            };
+            form.setDefaults(data);
+            form.setData(data);
         } else {
+            form.setDefaults(emptyExpense);
             form.setData(emptyExpense);
         }
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, expense?.id]);
 
-    const isDirty =
-        form.data.title !== (expense ? expense.title : '') ||
-        form.data.amount !== (expense ? expense.amount : '0.00') ||
-        form.data.category !== (expense ? expense.category : 'misc') ||
-        form.data.currency !==
-            (expense ? (expense.currency ?? 'THB') : 'THB') ||
-        form.data.tax_mode !==
-            (expense ? (expense.tax_mode ?? 'no_tax') : 'no_tax') ||
-        form.data.tax_invoice_no !==
-            (expense ? (expense.tax_invoice_no ?? '') : '') ||
-        form.data.withholding_tax_rate !==
-            (expense ? (expense.withholding_tax_rate ?? '0.00') : '0.00') ||
-        form.data.withholding_tax_form !==
-            (expense ? (expense.withholding_tax_form ?? 'pnd53') : 'pnd53') ||
-        form.data.supplier_id !==
-            (expense ? (expense.supplier_id ?? '') : '') ||
-        form.data.note !== (expense ? (expense.note ?? '') : '') ||
-        form.data.receipt !== null;
+    const isDirty = open && form.isDirty;
 
     const guard = useDiscardGuard(isDirty, form.processing);
+    const close = () => {
+        form.reset();
+        form.clearErrors();
+        resetSubmissionKey();
+        setMinimized(false);
+        onClose();
+    };
 
     function submit(event: FormEvent) {
         event.preventDefault();
@@ -141,10 +134,7 @@ export default function ExpenseEditorDialog({
             headers: headers(),
             forceFormData: true,
             preserveScroll: true,
-            onSuccess: () => {
-                resetSubmissionKey();
-                onClose();
-            },
+            onSuccess: close,
         };
 
         if (expense) {
@@ -167,7 +157,7 @@ export default function ExpenseEditorDialog({
                 open={open}
                 minimized={minimized}
                 onMinimize={setMinimized}
-                onClose={() => guard.request(onClose)}
+                onClose={() => guard.request(close)}
                 title={expense ? 'Edit Expense' : 'Create Expense'}
                 breadcrumb="Finance / Expenses"
                 entityLabel="Expense"

@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-01",
+  "timezone": "Asia/Bangkok",
+  "pos": {
+    "tests": 81,
+    "assertions": 1851,
+    "failures": 0
+  },
+  "erp": {
+    "filter": "Phase28|Manufacturing|PosPromotionCalculatorTest|PosMemberEnvelopeTest",
+    "tests": 82,
+    "assertions": 1937,
+    "failures": 0,
+    "fullSuite": false
+  },
+  "typescript": {
+    "pos": "PASS",
+    "erp": "PASS"
+  },
+  "vite": {
+    "pos": "PASS",
+    "erp": "PASS",
+    "version": "7.3.6"
+  },
+  "pint": "PASS scoped phase files",
+  "diffCheck": "PASS scoped changed files",
+  "links": 42,
+  "configuredDbMigrated": false,
+  "codeMigrations": {
+    "pos": 21,
+    "erp": 87
+  },
+  "geminiReview": false
+}

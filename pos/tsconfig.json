@@ -4,5 +4,5 @@
     "baseUrl": ".", "typeRoots": ["node_modules/@types", "../backend/node_modules/@types"],
     "paths": {"react": ["node_modules/@types/react", "../backend/node_modules/@types/react"], "react-dom/client": ["node_modules/@types/react-dom/client", "../backend/node_modules/@types/react-dom/client"]}
   },
-  "include": ["resources/**/*.tsx"]
+  "include": ["resources/**/*.tsx", "resources/**/*.ts"]
 }

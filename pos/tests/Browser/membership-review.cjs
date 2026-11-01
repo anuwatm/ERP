@@ -1,0 +1,66 @@
+const { chromium } = require('C:/Users/anuwat/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const base = 'http://127.0.0.1:8144';
+const directory = 'temp/phase2882-membership';
+const ids = JSON.parse(fs.readFileSync(directory + '/identities.json', 'utf8')).retail;
+const control = action => JSON.parse(execFileSync('C:/AppServ/php8/php.exe', ['pos/tests/Browser/membership-control.php', action], { encoding: 'utf8' }));
+(async () => {
+  const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', headless: true });
+  const report = { scope: 'Local synthetic ERP review result and publication-change UI; direct fixture CLI refresh, no mTLS', pageErrors: [] };
+  try {
+    const context = await browser.newContext({ viewport: { width: 375, height: 900 } });
+    await context.route('**/*', r => r.request().url().startsWith(base + '/') ? r.continue() : r.abort());
+    const page = await context.newPage();
+    page.on('pageerror', e => report.pageErrors.push(e.message));
+    await page.goto(base + '/');
+    const status = await page.evaluate(async () => (await fetch('/login', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify({ email: 'retail@membership.fixture.test', password: 'synthetic-membership-password' }) })).status);
+    assert.equal(status, 200);
+    await page.goto(base + '/membership');
+    assert.equal(await page.getByText(/pending_review/).count(), 0);
+    assert.ok(await page.getByText(/approved/).count() >= 1);
+    assert.ok((await page.locator('body').innerText()).includes('***0102'));
+    report.reviewVisible = true;
+    await page.goto(base + '/');
+    await page.getByRole('button', { name: 'Synthetic retail item', exact: false }).click();
+    const picker = page.locator('.membership-picker');
+    await picker.getByLabel('สมาชิกของบิล', { exact: true }).selectOption(ids.member);
+    await picker.getByLabel('โปรโมชันของบิล', { exact: true }).selectOption(ids.promotion);
+    await page.getByLabel('รับเงินสด', { exact: true }).fill('20.00');
+    await picker.getByRole('button', { name: 'ตรวจยอดโปรโมชัน', exact: true }).click();
+    await picker.getByText('ยอดหลังโปรโมชันรวม VAT 9.63', { exact: true }).waitFor();
+    const before = control('snapshot');
+    control('refresh');
+    const response = page.waitForResponse(r => r.url() === base + '/checkout');
+    await page.getByRole('button', { name: 'ยืนยันรับเงินสด', exact: true }).click();
+    assert.equal((await response).status(), 409);
+    await page.getByRole('alert').waitFor();
+    assert.deepEqual(control('snapshot'), before, 'Stale publication must not create sale or claim');
+    await picker.getByRole('button', { name: 'อัปเดตสิทธิ์', exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector('.membership-picker [role=status]'));
+    assert.equal(await page.getByRole('button', { name: 'ยืนยันรับเงินสด', exact: true }).isDisabled(), true);
+    await picker.getByRole('button', { name: 'ตรวจยอดโปรโมชัน', exact: true }).click();
+    await picker.getByText('ยอดหลังโปรโมชันรวม VAT 9.63', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'ยืนยันรับเงินสด', exact: true }).click();
+    await page.locator('.receipt').getByText(/รวม 9\.63/).waitFor();
+    const after = control('snapshot');
+    assert.equal(after.sales, before.sales + 1);
+    assert.equal(after.claims, before.claims + 1);
+    assert.deepEqual(report.pageErrors, []);
+    report.staleStatus = 409;
+    report.staleCreatedNothing = true;
+    report.refreshedAndRepriced = true;
+    report.before = before;
+    report.after = after;
+    report.result = 'PASS';
+  } catch (e) {
+    report.result = 'FAIL';
+    report.error = e.message;
+    console.error(e.message);
+    process.exitCode = 1;
+  } finally {
+    fs.writeFileSync(directory + '/review-browser-report.json', JSON.stringify(report, null, 2));
+    await browser.close();
+  }
+})();

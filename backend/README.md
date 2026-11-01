@@ -1,3 +1,15 @@
+# Company OS — ERP Backend
+
+> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](../document/PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](../document/acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](../docs/LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง**; baselineนี้ไม่รวม28.8.1/28.8.2ที่ตรวจlocalภายหลัง.
+
+สถานะเอกสาร 2026-10-29: Phase 28 และ POS Config. ERP อยู่ใน backend/ ส่วน POS แยก app/DB/session/keys ใน pos/. ไม่ใช้ ERP credentials กับ POS.
+
+[README โครงการ](../README.md) · [POS Config และข้อจำกัด](../document/POS_CONFIGURATION.md) · [Diagram portal](../document/index.html). [Gemini review ของ POS Config วันที่ 2026-10-29](../document/POS_CONFIG_GEMINI_REVIEW_20261029.md) ไม่พบข้อบกพร่องสำคัญใน Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
+## Laravel framework reference
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

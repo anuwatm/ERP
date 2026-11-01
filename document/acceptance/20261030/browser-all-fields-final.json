@@ -1,0 +1,5600 @@
+{
+  "status": "completed",
+  "scope": "Actual create/edit surfaces; isolated owner role; Chrome only; browser Date fixed for reproducible fresh-draft defaults",
+  "cases": [
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/audit-logs",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1926
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/bank-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 2338,
+      "checkedFields": 13,
+      "field": {
+        "id": "bank-accounts-bank_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/bank-statements",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2508
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/commercial-documents",
+      "label": "+ Create Delivery Order",
+      "http": 200,
+      "loadMs": 1780,
+      "checkedFields": 7,
+      "field": {
+        "id": "do-delivery-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/commercial-documents",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 2695,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r26:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/currencies",
+      "label": "Set Currency",
+      "http": 200,
+      "loadMs": 1454,
+      "checkedFields": 4,
+      "field": {
+        "id": "currency-code",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/currencies",
+      "label": "Set Exchange Rate",
+      "http": 200,
+      "loadMs": 7715,
+      "checkedFields": 4,
+      "field": {
+        "id": "rate-quote_currency",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/customers",
+      "label": "+ Create Customer",
+      "http": 200,
+      "loadMs": 2451,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/customers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 3612,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "Synthetic Acceptance Customer",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/customers",
+      "label": "Add Contact",
+      "http": 200,
+      "loadMs": 4871,
+      "checkedFields": 7,
+      "field": {
+        "id": "contact-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/deals",
+      "label": "+ Create Deal",
+      "http": 200,
+      "loadMs": 5495,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/deals",
+      "label": "+ Create Activity",
+      "http": 200,
+      "loadMs": 6632,
+      "checkedFields": 7,
+      "field": {
+        "id": "activity-subject",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/deals",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7569,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/documents",
+      "label": "Upload Document",
+      "http": 200,
+      "loadMs": 1559,
+      "checkedFields": 7,
+      "field": {
+        "id": "doc-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/documents",
+      "label": "New Category",
+      "http": 200,
+      "loadMs": 3750,
+      "checkedFields": 6,
+      "field": {
+        "id": "cat-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/documents",
+      "label": "New Retention Policy",
+      "http": 200,
+      "loadMs": 11105,
+      "checkedFields": 5,
+      "field": {
+        "id": "ret-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/documents",
+      "label": "New Version",
+      "http": 200,
+      "loadMs": 19270,
+      "checkedFields": 2,
+      "field": {
+        "id": "version-change-note",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/documents",
+      "label": "Link Entity",
+      "http": 200,
+      "loadMs": 26908,
+      "checkedFields": 3,
+      "field": {
+        "id": "link-id",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/e-tax",
+      "label": "Configure Submission",
+      "http": 200,
+      "loadMs": 2043,
+      "checkedFields": 5,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/expenses",
+      "label": "+ New Expense",
+      "http": 200,
+      "loadMs": 2152,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/expenses",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 9573,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "Synthetic UI expense",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/finance/cash-flow",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2399
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/finance/ocr",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2023
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "label": "+ Asset Category",
+      "http": 200,
+      "loadMs": 2248,
+      "checkedFields": 6,
+      "field": {
+        "id": "asset-category-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "label": "+ Capitalize Asset",
+      "http": 200,
+      "loadMs": 9811,
+      "checkedFields": 9,
+      "field": {
+        "id": "asset-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 16824,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r50:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/goods-receipts",
+      "label": "+ Stock Adjustment",
+      "http": 200,
+      "loadMs": 4490,
+      "checkedFields": 8,
+      "field": {
+        "id": "sm-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/goods-receipts",
+      "label": "+ Receive Goods (GRN)",
+      "http": 200,
+      "loadMs": 15006,
+      "checkedFields": 4,
+      "field": {
+        "id": "grn-received-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Attendance Summary",
+      "http": 200,
+      "loadMs": 3101,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Leave Request",
+      "http": 200,
+      "loadMs": 4139,
+      "checkedFields": 4,
+      "field": {
+        "id": "leave-starts-on",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr",
+      "label": "Create Draft Summary",
+      "http": 200,
+      "loadMs": 4991,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Work Shift",
+      "http": 200,
+      "loadMs": 5802,
+      "checkedFields": 6,
+      "field": {
+        "id": "shift-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Leave Type",
+      "http": 200,
+      "loadMs": 16219,
+      "checkedFields": 5,
+      "field": {
+        "id": "leave-type-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr",
+      "label": "Assign Work Profile",
+      "http": 200,
+      "loadMs": 27994,
+      "checkedFields": 6,
+      "field": {
+        "id": "profile-employee-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr",
+      "label": "Add Holiday",
+      "http": 200,
+      "loadMs": 37307,
+      "checkedFields": 2,
+      "field": {
+        "id": "holiday-date",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr/attendance-import",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2512
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr/employees",
+      "label": "New Employee",
+      "http": 200,
+      "loadMs": 2457,
+      "checkedFields": 20,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr/positions",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1699
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/hr/roster",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2125
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Warehouse",
+      "http": 200,
+      "loadMs": 2538,
+      "checkedFields": 2,
+      "field": {
+        "id": "wh-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Bin",
+      "http": 200,
+      "loadMs": 9549,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Lot",
+      "http": 200,
+      "loadMs": 10342,
+      "checkedFields": 5,
+      "field": {
+        "id": "lot-no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Physical Count",
+      "http": 200,
+      "loadMs": 11157,
+      "checkedFields": 4,
+      "field": {
+        "id": "count-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Transfer Stock",
+      "http": 200,
+      "loadMs": 12124,
+      "checkedFields": 6,
+      "field": {
+        "id": "transfer-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Add Bin",
+      "http": 200,
+      "loadMs": 12924,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/invoices",
+      "label": "Create Invoice",
+      "http": 200,
+      "loadMs": 2847,
+      "checkedFields": 17,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/invoices",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 11564,
+      "checkedFields": 10,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3056
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/payroll",
+      "label": "Create Payroll Run",
+      "http": 200,
+      "loadMs": 2738,
+      "checkedFields": 4,
+      "field": {
+        "id": "run-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/payroll",
+      "label": "New Employee Profile",
+      "http": 200,
+      "loadMs": 12511,
+      "checkedFields": 8,
+      "field": {
+        "id": "monthly-salary",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/payroll",
+      "label": "New Policy Version",
+      "http": 200,
+      "loadMs": 21539,
+      "checkedFields": 8,
+      "field": {
+        "id": "policy-effective-from",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/pos-integration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2442
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/products",
+      "label": "+ Create Item",
+      "http": 200,
+      "loadMs": 5307,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/products",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 20411,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "Synthetic expired session 1793293263896",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/projects",
+      "label": "+ New Project",
+      "http": 200,
+      "loadMs": 2072,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/projects",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 9443,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "Synthetic Acceptance Project",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/projects",
+      "label": "Members",
+      "http": 200,
+      "loadMs": 16303,
+      "checkedFields": 2,
+      "field": {
+        "id": "member-role",
+        "original": "member",
+        "value": "lead"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/purchase-orders",
+      "label": "+ Create Purchase Order",
+      "http": 200,
+      "loadMs": 2621,
+      "checkedFields": 13,
+      "field": {
+        "id": "purchase-orders-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/quotations",
+      "label": "+ Create Quotation",
+      "http": 200,
+      "loadMs": 2975,
+      "checkedFields": 15,
+      "field": {
+        "id": "quotations-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/roles",
+      "label": "Create Role",
+      "http": 200,
+      "loadMs": 2753,
+      "checkedFields": 157,
+      "field": {
+        "id": "role-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/roles",
+      "label": "Edit Role",
+      "http": 200,
+      "loadMs": 11469,
+      "checkedFields": 156,
+      "field": {
+        "id": "role-name",
+        "original": "Admin",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/ai-configuration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2850
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/api-access",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2713
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/api-access/webhooks",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1953
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "label": "New Branch",
+      "http": 200,
+      "loadMs": 2874,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 11262,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "Head Office",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/suppliers",
+      "label": "+ Create Supplier",
+      "http": 200,
+      "loadMs": 1582,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/suppliers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 2499,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "Synthetic Acceptance Supplier",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "+ New Task",
+      "http": 200,
+      "loadMs": 1855,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "Checklist (0/0)",
+      "http": 200,
+      "loadMs": 11270,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "Chat (0)",
+      "http": 200,
+      "loadMs": 18098,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 25994,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "Synthetic Acceptance Task",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/tax-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3498
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/treasury-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3589
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/users",
+      "label": "Invite User",
+      "http": 200,
+      "loadMs": 4193,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/users",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 5149,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "Local Acceptance Tester",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/vendor-payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 4404
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/workflows",
+      "label": "New Workflow",
+      "http": 200,
+      "loadMs": 3521,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/workflows",
+      "label": "New Delegation",
+      "http": 200,
+      "loadMs": 8864,
+      "checkedFields": 4,
+      "field": {
+        "id": "del-starts-at",
+        "original": "",
+        "value": "2026-10-28T09:31"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/workflows",
+      "label": "Create New Workflow",
+      "http": 200,
+      "loadMs": 16470,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/accounting/chart-of-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 2399,
+      "checkedFields": 3,
+      "field": {
+        "id": "coa-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/accounting/journals",
+      "label": "+ Manual Journal",
+      "http": 200,
+      "loadMs": 2588,
+      "checkedFields": 8,
+      "field": {
+        "id": "journal-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/accounting/periods",
+      "label": "+ Create Period",
+      "http": 200,
+      "loadMs": 2806,
+      "checkedFields": 3,
+      "field": {
+        "id": "form-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/petty-cash",
+      "label": "+ New Fund",
+      "http": 200,
+      "loadMs": 2375,
+      "checkedFields": 3,
+      "field": {
+        "id": "petty-imprest",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/petty-cash",
+      "label": "+ New Request",
+      "http": 200,
+      "loadMs": 11233,
+      "checkedFields": 4,
+      "field": {
+        "id": "petty-amount",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "path": "/cheques",
+      "label": "+ Register Cheque",
+      "http": 200,
+      "loadMs": 2286,
+      "checkedFields": 8,
+      "field": {
+        "id": "cheque-cheque_no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/audit-logs",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2437
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/bank-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 2644,
+      "checkedFields": 13,
+      "field": {
+        "id": "bank-accounts-bank_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/bank-statements",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2297
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/commercial-documents",
+      "label": "+ Create Delivery Order",
+      "http": 200,
+      "loadMs": 2569,
+      "checkedFields": 7,
+      "field": {
+        "id": "do-delivery-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/commercial-documents",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 11053,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r26:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/currencies",
+      "label": "Set Currency",
+      "http": 200,
+      "loadMs": 1621,
+      "checkedFields": 4,
+      "field": {
+        "id": "currency-code",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/currencies",
+      "label": "Set Exchange Rate",
+      "http": 200,
+      "loadMs": 2659,
+      "checkedFields": 4,
+      "field": {
+        "id": "rate-quote_currency",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/customers",
+      "label": "+ Create Customer",
+      "http": 200,
+      "loadMs": 1764,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/customers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 11893,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "Synthetic Acceptance Customer",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/customers",
+      "label": "Add Contact",
+      "http": 200,
+      "loadMs": 23023,
+      "checkedFields": 7,
+      "field": {
+        "id": "contact-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/deals",
+      "label": "+ Create Deal",
+      "http": 200,
+      "loadMs": 3106,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/deals",
+      "label": "+ Create Activity",
+      "http": 200,
+      "loadMs": 9902,
+      "checkedFields": 7,
+      "field": {
+        "id": "activity-subject",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/deals",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 10819,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "Upload Document",
+      "http": 200,
+      "loadMs": 3444,
+      "checkedFields": 7,
+      "field": {
+        "id": "doc-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "New Category",
+      "http": 200,
+      "loadMs": 4275,
+      "checkedFields": 6,
+      "field": {
+        "id": "cat-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "New Retention Policy",
+      "http": 200,
+      "loadMs": 10447,
+      "checkedFields": 5,
+      "field": {
+        "id": "ret-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "New Version",
+      "http": 200,
+      "loadMs": 19943,
+      "checkedFields": 2,
+      "field": {
+        "id": "version-change-note",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "Link Entity",
+      "http": 200,
+      "loadMs": 28226,
+      "checkedFields": 3,
+      "field": {
+        "id": "link-id",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/e-tax",
+      "label": "Configure Submission",
+      "http": 200,
+      "loadMs": 1983,
+      "checkedFields": 5,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/expenses",
+      "label": "+ New Expense",
+      "http": 200,
+      "loadMs": 2826,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/expenses",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 10839,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "Synthetic UI expense",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/finance/cash-flow",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2312
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/finance/ocr",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1883
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "label": "+ Asset Category",
+      "http": 200,
+      "loadMs": 2633,
+      "checkedFields": 6,
+      "field": {
+        "id": "asset-category-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "label": "+ Capitalize Asset",
+      "http": 200,
+      "loadMs": 7098,
+      "checkedFields": 9,
+      "field": {
+        "id": "asset-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 8026,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r50:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/goods-receipts",
+      "label": "+ Stock Adjustment",
+      "http": 200,
+      "loadMs": 1686,
+      "checkedFields": 8,
+      "field": {
+        "id": "sm-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/goods-receipts",
+      "label": "+ Receive Goods (GRN)",
+      "http": 200,
+      "loadMs": 3035,
+      "checkedFields": 4,
+      "field": {
+        "id": "grn-received-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Attendance Summary",
+      "http": 200,
+      "loadMs": 4127,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Leave Request",
+      "http": 200,
+      "loadMs": 5092,
+      "checkedFields": 4,
+      "field": {
+        "id": "leave-starts-on",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "Create Draft Summary",
+      "http": 200,
+      "loadMs": 5940,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Work Shift",
+      "http": 200,
+      "loadMs": 6986,
+      "checkedFields": 6,
+      "field": {
+        "id": "shift-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Leave Type",
+      "http": 200,
+      "loadMs": 7842,
+      "checkedFields": 5,
+      "field": {
+        "id": "leave-type-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "Assign Work Profile",
+      "http": 200,
+      "loadMs": 16261,
+      "checkedFields": 6,
+      "field": {
+        "id": "profile-employee-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "Add Holiday",
+      "http": 200,
+      "loadMs": 24451,
+      "checkedFields": 2,
+      "field": {
+        "id": "holiday-date",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr/attendance-import",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3325
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr/employees",
+      "label": "New Employee",
+      "http": 200,
+      "loadMs": 1999,
+      "checkedFields": 20,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr/positions",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2646
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/hr/roster",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2108
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Warehouse",
+      "http": 200,
+      "loadMs": 2878,
+      "checkedFields": 2,
+      "field": {
+        "id": "wh-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Bin",
+      "http": 200,
+      "loadMs": 10714,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Lot",
+      "http": 200,
+      "loadMs": 22594,
+      "checkedFields": 5,
+      "field": {
+        "id": "lot-no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Physical Count",
+      "http": 200,
+      "loadMs": 33068,
+      "checkedFields": 4,
+      "field": {
+        "id": "count-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Transfer Stock",
+      "http": 200,
+      "loadMs": 41810,
+      "checkedFields": 6,
+      "field": {
+        "id": "transfer-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Add Bin",
+      "http": 200,
+      "loadMs": 52697,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/invoices",
+      "label": "Create Invoice",
+      "http": 200,
+      "loadMs": 4652,
+      "checkedFields": 17,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/invoices",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 5787,
+      "checkedFields": 10,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1978
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/payroll",
+      "label": "Create Payroll Run",
+      "http": 200,
+      "loadMs": 3470,
+      "checkedFields": 4,
+      "field": {
+        "id": "run-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/payroll",
+      "label": "New Employee Profile",
+      "http": 200,
+      "loadMs": 12306,
+      "checkedFields": 8,
+      "field": {
+        "id": "monthly-salary",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/payroll",
+      "label": "New Policy Version",
+      "http": 200,
+      "loadMs": 19696,
+      "checkedFields": 8,
+      "field": {
+        "id": "policy-effective-from",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/pos-integration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2411
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/products",
+      "label": "+ Create Item",
+      "http": 200,
+      "loadMs": 3195,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/products",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 15980,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "Synthetic expired session 1793293263896",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/projects",
+      "label": "+ New Project",
+      "http": 200,
+      "loadMs": 3251,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/projects",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 11690,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "Synthetic Acceptance Project",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/projects",
+      "label": "Members",
+      "http": 200,
+      "loadMs": 18284,
+      "checkedFields": 2,
+      "field": {
+        "id": "member-role",
+        "original": "member",
+        "value": "lead"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/purchase-orders",
+      "label": "+ Create Purchase Order",
+      "http": 200,
+      "loadMs": 2229,
+      "checkedFields": 13,
+      "field": {
+        "id": "purchase-orders-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/quotations",
+      "label": "+ Create Quotation",
+      "http": 200,
+      "loadMs": 2664,
+      "checkedFields": 15,
+      "field": {
+        "id": "quotations-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/roles",
+      "label": "Create Role",
+      "http": 200,
+      "loadMs": 2301,
+      "checkedFields": 157,
+      "field": {
+        "id": "role-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/roles",
+      "label": "Edit Role",
+      "http": 200,
+      "loadMs": 10103,
+      "checkedFields": 156,
+      "field": {
+        "id": "role-name",
+        "original": "Admin",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/ai-configuration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1935
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/api-access",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2233
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/api-access/webhooks",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2103
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "label": "New Branch",
+      "http": 200,
+      "loadMs": 2661,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 11283,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "Head Office",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/suppliers",
+      "label": "+ Create Supplier",
+      "http": 200,
+      "loadMs": 2580,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/suppliers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 10673,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "Synthetic Acceptance Supplier",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "+ New Task",
+      "http": 200,
+      "loadMs": 2772,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "Checklist (0/0)",
+      "http": 200,
+      "loadMs": 8451,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "Chat (0)",
+      "http": 200,
+      "loadMs": 15845,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 22625,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "Synthetic Acceptance Task",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/tax-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2789
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/treasury-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2210
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/users",
+      "label": "Invite User",
+      "http": 200,
+      "loadMs": 2362,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/users",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 9957,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "Local Acceptance Tester",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/vendor-payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2197
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/workflows",
+      "label": "New Workflow",
+      "http": 200,
+      "loadMs": 2201,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/workflows",
+      "label": "New Delegation",
+      "http": 200,
+      "loadMs": 9592,
+      "checkedFields": 4,
+      "field": {
+        "id": "del-starts-at",
+        "original": "",
+        "value": "2026-10-28T09:31"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/workflows",
+      "label": "Create New Workflow",
+      "http": 200,
+      "loadMs": 16305,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/accounting/chart-of-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 2384,
+      "checkedFields": 3,
+      "field": {
+        "id": "coa-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/accounting/journals",
+      "label": "+ Manual Journal",
+      "http": 200,
+      "loadMs": 2305,
+      "checkedFields": 8,
+      "field": {
+        "id": "journal-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/accounting/periods",
+      "label": "+ Create Period",
+      "http": 200,
+      "loadMs": 2101,
+      "checkedFields": 3,
+      "field": {
+        "id": "form-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/petty-cash",
+      "label": "+ New Fund",
+      "http": 200,
+      "loadMs": 2341,
+      "checkedFields": 3,
+      "field": {
+        "id": "petty-imprest",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/petty-cash",
+      "label": "+ New Request",
+      "http": 200,
+      "loadMs": 9941,
+      "checkedFields": 4,
+      "field": {
+        "id": "petty-amount",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "path": "/cheques",
+      "label": "+ Register Cheque",
+      "http": 200,
+      "loadMs": 3984,
+      "checkedFields": 8,
+      "field": {
+        "id": "cheque-cheque_no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/audit-logs",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3295
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/bank-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 1774,
+      "checkedFields": 13,
+      "field": {
+        "id": "bank-accounts-bank_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/bank-statements",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2396
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/commercial-documents",
+      "label": "+ Create Delivery Order",
+      "http": 200,
+      "loadMs": 3685,
+      "checkedFields": 7,
+      "field": {
+        "id": "do-delivery-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/commercial-documents",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 11730,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r26:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/currencies",
+      "label": "Set Currency",
+      "http": 200,
+      "loadMs": 1955,
+      "checkedFields": 4,
+      "field": {
+        "id": "currency-code",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/currencies",
+      "label": "Set Exchange Rate",
+      "http": 200,
+      "loadMs": 2963,
+      "checkedFields": 4,
+      "field": {
+        "id": "rate-quote_currency",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/customers",
+      "label": "+ Create Customer",
+      "http": 200,
+      "loadMs": 7102,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/customers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 14818,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "Synthetic Acceptance Customer",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/customers",
+      "label": "Add Contact",
+      "http": 200,
+      "loadMs": 15809,
+      "checkedFields": 7,
+      "field": {
+        "id": "contact-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/deals",
+      "label": "+ Create Deal",
+      "http": 200,
+      "loadMs": 2689,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/deals",
+      "label": "+ Create Activity",
+      "http": 200,
+      "loadMs": 3774,
+      "checkedFields": 7,
+      "field": {
+        "id": "activity-subject",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/deals",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7185,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/documents",
+      "label": "Upload Document",
+      "http": 200,
+      "loadMs": 5349,
+      "checkedFields": 7,
+      "field": {
+        "id": "doc-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/documents",
+      "label": "New Category",
+      "http": 200,
+      "loadMs": 6264,
+      "checkedFields": 6,
+      "field": {
+        "id": "cat-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/documents",
+      "label": "New Retention Policy",
+      "http": 200,
+      "loadMs": 7210,
+      "checkedFields": 5,
+      "field": {
+        "id": "ret-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/documents",
+      "label": "New Version",
+      "http": 200,
+      "loadMs": 15067,
+      "checkedFields": 2,
+      "field": {
+        "id": "version-change-note",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/documents",
+      "label": "Link Entity",
+      "http": 200,
+      "loadMs": 16022,
+      "checkedFields": 3,
+      "field": {
+        "id": "link-id",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/e-tax",
+      "label": "Configure Submission",
+      "http": 200,
+      "loadMs": 3912,
+      "checkedFields": 5,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/expenses",
+      "label": "+ New Expense",
+      "http": 200,
+      "loadMs": 4071,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/expenses",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 13046,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "Synthetic UI expense",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/finance/cash-flow",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3687
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/finance/ocr",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3169
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "label": "+ Asset Category",
+      "http": 200,
+      "loadMs": 2998,
+      "checkedFields": 6,
+      "field": {
+        "id": "asset-category-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "label": "+ Capitalize Asset",
+      "http": 200,
+      "loadMs": 9823,
+      "checkedFields": 9,
+      "field": {
+        "id": "asset-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/fixed-assets",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 16658,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r50:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/goods-receipts",
+      "label": "+ Stock Adjustment",
+      "http": 200,
+      "loadMs": 3105,
+      "checkedFields": 8,
+      "field": {
+        "id": "sm-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/goods-receipts",
+      "label": "+ Receive Goods (GRN)",
+      "http": 200,
+      "loadMs": 11147,
+      "checkedFields": 4,
+      "field": {
+        "id": "grn-received-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Attendance Summary",
+      "http": 200,
+      "loadMs": 2945,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Leave Request",
+      "http": 200,
+      "loadMs": 9170,
+      "checkedFields": 4,
+      "field": {
+        "id": "leave-starts-on",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr",
+      "label": "Create Draft Summary",
+      "http": 200,
+      "loadMs": 15682,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Work Shift",
+      "http": 200,
+      "loadMs": 23306,
+      "checkedFields": 6,
+      "field": {
+        "id": "shift-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr",
+      "label": "New Leave Type",
+      "http": 200,
+      "loadMs": 30656,
+      "checkedFields": 5,
+      "field": {
+        "id": "leave-type-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr",
+      "label": "Assign Work Profile",
+      "http": 200,
+      "loadMs": 38282,
+      "checkedFields": 6,
+      "field": {
+        "id": "profile-employee-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr",
+      "label": "Add Holiday",
+      "http": 200,
+      "loadMs": 45011,
+      "checkedFields": 2,
+      "field": {
+        "id": "holiday-date",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr/attendance-import",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1955
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr/employees",
+      "label": "New Employee",
+      "http": 200,
+      "loadMs": 2415,
+      "checkedFields": 20,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr/positions",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1448
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/hr/roster",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2015
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Warehouse",
+      "http": 200,
+      "loadMs": 2194,
+      "checkedFields": 2,
+      "field": {
+        "id": "wh-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Bin",
+      "http": 200,
+      "loadMs": 10497,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Lot",
+      "http": 200,
+      "loadMs": 18057,
+      "checkedFields": 5,
+      "field": {
+        "id": "lot-no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Physical Count",
+      "http": 200,
+      "loadMs": 25801,
+      "checkedFields": 4,
+      "field": {
+        "id": "count-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Transfer Stock",
+      "http": 200,
+      "loadMs": 33089,
+      "checkedFields": 6,
+      "field": {
+        "id": "transfer-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/inventory-operations",
+      "label": "+ Add Bin",
+      "http": 200,
+      "loadMs": 42949,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/invoices",
+      "label": "Create Invoice",
+      "http": 200,
+      "loadMs": 2539,
+      "checkedFields": 17,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/invoices",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 11000,
+      "checkedFields": 10,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2419
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/payroll",
+      "label": "Create Payroll Run",
+      "http": 200,
+      "loadMs": 2415,
+      "checkedFields": 4,
+      "field": {
+        "id": "run-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/payroll",
+      "label": "New Employee Profile",
+      "http": 200,
+      "loadMs": 11445,
+      "checkedFields": 8,
+      "field": {
+        "id": "monthly-salary",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/payroll",
+      "label": "New Policy Version",
+      "http": 200,
+      "loadMs": 20007,
+      "checkedFields": 8,
+      "field": {
+        "id": "policy-effective-from",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/pos-integration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1654
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/products",
+      "label": "+ Create Item",
+      "http": 200,
+      "loadMs": 3153,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/products",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 15132,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "Synthetic expired session 1793293263896",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/projects",
+      "label": "+ New Project",
+      "http": 200,
+      "loadMs": 2436,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/projects",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7874,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "Synthetic Acceptance Project",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/projects",
+      "label": "Members",
+      "http": 200,
+      "loadMs": 13752,
+      "checkedFields": 2,
+      "field": {
+        "id": "member-role",
+        "original": "member",
+        "value": "lead"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/purchase-orders",
+      "label": "+ Create Purchase Order",
+      "http": 200,
+      "loadMs": 1465,
+      "checkedFields": 13,
+      "field": {
+        "id": "purchase-orders-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/quotations",
+      "label": "+ Create Quotation",
+      "http": 200,
+      "loadMs": 2071,
+      "checkedFields": 15,
+      "field": {
+        "id": "quotations-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/roles",
+      "label": "Create Role",
+      "http": 200,
+      "loadMs": 1960,
+      "checkedFields": 157,
+      "field": {
+        "id": "role-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/roles",
+      "label": "Edit Role",
+      "http": 200,
+      "loadMs": 8189,
+      "checkedFields": 156,
+      "field": {
+        "id": "role-name",
+        "original": "Admin",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/ai-configuration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1725
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/api-access",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1745
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/api-access/webhooks",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1671
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "label": "New Branch",
+      "http": 200,
+      "loadMs": 1939,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/settings/organization-structure",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7907,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "Head Office",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/suppliers",
+      "label": "+ Create Supplier",
+      "http": 200,
+      "loadMs": 2286,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/suppliers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 8149,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "Synthetic Acceptance Supplier",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "+ New Task",
+      "http": 200,
+      "loadMs": 1803,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "Checklist (0/0)",
+      "http": 200,
+      "loadMs": 7442,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "Chat (0)",
+      "http": 200,
+      "loadMs": 12877,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/tasks",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 17699,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "Synthetic Acceptance Task",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/tax-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1785
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/treasury-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1882
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/users",
+      "label": "Invite User",
+      "http": 200,
+      "loadMs": 1970,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/users",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7733,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "Local Acceptance Tester",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/vendor-payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1849
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/workflows",
+      "label": "New Workflow",
+      "http": 200,
+      "loadMs": 1888,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/workflows",
+      "label": "New Delegation",
+      "http": 200,
+      "loadMs": 6973,
+      "checkedFields": 4,
+      "field": {
+        "id": "del-starts-at",
+        "original": "",
+        "value": "2026-10-28T09:31"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/workflows",
+      "label": "Create New Workflow",
+      "http": 200,
+      "loadMs": 11976,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/accounting/chart-of-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 1877,
+      "checkedFields": 3,
+      "field": {
+        "id": "coa-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/accounting/journals",
+      "label": "+ Manual Journal",
+      "http": 200,
+      "loadMs": 1926,
+      "checkedFields": 8,
+      "field": {
+        "id": "journal-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/accounting/periods",
+      "label": "+ Create Period",
+      "http": 200,
+      "loadMs": 1930,
+      "checkedFields": 3,
+      "field": {
+        "id": "form-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/petty-cash",
+      "label": "+ New Fund",
+      "http": 200,
+      "loadMs": 1658,
+      "checkedFields": 3,
+      "field": {
+        "id": "petty-imprest",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/petty-cash",
+      "label": "+ New Request",
+      "http": 200,
+      "loadMs": 7911,
+      "checkedFields": 4,
+      "field": {
+        "id": "petty-amount",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "light",
+      "path": "/cheques",
+      "label": "+ Register Cheque",
+      "http": 200,
+      "loadMs": 1588,
+      "checkedFields": 8,
+      "field": {
+        "id": "cheque-cheque_no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/audit-logs",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2347
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/bank-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 1812,
+      "checkedFields": 13,
+      "field": {
+        "id": "bank-accounts-bank_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/bank-statements",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1981
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/commercial-documents",
+      "label": "+ Create Delivery Order",
+      "http": 200,
+      "loadMs": 1954,
+      "checkedFields": 7,
+      "field": {
+        "id": "do-delivery-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/commercial-documents",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 7972,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r26:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/currencies",
+      "label": "Set Currency",
+      "http": 200,
+      "loadMs": 1207,
+      "checkedFields": 4,
+      "field": {
+        "id": "currency-code",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/currencies",
+      "label": "Set Exchange Rate",
+      "http": 200,
+      "loadMs": 2061,
+      "checkedFields": 4,
+      "field": {
+        "id": "rate-quote_currency",
+        "original": "",
+        "value": "LOC"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/customers",
+      "label": "+ Create Customer",
+      "http": 200,
+      "loadMs": 1633,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/customers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7576,
+      "checkedFields": 12,
+      "field": {
+        "id": "customer-company_name",
+        "original": "Synthetic Acceptance Customer",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/customers",
+      "label": "Add Contact",
+      "http": 200,
+      "loadMs": 13162,
+      "checkedFields": 7,
+      "field": {
+        "id": "contact-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/deals",
+      "label": "+ Create Deal",
+      "http": 200,
+      "loadMs": 2004,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/deals",
+      "label": "+ Create Activity",
+      "http": 200,
+      "loadMs": 8460,
+      "checkedFields": 7,
+      "field": {
+        "id": "activity-subject",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/deals",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 14870,
+      "checkedFields": 11,
+      "field": {
+        "id": "deal-source",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "Upload Document",
+      "http": 200,
+      "loadMs": 1814,
+      "checkedFields": 7,
+      "field": {
+        "id": "doc-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "New Category",
+      "http": 200,
+      "loadMs": 7436,
+      "checkedFields": 6,
+      "field": {
+        "id": "cat-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "New Retention Policy",
+      "http": 200,
+      "loadMs": 13471,
+      "checkedFields": 5,
+      "field": {
+        "id": "ret-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "New Version",
+      "http": 200,
+      "loadMs": 18878,
+      "checkedFields": 2,
+      "field": {
+        "id": "version-change-note",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/documents",
+      "label": "Link Entity",
+      "http": 200,
+      "loadMs": 24397,
+      "checkedFields": 3,
+      "field": {
+        "id": "link-id",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/e-tax",
+      "label": "Configure Submission",
+      "http": 200,
+      "loadMs": 1691,
+      "checkedFields": 5,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/expenses",
+      "label": "+ New Expense",
+      "http": 200,
+      "loadMs": 2196,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/expenses",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7518,
+      "checkedFields": 12,
+      "field": {
+        "id": "expense-title",
+        "original": "Synthetic UI expense",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/finance/cash-flow",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2134
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/finance/ocr",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1643
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "label": "+ Asset Category",
+      "http": 200,
+      "loadMs": 1767,
+      "checkedFields": 6,
+      "field": {
+        "id": "asset-category-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "label": "+ Capitalize Asset",
+      "http": 200,
+      "loadMs": 7970,
+      "checkedFields": 9,
+      "field": {
+        "id": "asset-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/fixed-assets",
+      "label": "Upload Proof",
+      "http": 200,
+      "loadMs": 14396,
+      "checkedFields": 1,
+      "field": {
+        "id": ":r50:",
+        "original": "",
+        "value": "C:\\fakepath\\invoice.pdf"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/goods-receipts",
+      "label": "+ Stock Adjustment",
+      "http": 200,
+      "loadMs": 2089,
+      "checkedFields": 8,
+      "field": {
+        "id": "sm-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/goods-receipts",
+      "label": "+ Receive Goods (GRN)",
+      "http": 200,
+      "loadMs": 2934,
+      "checkedFields": 4,
+      "field": {
+        "id": "grn-received-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Attendance Summary",
+      "http": 200,
+      "loadMs": 1569,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Leave Request",
+      "http": 200,
+      "loadMs": 4460,
+      "checkedFields": 4,
+      "field": {
+        "id": "leave-starts-on",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "Create Draft Summary",
+      "http": 200,
+      "loadMs": 10316,
+      "checkedFields": 4,
+      "field": {
+        "id": "summary-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Work Shift",
+      "http": 200,
+      "loadMs": 16254,
+      "checkedFields": 6,
+      "field": {
+        "id": "shift-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "New Leave Type",
+      "http": 200,
+      "loadMs": 23055,
+      "checkedFields": 5,
+      "field": {
+        "id": "leave-type-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "Assign Work Profile",
+      "http": 200,
+      "loadMs": 29345,
+      "checkedFields": 6,
+      "field": {
+        "id": "profile-employee-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr",
+      "label": "Add Holiday",
+      "http": 200,
+      "loadMs": 35843,
+      "checkedFields": 2,
+      "field": {
+        "id": "holiday-date",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr/attendance-import",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1751
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr/employees",
+      "label": "New Employee",
+      "http": 200,
+      "loadMs": 1727,
+      "checkedFields": 20,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr/positions",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1263
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/hr/roster",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1509
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Warehouse",
+      "http": 200,
+      "loadMs": 2308,
+      "checkedFields": 2,
+      "field": {
+        "id": "wh-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Bin",
+      "http": 200,
+      "loadMs": 8014,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Lot",
+      "http": 200,
+      "loadMs": 13522,
+      "checkedFields": 5,
+      "field": {
+        "id": "lot-no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Physical Count",
+      "http": 200,
+      "loadMs": 19421,
+      "checkedFields": 4,
+      "field": {
+        "id": "count-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Transfer Stock",
+      "http": 200,
+      "loadMs": 24238,
+      "checkedFields": 6,
+      "field": {
+        "id": "transfer-quantity",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/inventory-operations",
+      "label": "+ Add Bin",
+      "http": 200,
+      "loadMs": 25949,
+      "checkedFields": 3,
+      "field": {
+        "id": "bin-code",
+        "original": "",
+        "value": "LOCAL DRAFT 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/invoices",
+      "label": "Create Invoice",
+      "http": 200,
+      "loadMs": 2391,
+      "checkedFields": 17,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/invoices",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 7222,
+      "checkedFields": 10,
+      "field": {
+        "id": "invoice-issue-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1810
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/payroll",
+      "label": "Create Payroll Run",
+      "http": 200,
+      "loadMs": 1696,
+      "checkedFields": 4,
+      "field": {
+        "id": "run-period-start",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/payroll",
+      "label": "New Employee Profile",
+      "http": 200,
+      "loadMs": 2460,
+      "checkedFields": 8,
+      "field": {
+        "id": "monthly-salary",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/payroll",
+      "label": "New Policy Version",
+      "http": 200,
+      "loadMs": 3193,
+      "checkedFields": 8,
+      "field": {
+        "id": "policy-effective-from",
+        "original": "",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/pos-integration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1525
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/products",
+      "label": "+ Create Item",
+      "http": 200,
+      "loadMs": 2968,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/products",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 16036,
+      "checkedFields": 11,
+      "field": {
+        "id": "products-name",
+        "original": "Synthetic expired session 1793293263896",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/projects",
+      "label": "+ New Project",
+      "http": 200,
+      "loadMs": 3359,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/projects",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 13270,
+      "checkedFields": 11,
+      "field": {
+        "id": "project-name",
+        "original": "Synthetic Acceptance Project",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/projects",
+      "label": "Members",
+      "http": 200,
+      "loadMs": 20346,
+      "checkedFields": 2,
+      "field": {
+        "id": "member-role",
+        "original": "member",
+        "value": "lead"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/purchase-orders",
+      "label": "+ Create Purchase Order",
+      "http": 200,
+      "loadMs": 2102,
+      "checkedFields": 13,
+      "field": {
+        "id": "purchase-orders-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/quotations",
+      "label": "+ Create Quotation",
+      "http": 200,
+      "loadMs": 2037,
+      "checkedFields": 15,
+      "field": {
+        "id": "quotations-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/roles",
+      "label": "Create Role",
+      "http": 200,
+      "loadMs": 2342,
+      "checkedFields": 157,
+      "field": {
+        "id": "role-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/roles",
+      "label": "Edit Role",
+      "http": 200,
+      "loadMs": 10354,
+      "checkedFields": 156,
+      "field": {
+        "id": "role-name",
+        "original": "Admin",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/ai-configuration",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1830
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/api-access",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 1769
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/api-access/webhooks",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2796
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "label": "New Branch",
+      "http": 200,
+      "loadMs": 3172,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/settings/organization-structure",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 11125,
+      "checkedFields": 4,
+      "field": {
+        "id": "branch-name",
+        "original": "Head Office",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/suppliers",
+      "label": "+ Create Supplier",
+      "http": 200,
+      "loadMs": 2127,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/suppliers",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 9030,
+      "checkedFields": 6,
+      "field": {
+        "id": "supplier-name",
+        "original": "Synthetic Acceptance Supplier",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "+ New Task",
+      "http": 200,
+      "loadMs": 5033,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "Checklist (0/0)",
+      "http": 200,
+      "loadMs": 14558,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "Chat (0)",
+      "http": 200,
+      "loadMs": 22907,
+      "checkedFields": 1,
+      "field": {
+        "id": null,
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/tasks",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 33440,
+      "checkedFields": 7,
+      "field": {
+        "id": "task-title",
+        "original": "Synthetic Acceptance Task",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/tax-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 3586
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/treasury-reports",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 4558
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/users",
+      "label": "Invite User",
+      "http": 200,
+      "loadMs": 4124,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/users",
+      "label": "Edit",
+      "http": 200,
+      "loadMs": 13272,
+      "checkedFields": 9,
+      "field": {
+        "id": "user-name",
+        "original": "Local Acceptance Tester",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/vendor-payments",
+      "http": 200,
+      "status": "NO_CREATE_SURFACE",
+      "ms": 2350
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/workflows",
+      "label": "New Workflow",
+      "http": 200,
+      "loadMs": 2356,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/workflows",
+      "label": "New Delegation",
+      "http": 200,
+      "loadMs": 9992,
+      "checkedFields": 4,
+      "field": {
+        "id": "del-starts-at",
+        "original": "",
+        "value": "2026-10-28T09:31"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/workflows",
+      "label": "Create New Workflow",
+      "http": 200,
+      "loadMs": 16976,
+      "checkedFields": 8,
+      "field": {
+        "id": "wf-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/accounting/chart-of-accounts",
+      "label": "+ Create Account",
+      "http": 200,
+      "loadMs": 2454,
+      "checkedFields": 3,
+      "field": {
+        "id": "coa-code",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/accounting/journals",
+      "label": "+ Manual Journal",
+      "http": 200,
+      "loadMs": 2182,
+      "checkedFields": 8,
+      "field": {
+        "id": "journal-date",
+        "original": "2026-10-29",
+        "value": "2026-10-28"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/accounting/periods",
+      "label": "+ Create Period",
+      "http": 200,
+      "loadMs": 1774,
+      "checkedFields": 3,
+      "field": {
+        "id": "form-name",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/petty-cash",
+      "label": "+ New Fund",
+      "http": 200,
+      "loadMs": 2086,
+      "checkedFields": 3,
+      "field": {
+        "id": "petty-imprest",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/petty-cash",
+      "label": "+ New Request",
+      "http": 200,
+      "loadMs": 10448,
+      "checkedFields": 4,
+      "field": {
+        "id": "petty-amount",
+        "original": "",
+        "value": "91"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "path": "/cheques",
+      "label": "+ Register Cheque",
+      "http": 200,
+      "loadMs": 2646,
+      "checkedFields": 8,
+      "field": {
+        "id": "cheque-cheque_no",
+        "original": "",
+        "value": "Local draft 20261029"
+      },
+      "scrollLocked": true,
+      "focusWithinDialog": true,
+      "horizontalContained": true,
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.48"
+}

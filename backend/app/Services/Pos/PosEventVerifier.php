@@ -8,7 +8,7 @@ class PosEventVerifier
 {
     public function verify(object $instance, array $event, string $type): array
     {
-        abort_unless(in_array($type, ['sale.completed', 'sale.refunded', 'cash.moved', 'kitchen.consumed', 'kitchen.wasted', 'return.inspected', 'tax.document_issued'], true), 422);
+        abort_unless(in_array($type, ['sale.completed', 'sale.refunded', 'cash.moved', 'kitchen.consumed', 'kitchen.wasted', 'return.inspected', 'tax.document_issued', 'delivery.updated', 'member.requested'], true), 422);
         $event = validator($event, ['domain' => 'required|in:company-os.pos-event.v1', 'schema_version' => 'required|integer|in:1', 'instance_id' => 'required|uuid', 'event_id' => 'required|uuid', 'aggregate_id' => 'required|uuid', 'aggregate_version' => 'required|integer|in:1', 'source_sequence' => 'required|integer|min:1', 'event_type' => 'required|in:'.$type, 'occurred_at' => 'required|date', 'key_id' => 'required|string|max:100', 'payload_hash' => 'required|string|size:64', 'signature' => 'required|string|max:2000', 'payload' => 'required|array'])->validate();
         abort_unless($event['instance_id'] === $instance->id, 403, 'POS identity mismatch.');
         $keys = json_decode($instance->signing_keys, true, flags: JSON_THROW_ON_ERROR);

@@ -5,6 +5,10 @@ import PageHeader from '@/Components/UI/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import CreateEditDialog from '@/Components/UI/CreateEditDialog';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 
 type Config = {
@@ -66,7 +70,7 @@ export default function ETax({
     canManage: boolean;
     canSubmit: boolean;
 }) {
-    const settings = useForm({
+    const configData = (config: Config) => ({
         _method: 'patch',
         mode: config.mode,
         provider_code: config.provider_code ?? 'rd_api',
@@ -79,7 +83,20 @@ export default function ETax({
         client_secret: '',
         webhook_secret: '',
     });
+    const settings = useForm(configData(config));
 
+    const [configOpen, setConfigOpen] = useState(false);
+    const [configMinimized, setConfigMinimized] = useState(false);
+    const configGuard = useDiscardGuard(
+        configOpen && settings.isDirty,
+        settings.processing,
+    );
+    const closeConfig = () => {
+        settings.reset();
+        settings.clearErrors();
+        setConfigOpen(false);
+        setConfigMinimized(false);
+    };
     const generation = useForm({
         source_type: 'invoice',
         source_id: invoices[0]?.id ?? '',
@@ -137,221 +154,270 @@ export default function ETax({
                     title="Submission Configuration"
                     description="Certificate private keys must NEVER be stored in the database. Store only a vault/KMS reference. Provider secrets are encrypted at rest."
                 >
-                    <form
-                        className="grid gap-3 md:grid-cols-2"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            settings.patch(route('e-tax.config.update'), {
-                                preserveScroll: true,
-                            });
-                        }}
-                    >
-                        <div>
-                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Operating Mode
-                            </label>
-                            <select
-                                value={settings.data.mode}
-                                onChange={(event) =>
-                                    settings.setData('mode', event.target.value)
-                                }
-                                className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                            >
-                                <option value="disabled">Disabled</option>
-                                <option value="manual_export">
-                                    Manual XML Export
-                                </option>
-                                <option value="mock">Mock (no delivery)</option>
-                                <option value="provider">
-                                    Live Provider Gateway (RD API / INET /
-                                    Sandbox)
-                                </option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Provider Selection
-                            </label>
-                            <select
-                                value={settings.data.provider_code}
-                                onChange={(event) =>
-                                    settings.setData(
-                                        'provider_code',
-                                        event.target.value,
-                                    )
-                                }
-                                disabled={settings.data.mode === 'mock'}
-                                className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                            >
-                                <option value="rd_api">
-                                    Revenue Department Web Service (RD API)
-                                </option>
-                                <option value="inet">
-                                    Certified Provider (INET Gateway)
-                                </option>
-                                <option value="sandbox">Sandbox Gateway</option>
-                                <option value="mock">Mock Simulator</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Digital Signature Pipeline
-                            </label>
-                            <select
-                                value={settings.data.signature_mode}
-                                onChange={(event) =>
-                                    settings.setData(
-                                        'signature_mode',
-                                        event.target.value,
-                                    )
-                                }
-                                className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                            >
-                                <option value="xml_dsig">
-                                    ETDA Enveloped XML-DSig (RSA-SHA256)
-                                </option>
-                                <option value="external">
-                                    External HSM / Vault Signing
-                                </option>
-                                <option value="none">
-                                    None (Unsigned / Mock)
-                                </option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Certificate Reference (Vault / ARN)
-                            </label>
-                            <input
-                                value={settings.data.certificate_reference}
-                                onChange={(event) =>
-                                    settings.setData(
-                                        'certificate_reference',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="vault:secret/etax/cert-2026"
-                                className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Certificate Expiry Date
-                            </label>
-                            <input
-                                type="date"
-                                value={settings.data.certificate_expires_at}
-                                onChange={(event) =>
-                                    settings.setData(
-                                        'certificate_expires_at',
-                                        event.target.value,
-                                    )
-                                }
-                                className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                            />
-                        </div>
-
-                        {settings.data.mode === 'provider' && (
-                            <>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                        Provider Gateway Endpoint URL
-                                    </label>
-                                    <input
-                                        value={settings.data.api_url}
-                                        onChange={(event) =>
-                                            settings.setData(
-                                                'api_url',
-                                                event.target.value,
-                                            )
-                                        }
-                                        placeholder="https://etax.rd.go.th/api/v1"
-                                        className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                        Client ID / App Key
-                                    </label>
-                                    <input
-                                        value={settings.data.client_id}
-                                        onChange={(event) =>
-                                            settings.setData(
-                                                'client_id',
-                                                event.target.value,
-                                            )
-                                        }
-                                        placeholder="ETAX_CLIENT_ID"
-                                        className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                        Client Secret (Encrypted)
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={settings.data.client_secret}
-                                        onChange={(event) =>
-                                            settings.setData(
-                                                'client_secret',
-                                                event.target.value,
-                                            )
-                                        }
-                                        placeholder={
-                                            config.has_client_secret
-                                                ? '•••••••• (Stored securely. Enter to replace)'
-                                                : 'Enter client secret'
-                                        }
-                                        className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                        Webhook HMAC Secret
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={settings.data.webhook_secret}
-                                        onChange={(event) =>
-                                            settings.setData(
-                                                'webhook_secret',
-                                                event.target.value,
-                                            )
-                                        }
-                                        placeholder={
-                                            config.has_webhook_secret
-                                                ? '•••••••• (Stored securely. Enter to replace)'
-                                                : 'Enter webhook HMAC secret'
-                                        }
-                                        className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        <div className="md:col-span-2 mt-2">
-                            <PrimaryButton
-                                disabled={settings.processing || !canManage}
-                            >
-                                Save Configuration
-                            </PrimaryButton>
-                        </div>
-                        {Object.values(settings.errors).map((error) => (
-                            <p
-                                role="alert"
-                                className="text-sm text-red-600 md:col-span-2"
-                                key={error}
-                            >
-                                {error}
-                            </p>
-                        ))}
-                    </form>
+                    <p className="text-sm">
+                        Mode: {config.mode} · Provider:{' '}
+                        {config.provider_code || '—'} · Signature:{' '}
+                        {config.signature_mode || 'xml_dsig'}
+                    </p>
+                    {canManage && (
+                        <SecondaryButton
+                            type="button"
+                            onClick={() => setConfigOpen(true)}
+                        >
+                            Configure Submission
+                        </SecondaryButton>
+                    )}
                 </Card>
+                <DiscardChangesDialog
+                    open={configGuard.confirming}
+                    onKeep={configGuard.keep}
+                    onDiscard={configGuard.discard}
+                />
+                <CreateEditDialog
+                    open={configOpen}
+                    minimized={configMinimized}
+                    onMinimize={setConfigMinimized}
+                    onClose={() => configGuard.request(closeConfig)}
+                    title="Submission Configuration"
+                    breadcrumb="Finance / e-Tax"
+                    entityLabel="e-Tax configuration"
+                    draftLabel={
+                        settings.data.provider_code || 'Submission settings'
+                    }
+                    storageKey="etax-config-editor-size"
+                    formId="etax-config-editor"
+                    processing={settings.processing}
+                    saveDisabled={!canManage}
+                    saveLabel="Save Configuration"
+                    errors={settings.errors}
+                    status={settings.data.mode}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        if (!canManage || settings.processing) return;
+                        settings.patch(route('e-tax.config.update'), {
+                            preserveScroll: true,
+                            onSuccess: (page) => {
+                                const saved = configData(
+                                    page.props.config as Config,
+                                );
+                                settings.setDefaults(saved);
+                                settings.setData(saved);
+                                settings.clearErrors();
+                                setConfigOpen(false);
+                                setConfigMinimized(false);
+                            },
+                        });
+                    }}
+                >
+                    {() => (
+                        <div className="grid gap-3 p-4 md:grid-cols-2">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Operating Mode
+                                </label>
+                                <select
+                                    value={settings.data.mode}
+                                    onChange={(event) =>
+                                        settings.setData(
+                                            'mode',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                >
+                                    <option value="disabled">Disabled</option>
+                                    <option value="manual_export">
+                                        Manual XML Export
+                                    </option>
+                                    <option value="mock">
+                                        Mock (no delivery)
+                                    </option>
+                                    <option value="provider">
+                                        Live Provider Gateway (RD API / INET /
+                                        Sandbox)
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Provider Selection
+                                </label>
+                                <select
+                                    value={settings.data.provider_code}
+                                    onChange={(event) =>
+                                        settings.setData(
+                                            'provider_code',
+                                            event.target.value,
+                                        )
+                                    }
+                                    disabled={settings.data.mode === 'mock'}
+                                    className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                >
+                                    <option value="rd_api">
+                                        Revenue Department Web Service (RD API)
+                                    </option>
+                                    <option value="inet">
+                                        Certified Provider (INET Gateway)
+                                    </option>
+                                    <option value="sandbox">
+                                        Sandbox Gateway
+                                    </option>
+                                    <option value="mock">Mock Simulator</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Digital Signature Pipeline
+                                </label>
+                                <select
+                                    value={settings.data.signature_mode}
+                                    onChange={(event) =>
+                                        settings.setData(
+                                            'signature_mode',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                >
+                                    <option value="xml_dsig">
+                                        ETDA Enveloped XML-DSig (RSA-SHA256)
+                                    </option>
+                                    <option value="external">
+                                        External HSM / Vault Signing
+                                    </option>
+                                    <option value="none">
+                                        None (Unsigned / Mock)
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Certificate Reference (Vault / ARN)
+                                </label>
+                                <input
+                                    value={settings.data.certificate_reference}
+                                    onChange={(event) =>
+                                        settings.setData(
+                                            'certificate_reference',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="vault:secret/etax/cert-2026"
+                                    className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Certificate Expiry Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={settings.data.certificate_expires_at}
+                                    onChange={(event) =>
+                                        settings.setData(
+                                            'certificate_expires_at',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                />
+                            </div>
+
+                            {settings.data.mode === 'provider' && (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Provider Gateway Endpoint URL
+                                        </label>
+                                        <input
+                                            value={settings.data.api_url}
+                                            onChange={(event) =>
+                                                settings.setData(
+                                                    'api_url',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="https://etax.rd.go.th/api/v1"
+                                            className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Client ID / App Key
+                                        </label>
+                                        <input
+                                            value={settings.data.client_id}
+                                            onChange={(event) =>
+                                                settings.setData(
+                                                    'client_id',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="ETAX_CLIENT_ID"
+                                            className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Client Secret (Encrypted)
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={settings.data.client_secret}
+                                            onChange={(event) =>
+                                                settings.setData(
+                                                    'client_secret',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder={
+                                                config.has_client_secret
+                                                    ? '•••••••• (Stored securely. Enter to replace)'
+                                                    : 'Enter client secret'
+                                            }
+                                            className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                            Webhook HMAC Secret
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={settings.data.webhook_secret}
+                                            onChange={(event) =>
+                                                settings.setData(
+                                                    'webhook_secret',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder={
+                                                config.has_webhook_secret
+                                                    ? '•••••••• (Stored securely. Enter to replace)'
+                                                    : 'Enter webhook HMAC secret'
+                                            }
+                                            className="w-full rounded-md border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {Object.values(settings.errors).map((error) => (
+                                <p
+                                    role="alert"
+                                    className="text-sm text-red-600 md:col-span-2"
+                                    key={error}
+                                >
+                                    {error}
+                                </p>
+                            ))}
+                        </div>
+                    )}
+                </CreateEditDialog>
 
                 <Card
                     title="Prepare Internal XML"

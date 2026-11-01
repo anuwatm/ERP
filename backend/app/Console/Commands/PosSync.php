@@ -56,6 +56,13 @@ class PosSync extends Command
                 $published = $transport->request($id, 'tax-profile', json_decode($profile->snapshot, true));
                 abort_unless(($published['status'] ?? null) === 'accepted', 502, 'Issuer profile was not acknowledged.');
             }
+            if (config('pos.local_membership_enabled') === true) {
+                $membership = app(\App\Services\Pos\PosMembershipPublicationService::class)->forSync($id);
+                if ($membership) {
+                    $ack = $transport->request($id, 'membership', $membership, $membership['id']);
+                    abort_unless(($ack['status'] ?? null) === 'accepted', 502, 'Membership publication was not acknowledged.');
+                }
+            }
             $batch = $transport->request($id, 'events', ['cursor' => $instance->durable_cursor, 'limit' => 100]);
             validator($batch, ['events' => 'present|array|max:100', 'next_cursor' => 'required|integer|min:0'])->validate();
             $import->receive($id, $batch['events'], $batch['next_cursor']);
@@ -81,6 +88,14 @@ class PosSync extends Command
                                     $sale->selectRaw('1')->from('pos_import_sales')->where('pos_sync_dependencies.source_kind', 'sale')->whereColumn('pos_import_sales.pos_instance_id', 'pos_sync_dependencies.pos_instance_id')->whereColumn('pos_import_sales.source_sale_id', 'pos_sync_dependencies.source_id');
                                 })->whereNotExists(function ($tax) {
                                     $tax->selectRaw('1')->from('pos_import_tax_documents')->where('pos_sync_dependencies.source_kind', 'tax_document')->whereColumn('pos_import_tax_documents.pos_instance_id', 'pos_sync_dependencies.pos_instance_id')->whereColumn('pos_import_tax_documents.source_document_id', 'pos_sync_dependencies.source_id');
+                                })->when(config('pos.local_membership_enabled') === true, function ($deps) {
+                                    $deps->whereNotExists(function ($release) {
+                                        $release->selectRaw('1')->from('pos_import_promotion_claims')->where('pos_sync_dependencies.source_kind', 'promotion_release')->whereColumn('pos_import_promotion_claims.pos_instance_id', 'pos_sync_dependencies.pos_instance_id')->whereColumn('pos_import_promotion_claims.id', 'pos_sync_dependencies.source_id')->whereNotNull('pos_import_promotion_claims.released_at');
+                                    });
+                                })->when(config('pos.local_delivery_enabled') === true, function ($deps) {
+                                    $deps->whereNotExists(function ($delivery) {
+                                        $delivery->selectRaw('1')->from('pos_import_delivery_revisions')->where('pos_sync_dependencies.source_kind', 'delivery_revision')->whereColumn('pos_import_delivery_revisions.pos_instance_id', 'pos_sync_dependencies.pos_instance_id')->whereColumn('pos_import_delivery_revisions.source_delivery_id', 'pos_sync_dependencies.source_id')->whereRaw("pos_import_delivery_revisions.version = JSON_EXTRACT(pos_sync_inbox.received_bytes, '$.payload.version') - 1");
+                                    });
                                 });
                             });
                         });

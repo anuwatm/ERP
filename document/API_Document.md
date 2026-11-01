@@ -1,5 +1,7 @@
 # API_Document — ERP External Read-only API
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 **POS แยกแอป:** [Phase28 API/routes](PHASE_28_API.md) เป็น staff/admin/connector interfaces คนละขอบเขตกับ External Read API 62 GET paths ในเอกสารนี้. [Configured database upgrade](DATABASE_UPGRADE_20261027.md) appliedแล้ว; ไม่เท่ากับ production deployment.
 
 เอกสารอ้างอิงการดึงข้อมูลสำหรับ backend ของแอปภายนอก ครอบคลุม **62 GET endpoints** ภายใต้ `/api/v1` อ้างอิง routes/controllers และ OpenAPI version1.2.0 ณ2026-10-19 ตัวอย่างทั้งหมดเป็นข้อมูลสมมติ ไม่ใช่ผลเรียกฐานใช้งานจริง

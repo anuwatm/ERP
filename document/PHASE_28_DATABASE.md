@@ -1,5 +1,7 @@
 # Phase 28 — Database inventory and relationships — 2026-10-27
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 ERP/POS เป็นคนละฐาน ไม่มี cross-database foreign key หรือ POS credential สำหรับ ERP DB. Source of truth คือ migrations; ตารางนี้เป็น inventory ของ create-table declarations ใน Phase28 ไม่รวม Laravel framework tables/columns เดิมทุกตัว
 
 Configured ERP MySQL `erp`: 83 migrations applied / pending 0. POS SQLite `pos/database/database.sqlite`: 17 applied / pending 0, quick_check=ok, foreign-key violations=0. ดู [backup/data verification](DATABASE_UPGRADE_20261027.md). POS ยังไม่มี staff/orders และยังต้อง provision

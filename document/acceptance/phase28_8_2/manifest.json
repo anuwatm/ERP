@@ -1,0 +1,280 @@
+{
+  "date": "2026-11-01",
+  "scope": "Source and synthetic local acceptance evidence only; no private keys/configured DB/env",
+  "source": [
+    {
+      "path": "shared/pos/PromotionCalculator.php",
+      "sha256": "e2235ab2469fd3b7b8943d819eabcda0f1b6dde77dc2faf6ace416c769ae0cdf"
+    },
+    {
+      "path": "shared/pos/MemberEnvelope.php",
+      "sha256": "538ef9b135b9ffaab37c9e786dffaaaa6ea0afa425f38c0373fd756f031c903a"
+    },
+    {
+      "path": "shared/tests/PromotionContract.php",
+      "sha256": "077a9226fa6b7d22aea2eaf1167fd8e154ff73e8080591c7b1dfb1fad18875f0"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosMembershipMasterService.php",
+      "sha256": "7c79b9f7caaeff4c51cb29d0cf35ae75029a8c39fd9bfa5a8ae21b9f32b13c33"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosMembershipPublicationService.php",
+      "sha256": "1975d2b15866b50c4b28bd090147805bae0981273de50d56d3f99e70baf6a40d"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosMemberRequestImportService.php",
+      "sha256": "dff48634e7515725daa37cc6a7d1eb6aadac7cbb75385fa7d69c10ae953339d2"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosMembershipImportService.php",
+      "sha256": "693079ee765b1752fc21a005144c3cceda153feb2fafc19890a17a635490cfd5"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosSaleValidator.php",
+      "sha256": "7e7253b0084f5a9b11bd5bdf3c0e9b0b342447f911e82aecd46bb7720f933d02"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosImportService.php",
+      "sha256": "5c87b6ac771c785faa0ba1b7520e60de7f5951036470381cd2afecf30072153b"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosRefundImportService.php",
+      "sha256": "13939a96ed24e9c670bd1340bb7c5e93b20c0f4601ba0da9b12b531094b0618e"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosCheckpointService.php",
+      "sha256": "9ebf62d570d3cf48cb2f7f980fa84f654df5840a6e45da8c0db6912ecd6b2888"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosEventVerifier.php",
+      "sha256": "79008b61e8433aa5af61f3810338eda2584a98493ae3b926f2fc1febb94b3d20"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosTransport.php",
+      "sha256": "6cf2f90bde621ed0058fd62c55afad3ab06aeb8272cf7e22e67553d38a7b1395"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosDependencyPending.php",
+      "sha256": "8c4c83732b37cdf98be3e42044af630ed2502f2cf3a13dba93d500d66ceb4d59"
+    },
+    {
+      "path": "backend/app/Console/Commands/PosSync.php",
+      "sha256": "ccdca5736273c8f8f70398ec1054982a035e2aeeeeefe0355fe587f36e1d10ee"
+    },
+    {
+      "path": "backend/app/Http/Controllers/PosMembershipController.php",
+      "sha256": "41170ebdce758d692ea570d16238e2bdcfc3a479d3f4df38ee58e21092b19f3b"
+    },
+    {
+      "path": "backend/resources/views/pos-membership.blade.php",
+      "sha256": "bce37aacfc766abe3f198991cd5fc56e379905325193096ebcd50fdc44c89dc1"
+    },
+    {
+      "path": "backend/routes/web.php",
+      "sha256": "0097b43872549ff7000b248226cdfd7647a56789cb9bffaab1a246fdc0603172"
+    },
+    {
+      "path": "backend/config/pos.php",
+      "sha256": "69afb2eff3eaa4c3f19fec8447372a4e16f119c591b9995338bd74d939356e85"
+    },
+    {
+      "path": "backend/database/migrations/2026_10_30_000002_create_pos_membership_master.php",
+      "sha256": "a439bfdce97240f1eee2696fd60abf9d37525e0b4dd02d6b8df84817642a1474"
+    },
+    {
+      "path": "backend/database/migrations/2026_10_31_000001_create_membership_publications.php",
+      "sha256": "b58599a81e2d7c8054e217f03e07a50bf35b7350594902ca54fe5cddbabc740c"
+    },
+    {
+      "path": "backend/database/migrations/2026_10_31_000002_create_member_request_inbox.php",
+      "sha256": "1fc69f4a882fd91d329a764df20219dcac23ace7cb7b451a841efe36c2cf1063"
+    },
+    {
+      "path": "pos/app/Services/MembershipService.php",
+      "sha256": "adffe7343964d70ebb25ab076d032e13a2a31e5701f8931acd54902f9b08a97e"
+    },
+    {
+      "path": "pos/app/Services/MemberDraftService.php",
+      "sha256": "60994b678a4c0841e57349498176967d85f204a9011cf0092cdb417d158b1dc0"
+    },
+    {
+      "path": "pos/app/Services/DeliveryPromotionService.php",
+      "sha256": "fde6a27a60b943aac6a95b6a085a72c73f2a827852cfad6fa9fd6ca5e3951c4c"
+    },
+    {
+      "path": "pos/app/Services/CheckoutService.php",
+      "sha256": "f8a1933e9e296ee05fd070c8bfae134140b5a270a2438d3101e8faf832d3552c"
+    },
+    {
+      "path": "pos/app/Services/RefundService.php",
+      "sha256": "5563462d87a84c447c4135f34539cd029a85000f89b8f511dd5709ade11aff8f"
+    },
+    {
+      "path": "pos/app/Services/RestaurantService.php",
+      "sha256": "bd823a90455eff11cef7c6fc0a3850c270581177b882ca8a3b0c753cb99e4a94"
+    },
+    {
+      "path": "pos/app/Services/DeliveryOperations.php",
+      "sha256": "a72d0e43acb7e880db142a9caf2afc043186656fd552dae921aad9a8ccb063be"
+    },
+    {
+      "path": "pos/app/Services/DeliveryService.php",
+      "sha256": "4b82fab40cfccdaa9db6e84980ec6d48bf760dd0efdb2230c0152e78981f0260"
+    },
+    {
+      "path": "pos/resources/MembershipPicker.tsx",
+      "sha256": "d07cf506e671c4535e9a971e259942bd72119b7e2ad6c570f51a430dfe7db2b9"
+    },
+    {
+      "path": "pos/resources/RestaurantPanel.tsx",
+      "sha256": "d0b54e548299aace3ab1119b7610f3b4ed1cd7aa703a5ac1595116d0e9abc75b"
+    },
+    {
+      "path": "pos/resources/pos.tsx",
+      "sha256": "fa55ddff3ab2d835d9034199003462501c3c49c412f64007ad707c534d7bcaab"
+    },
+    {
+      "path": "pos/resources/pos.css",
+      "sha256": "82b070645445cf2e9722dd82f073077e60df22a7dff748f3d2b05fe8b37dd210"
+    },
+    {
+      "path": "pos/resources/views/membership.blade.php",
+      "sha256": "eef9ad9e29290de75a192ac299d55e6cca92d0ff020ff02b8f674603e4d11dc8"
+    },
+    {
+      "path": "pos/resources/views/deliveries.blade.php",
+      "sha256": "b2b33d8461320b8153c9f4f89b1d23f57c76e24f62166bc7dea836310066601f"
+    },
+    {
+      "path": "pos/routes/membership.php",
+      "sha256": "7ad5afa6aedbe930551a13a1031cb3e0113e3468ac6520eded9252c230192a59"
+    },
+    {
+      "path": "pos/routes/connector.php",
+      "sha256": "988f19108fba2f319ebb859abef9f055be78a09f833fb4e30e831d24c75bec75"
+    },
+    {
+      "path": "pos/routes/web.php",
+      "sha256": "09b875155c4739aa702afc4b758cdcf3b44a50db5ebbb9196ac75b4b21b22847"
+    },
+    {
+      "path": "pos/config/pos.php",
+      "sha256": "25890b1ba903f5d6f1cf4043064437373fbb58f088d3bc031ad4321c126a1692"
+    },
+    {
+      "path": "pos/database/migrations/2026_10_31_000001_create_membership_runtime.php",
+      "sha256": "3753f5a7dcddc2c97bf2a6075aa83579b9156b07d5731ddbc935486e225d68cb"
+    },
+    {
+      "path": "pos/database/migrations/2026_10_31_000002_create_member_drafts.php",
+      "sha256": "d5fe8b4968121d5789243717c2c5e7f8d6b708022317e6f931f82a562741bf90"
+    },
+    {
+      "path": "backend/tests/Feature/Phase28PosImportTest.php",
+      "sha256": "5b69ecd7abdad609c3a42cc278f5d06f96e7e832688cc681a91ca7d3048a2c18"
+    },
+    {
+      "path": "backend/tests/Unit/PosMemberEnvelopeTest.php",
+      "sha256": "ab57ac3e93c9a6dc6d87a29424ac5b91c34e9bd771206e3e3a5be860424d6d51"
+    },
+    {
+      "path": "backend/tests/Unit/PosPromotionCalculatorTest.php",
+      "sha256": "509ea0d1f14285ee32c44610fa20730902be9167a439bc6e8906801f6a4ce5e5"
+    },
+    {
+      "path": "pos/tests/PromotionCalculatorTest.php",
+      "sha256": "0e45e2cbeb9b1adf782582eb2e68ffba0ee1aeee2bbe115a7ee2b3c3ddbef28c"
+    },
+    {
+      "path": "pos/tests/CheckoutTest.php",
+      "sha256": "16e09d31e0a9f4afaff428440d4a023a04c50d15ee2685c605401a97fbcb945a"
+    },
+    {
+      "path": "pos/tests/RestaurantTest.php",
+      "sha256": "c7c410cff8b3ae36ce9d12b22c6f9db5d2c6731f00b2444d8a514745915a453c"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "document/acceptance/phase28_8_2/browser-report.json",
+      "sha256": "a64dd8898b9a24ce4faa797c9c690116584a742a53bb354c12fcf6e5c061ef70"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/cleanup.json",
+      "sha256": "04dac8f1799ba140f53e0f6aba292226397ff1af5ff18c2e69bf3dac1e287594"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/document-links.json",
+      "sha256": "9e10d4be9a6c3426cd90357315ed392294c77aba7816ceeaf956f66c12e1d91d"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/erp.junit.xml",
+      "sha256": "c8f0f00411e33bac2b9173914efeb34052d14a5b4f90961caf294c6a404422ee"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/layout-report.json",
+      "sha256": "4d4dd8b354974090e9f784767bff30d7badb618664269c3ed39e11290956c62f"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/pharmacy-1280.png",
+      "sha256": "7a82a1f1f687909732340070dd6f5cbf166d463a9a9cf50e14c31e59354ea123"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/pharmacy-375.png",
+      "sha256": "95e9043cded31bbcbfb6a2f10c4be0b77f935aba84a4e0202c216c9be2bf0a01"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/pos.junit.xml",
+      "sha256": "3c1365e0413c70eb715503bca2f6e02c2a33f01f79507f5a0c3ac385ca9aa2e1"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/README.md",
+      "sha256": "04b53db088906f7a58730326cd336a7ddd5696a48d9cd8fcdb8829eba2b3e85c"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/restaurant-1280.png",
+      "sha256": "b6f6c065cec6fd85a797e94a1376ff65248d3a418e097b0e362a0a42dfb47460"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/restaurant-375.png",
+      "sha256": "8c4b5a20bf99528e882ddc0acac6201ad2d2918ba9fad536128aaacca0f5f24e"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/retail-1280.png",
+      "sha256": "c021d70c272a821ba817ed2a91987204d4ef00c59285df0baa6fedb7bb8f8d4a"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/retail-375.png",
+      "sha256": "33e1bf5fe9d957f8a250f46bdebc54c67f588213afdc85849b0fe0d805762e8f"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/review-browser-report.json",
+      "sha256": "dc3ba3ea3a6db61558c34040f68f39c559a803ec02d11180742e0c236331a532"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/roundtrip.json",
+      "sha256": "61790fd20069822f845c4b096dc746d1165d50152b9e076b9205023d4cb8fb40"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/signature-verification.json",
+      "sha256": "9868a998d9b0c1631ce12665315798206a5c74755a9dc110b04486e26bbf3669"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/signed-events.json",
+      "sha256": "11c6b46f678134373bb583cba43028a3849645f89cadb515293461a40d94657d"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/source-verification.json",
+      "sha256": "58528191020c47d7d5139dbedf8cc8a254d51f4f25136ce0a403cede7dc96d3c"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/synthetic-public.pem",
+      "sha256": "b1dac393ea78e6f5662334aac452f436d4230ff16973a85e6e16db2f87e9bf1f"
+    },
+    {
+      "path": "document/acceptance/phase28_8_2/validation.json",
+      "sha256": "77783dbe3063078b465a10e7bb8507c1c801d5678c07c7a9dac267439ce582a9"
+    }
+  ]
+}

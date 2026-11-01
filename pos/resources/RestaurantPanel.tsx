@@ -1,3 +1,4 @@
+import MembershipPicker, {MembershipOptions, MembershipSelection} from './MembershipPicker';
 import React, { useEffect, useState } from "react";
 
 export type RestaurantState = {
@@ -14,6 +15,8 @@ export type RestaurantState = {
 
 type Props = {
   state: RestaurantState & {
+    membership_enabled: boolean;
+    membership: MembershipOptions;
     staff: { role: string };
     catalog_version: string | null;
     items: {
@@ -55,6 +58,7 @@ export default function RestaurantPanel({
   const [orderKey, setOrderKey] = useState(() => crypto.randomUUID());
   const [selected, setSelected] = useState<string[]>([]);
   const [billKey, setBillKey] = useState(() => crypto.randomUUID());
+  const [membershipSelection, setMembershipSelection] = useState<MembershipSelection | null>(null);
   const [cash, setCash] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [cancelLine, setCancelLine] = useState("");
@@ -417,8 +421,10 @@ export default function RestaurantPanel({
                 request_key: billKey,
                 kitchen_line_ids: selected,
                 cash_tendered: cash,
+                ...(membershipSelection?.payload || {}),
               });
               onReceipt(receipt);
+              setMembershipSelection(null);
               setSelected([]);
               setCash("");
               setBillKey(crypto.randomUUID());
@@ -443,6 +449,7 @@ export default function RestaurantPanel({
             ตรวจยอดบิลอาหาร
           </button>
           {preview && <p role="status">ยอดบิลอาหารรวม VAT {preview}</p>}
+          {state.membership_enabled && <MembershipPicker data={state.membership} input={{terminal_id: terminal, kitchen_line_ids: selected}} disabled={busy || !selected.length} onChange={setMembershipSelection} refresh={reload} />}
           <label>
             รับเงินสดค่าอาหาร
             <input
@@ -453,7 +460,7 @@ export default function RestaurantPanel({
               onChange={(e) => setCash(e.target.value)}
             />
           </label>
-          <button disabled={busy || !shiftOpen || !selected.length || !preview}>
+          <button disabled={busy || !shiftOpen || !selected.length || !preview || (!!membershipSelection && (!membershipSelection.ready || membershipSelection.cartKey !== JSON.stringify({terminal_id: terminal, kitchen_line_ids: selected})))}>
             ยืนยันรับเงินค่าอาหาร
           </button>
         </form>

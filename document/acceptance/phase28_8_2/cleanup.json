@@ -1,0 +1,10 @@
+{
+    "sealed": true,
+    "server_stopped": true,
+    "active_pos_staff": 0,
+    "active_erp_users": 0,
+    "sessions_removed": 12,
+    "private_keys_remaining": 0,
+    "member_and_audit_rows_deleted": false,
+    "configured_databases_changed": false
+}

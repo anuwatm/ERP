@@ -1,5 +1,7 @@
 # Phase 28 — Local-only Connector / Prescription / Pharmacy validation
 
+> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 **ล่าสุด 2026-10-27:** Geminiหมวด17รับรอง local; [acceptance](PHASE_28_LOCAL_ACCEPTANCE.md), [API](PHASE_28_API.md), [schema](PHASE_28_DATABASE.md). ผู้ใช้อนุมัติอัปเดตฐานตามconfigแล้วตาม [upgrade report](DATABASE_UPGRADE_20261027.md); ไม่ขยาย remote/production/real-prescription authorization. หลักฐานทดสอบเดิมด้านล่างเป็นประวัติ.
 
 2026-10-25: ผู้ใช้อนุมัติ “อนุญาตพัฒนาและทดสอบ local เท่านั้น”. เอกสารนี้บันทึกขอบเขตที่ implement และทดสอบได้ ไม่ใช่อนุมัติ remote/production หรือรับรอง e-Tax

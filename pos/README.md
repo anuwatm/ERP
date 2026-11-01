@@ -1,5 +1,22 @@
 # Standalone POS workspace — development preview
 
+> **Phase28.8.3 In Progress — 2026-11-01:** เริ่มoffline foundation/Stockquota/encrypted browser queue/clock guard. [สถานะและงานต่อ](../document/PHASE_28_8_3_OFFLINE.md). ยังไม่พร้อมรับเงินoffline และยังไม่migrateฐานใช้งานจริง
+
+> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](../document/PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](../document/acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+
+
+## Phase28.8.1 Delivery — local operational scope complete 2026-10-30
+
+Retail/Restaurant เข้า **/deliveries**: prepaid cash อ้างบิลเดิม; COD มี shared reservation/kitchen, รับเงิน/ส่งเงินข้ามกะ/คืนเงินเป็น cash-custody evidence, manager fees/รับคืน/restockหรือwaste, signed ERP revisions/checkpoint. Pharmacy Delivery ปิดทั้งหมด. [วิธีใช้/diagram/ข้อจำกัด](../document/PHASE_28_8_1_DELIVERY.md) · [ผลตรวจ](../document/acceptance/phase28_8_1/README.md).
+
+POS61tests/432assertions; ERP Phase28/Manufacturing62tests/509assertions; Chrome1280/375 และ signed roundtrip35revisions ผ่าน. COD financial/inventory posting ยังรอตรวจรับ policy; ไม่สร้าง ABB/Payment/GL อัตโนมัติ. POS_LOCAL_DELIVERY_ENABLED=false ค่าเริ่มต้น. POS2/ERP1 migrations ใหม่ยังไม่รันกับconfigured DB. **ยังไม่ได้ทดสอบกับระบบจริง**; Gemini review เดิมไม่ครอบคลุม feature นี้
+
+## หน้า Config — เพิ่ม 2026-10-29
+
+Login ด้วย manager แล้วกด **ตั้งค่า POS** (`/config`). Local/testing + loopback เท่านั้น: แก้ชื่อ/เลือกกิจการก่อน provision, เพิ่ม Terminal/พนักงานเฉพาะสาขาตนเอง, ดู UUID และ feature flags. ยืนยันรหัสผ่านทุกครั้งและเก็บ audit. สาขา/manager คนแรกยังใช้ CLI; flags/keys ตั้งที่ Server และ catalog/quota/mappings ตั้งที่ ERP. [วิธีใช้และข้อจำกัด](../document/README_POS.md#หน้า-config-สำหรับผู้จัดการ-เพิ่ม-2026-10-29).
+
+ผลทดสอบหลังเพิ่ม: POS 45 tests / 268 assertions, TypeScript และ Vite build ผ่าน. ไม่เปลี่ยนฐานตาม config ไม่ใช่ Gemini sign-off รอบใหม่ และยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+
 Laravel 13 / PHP 8.3 / React 18. Config, DB, session, staff credentials, migrations และ release แยกจาก ERP ที่ `backend/`. ห้ามใช้ ERP `.env`, APP_KEY หรือ DB principal กับ POS
 
 ## สถานะ — 2026-10-27

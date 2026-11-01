@@ -1,6 +1,10 @@
 # ผล Full Understand — ERP และ POS Phase28
 
-## ผลล่าสุด — 2026-10-27 (Asia/Bangkok)
+> รอบปัจจุบัน 2026-10-30: rescan working tree รวม POS Config, local acceptance และเอกสารล่าสุด; ดูจำนวน/coverage/source hashes ใน [.ua/analysis-report.json](../.ua/analysis-report.json) และ [.ua/meta.json](../.ua/meta.json). ใช้ semantic cache เฉพาะไฟล์ SHA-256 ตรงเดิม และตรวจ source drift ก่อนpublish. ไม่ commit/stash งานผู้ใช้.
+
+> ข้อมูลตัวเลขด้านล่างเป็น baseline 2026-10-27 เพื่อเก็บประวัติ ไม่ใช่จำนวนรอบปัจจุบัน.
+
+## Baseline เดิม — 2026-10-27 (Asia/Bangkok)
 
 สแกน working tree ทั้งโปรเจกต์ตามคำยืนยันผู้ใช้: **1,030 files** รวม POS98; **3,126 nodes / 10,009 edges**, **10 layers / 22 guided-tour steps**. Static analysis ผ่าน typed schema และ deterministic validation โดยไม่ได้รัน application tests หรือเปลี่ยนฐานข้อมูล
 

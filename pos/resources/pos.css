@@ -218,3 +218,7 @@ header button {
     display: none;
   }
 }
+
+.membership-picker { min-width: 0; margin: 12px 0; padding: 12px; border: 1px solid #cad5e2; border-radius: 8px; overflow-wrap: anywhere; }
+.membership-picker input, .membership-picker select { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.membership-picker button { white-space: nowrap; margin: 3px 0; }

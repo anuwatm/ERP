@@ -1,0 +1,44 @@
+{
+  "status": "published",
+  "total": 1125,
+  "cachedUnchangedSource": 922,
+  "refreshedChangedOrNew": 203,
+  "byCategory": {
+    "code": 859,
+    "docs": 155,
+    "config": 71,
+    "markup": 39,
+    "script": 1
+  },
+  "excludedByIgnore": 107,
+  "missing": 0,
+  "unreadable": 0,
+  "graph": {
+    "totalNodes": 3242,
+    "totalEdges": 10175,
+    "totalLayers": 10,
+    "tourSteps": 22,
+    "nodeTypes": {
+      "file": 898,
+      "class": 465,
+      "function": 1652,
+      "document": 155,
+      "config": 71,
+      "service": 1
+    },
+    "edgeTypes": {
+      "contains": 3502,
+      "exports": 675,
+      "calls": 855,
+      "depends_on": 161,
+      "tested_by": 884,
+      "configures": 34,
+      "documents": 1257,
+      "imports": 2806,
+      "publishes": 1
+    }
+  },
+  "publishedGraphUnchanged": false,
+  "candidate": ".ua/tmp/working-tree-candidate.json",
+  "report": ".ua/tmp/working-tree-analysis-report.json"
+}

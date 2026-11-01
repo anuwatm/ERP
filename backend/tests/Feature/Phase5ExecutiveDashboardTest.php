@@ -184,6 +184,20 @@ class Phase5ExecutiveDashboardTest extends TestCase
                 ->has('dashboardWidgets.executive.project_risks.items', 1));
     }
 
+    public function test_executive_trend_keeps_twelve_unique_months_at_calendar_boundaries(): void
+    {
+        $user = User::factory()->create();
+        $this->attachRole($user, 'director', ['dashboard.view', 'executive.dashboard.view', 'invoices.view', 'expenses.view']);
+        foreach (['2026-10-29' => '2025-11', '2026-03-31' => '2025-04', '2026-02-28' => '2025-03'] as $day => $start) {
+            $this->travelTo(\Carbon\CarbonImmutable::parse($day.' 12:00:00'));
+            $this->actingAsOrgUser($user)->get(route('executive.dashboard'))->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->has('dashboardWidgets.executive.revenue_expense_trend', 12)
+                    ->where('dashboardWidgets.executive.revenue_expense_trend.0.label', $start)
+                    ->where('dashboardWidgets.executive.revenue_expense_trend.11.label', substr($day, 0, 7)));
+        }
+    }
+
     public function test_non_executive_finance_user_does_not_receive_executive_summary(): void
     {
         $finance = User::factory()->create();
