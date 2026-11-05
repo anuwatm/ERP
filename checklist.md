@@ -1745,7 +1745,8 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 
 - [ ] ตรวจรับบัญชี/ภาษีโปรโมชั่นและCOD/fees, privacy/consent/retention และkey custody/rotation สำหรับข้อมูลจริง
 - [ ] ทดสอบtwo-server/mTLS/MySQL-MariaDB concurrency และอุปกรณ์จริง
-- [ ] สำรอง/ทดสอบrestore และmigrate configuredDB พร้อมprovision keys/permissions จริง (code ERP87/POS21; รอบนี้ยังไม่รัน)
+- [x] ตรวจ configured DB ล่าสุด ERP 88/88 และ POS 25/25 ไม่มี migration ค้าง และซ้อม restore บนฐานสังเคราะห์ทั้งสองระบบผ่าน [ผลตรวจ](document/acceptance/local-closure-20261105/README.md)
+- [ ] Provision keys/permissions และทดสอบ restore ในสภาพแวดล้อมใช้งานจริงก่อน release
 
 #### 28.8.3 Browser / PWA offline — ทำก่อน, ทุก POS
 

@@ -33,3 +33,5 @@
 
 - ERP full regression รัน 566 เคสด้วย CLI memory limit 512 MB พบ 2 เคสที่ข้ามเพราะต้องใช้ MySQL แยก และ 1 เคส Sales ที่ fixture ขึ้นกับวันของเดือน บนต้นเดือน ดีลย้อนหลัง 10 วันอยู่นอกช่วงรายงาน จึงแก้เฉพาะเวลาใน fixture แล้วรัน Sales ทั้งคลาสซ้ำผ่าน 10 tests / 201 assertions ผลชุดเต็มเป็นผลก่อนแก้ fixture
 - ลบ node_modules รุ่นเดิมที่พักไว้หลังติดตั้งและตรวจ build ของชุดใหม่แล้ว
+
+ตรวจซ้ำหลังแก้ fixture แล้ว ERP ชุดเต็มไม่มี failure และ 2 เคส MySQL ที่เคยข้ามผ่านในชุดแยก ดู [ผลตรวจรอบปิด local](acceptance/local-closure-20261105/README.md)

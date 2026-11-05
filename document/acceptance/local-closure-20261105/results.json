@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-05",
+  "scope": "original local scope only",
+  "standard_erp": {
+    "tests": 566,
+    "assertions": 10933,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 2,
+    "skipped_cases": [
+      "test_simultaneous_signed_callbacks_commit_one_receipt_and_journal",
+      "test_database_worker_drains_duplicate_jobs_with_one_simulation_and_no_accounting"
+    ]
+  },
+  "isolated_mysql_tests": {
+    "phase23": {
+      "tests": 1,
+      "assertions": 8,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "skipped_cases": []
+    },
+    "phase24": {
+      "tests": 1,
+      "assertions": 12,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "skipped_cases": []
+    }
+  },
+  "configured_migrations": {
+    "erp": {
+      "driver": "mysql",
+      "migration_files": 88,
+      "applied": 88,
+      "pending": [],
+      "unknown_applied": []
+    },
+    "pos": {
+      "driver": "sqlite",
+      "migration_files": 25,
+      "applied": 25,
+      "pending": [],
+      "unknown_applied": []
+    }
+  },
+  "configured_pos_structure": {
+    "configured_tables": 56,
+    "fresh_tables": 56,
+    "schema_differences": [],
+    "integrity": "ok",
+    "foreign_key_errors": 0
+  },
+  "synthetic_restore": {
+    "erp": {
+      "tables": 171,
+      "migrations": 88,
+      "column_schema_match": true,
+      "synthetic_canary_recovered": true
+    },
+    "pos": {
+      "schema_match": true,
+      "integrity": "ok",
+      "foreign_key_errors": 0,
+      "tables": 56,
+      "migrations": 25,
+      "synthetic_canary_recovered": true
+    }
+  },
+  "mysql_fixture_version": "8.0.17",
+  "provider_calls": "none; in-process synthetic callback and simulation",
+  "target_system_or_hardware_tested": false,
+  "configured_erp_structure": {
+    "configured_tables": 171,
+    "fresh_tables": 171,
+    "missing_tables": [],
+    "extra_tables": [],
+    "missing_columns": [],
+    "additional_columns": []
+  }
+}

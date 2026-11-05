@@ -2,6 +2,8 @@
 
 อัปเดต 2026-11-05 ใช้ [checklist](checklist.md) ติดตามงาน และ [Gemini](gemini.md) ดูผลตรวจรับล่าสุด
 
+[ผลตรวจรับ local และโครงสร้างฐานล่าสุด](document/acceptance/local-closure-20261105/README.md)
+
 ## งานถัดไป
 
 - Phase 28.8.6 ยังเลื่อนไว้ ขอบเขตการจ่าย QR, Card/EDC, mixed tender และ shared-stock connection model อยู่ใน checklist
@@ -14,7 +16,7 @@
 - e-Tax provider/channel/certificate/signing adapterและcontractจริง;signing ownerเลือกเป็นบุคคลได้แล้ว แต่ไม่ได้แปลว่ามีcertificateหรือส่งproviderแล้ว.
 - ProvisionฐานPOSของสาขาที่จะใช้จริง:branch/terminal/staff/keys/catalog/quota/issuer profile;อย่าสร้างแทนผู้ใช้จากบัญชีsyntheticหรือใช้fixtureเป็นฐานขาย.
 - Two-server deployment/firewall/mTLS/credential rotation,merchant/settlement onboardingและอุปกรณ์printer/scannerจริง.
-- MariaDB concurrent quota/numbering/load/crash,Manufacturing target concurrencyและMySQL testsที่ข้าม;ห้ามใช้SQLiteแทนrow-lock/load proof.
+- MariaDB concurrent quota/numbering/load/crash,Manufacturing target concurrency;ห้ามใช้SQLiteแทนrow-lock/load proof.
 - Target HTTPS/session/cookie/domain,storage/font permissions,log handlers/queue/scheduler/monitoring-owner,backup retention approvalและproduction ERP/POS restore drill/UAT/SLO/tax acceptance. นโยบายarchivePOS90วันที่อนุมัติแล้วไม่ใช่การอนุมัติbackup retentionทุกระบบ.
 - Browserผลล่าสุดเป็นChrome/responsive emulation;physical mobile keyboard/touch,Safari/WebKitและoperator UATยังไม่รับรอง.
 - Notification DLQ replay/resetและquiet-hours defer policyยังต้องกำหนดpermission/org/audit/retry cap/expiry/dedupe/recipient authorizationก่อนเปลี่ยนbehavior;quiet hoursคงsuppressตามเดิม.
