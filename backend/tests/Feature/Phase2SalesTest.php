@@ -270,6 +270,8 @@ class Phase2SalesTest extends TestCase
 
     public function test_sales_dashboard_separates_currency_and_period_and_excludes_new_deals_from_stale(): void
     {
+        // Keep the ten-day-old deal inside the month being measured.
+        $this->travelTo(now()->day(20)->setTime(12, 0));
         $owner = User::factory()->create();
         $this->attachRole($owner, 'owner', ['sales.dashboard.view', 'deals.view', 'customers.view']);
         $customer = Customer::create(['org_id' => $owner->org_id, 'customer_code' => 'DASH001', 'company_name' => 'Dashboard Customer', 'owner_id' => $owner->id]);

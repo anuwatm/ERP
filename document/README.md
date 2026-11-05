@@ -1,6 +1,8 @@
 # Company OS / Lightweight ERP — System Diagrams & Architecture
 
-> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](../docs/LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง**; Phase28.8 deferred.
+> **POS ปัจจุบันถึง Phase 28.8.5 (2026-11-05)** [ติดตั้งและตั้งค่า](README_POS.md) · [Manager Config](POS_CONFIGURATION.md) · [Diagrams แยกประเภทร้าน](24_pos_workflows.html) · [รายงานฐาน POS 25/25](DATABASE_UPDATE_20261105_PHASE28_8_5.md) **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง**
+
+> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](../docs/LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง** (snapshot เดิม).
 
 > **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
 
@@ -16,7 +18,7 @@
 
 **คู่มืออ่านโค้ดทีละโมดูล (2026-10-24):** [Module Reference — Architecture, workflows, source map และข้อจำกัด implementation](modules/README.md)
 
-**Understand ปัจจุบัน (2026-10-30):** [pipeline/coverage/ข้อจำกัด](UNDERSTAND_PIPELINE.md), รวม POS Config และ local closeout; จำนวนจริงอยู่ใน .ua/analysis-report.json. Diagram HTML ปัจจุบันดูหมายเลข23.
+**Understand ปัจจุบัน (2026-10-30):** [pipeline/coverage/ข้อจำกัด](UNDERSTAND_PIPELINE.md), รวม POS Config และ local closeout; จำนวนจริงอยู่ใน .ua/analysis-report.json. ดู [Config diagram](23_pos_server_configuration.html) และ [Workflow diagrams](24_pos_workflows.html).
 
 **API Reference:** [API_Document](API_Document.md) — ครบ62 GET endpoints พร้อมข้อมูลที่ดึงได้ วิธีเรียก ตัวอย่าง output ความหมาย fields/scopes/parameters และ error reference
 
@@ -836,7 +838,7 @@ flowchart LR
    - ไฟล์ JSON Specification อยู่ในโฟลเดอร์ [`document/specs/`](./specs/)
    - สามารถรันคำสั่ง `node <archify-path>/bin/archify.mjs deliver <type> <spec.json> <output.html> --quality showcase --json` เพื่อ render ใหม่ได้ตลอดเวลา
 
-## Phase 28 — current status (2026-10-27)
+## Phase 28 — หลักฐาน baseline (2026-10-27)
 
 [Local acceptance](PHASE_28_LOCAL_ACCEPTANCE.md) · [Current implementation](../docs/PHASE_28_POS.md) · [API/routes](PHASE_28_API.md) · [Schema/relationships](PHASE_28_DATABASE.md) · [Database upgrade](DATABASE_UPGRADE_20261027.md) · [Operations](../docs/PHASE_28_OPERATIONS.md). Geminiหมวด17รับรอง local; ERP/POSตามconfig current.
 

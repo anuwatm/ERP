@@ -5,15 +5,29 @@
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
 
+Options -MultiViews -Indexes
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
 
     RewriteEngine On
 
     # Block dotfiles
     RewriteRule (?:^|/)\.(?!well-known(?:/|$)) - [F,L]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^\.well-known/acme-challenge/[A-Za-z0-9_-]+$ - [L]
+    RewriteRule ^\.well-known(?:/|$) - [F,L,NC]
+
+    # Build output, application entry points and approved images are the only static files.
+    RewriteRule ^build/(?:manifest\.json|assets/[a-z0-9_-]+\.(?:css|js|woff2?|ttf|svg|png|jpe?g|webp|gif|avif))$ - [L,NC]
+    RewriteRule ^(?:favicon\.ico|robots\.txt|setup/?|setup/(?:index|system-requirements)\.php)$ - [L,NC]
+    RewriteRule ^storage/org-logos/[0-9a-f-]+/[a-z0-9]+\.(?:jpg|jpeg|png|webp)$ - [L,NC]
+    RewriteRule ^(?:build|storage|setup)(?:/|$) - [F,L,NC]
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule !^(?:|index\.php)$ - [F,L,NC]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

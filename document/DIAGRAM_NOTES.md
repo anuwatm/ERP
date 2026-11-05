@@ -2,6 +2,8 @@
 
 เก็บรายละเอียด cards จาก diagram เดิมครบ เพื่อให้ HTML เน้นเส้นทางหลักและไม่ล้นจอ. [Portal](index.html) · [POS Config](POS_CONFIGURATION.md). คำอธิบายเดิมคงภาษาต้นฉบับ.
 
+สำหรับงาน POS ปัจจุบันดู [23 — POS Server/Config](23_pos_server_configuration.html), [24 — ขั้นตอนใช้งานทั้งสามประเภท](24_pos_workflows.html) และ [คู่มือติดตั้ง](README_POS.md) บันทึกด้านล่างเป็น snapshot ของ diagram รอบ 2026-10-29
+
 ## 01_system_architecture
 
 [เปิด diagram](01_system_architecture.html)

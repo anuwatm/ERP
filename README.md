@@ -1,5 +1,7 @@
 # Company OS / Lightweight ERP
 
+> ตรวจและปรับความปลอดภัย ERP/POS วันที่ 2026-11-05 [รายงานและผลทดสอบ](document/SECURITY_REVIEW_20261105.md)
+
 > **Phase 28.8.5 — Restaurant POS:** คิวครัวตามลำดับรับออเดอร์, คิวที่นั่ง, จองโต๊ะ และ QR สั่งอาหารผูกโต๊ะ [คู่มือและ diagram](document/PHASE_28_8_5_RESTAURANT.md) · [หลักฐาน](document/acceptance/phase28_8_5/README.md) **ยังไม่ได้ทดสอบกับระบบจริง**
 
 > **Phase 28.8.4 Local Complete — 2026-11-05:** ประวัติผู้ป่วยเฉพาะ Pharmacy, เข้ารหัส/แยกสาขา/สิทธิ์/ผูกบิล; synthetic-only ไม่ส่ง ERP/offline. POS108 tests /2,059 assertions และ Chromeผ่าน. [คู่มือ/diagram](document/PHASE_28_8_4_PATIENT_HISTORY.md) · [หลักฐาน](document/acceptance/phase28_8_4/README.md)
@@ -291,7 +293,7 @@ flowchart TB
 ```sh
 cd backend
 composer install
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
 คัดลอก `.env.example` เป็น `.env` แล้วตั้ง `APP_URL` และ `DB_*` ให้ตรงฐานข้อมูลสำหรับพัฒนา
@@ -410,32 +412,22 @@ node --test examples/external-api/summary-client.test.mjs examples/external-api/
 
 สัญญา API และเอกสารโดเมนอยู่ใน [docs/](docs/README.md) การแก้ fields/scopes/metrics ต้องปรับ contract และ tests ให้สอดคล้องกัน
 
-## เรียกใช้ POS ร้านทั่วไป / ร้านอาหาร / ร้านขายยา
+## ติดตั้ง ตั้งค่า และใช้งาน POS
 
-POS ทั้งสามประเภทเปิดที่หน้าเดียว เช่น **http://127.0.0.1:8128/** โดยระบบดูประเภทสาขาจากบัญชี POS ที่เข้าสู่ระบบ ไม่ได้มี URL แยกตามประเภทร้าน
+เริ่มจาก [คู่มือติดตั้ง POS](document/README_POS.md) เพื่อเลือกใช้ข้อมูลสังเคราะห์หรือสร้างสาขาของตนเอง คู่มือมีคำสั่งติดตั้งจาก lockfiles, ตั้งค่า `pos/.env`, เตรียมฐาน สร้าง Terminal และ staff แล้วเปิดหน้าขายที่ **http://127.0.0.1:8128/**
 
-| ประเภท | ประเภทสาขา | คู่มือใช้งาน |
+| ประเภทร้าน | `business_type` | วิธีใช้งานและ diagram |
 | --- | --- | --- |
-| ร้านขายของทั่วไป | `retail` | [README ร้านค้าทั่วไป](document/README_POS_RETAIL.md) |
-| ร้านอาหาร | `restaurant` | [README ร้านอาหาร](document/README_POS_RESTAURANT.md) |
-| ร้านขายยา | `pharmacy` | [README ร้านขายยา](document/README_POS_PHARMACY.md) |
+| ร้านขายของทั่วไป | `retail` | [เปิดกะ ขาย คืนเงิน และปิดกะ](document/README_POS_RETAIL.md) |
+| ร้านอาหาร | `restaurant` | [จัดโต๊ะ จองโต๊ะ QR สั่งอาหาร และคิวครัว](document/README_POS_RESTAURANT.md) |
+| ร้านขายยา | `pharmacy` | [ขายตามสิทธิ์เภสัชกร ตรวจของคืน และประวัติผู้ป่วยสังเคราะห์](document/README_POS_PHARMACY.md) |
 
-เริ่มที่ [README เปิดใช้ POS](document/README_POS.md): มีทั้งโหมดทดลองพร้อมบัญชีจำลอง และโหมดตั้งค่าสาขาของตนเอง รวม environment, dependencies, Terminal/staff และ catalog/quota ที่ต้องเตรียม
+ทั้งสามประเภทเปิดหน้า `/` เดียวกัน ระบบเลือกหน้าทำงานตามสาขาของบัญชี POS Manager ตั้งค่าพนักงานและ Terminal ผ่าน `/config` ใน local ส่วน ERP เผยแพร่ catalog และ quota ผ่าน connector แยกจากหน้าขาย [หน้า Config](document/POS_CONFIGURATION.md) · [Diagrams ใช้งาน POS ทั้งสามประเภท](document/24_pos_workflows.html)
 
-หลังเตรียม local config/dependencies ตามคู่มือแล้ว เปิด server ของฐานสาขาตนเองได้ดังนี้:
+<a id="phase-28--current-status-2026-10-27"></a>
 
-```powershell
-Set-Location C:/LocalDevine/www/ERP/pos
-$env:POS_SHARED_VENDOR = '1'  # เฉพาะ local ที่ใช้ vendor จาก backend
-php artisan serve --host=127.0.0.1 --port=8128
-```
+## สถานะ POS ถึง Phase 28.8.5
 
-หากยังไม่มีข้อมูลพร้อมขาย ให้ใช้ขั้นตอน **ทดลองด้วยข้อมูลจำลอง** ในคู่มือกลางแทน คำสั่งเปิด server อย่างเดียวไม่ได้สร้างบัญชี/สินค้า/quota. บัญชี ERP ใช้ login POS โดยอัตโนมัติไม่ได้
+ขอบเขต local ถึง Phase 28.8.5 ครอบคลุมคิวครัว คิวที่นั่ง จองโต๊ะ และ QR สั่งอาหาร ฐานที่บันทึกไว้ล่าสุดคือ POS SQLite 25/25 และ ERP 88/88 migrations [สถานะ POS](docs/PHASE_28_POS.md) · [รายงานฐาน POS](document/DATABASE_UPDATE_20261105_PHASE28_8_5.md)
 
-> **หมายเหตุ:** ยังไม่ได้ทดสอบการเชื่อมต่อกับระบบและอุปกรณ์จริง ผลปัจจุบันครอบคลุม local development เท่านั้น
-
-## Phase 28 — current status (2026-10-27)
-
-**Phase28 local accepted (Gemini 2026-10-27); ฐาน ERP/POS ตาม config อัปเดตแล้ว.** Retail/Restaurant/Pharmacy, local ABB/FULL, recall, signed checkpoints และ encrypted archive/recovery พร้อมใน local. POS e-Tax ยัง awaiting_provider. [สถานะ/คู่มือปัจจุบัน](docs/PHASE_28_POS.md) · [Database upgrade](document/DATABASE_UPGRADE_20261027.md)
-
-> **หมายเหตุ — ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง:** ขั้นตอนเชื่อมต่อในคู่มือยังไม่ได้ทดสอบบน Server/เครือข่ายจริง (firewall/mTLS), เครื่องพิมพ์ใบเสร็จ, เครื่องสแกนบาร์โค้ด หรือบริการ e-Tax จริง รวมถึง load/concurrency และ backup/recovery บนสภาพแวดล้อมใช้งานจริง. ผลตรวจรับปัจจุบันครอบคลุม local development เท่านั้น ต้องทดสอบการเชื่อมต่อจริงก่อนนำไปใช้งาน. ส่วน e-Tax provider/certificate และ adapter ยังรอการเลือกผู้ให้บริการ.
+> **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** รวมการเชื่อม ERP–POS, HTTPS/mTLS, มือถือจริง เครื่องพิมพ์ เครื่องสแกน และ e-Tax provider

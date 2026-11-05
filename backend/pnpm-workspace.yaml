@@ -2,3 +2,17 @@ packages:
   - .
 allowBuilds:
   esbuild: true
+overrides:
+  brace-expansion@>=4.0.0 <5.0.10: '>=5.0.10'
+  brace-expansion@>=4.0.0 <5.0.11: '>=5.0.11'
+  brace-expansion@>=4.0.0 <5.0.12: '>=5.0.12'
+  brace-expansion@>=4.0.0 <5.0.9: '>=5.0.9'
+  follow-redirects@>=1.16.0 <1.16.1: '>=1.16.1'
+  follow-redirects@>=1.16.0 <=1.16.1: '>=1.16.2'
+  minimatch@>=7.0.0 <11.0.1: '>=11.0.1'
+  postcss-selector-parser@<6.1.5: '>=6.1.5'
+  qs@>=2.2.5 <6.16.0: '>=6.16.0'
+  qs@>=6.14.2 <=6.15.3: '>=6.16.0'
+  qs@>=6.7.0 <=6.16.0: '>=6.16.1'
+  shell-quote@>=1.8.4 <1.11.0: '>=1.11.0'
+  zod@<4.6.6: '>=4.6.6'

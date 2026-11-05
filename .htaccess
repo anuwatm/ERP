@@ -5,16 +5,21 @@
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
 
+Options -MultiViews -Indexes
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
 
     RewriteEngine On
     RewriteBase /ERP/
 
     # Block dotfiles and hidden directories (.env, .git, .ua, .agents, .codex, .cursor, .gemini, etc.)
     RewriteRule (?:^|/)\.(?!well-known(?:/|$)) - [F,L]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^\.well-known/acme-challenge/[A-Za-z0-9_-]+$ - [L]
+    RewriteRule ^\.well-known(?:/|$) - [F,L,NC]
 
     # Block direct web access to internal application, documentation, and temporary directories
     RewriteRule ^backend/(?!public(?:/|$)) - [F,L]
@@ -27,13 +32,18 @@
 
     # Direct static asset requests to backend/public
     RewriteRule ^build/(.*)$ backend/public/build/$1 [L]
-    RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]
+    RewriteRule ^storage/(org-logos/[0-9a-f-]+/[a-z0-9]+\.(?:jpg|jpeg|png|webp))$ backend/public/storage/$1 [L,NC]
+    RewriteRule ^storage(?:/|$) - [F,L,NC]
     RewriteRule ^favicon\.ico$ backend/public/favicon.ico [L]
     RewriteRule ^robots\.txt$ backend/public/robots.txt [L]
 
-    # Handle all other non-file requests via root index.php
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
+    # Existing paths at the repository root are private unless explicitly public.
+    RewriteRule ^(?:$|index\.php$|setup/?$|setup/(?:index|system-requirements)\.php$|(?:backend|pos)/public(?:/|$)) - [L,NC]
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [F,L]
+
+    # Send application routes to the front controller.
     RewriteRule ^ index.php [L,QSA]
 </IfModule>
 

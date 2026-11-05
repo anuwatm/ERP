@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Log;
 use Pos\Http\ConnectorAuthentication;
 use Pos\Http\LocalPublicMenu;
 use Pos\Http\StaffAuthentication;
@@ -15,5 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['pos.staff' => StaffAuthentication::class, 'pos.connector' => ConnectorAuthentication::class, 'pos.local-menu' => LocalPublicMenu::class]);
     })->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['member_name', 'member_phone', 'manager_password', 'manager_email', 'token', 'password', 'password_confirmation', 'recipient', 'phone', 'address']);
-        // Use Laravel's standard exception handler; production APP_DEBUG remains false.
+        $exceptions->report(function (QueryException $exception) {
+            Log::error('database_error', ['sqlstate' => (string) $exception->getCode()]);
+
+            return false;
+        });
     })->create();

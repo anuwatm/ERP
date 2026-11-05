@@ -4,9 +4,6 @@
 .cursor/
 .gemini/
 .ua/
-backend/.env
-backend/.env.*
-!backend/.env.example
 backend/database/*.sqlite*
 backend/node_modules/
 backend/vendor/
@@ -20,9 +17,6 @@ backend/storage/framework/sessions/
 backend/storage/framework/testing/
 backend/storage/framework/views/
 backend/storage/logs/
-pos/.env
-pos/.env.*
-!pos/.env.example
 pos/database/*.sqlite*
 pos/node_modules/
 pos/vendor/
@@ -41,3 +35,15 @@ temp/
 *.p12
 *.pfx
 *.zip
+
+# Local secrets, database files and backup artifacts.
+.env
+.env.*
+!.env.example
+!.env.mysql.example
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.bak
+*.dump

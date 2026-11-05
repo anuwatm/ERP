@@ -1,12 +1,8 @@
 # README — ใช้ POS ร้านขายของทั่วไป
 
-> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+คู่มือ local สำหรับ cashier และ Manager ของร้านค้าทั่วไป ครอบคลุมการขายเงินสด คืนเงิน และปิดกะ
 
-> **Phase28.8.1 — 2026-10-30:** Delivery local: /deliveries → รับรายการ → ready จอง quota → dispatch/deliver → collect → manager remit. รับคืนต้อง receive/inspect ก่อน restock; COD ไม่สร้างเอกสารการเงินอัตโนมัติ. [คู่มือ/diagram](PHASE_28_8_1_DELIVERY.md). **ยังไม่ได้ทดสอบกับระบบจริง**
-
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
-
-> **หมายเหตุ:** ทดสอบระดับ local เท่านั้น ยังไม่ได้ทดสอบกับเครื่องพิมพ์ เครื่องสแกน เครือข่าย หรือระบบจริง
+> **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** ใช้คู่มือนี้กับ local หรือข้อมูลสังเคราะห์
 
 ## เรียกใช้
 
@@ -26,6 +22,23 @@ php artisan pos:staff $posBranchId manager.retail@pos.test --role=manager
 ```
 
 คำสั่ง staff ถามชื่อ/รหัสผ่านเอง. ผูก UUID กับ ERP instance/authority และ publish catalog/quota ก่อนขาย; การสร้างสาขาอย่างเดียวไม่ทำให้สินค้าและ Stock ปรากฏ
+
+## Workflow
+
+```mermaid
+flowchart TD
+    A["Cashier หรือ Manager เลือก Terminal และเปิดกะ"] --> B["เพิ่มสินค้าและตรวจจำนวน หน่วย ราคา และ VAT"]
+    Q["ลูกค้าส่งคำขอจาก QR เมนู"] --> QA["พนักงานตรวจรับและนำเข้าตะกร้า"]
+    QA --> B
+    B --> C{"ราคา catalog และ quota ผ่านหรือไม่"}
+    C -->|"ไม่ผ่าน"| X["แก้รายการหรือให้ผู้ดูแลตรวจ catalog และ quota"]
+    C -->|"ผ่าน"| D["รับเงินสดและยืนยันขาย"]
+    D --> E["ตรวจใบเสร็จและเงินทอน"]
+    E --> F["ปิดกะตามยอดนับจริงและติดตามรอ ERP"]
+    E -->|"ต้องคืนเงิน"| R["Manager อ้างบิลเดิมและตรวจรับสินค้าคืนตาม workflow"]
+```
+
+ก่อนเปิดกะ ให้ผู้ดูแลตรวจว่า Terminal ถูกสาขา สินค้ามี catalog และ quota และเปิด flags เฉพาะงานที่ต้องใช้ เช่น QR, สมาชิก หรือ refund ส่วนการจัดส่งเปิดจาก `/deliveries` ตามขั้นตอนรับรายการ ส่งมอบ และกระทบเงินของร้าน [ตั้งค่า flags](README_POS.md#feature-flags-ที่ใช้บ่อย) · [สมาชิก/โปรโมชัน](PHASE_28_8_2_MEMBERSHIP.md) · [Delivery และ COD](PHASE_28_8_1_DELIVERY.md)
 
 ## เปิดกะและขายเงินสด
 

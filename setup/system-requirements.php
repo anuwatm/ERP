@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Setup\Installer;
 
+header('Cache-Control: private, no-store');
+header('Referrer-Policy: no-referrer');
+
 require_once __DIR__.'/../backend/setup/Installer.php';
 
 $basePath = dirname(__DIR__).'/backend';

@@ -62,8 +62,8 @@
 CRM → Deal → Invoice → Payment → Project → Task → Dashboard
 ```
 
-## Phase 28 — current status (2026-10-27)
+## สถานะ POS ถึง Phase 28.8.5
 
-[สถานะปัจจุบัน](PHASE_28_POS.md) · [Operations](PHASE_28_OPERATIONS.md) · [API/routes](../document/PHASE_28_API.md) · [Database inventory](../document/PHASE_28_DATABASE.md) · [Configured DB upgrade](../document/DATABASE_UPGRADE_20261027.md). Gemini local PASS; configured DB current.
+[ติดตั้งและตั้งค่า POS](../document/README_POS.md) · [Config ของ Manager](../document/POS_CONFIGURATION.md) · [Diagrams การใช้งานทั้งสามประเภท](../document/24_pos_workflows.html) · [Operations](PHASE_28_OPERATIONS.md) · [รายงานฐาน POS 25/25](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md)
 
-> **หมายเหตุ:** ขั้นตอนเชื่อมต่อระบบและอุปกรณ์จริงยังไม่ได้ทดสอบกับระบบจริง ดู [ขอบเขตการทดสอบใน README หลัก](../README.md#phase-28--current-status-2026-10-27) และ [POS integration boundaries](../pos/README.md#integration-boundaries). ผล local ไม่ใช่ผลรับรองการเชื่อมต่อจริง.
+**ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** รายงานการเชื่อมต่อในเอกสารนี้ใช้กับ local และข้อมูลสังเคราะห์

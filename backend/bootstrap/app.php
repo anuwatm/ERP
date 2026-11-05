@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureTwoFactorEnrollment;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\ExternalApiResponse;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
+            'cache.headers:private;no_store',
             EnsureTwoFactorEnrollment::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
@@ -47,6 +49,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ]);
 
                 // Do not serialize request credentials, query bindings or exception messages.
+                return false;
+            }
+
+            if ($exception instanceof QueryException) {
+                Log::error('database_error', ['sqlstate' => (string) $exception->getCode()]);
+
                 return false;
             }
 

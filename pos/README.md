@@ -1,50 +1,20 @@
-# Standalone POS workspace — development preview
+# POS Workspace
 
-> **Phase 28.8.5 — Restaurant POS:** คิวครัวตามลำดับรับออเดอร์, คิวที่นั่ง, จองโต๊ะ และ QR สั่งอาหารผูกโต๊ะ [คู่มือและ diagram](../document/PHASE_28_8_5_RESTAURANT.md) · [หลักฐาน](../document/acceptance/phase28_8_5/README.md) **ยังไม่ได้ทดสอบกับระบบจริง**
+Standalone POS สำหรับ Retail, Restaurant และ Pharmacy ใช้ Laravel 13 / PHP 8.3+ / React 18 แยกฐานข้อมูล บัญชี session และ APP_KEY จาก ERP
 
-> **Phase 28.8.4 Local Complete — 2026-11-05:** ประวัติผู้ป่วยเฉพาะ Pharmacy, เข้ารหัส/แยกสาขา/สิทธิ์/ผูกบิล; synthetic-only ไม่ส่ง ERP/offline. POS108 tests /2,059 assertions และ Chromeผ่าน. [คู่มือ/diagram](../document/PHASE_28_8_4_PATIENT_HISTORY.md) · [หลักฐาน](../document/acceptance/phase28_8_4/README.md)
+สถานะ local ถึง **Phase 28.8.5** ฐานที่บันทึกไว้ล่าสุด POS SQLite 25/25 migrations และ ERP 88/88 [ผลอัปเดตฐาน](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md) · [หลักฐาน Phase 28.8.5](../document/acceptance/phase28_8_5/README.md) · [ผลตรวจ security ล่าสุด](../document/SECURITY_REVIEW_20261105.md)
 
-> **ฐานปัจจุบัน:** POS SQLite 25/25 migrations, pending 0 และ ERP 88/88 ตามรายงานรอบก่อน [ผลอัปเดตฐาน POS](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md)
+> **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** ใช้ขั้นตอน local และข้อมูลสังเคราะห์ในการทดลอง
 
-> **Database updated — 2026-11-04:** configured ERP MySQL **88/88**, POS SQLite **22/22**, pending0. สำรองก่อนรันและตรวจข้อมูลเดิมครบ; environment/flagsเดิมไม่เปลี่ยน. [รายงาน/ข้อมูลสำรอง](../document/DATABASE_UPDATE_20261104.md)
+## ติดตั้งและเปิดใช้
 
-> **Phase28.8.3 Local Complete — 2026-11-04:** PWA `/offline/app`, encrypted queue/quota/slots, sync/ACK, Manager cash review และ signed POS → ERP ผ่าน local acceptance. [คู่มือ/diagram](../document/PHASE_28_8_3_OFFLINE.md) · [หลักฐาน](../document/acceptance/phase28_8_3/README.md). Flag defaultfalse; configuredDBmigrateครบแล้วตามรายงานด้านบน และ **ยังไม่ได้ทดสอบกับระบบจริง**
+จาก `pos/` ใช้ `composer install`, `pnpm install --frozen-lockfile` และ `pnpm run build` ก่อนเตรียม config และฐาน ดู [คู่มือติดตั้งและทดลอง](../document/README_POS.md) สำหรับขั้นตอนสร้าง APP_KEY เฉพาะฐานใหม่, migrate, สร้างสาขา, ตั้ง ERP connector และเปิด POS บน loopback
 
-> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](../document/PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](../document/acceptance/phase28_8_2/README.md). Default-off; configuredDBmigrateครบแล้ว2026-11-04 และ **ยังไม่ได้ทดสอบกับระบบจริง**
+ทั้งสามประเภทเข้า `/` หลังเปิด local server เช่น **http://127.0.0.1:8128/** ด้วยบัญชี POS ของสาขาที่ต้องการ [Manager Config](../document/POS_CONFIGURATION.md) · [Diagrams ทั้งสามประเภท](../document/24_pos_workflows.html)
 
-
-## Phase28.8.1 Delivery — local operational scope complete 2026-10-30
-
-Retail/Restaurant เข้า **/deliveries**: prepaid cash อ้างบิลเดิม; COD มี shared reservation/kitchen, รับเงิน/ส่งเงินข้ามกะ/คืนเงินเป็น cash-custody evidence, manager fees/รับคืน/restockหรือwaste, signed ERP revisions/checkpoint. Pharmacy Delivery ปิดทั้งหมด. [วิธีใช้/diagram/ข้อจำกัด](../document/PHASE_28_8_1_DELIVERY.md) · [ผลตรวจ](../document/acceptance/phase28_8_1/README.md).
-
-POS61tests/432assertions; ERP Phase28/Manufacturing62tests/509assertions; Chrome1280/375 และ signed roundtrip35revisions ผ่าน. COD financial/inventory posting ยังรอตรวจรับ policy; ไม่สร้าง ABB/Payment/GL อัตโนมัติ. POS_LOCAL_DELIVERY_ENABLED=false ค่าเริ่มต้น. POS2/ERP1 migrations ใหม่ยังไม่รันกับconfigured DB. **ยังไม่ได้ทดสอบกับระบบจริง**; Gemini review เดิมไม่ครอบคลุม feature นี้
-
-## หน้า Config — เพิ่ม 2026-10-29
-
-Login ด้วย manager แล้วกด **ตั้งค่า POS** (`/config`). Local/testing + loopback เท่านั้น: แก้ชื่อ/เลือกกิจการก่อน provision, เพิ่ม Terminal/พนักงานเฉพาะสาขาตนเอง, ดู UUID และ feature flags. ยืนยันรหัสผ่านทุกครั้งและเก็บ audit. สาขา/manager คนแรกยังใช้ CLI; flags/keys ตั้งที่ Server และ catalog/quota/mappings ตั้งที่ ERP. [วิธีใช้และข้อจำกัด](../document/README_POS.md#หน้า-config-สำหรับผู้จัดการ-เพิ่ม-2026-10-29).
-
-ผลทดสอบหลังเพิ่ม: POS 45 tests / 268 assertions, TypeScript และ Vite build ผ่าน. ไม่เปลี่ยนฐานตาม config ไม่ใช่ Gemini sign-off รอบใหม่ และยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
-
-Laravel 13 / PHP 8.3 / React 18. Config, DB, session, staff credentials, migrations และ release แยกจาก ERP ที่ `backend/`. ห้ามใช้ ERP `.env`, APP_KEY หรือ DB principal กับ POS
-
-## สถานะ — 2026-10-27
-
-**Local Complete / Gemini PASS; Production Pending.** Retail/Restaurant/Pharmacy, variants/table QR/kitchen polling, manager refund/void/discount/Cash In-Out, pharmacy inspection/recall, ABB/FULL replacement/print, signed checkpoints และ encrypted archive/restore/fencing พัฒนาและตรวจ localแล้ว. ข้อจำกัดไม่มี patient history เป็น baseline Phase28; โมดูล local ใหม่ดู Phase28.8.4 ด้านบน
-
-Configured POS SQLite รันครบ17 migrations / pending0; เป็นฐานใหม่ยังไม่มี staff/orders. ERP MySQL `erp` รันครบ83 migrations / pending0. [หลักฐานและ backup](../document/DATABASE_UPGRADE_20261027.md)
-
-`POS_RELEASE_APPROVED=false` และ local feature flags defaultปิด; ยังไม่เปิด production. ABB/FULL เป็นเอกสาร local ที่ยังไม่ผ่าน hardware/tax production acceptance. e-Tax queue `awaiting_provider` จนเลือก provider/certificate/adapter. Transport local-only loopback HTTPS; prescription รับเฉพาะ synthetic hash allowlist. [Operations](../docs/PHASE_28_OPERATIONS.md) · [API](../document/PHASE_28_API.md) · [Schema](../document/PHASE_28_DATABASE.md)
-
-## เรียกใช้และคู่มือแยกประเภทร้าน
-
-เปิดหน้า `/` ของ POS เช่น **http://127.0.0.1:8128/** หลังเปิด local server. ประเภทหน้าร้านขึ้นกับสาขาของบัญชี staff + feature flags ไม่ใช่ URL แยก
-
-- [เริ่มต้น/วิธีเปิด server/ทดลองด้วยข้อมูลจำลอง](../document/README_POS.md)
-- [ร้านขายของทั่วไป — retail](../document/README_POS_RETAIL.md)
-- [ร้านอาหาร — restaurant](../document/README_POS_RESTAURANT.md)
-- [ร้านขายยา — pharmacy](../document/README_POS_PHARMACY.md)
-
-คู่มือมีคำสั่งสร้างสาขา/Terminal/staff ครั้งแรกและขั้นตอนทำงานรายวัน. โหมด fixture แยกฐานจาก configured POS/ERP; โหมดใช้สาขาตนเองต้อง provision catalog/quota/keys ก่อนขาย
+- [Retail — เปิดกะ ขายสินค้า คืนเงิน ปิดกะ](../document/README_POS_RETAIL.md)
+- [Restaurant — โต๊ะ จองคิว QR ครัว และแยกบิล](../document/README_POS_RESTAURANT.md)
+- [Pharmacy — จ่ายยา ตรวจของคืน และประวัติผู้ป่วย](../document/README_POS_PHARMACY.md)
 
 ## Dependencies / local development
 
@@ -52,7 +22,7 @@ Configured POS SQLite รันครบ17 migrations / pending0; เป็น�
 
 Browser fixtures เพิ่ม: หลัง `prepare.php` ใช้ `prepare-restaurant.php` + `restaurant.cjs` หรือ `prepare-pharmacy.php` + `inspection.cjs`. ทั้งหมดใช้ temp SQLite เดิมและเก็บหลักฐานไว้ ไม่ล้างข้อมูล. ต้องเปิด local server ตามคำสั่งด้านล่าง; scripts บล็อก external origins
 
-Production ต้อง install dependencies ภายใน workspace นี้ด้วย Composer/npm และออก lockfiles ที่ตรวจแล้ว. ในเครื่องพัฒนาปัจจุบันทดสอบโดยใช้ dependencies ที่มีอยู่ใน `backend/` แบบ explicit; ไม่แชร์ DB/session หรือข้อมูล ERP
+Production ต้อง install dependencies ภายใน workspace นี้ด้วย Composer และ pnpm จาก lockfiles ที่มีใน workspace. ในเครื่องพัฒนาปัจจุบันทดสอบโดยใช้ dependencies ที่มีอยู่ใน `backend/` แบบ explicit; ไม่แชร์ DB/session หรือข้อมูล ERP
 
 ```powershell
 # จาก repository root
@@ -87,7 +57,7 @@ Browser test บล็อกทุก origin ยกเว้น `127.0.0.1:8128`
 - `POS_CONNECTOR_BRANCH_IDS`/`POS_CONNECTOR_SCOPES` ต้อง provision ใน POS environment; default ว่าง deny ทุก operation
 - Local tests ป้อน certificate server variables จำลองเพื่อทดสอบ authorization; ไม่ใช่การพิสูจน์ TLS/firewall จริง
 - ERP endpoints `/pos-integration`, pause และ replay ใช้ ERP user permissions/re-authentication; ไม่มี public ERP write endpoint สำหรับ POS
-- ฐาน ERP/POS ตาม config รัน migrations ครบแล้ว ดู [ผลอัปเดตฐานข้อมูล](../document/DATABASE_UPGRADE_20261027.md). ฐาน POS ใหม่ยังต้อง provision ก่อนใช้ขาย
+- ฐาน ERP/POS ตาม config รัน migrations ครบแล้ว ดู [ผลอัปเดตฐานข้อมูล](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md). ฐาน POS ใหม่ยังต้อง provision ก่อนใช้ขาย
 - Quota partition, freeze/reclaim, counters/watermark และ restore fencing ทำและตรวจ local แล้ว. ห้ามคืน quota จาก timeout/revoke เอง; การทดสอบบนระบบจริงเป็นไปตามหมายเหตุข้างต้น
 - Retention ออนไลน์ขั้นต่ำ90วันและ encrypted archive/restore พร้อม sticky hold ทำแล้ว; ไม่ลบ pending/review/hold/source evidence/dedupe อัตโนมัติ. ดู [operations](../docs/PHASE_28_OPERATIONS.md) สำหรับ backup/recovery
 

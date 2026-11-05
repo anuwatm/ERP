@@ -1,10 +1,10 @@
-# POS Config — คู่มือตั้งค่าและขอบเขตปัจจุบัน — 2026-10-29
+# POS Config — คู่มือตั้งค่าและขอบเขตปัจจุบัน — อัปเดต 2026-11-05
 
 เพิ่มหลัง Gemini ตรวจรับ Phase 28 local วันที่ 2026-10-27. โค้ด Config รอบนี้ทดสอบ POS 45 tests / 268 assertions, TypeScript, Vite และ Pint ผ่าน; Gemini ตรวจเฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาตแล้ว ไม่พบข้อบกพร่องสำคัญในขอบเขต Local-only ดู [รายงานและขอบเขต](POS_CONFIG_GEMINI_REVIEW_20261029.md). ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริงและไม่เปิด production.
 
 ## เปิดใช้งาน
 
-เปิด POS ตาม README_POS.md แล้ว login ด้วย manager ของสาขา กด **ตั้งค่า POS** หรือเข้า `/config`. ใช้เฉพาะ local/testing จาก loopback (127.0.0.1 หรือ ::1). บัญชี cashier/kitchen/pharmacist เข้าไม่ได้. สาขาและผู้จัดการคนแรกยังใช้ CLI; ไม่มี anonymous setup และไม่มีผู้จัดการส่วนกลางข้ามสาขาในหน้านี้.
+เปิด POS ตาม [คู่มือติดตั้ง](README_POS.md) แล้ว login ด้วย manager ของสาขา กด **ตั้งค่า POS** หรือเข้า `/config`. ใช้เฉพาะ local/testing จาก loopback (127.0.0.1 หรือ ::1). บัญชี cashier/kitchen/pharmacist เข้าไม่ได้. สาขาและผู้จัดการคนแรกยังใช้ CLI; ไม่มี anonymous setup และไม่มีผู้จัดการส่วนกลางข้ามสาขาในหน้านี้.
 
 ## ตั้งค่าอะไรได้
 
@@ -25,7 +25,7 @@
 - keys, .env, feature flags และ HTTPS/mTLS ตั้งที่ Server; หน้า Config ไม่เขียน environment
 - catalog/ราคา/VAT/quota/BOM/หน่วยยา/lot/issuer profile/GL mappings และ ERP staff authority ตั้งจาก ERP หรือ provisioning ที่รองรับ แล้ว sync ตาม contract
 - ยังไม่มี edit/deactivate/reset-password พนักงานหรือ Terminal ในหน้าใหม่นี้
-- ไม่มี migration ใหม่ และไม่ได้แก้ข้อมูลฐานที่ตั้งค่าใช้อยู่ในงานพัฒนานี้
+- หน้า Config ใช้ schema เดิม สำหรับสถานะฐานล่าสุดดู [รายงาน Phase 28.8.5](DATABASE_UPDATE_20261105_PHASE28_8_5.md)
 
 ## Routes และผลตอบกลับ
 
@@ -72,6 +72,6 @@ ERD แสดง logical relations; ไม่รับรองว่า audit a
 
 [Controller](../pos/app/Http/ConfigurationController.php) · [Access](../pos/app/Http/ConfigurationAccess.php) · [Routes](../pos/routes/configuration.php) · [View](../pos/resources/views/configuration.blade.php) · [Tests](../pos/tests/ConfigurationTest.php)
 
-[POS Server / Config diagram](23_pos_server_configuration.html) · [JSON source](specs/23_pos_server_configuration.json) · [คู่มือ POS](README_POS.md) · [Diagram portal](index.html)
+[POS Server / Config diagram](23_pos_server_configuration.html) · [JSON source](specs/23_pos_server_configuration.json) · [คู่มือ POS](README_POS.md) · [Diagrams การใช้งานรายร้าน](24_pos_workflows.html) · [Diagram portal](index.html)
 
 Diagram เขียนคำอธิบายใหม่เป็นภาษาไทย ส่วน Viewer UI และ html lang ของ Archify fallback เป็น English.

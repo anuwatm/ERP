@@ -22,6 +22,9 @@ class StaffAuthentication
             $request->session()->put('pos_last_seen', $now);
         }
 
-        return $next($request);
+        $response = $next($request);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 }

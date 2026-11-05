@@ -3,9 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\InAppNotification;
-use App\Models\Organization;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -41,7 +39,7 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
-        $org = $user?->organization ?? (Schema::hasTable('organizations') ? Organization::first() : null);
+        $org = $user?->organization;
 
         return [
             ...parent::share($request),
@@ -58,7 +56,7 @@ class HandleInertiaRequests extends Middleware
                 'id' => $org->id,
                 'name' => $org->name,
                 'legal_name' => $org->legal_name,
-                'logo_url' => Organization::formatLogoUrl($org->logo_url),
+                'logo_url' => $org::formatLogoUrl($org->logo_url),
                 'currency' => $org->currency,
                 'timezone' => $org->timezone,
             ] : null,
@@ -69,7 +67,7 @@ class HandleInertiaRequests extends Middleware
                 'info' => $request->session()->get('info'),
                 'created_reference' => $request->session()->get('created_reference'),
             ],
-            'notifications' => $user ? [
+            'notifications' => fn () => $user ? [
                 'unread_count' => InAppNotification::where('user_id', $user->id)->whereNull('read_at')->count(),
                 'latest' => InAppNotification::where('user_id', $user->id)->latest()->limit(5)->get(['id', 'title', 'body', 'url', 'read_at']),
             ] : ['unread_count' => 0, 'latest' => []],

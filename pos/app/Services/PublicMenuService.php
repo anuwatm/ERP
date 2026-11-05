@@ -81,7 +81,7 @@ class PublicMenuService
         $t = $this->token($token);
         [$catalog, $items, $branch] = $this->published($t->branch_id);
         $restaurant = $branch->business_type === 'restaurant';
-        $stock = $restaurant ? $this->ingredientAvailability($branch) : [];
+        $stock = $restaurant ? $this->ingredientAvailability($branch, $items) : [];
         $products = array_map(function ($product) use ($restaurant, $stock, $items) {
             $visible = array_intersect_key($product, array_flip(['product_id', 'name', 'barcode', 'unit', 'price', 'tax_rate', 'restaurant_variant']));
             if ($restaurant) {
@@ -116,7 +116,8 @@ class PublicMenuService
             $items = $this->normalize($input, $published);
             if ($branch->business_type === 'restaurant') {
                 abort_unless(array_sum(array_column($items, 'quantity')) <= 100 && count($items) <= 50, 422, 'Restaurant order is too large.');
-                abort_unless($this->canPrepare($items, $published, $this->ingredientAvailability($branch)), 422, 'Some dishes are unavailable.');
+                $requested = array_intersect_key($published, array_flip(array_column($items, 'product_id')));
+                abort_unless($this->canPrepare($items, $requested, $this->ingredientAvailability($branch, $requested)), 422, 'Some dishes are unavailable.');
             }
             $hash = hash('sha256', CanonicalJson::encode($items));
             $id = (string) Str::uuid();
@@ -189,7 +190,9 @@ class PublicMenuService
             if ($catalog->version !== $row->catalog_version) {
                 return $status + ['review' => 'menu_changed'];
             }
-            if (! $this->canPrepare(json_decode($row->items, true), $items, $this->ingredientAvailability($branch))) {
+            $lines = json_decode($row->items, true);
+            $requested = array_intersect_key($items, array_flip(array_column($lines, 'product_id')));
+            if (! $this->canPrepare($lines, $requested, $this->ingredientAvailability($branch, $requested))) {
                 return $status + ['review' => 'unavailable'];
             }
 
@@ -244,9 +247,20 @@ class PublicMenuService
         return [$catalog, $items, $b];
     }
 
-    private function ingredientAvailability(object $branch): array
+    private function ingredientAvailability(object $branch, array $products): array
     {
+        $ingredients = [];
+        foreach ($products as $product) {
+            foreach ($product['restaurant']['ingredients'] as $ingredient) {
+                $ingredients[$ingredient['product_id']] = true;
+            }
+        }
+        if ($ingredients === []) {
+            return [];
+        }
+
         $grants = DB::table('pos_grants as g')->where('g.branch_id', $branch->id)->where('g.status', 'active')
+            ->when(count($ingredients) <= 500, fn ($query) => $query->whereIn('g.product_id', array_keys($ingredients)))
             ->where(fn ($q) => $q->whereNull('g.expires_at')->orWhere('g.expires_at', '>=', now($branch->timezone)->toDateString()))
             ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('pos_lot_recalls as r')->whereColumn('r.branch_id', 'g.branch_id')->whereColumn('r.lot_id', 'g.lot_id'))
             ->get(['product_id', 'granted_quantity', 'consumed_quantity', 'reserved_quantity']);

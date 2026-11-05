@@ -1,27 +1,26 @@
-# Phase 28 — Standalone POS: current implementation
+# Phase 28 — Standalone POS ถึง Phase 28.8.5
 
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+**Local Complete ถึง Phase 28.8.5 (2026-11-05)** · [ติดตั้งและตั้งค่า](../document/README_POS.md) · [Config](../document/POS_CONFIGURATION.md) · [Diagrams รายร้าน](../document/24_pos_workflows.html) · [หลักฐานล่าสุด](../document/acceptance/phase28_8_5/README.md)
 
-**Local Complete — Gemini PASS (2026-10-27); configured ERP/POS databases current; Production Pending.**
-
-อ้างอิงผลรับรอง [Gemini หมวด 17](../gemini.md#17-ผลการตรวจรับงาน-phase-28-ฉบับสมบูรณ์สำหรับสภาพแวดล้อม-local-phase-28-local-acceptance-sign-off--2026-10-27). สถานะนี้ครอบคลุม local implementation ไม่ใช่ production/e-Tax certification
+> **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** ผล Gemini 2026-10-27 เป็น baseline ของ Phase 28 เดิม
 
 | พื้นที่ | สถานะปัจจุบัน |
 | --- | --- |
 | Core / Retail | Cash checkout/change/shift, manager discount, cash in-out, partial/full refund และ void ผ่าน refund pipeline; completed sale immutable |
-| Restaurant | Table/takeaway, variant/size/modifier SKU+BOM, public menu/table-session + staff accept, kitchen polling 5 วินาที, split bill, recipe consumption และ waste |
-| Pharmacy | Unit conversions/precision, FEFO/lot-expiry, pharmacist authority, synthetic prescription ACL/quarantine, qualified pharmacist manager ตรวจของคืน restock/destroy และ lot recall |
+| Restaurant | Table/takeaway, variant/size/modifier SKU+BOM, QR/table session และ staff acceptance, คิวครัว FIFO, Walk-in/จองโต๊ะ 90 นาทีและเผื่อมาสาย 15 นาที, kitchen polling 5 วินาที, split bill, recipe consumption และ waste |
+| Pharmacy | Unit conversions/precision, FEFO/lot-expiry, pharmacist authority, synthetic prescription ACL/quarantine, qualified pharmacist manager ตรวจของคืน restock/destroy และ lot recall พร้อมประวัติผู้ป่วยสังเคราะห์เฉพาะ POS สาขา |
 | Tax local | ABB/FULL แยก branch/terminal/date/sequence, trusted issuer/buyer snapshot, replacement/print/reprint; ไม่เพิ่ม sale/VAT ซ้ำ |
 | e-Tax | เลือก signing owner ได้; queue `awaiting_provider`. Provider adapter/certificate/sign/submit/accept/reject ยังรอ provider contract |
 | ERP connector | ERP outbound เท่านั้น, signature/immutable inbox/dedupe, financial-imported แยก inventory-pending, shared Stock/GL services, bounded polling/lease/backoff |
 | Integrity / operations | Signed checkpoint + ledger reconciliation, independent recovery anchor/fence, authorized fresh paged recovery, private encrypted archive/restore และ sticky hold |
 | Retention | ออนไลน์ขั้นต่ำ 90 วัน; ย้ายเฉพาะ accepted/reconciled/ACKed events ที่ไม่ hold. เก็บ source/dedupe/audit/pending/review และ archive; ไม่ลบเอกสารอัตโนมัติ |
-| Configured databases | ERP MySQL `erp`: 83 applied / 0 pending; POS SQLite: 17 applied / 0 pending. POS ฐานใหม่ยังไม่ provision staff/orders |
+| ส่วนขยาย local | Delivery สำหรับ Retail/Restaurant, สมาชิก/โปรโมชัน, browser offline ตาม permit และคิวตรวจรับ |
+| Configured databases | Snapshot ล่าสุด ERP MySQL 88/88 และ POS SQLite 25/25 migrations, pending 0 |
 
 ## หลักฐานและคู่มือ
 
 - [Local acceptance + provisioning/recovery runbook](../document/PHASE_28_LOCAL_ACCEPTANCE.md)
-- [Database upgrade / backup / data verification](../document/DATABASE_UPGRADE_20261027.md)
+- [ฐาน POS 25/25 และ backup](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md) · [ฐาน ERP 88/88](../document/DATABASE_UPDATE_20261104.md)
 - [Database inventory / relationships](../document/PHASE_28_DATABASE.md)
 - [API / routes](../document/PHASE_28_API.md)
 - [Operations](PHASE_28_OPERATIONS.md)
@@ -34,4 +33,4 @@ Gemini: ERP Phase28 **39/348**, POS **41/242**; TypeScript/build/browser ผ่�
 
 ## Production / deferred gates
 
-ยังรอ e-Tax provider/certificate/signing adapter, two-server firewall/mTLS, hardware printer/scanner, MariaDB concurrency/load, UAT/backup recovery drill และ SLO จริง. Production checkout/local feature gates ยังไม่เปิด. QR payment, patient history, card/mixed tender และ browser offline ไม่รวม local cash release นี้
+ยังรอ e-Tax provider/certificate/signing adapter, two-server firewall/mTLS, hardware printer/scanner, MariaDB concurrency/load, UAT/backup recovery drill และ SLO จริง. Production checkout/local feature gates ยังไม่เปิด. QR payment, card/EDC และ mixed tender ยังเลื่อนไว้ ส่วนประวัติผู้ป่วยและ browser offline ใช้ได้เฉพาะ local ตาม feature gates และ policy ที่กำหนด

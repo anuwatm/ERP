@@ -262,7 +262,7 @@ class RestaurantTest extends TestCase
     public function test_kitchen_passive_poll_does_not_extend_staff_idle_timeout(): void
     {
         $lastSeen = time() - 30;
-        $this->actingAs($this->kitchen)->withSession(['pos_login_at' => time(), 'pos_last_seen' => $lastSeen])->withHeaders(['X-POS-Passive' => '1'])->getJson('/state')->assertOk()->assertSessionHas('pos_last_seen', $lastSeen);
+        $this->actingAs($this->kitchen)->withSession(['pos_login_at' => time(), 'pos_last_seen' => $lastSeen])->withHeaders(['X-POS-Passive' => '1'])->getJson('/state')->assertOk()->assertHeader('Cache-Control', 'no-store, private')->assertSessionHas('pos_last_seen', $lastSeen);
         $this->withHeaders(['X-POS-Passive' => '0'])->getJson('/state')->assertOk()->assertSessionHas('pos_last_seen', fn ($value) => $value > $lastSeen);
     }
 
@@ -414,6 +414,18 @@ class RestaurantTest extends TestCase
         $this->assertSame(['sent' => 1], $menu->status($token, $current['id'])['progress']);
         $this->assertSame(1, $menu->status($token, $current['id'])['queue_number']);
         $this->postJson('/menu/requests', ['token' => $token, 'request_key' => 'too-many', 'catalog_version' => 'qr-v2', 'items' => [array_replace($line, ['quantity' => '4'])]])->assertUnprocessable();
+    }
+
+    public function test_pos_login_caps_attempts_across_multiple_source_ips(): void
+    {
+        for ($attempt = 1; $attempt <= 10; $attempt++) {
+            $email = $attempt % 2 === 0 ? 'CASHIER@restaurant.test' : 'cashier@restaurant.test';
+            $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.'.$attempt])
+                ->postJson('/login', ['email' => $email, 'password' => 'wrong-password'])->assertUnprocessable();
+        }
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.11'])
+            ->postJson('/login', ['email' => 'cashier@restaurant.test', 'password' => 'wrong-password'])->assertTooManyRequests();
+        $this->assertGuest();
     }
 
     public function test_private_lan_menu_requires_opt_in_https_and_exact_private_origin(): void

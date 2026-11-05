@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POS Workflows — ร้านค้าทั่วไป ร้านอาหาร ร้านขายยา</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,sans-serif;line-height:1.55}
+body{margin:0;background:light-dark(#f1f5f9,#0f172a);color:light-dark(#172033,#e2e8f0)}
+main{max-width:64rem;margin:auto;padding:1.25rem}
+header,section{background:light-dark(#fff,#1e293b);border:1px solid light-dark(#cbd5e1,#475569);border-radius:1rem;padding:1rem 1.25rem;margin-bottom:1rem}
+a{color:light-dark(#075985,#7dd3fc)}
+nav{display:flex;flex-wrap:wrap;gap:.5rem 1.25rem}
+h1,h2,p{margin:.25rem 0 .7rem}
+.flow{display:grid;gap:1.3rem;padding:0;margin:1rem 0;list-style:none}
+.flow li{position:relative;border-left:4px solid #0891b2;border-radius:.5rem;background:light-dark(#ecfeff,#0f2638);padding:.55rem .85rem}
+.flow li+li::before{content:"↓";position:absolute;top:-1.38rem;left:.75rem;font-weight:bold}
+.role{display:block;font-weight:650}
+.note{border-top:1px solid light-dark(#cbd5e1,#475569);padding-top:.65rem}
+@media(min-width:64rem){.flow{grid-template-columns:repeat(5,minmax(0,1fr))}.flow li+li::before{content:"→";top:1rem;left:-1.25rem}}
+</style>
+</head>
+<body><main>
+<header>
+<p><a href="index.html">กลับไปหน้า Diagrams</a> · <a href="README_POS.md">คู่มือติดตั้งและ Config</a></p>
+<h1>ขั้นตอนใช้งาน POS แยกตามประเภทร้าน</h1>
+<p>Phase 28.8.5 · Local · 2026-11-05</p>
+<p><strong>ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง</strong></p>
+<nav aria-label="เลือกประเภทร้าน"><a href="#retail">ร้านขายของทั่วไป</a><a href="#restaurant">ร้านอาหาร</a><a href="#pharmacy">ร้านขายยา</a></nav>
+</header>
+<section id="retail" aria-labelledby="retail-title">
+<h2 id="retail-title">ร้านขายของทั่วไป <code>retail</code></h2>
+<ol class="flow" aria-label="ลำดับการทำงาน"><li><span class="role">Cashier / Manager</span>เลือก Terminal และเปิดกะ</li><li><span class="role">Cashier / Manager</span>ค้นหา สแกน หรือดึงคำขอ QR ที่พนักงานตรวจรับแล้วเข้าตะกร้า</li><li><span class="role">POS Server</span>ตรวจ catalog ราคา VAT และ quota</li><li><span class="role">Cashier / Manager</span>รับเงินสด ออกใบเสร็จ ตรวจเงินทอน</li><li><span class="role">Cashier / Manager</span>นับยอดจริง ปิดกะ และตรวจรายการรอ ERP</li></ol>
+<p class="note">คืนเงินอ้างบิลเดิมโดย Manager ตรวจรับสินค้าตาม workflow ก่อนพิจารณาคืน Stock</p>
+<a href="README_POS_RETAIL.md#workflow">เปิดคู่มือและ diagram แบบละเอียด</a>
+</section>
+<section id="restaurant" aria-labelledby="restaurant-title">
+<h2 id="restaurant-title">ร้านอาหาร <code>restaurant</code></h2>
+<ol class="flow" aria-label="ลำดับการทำงาน"><li><span class="role">Cashier / Manager</span>จัดที่นั่งจาก Walk-in หรือจองโต๊ะ แล้วเปิด table session หรือเลือกรับกลับบ้าน</li><li><span class="role">Cashier / Manager</span>บันทึกออเดอร์จากหน้าร้าน หรือรับคำขอ QR ผูกโต๊ะเข้าครัว</li><li><span class="role">POS Server</span>ตรวจเมนูและ quota กันวัตถุดิบและออกเลขคิวตามลำดับรับ</li><li><span class="role">Kitchen / Manager</span>รับออเดอร์ เริ่มเตรียมและตัดวัตถุดิบ แล้วทำสถานะพร้อมเสิร์ฟ</li><li><span class="role">Cashier / Manager</span>เสิร์ฟ เลือกจานที่ชำระ ออกบิล และปิดโต๊ะหลังจัดการครบ</li></ol>
+<p class="note">การจองใช้ช่วงโต๊ะ 90 นาที และเผื่อมาสาย 15 นาทีก่อนพนักงานยืนยันไม่มา รายการสั่งเพิ่มได้เลขคิวใหม่ Manager พักหรือข้ามคิวพร้อมเหตุผล</p>
+<a href="README_POS_RESTAURANT.md#workflow">เปิดคู่มือและ diagram แบบละเอียด</a>
+</section>
+<section id="pharmacy" aria-labelledby="pharmacy-title">
+<h2 id="pharmacy-title">ร้านขายยา <code>pharmacy</code></h2>
+<ol class="flow" aria-label="ลำดับการทำงาน"><li><span class="role">พนักงาน POS</span>เลือก Terminal เปิดกะ และเลือกหน่วยขายที่เผยแพร่</li><li><span class="role">Pharmacist</span>ดำเนินรายการสินค้าที่กำหนดว่าต้องใช้ role pharmacist</li><li><span class="role">POS Server</span>ตรวจ conversion, lot, expiry, recall และ quota</li><li><span class="role">พนักงาน POS</span>รับเงินสด ออกใบเสร็จ และติดตามสถานะ ERP</li><li><span class="role">Manager ที่เป็นเภสัชกร</span>ตรวจของคืนจากบิลเดิม เลือก restock ให้ ERP ตรวจหลักฐาน หรือบันทึก destroy</li></ol>
+<p class="note">ประวัติผู้ป่วยใช้ข้อมูลสังเคราะห์และเก็บใน POS Server สาขา Cashier เห็นรหัสและชื่อที่ mask สำหรับเลือกผูกบิล</p>
+<a href="README_POS_PHARMACY.md#workflow">เปิดคู่มือและ diagram แบบละเอียด</a>
+</section>
+</main></body>
+</html>

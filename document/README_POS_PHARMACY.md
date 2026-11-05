@@ -1,12 +1,8 @@
 # README — ใช้ POS ร้านขายยา
 
-> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+คู่มือ local สำหรับขายยา ตรวจของคืน และประวัติผู้ป่วยสังเคราะห์ใน Phase 28.8.4 [หลักฐานตรวจรับ](acceptance/phase28_8_4/README.md)
 
-> **Phase28.8.1 — 2026-10-30:** Pharmacy Delivery ปิดทั้งหมดตามผู้ใช้ยืนยัน. ห้ามเปิดด้วย flag หรือใช้ flow Retail แทน; ต้องออกแบบ eligibility/pharmacist approval ก่อน release แยก. [คู่มือ/diagram](PHASE_28_8_1_DELIVERY.md). **ยังไม่ได้ทดสอบกับระบบจริง**
-
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
-
-> **หมายเหตุ:** ทดสอบระดับ local เท่านั้น ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง
+> **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** ใช้คู่มือนี้กับ local หรือข้อมูลสังเคราะห์
 
 ## เรียกใช้และสิทธิ์
 
@@ -37,6 +33,27 @@ php artisan pos:staff $posBranchId manager.pharmacy@pos.test --role=manager --ph
 ```
 
 `--pharmacist-qualified` เป็นค่าที่ผู้ดูแลระบุ ไม่ใช่ระบบตรวจรับรองคุณวุฒิจริง. ผูก UUID/role/qualification ของ POS กับ ERP staff authority ให้ถูกบุคคล ไม่ให้แคชเชียร์กำหนดสิทธิ์ตัวเอง
+
+## Workflow
+
+```mermaid
+flowchart TD
+    A["พนักงานเลือก Terminal และเปิดกะ"] --> B["เลือกสินค้า หน่วย และจำนวนจาก catalog"]
+    B --> C{"สินค้าบังคับเภสัชกรหรือไม่"}
+    C -->|"ใช่"| D["เภสัชกรตรวจตาม policy"]
+    C -->|"ไม่"| E["POS ตรวจ conversion lot expiry recall และ quota"]
+    D --> E
+    E --> F["รับเงินสด ออกใบเสร็จ และติดตาม ERP"]
+    P["ประวัติผู้ป่วยสังเคราะห์ในสาขา"] -.->|"เลือกผูกบิลเมื่อเปิด feature"| F
+    F -->|"คืนสินค้าจากบิลเดิม"| R["Manager ทำ refund และรับของเข้ารอตรวจ"]
+    R --> I["Manager ที่เป็นเภสัชกรตรวจ lot และสภาพ"]
+    I -->|"ผ่านและเลือก restock"| S["ERP ตรวจหลักฐานก่อนคืน Stock"]
+    I -->|"เลือก destroy"| X["บันทึกผลทำลาย"]
+```
+
+ก่อนเริ่มกะ ตรวจว่า lot และวันหมดอายุถูก provision และมีผู้ใช้ role `pharmacist` สำหรับสินค้าที่บังคับสิทธิ์ ส่วนการตรวจของคืนใช้บัญชี `manager` ที่ provision `pharmacist_qualified` การจัดส่งและ QR เมนูสำหรับลูกค้าปิดใน Pharmacy
+
+เมื่อทดลองประวัติผู้ป่วย ให้เปิด `POS_LOCAL_PATIENT_HISTORY_ENABLED=true` ร่วมกับ Pharmacy flag แล้วเข้า **ประวัติผู้ป่วย** ที่ `/patients` เภสัชกรหรือ Manager ที่มีคุณสมบัติสร้างและแก้ทะเบียนได้ Cashier เลือกจากรหัสและชื่อที่ mask เพื่อผูกบิล ข้อมูลสังเคราะห์อยู่เฉพาะ POS Server ของสาขา แยกจาก ERP และ offline queue [คู่มือประวัติผู้ป่วย](PHASE_28_8_4_PATIENT_HISTORY.md)
 
 ## เตรียมสินค้าและ lot ก่อนขาย
 

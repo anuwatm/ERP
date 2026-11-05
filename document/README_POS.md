@@ -1,84 +1,62 @@
-# README — เรียกใช้และตั้งต้น POS
+# ติดตั้ง ตั้งค่า และใช้งาน POS
 
-> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+อัปเดต 2026-11-05 ถึง **Phase 28.8.5** ในขอบเขต local ระบบ POS ทำงานแยกจาก ERP ทั้งบัญชีผู้ใช้ ฐานข้อมูล session และ APP_KEY ผลอัปเดตฐานที่บันทึกไว้ล่าสุดคือ POS SQLite 25/25 migrations และ ERP 88/88 [รายงานฐาน POS](DATABASE_UPDATE_20261105_PHASE28_8_5.md)
 
-> **Phase28.8.1 — 2026-10-30:** Retail/Restaurant มี Delivery local ที่ /deliveries; COD เป็น custody รอ accounting review. Pharmacy Delivery ปิด. [คู่มือ/diagram](PHASE_28_8_1_DELIVERY.md). **ยังไม่ได้ทดสอบกับระบบจริง**
+> **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** รวมเครือข่ายระหว่าง ERP กับ POS, HTTPS/mTLS, มือถือสแกน QR, เครื่องพิมพ์, เครื่องสแกน และ e-Tax provider ขั้นตอนด้านล่างใช้กับ local หรือข้อมูลสังเคราะห์
 
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+## เลือกประเภทร้าน
 
-คู่มือวันที่ 2026-10-27 สำหรับ local development ที่ผ่านการตรวจรับแล้ว
+เปิด POS ที่ **http://127.0.0.1:8128/** ทั้งสามประเภท ระบบเลือกหน้าทำงานจาก `business_type` ของสาขาที่บัญชี POS สังกัด และแสดงฟังก์ชันตาม role กับ flags ของเครื่องนั้น
 
-> **หมายเหตุ:** ยังไม่ได้ทดสอบการเชื่อมต่อกับระบบและอุปกรณ์จริง เช่น Server/firewall/mTLS, เครื่องพิมพ์, เครื่องสแกน และ e-Tax provider. คำสั่งเปิด PHP development server ใช้ทดลองในเครื่องเท่านั้น
-
-## 1. แต่ละประเภทร้านเปิดที่ไหน
-
-ทั้งสามประเภทใช้แอป `pos/` และหน้า `/` เดียวกัน เช่น **http://127.0.0.1:8128/** หลังเปิด local server. ระบบใช้ `business_type` ของสาขาที่บัญชี POS สังกัด ร่วมกับ role และ feature flags; ไม่มี URL แยก `/retail`, `/restaurant` หรือ `/pharmacy` และไม่ได้เปลี่ยนประเภทร้านด้วย query string
-
-| ประเภท | business_type | Flag หลักบน POS | คู่มือ |
+| ประเภท | ค่า `business_type` | เปิดฟังก์ชันหลักใน local | คู่มือและ diagram |
 | --- | --- | --- | --- |
-| ร้านขายของทั่วไป | `retail` | Core ขายเงินสด ไม่ต้องเปิด restaurant/pharmacy | [README ร้านค้าทั่วไป](README_POS_RETAIL.md) |
-| ร้านอาหาร | `restaurant` | `POS_LOCAL_RESTAURANT_ENABLED=true` | [README ร้านอาหาร](README_POS_RESTAURANT.md) |
-| ร้านขายยา | `pharmacy` | `POS_LOCAL_PHARMACY_ENABLED=true` | [README ร้านขายยา](README_POS_PHARMACY.md) |
+| ร้านขายของทั่วไป | `retail` | หน้าขายเงินสดของ POS | [ขายสินค้า คืนเงิน และปิดกะ](README_POS_RETAIL.md#workflow) |
+| ร้านอาหาร | `restaurant` | `POS_LOCAL_RESTAURANT_ENABLED=true` | [โต๊ะ คิวครัว จองโต๊ะ และ QR](README_POS_RESTAURANT.md#workflow) |
+| ร้านขายยา | `pharmacy` | `POS_LOCAL_PHARMACY_ENABLED=true` | [จ่ายยา ตรวจของคืน และประวัติผู้ป่วย](README_POS_PHARMACY.md#workflow) |
 
-บัญชี POS เป็นคนละบัญชีกับ ERP. การสร้าง ERP user หรือเปิดหน้า ERP `/pos-integration` ไม่ได้สร้างบัญชีแคชเชียร์ให้อัตโนมัติ. รุ่นนำร่องใช้หนึ่งสาขาหนึ่งประเภทกิจการ; ไม่เปลี่ยนประเภทสาขาเดิมเพื่อทดลองอีกกิจการ
+สาขาต่างประเภทใช้แอป `pos/` เดียวกัน แต่ให้สร้างสาขา Terminal และบัญชีตามสาขาจริง เปิดเครื่องหรือสลับสาขาทดลองด้วยบัญชี POS ของสาขานั้น การใช้หลายแท็บใน browser profile เดียวกันจะแชร์ session
 
-## หน้า Config สำหรับผู้จัดการ (เพิ่ม 2026-10-29)
+## ภาพรวม ERP กับ POS Server
 
-หลังเข้าสู่ระบบด้วย role `manager` กด **ตั้งค่า POS** หรือเปิด `/config` บน POS URL เดิม. เปิดเฉพาะ local/testing และ loopback; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
-
-- แก้ชื่อสาขา และเลือก `retail` / `restaurant` / `pharmacy` ก่อนมี Terminal/catalog/quota/orders/tax profile. สาขาที่ provision แล้วเปลี่ยนกิจการให้สร้างสาขาใหม่ ไม่แก้ประวัติเดิม
-- เพิ่ม Terminal พร้อมดู UUID สำหรับลงทะเบียน ERP
-- เพิ่มพนักงาน/role ของสาขาตนเอง พร้อมรหัสผ่านอย่างน้อย 12 ตัวและยืนยันรหัสผ่าน
-- ดูรายชื่อพนักงาน UUID สถานะ feature flags และ instance; ไม่มีการแสดงรหัสผ่าน/private keys
-- ทุกการบันทึกต้องยืนยันรหัสผ่านผู้จัดการ มี audit และไม่รับ branch_id จาก browser เพื่อจัดการสาขาอื่น
-
-การสร้างสาขาและ manager คนแรกยังใช้ CLI ตามคู่มือด้านล่าง. คุณสมบัติผู้จัดการเภสัชกร provision ผ่านผู้ดูแล. หน้า Config ไม่แก้ `.env`, keys, feature flags, catalog/quota, GL หรือ issuer profile; ดูสถานะและตั้งค่าฝั่ง Server/ERP ตามรายการในหน้า. การเพิ่มบัญชีไม่สร้าง ERP staff authority อัตโนมัติ.
-
-## 2. ทางเลือก A — ทดลองหน้าจอด้วยข้อมูลจำลอง
-
-เหมาะกับการเปิดดู workflow ก่อน provision ฐาน POS ของตนเอง. ใช้ dependencies ที่ติดตั้งใน `backend/` อยู่แล้ว และ PHP ที่มี BCMath/OpenSSL/SQLite
-
-เปิด PowerShell จาก repository root:
-
-```powershell
-Set-Location C:/LocalDevine/www/ERP
-node backend/node_modules/vite/bin/vite.js build --config pos/vite.config.mjs
-Set-Location pos
-
-php tests/Browser/prepare.php
-php tests/Browser/prepare-restaurant.php
-php tests/Browser/prepare-pharmacy.php
-php -S 127.0.0.1:8128 -t public tests/Browser/router.php
+```mermaid
+flowchart LR
+    E["ผู้ดูแล ERP"] --> ERP["ERP ส่วนกลาง"]
+    ERP -->|"เผยแพร่ catalog ราคา VAT และ quota ผ่าน connector"| S["POS Server ของสาขา"]
+    C["พนักงานและจอครัว"] -->|"บัญชี POS ผ่าน browser"| S
+    Q["ลูกค้าเปิด QR เมนูที่อนุญาต"] -->|"คำขอรอพนักงานรับ"| S
+    S --> DB[("ฐาน POS แยกจาก ERP")]
+    ERP -->|"ดึง signed outbox ผ่าน HTTPS/mTLS"| S
+    ERP --> I["ตรวจสิทธิ์และนำเข้า ERP ตามชนิด event"]
 ```
 
-เปิด **http://127.0.0.1:8128/** แล้วเลือกบัญชีตามประเภทร้าน:
+ERP เป็นแหล่งข้อมูลสินค้า ราคา และสิทธิ์ขาย ส่วน POS Server ยืนยันกะ บิล คิวครัว และการจัดโต๊ะของสาขา POS ไม่เขียนฐาน ERP ตรง เมื่อดูหน้า local ด้วย HTTP จะทดสอบ UI ได้ แต่การ publish และ sync ผ่าน connector ต้องตั้งค่า HTTPS/mTLS แยก
 
-| ทดลอง | บัญชีจำลอง | Role / สิ่งที่เตรียมไว้ |
-| --- | --- | --- |
-| ขายของทั่วไป | `cashier@pos.test` | cashier / สินค้าและ quota จำลอง |
-| งานผู้จัดการร้านทั่วไป | `manager@pos.test` | manager / ส่วนลด คืนเงิน และ Cash In-Out |
-| ร้านอาหาร | `restaurant@pos.test` | manager / เมนู สูตร วัตถุดิบ และตัวเลือกขนาด |
-| ร้านขายยา | `pharmacy-manager@pos.test` | qualified manager / ตัวอย่างขาย-คืนสินค้ารอตรวจ |
+## ติดตั้ง POS local
 
-รหัสผ่านทุกบัญชีในตารางคือ **`local-fixture-password` ใช้เฉพาะ fixture นี้**. ตัวอย่าง Pharmacy เน้นตรวจของคืน ไม่ใช่ชุดสาธิตการจ่ายยาทุกชนิด และบัญชี manager ไม่ใช่ role `pharmacist`
+ต้องมี PHP 8.3 ขึ้นไปพร้อม Composer และ extensions ที่ lockfile กำหนด เช่น BCMath และ OpenSSL สำหรับ SQLite ใช้ PDO SQLite ด้วย ส่วน frontend ใช้ Node.js ที่รองรับ Vite และ pnpm ตาม `pos/package.json`
 
-ข้อมูลอยู่ใน `temp/phase28-pos-browser/database.sqlite` แยกจากฐานตาม config ที่ `pos/database/database.sqlite` และ ERP. Scripts เก็บข้อมูลเดิมไว้; `prepare-pharmacy.php` สร้างรายการขาย/คืนจำลองเพิ่มเติม จึงไม่ควรรันซ้ำเป็นงานประจำ. Catalog มีอายุและ quota มีจำนวนจำกัด หากหมดให้เตรียม fixture/catalog ที่เหมาะสม ไม่แก้ยอดหรือลบหลักฐานในฐานใช้งาน
+จาก repository root ใน PowerShell ติดตั้ง dependencies ของ POS เองและ build หน้าเว็บ
 
-เปลี่ยนประเภทร้านด้วยการออกจากระบบแล้วเข้าด้วยอีกบัญชี หรือแยก browser profile. หลายแท็บใน profile เดียวใช้ session เดียวกัน. หยุด server ด้วย `Ctrl+C`. โหมดนี้ไม่เชื่อม ERP จริง; ตัวเลข “รอ ERP” ไม่จำเป็นต้องลดเป็นศูนย์
+```powershell
+Set-Location pos
+composer install
+pnpm install --frozen-lockfile
+pnpm run build
 
-## 3. ทางเลือก B — ใช้ฐานและสาขาของตนเองใน local
+# สร้าง config เฉพาะเมื่อติดตั้งใหม่
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
 
-### เตรียม environment และ assets
+เครื่องพัฒนาที่เตรียม dependencies ของ ERP แล้วสามารถใช้ PHP vendor ร่วมชั่วคราวด้วย `$env:POS_SHARED_VENDOR = '1'` และจาก repository root ใช้ `node backend/node_modules/vite/bin/vite.js build --config pos/vite.config.mjs` ฐานข้อมูล session และ credentials ของสองแอปยังแยกกัน สำหรับการติดตั้ง POS แยกให้ใช้ lockfiles ของ POS ตามคำสั่งหลักด้านบน
 
-1. ติดตั้ง PHP/Composer และ Node dependencies ของ POS หรือใช้ `POS_SHARED_VENDOR=1` เฉพาะเครื่องพัฒนานี้
-2. หากยังไม่มี `pos/.env` จึงคัดลอก `pos/.env.example`; อย่าเขียนทับ `.env` เดิม และอย่าคัดลอก ERP `.env`/APP_KEY/DB credentials
-3. ปรับค่าต่อไปนี้ใน `pos/.env` ให้ตรงกับฐานที่ต้องการใช้ ตัวอย่างสำหรับ SQLite ที่สร้างไว้ในเครื่องนี้:
+ตั้งค่าต่อไปนี้ใน `pos/.env` ตัวอย่างใช้ HTTP บน loopback และ SQLite ให้แก้ path เป็นฐานที่ตั้งใจใช้ก่อนรัน Artisan
 
 ```dotenv
 APP_ENV=local
 APP_DEBUG=false
 APP_URL=http://127.0.0.1:8128
 DB_CONNECTION=sqlite
+DB_URL=
 DB_DATABASE=C:/LocalDevine/www/ERP/pos/database/database.sqlite
 SESSION_DRIVER=file
 SESSION_COOKIE=pos_session
@@ -86,78 +64,109 @@ SESSION_SECURE_COOKIE=false
 POS_RELEASE_APPROVED=false
 ```
 
-`.env.example` มีค่าเริ่มต้น MySQL จึงต้องเลือก connection ให้ถูกก่อนใช้. ถ้ามี `DB_URL` เดิม ให้ตรวจว่าไม่ได้ชี้คนละฐาน. `SESSION_SECURE_COOKIE=false` เป็นค่าของตัวอย่าง HTTP loopback นี้; การติดตั้ง HTTPS จริงต้องตั้งค่าตามสภาพแวดล้อมจริง
+`SESSION_SECURE_COOKIE=false` ใช้เฉพาะตัวอย่าง HTTP loopback สำหรับ HTTPS ให้ตั้ง `true` ใช้ APP_KEY ของ POS เองและเก็บสำรองไว้ด้วย เพราะข้อมูลที่เข้ารหัสต้องใช้ key เดิม ตั้งค่า `POS_INSTANCE_ID`, `POS_SIGNING_KEY_ID` และ `POS_SIGNING_KEY_PATH` จากข้อมูล provisioning เมื่อใช้ signed outbox หรือ connector เก็บ RSA private key ใน private storage และส่งให้ ERP เฉพาะ public key ที่ตรงกัน
 
-4. ติดตั้งใหม่ที่ APP_KEY ว่างเท่านั้นจึงสร้าง key. **ห้ามสร้าง key ทับของเดิมเมื่อมี encrypted archives**. เก็บ POS RSA private key และตั้ง `POS_INSTANCE_ID`, `POS_SIGNING_KEY_PATH`, `POS_SIGNING_KEY_ID` ให้ตรงกับ public key/instance ที่ ERP ลงทะเบียน
-5. ฐานตาม config ในเครื่องนี้รัน migrations แล้ว; ใช้ `migrate:status` ตรวจ ไม่ใช้ `migrate:fresh` หรือ seed ทับข้อมูล. หลังแก้ config ใช้ `config:clear` และเปิด server ใหม่
+จาก `pos/` สร้างไฟล์ SQLite ตาม path ใน config เฉพาะฐานใหม่ แล้วรันขั้นตอนต่อไปนี้
 
 ```powershell
-# จาก repository root — build bundle ก่อนเปิดหน้าจอ
-node backend/node_modules/vite/bin/vite.js build --config pos/vite.config.mjs
-Set-Location pos
-$env:POS_SHARED_VENDOR = '1'  # เฉพาะกรณีใช้ vendor ของ backend ใน local
-php artisan migrate:status
-php artisan config:clear
+# เฉพาะฐานใหม่ที่ใช้ path ตัวอย่าง
+if (-not (Test-Path database/database.sqlite)) {
+    New-Item -ItemType File database/database.sqlite | Out-Null
+}
 
-# เฉพาะติดตั้งใหม่และ APP_KEY ว่างเท่านั้น: php artisan key:generate
+php artisan config:clear
+# เฉพาะติดตั้งใหม่และ APP_KEY ยังว่าง
+php artisan key:generate
+php artisan migrate
+php artisan migrate:status
 ```
 
-### สร้างสาขา Terminal และพนักงาน
+สำหรับฐานที่มีอยู่ ให้ข้าม `key:generate` ตรวจ connection และสำรองฐานก่อน migrate เมื่อมีรายการค้าง ใช้ `migrate:status` ตรวจผล หลีกเลี่ยง `migrate:fresh` บนฐานใช้งาน
 
-ใช้คำสั่งในคู่มือประเภทร้านที่เลือก. `pos:branch`/`pos:terminal` ใช้สร้างครั้งแรก; ถ้ามีแล้วให้ใช้ UUID เดิม ไม่รันสร้างซ้ำ. `pos:staff` ถามชื่อและรหัสผ่านผ่าน terminal โดยรหัสผ่านยาวอย่างน้อย 12 ตัวอักษร. เก็บ UUID ที่คำสั่งแสดงเพื่อผูก ERP mapping/authority
+## สร้างและตั้งค่าสาขา
 
-จากนั้นผู้ดูแลต้องเตรียม:
-
-- ERP POS Integration ที่ `<ERP_BASE_URL>/pos-integration`: branch/warehouse/customer/actor, business type, Terminal UUID/code, public key และ GL mappings ให้ตรงกับ POS
-- Active POS instance/staff authority, catalog/ราคา/VAT/อายุข้อมูล และ quota ของสินค้า หรือวัตถุดิบสำหรับร้านอาหาร. ฐานว่างที่ migrate แล้วไม่ได้มีรายการพร้อมขายให้อัตโนมัติ
-- Restaurant ต้องมี BOM/recipe และ option SKU; Pharmacy ต้องมี published unit/conversion policy, lot/expiry และ pharmacist requirements ที่เกี่ยวข้อง
-- ถ้าเปิด local ABB/FULL ต้อง provision issuer profile ก่อน; ถ้าเปิด flag แต่ยังไม่มี profile การ checkout จะไม่สำเร็จ
-- การ publish/pull จริงผ่าน connector ต้องตั้ง local HTTPS/mTLS และ connection allowlist ก่อนใช้ `php artisan pos:sync <INSTANCE_UUID>` ที่ `backend/`. PHP HTTP server ด้านล่างเพียงเปิด UI ไม่ได้ทำให้ HTTPS connector พร้อมเอง
-
-ค่าระดับสินค้าที่หน้า POS Integration ยังไม่มีฟอร์มแก้ เช่น pharmacy conversion policy ต้องให้ผู้ดูแลเตรียมผ่าน provisioning ที่รองรับก่อน publish; แคชเชียร์ไม่ตั้ง factor/ราคา/lot policy เองในตะกร้า
-
-### เปิดหน้า POS
+ตัวอย่างสร้างสาขา Retail ครั้งแรกจาก `pos/` ใช้ UUID เดิมเมื่อสาขาหรือ Terminal มีอยู่แล้ว คำสั่ง `pos:staff` ถามชื่อและรหัสผ่านผ่าน terminal
 
 ```powershell
-# จาก pos/ หลังเตรียม config, identity, catalog และ quota แล้ว
-$env:POS_SHARED_VENDOR = '1'  # ไม่จำเป็นถ้า pos/vendor ติดตั้งแยกแล้ว
+$branch = [guid]::NewGuid().ToString()
+$terminal = [guid]::NewGuid().ToString()
+php artisan pos:branch $branch RT01 "ร้านค้าทดลอง" --type=retail
+php artisan pos:terminal $terminal $branch T01
+php artisan pos:staff $branch manager.retail@pos.test --role=manager
+php artisan pos:staff $branch cashier.retail@pos.test --role=cashier
+```
+
+ร้านอาหารเพิ่ม role `kitchen` และร้านขายยาเพิ่ม `pharmacist` หรือ Manager ที่ provision ด้วย `--pharmacist-qualified` ตามคู่มือของแต่ละประเภท เก็บ UUID ของสาขา Terminal และ staff เพื่อใช้ mapping และ provision authority ฝั่ง ERP
+
+### หน้า Config สำหรับผู้จัดการ
+
+เปิด POS แล้ว login ด้วย Manager กด **ตั้งค่า POS** หรือเข้า **http://127.0.0.1:8128/config** ใช้ใน local/testing ผ่าน loopback
+
+| ตั้งที่ไหน | งานที่ทำ |
+| --- | --- |
+| POS `/config` | ดู instance, flags และ UUID เพิ่ม Terminal และพนักงาน เปลี่ยนชื่อสาขาและเลือกประเภทได้ก่อนมี provisioning ที่ล็อกประเภท บันทึกด้วยรหัสผ่าน Manager |
+| `pos/.env` และ private storage | เลือกฐานและ URL ตั้ง feature flags, instance และกุญแจ แล้ว `php artisan config:clear` และเปิด process ใหม่ |
+| ERP `/pos-integration` และ provisioning | ตั้ง branch/warehouse, Terminal, staff authority, public key, account mappings, catalog และ quota |
+| คู่มือประเภทร้าน | ตรวจเมนูและ recipe ของร้านอาหาร หรือ unit conversion, lot, expiry และ policy ของร้านขายยา |
+
+หน้า Config จัดการเฉพาะสาขาที่บัญชีสังกัด การตั้ง flags, keys, catalog, quota และ issuer profile ทำผ่านผู้ดูแลระบบตามขอบเขตด้านบน [รายละเอียด Config และ diagram](POS_CONFIGURATION.md)
+
+ก่อนขาย ให้ตรวจว่าสาขา Terminal และบัญชีใช้งานได้ มี catalog ที่ยังไม่หมดอายุ มี quota ของสินค้า/วัตถุดิบ และมี issuer profile ถ้าเปิด ABB/FULL สำหรับการเชื่อม ERP ให้ตั้ง connector allowlist และ mTLS ตาม [Operations](../docs/PHASE_28_OPERATIONS.md) แล้วจึงใช้ `php artisan pos:sync <INSTANCE_UUID>` จาก `backend/` ตาม runbook
+
+## เปิดใช้และตรวจความพร้อม
+
+```powershell
+# จาก pos/
 php artisan serve --host=127.0.0.1 --port=8128
 ```
 
-เปิด **http://127.0.0.1:8128/** เข้าด้วยบัญชี POS ของสาขา แล้วเลือก Terminal. ถ้าเปลี่ยน port ให้ใช้ port ที่ server แสดงและปรับ APP_URL ให้ตรง; ไม่ใช้ test router ของทางเลือก A กับฐานสาขาของตนเอง
+เปิด `/` ด้วยบัญชี POS เลือก Terminal และเปิดกะก่อนรับเงิน ร้านอาหารใช้ **โต๊ะและครัว** และร้านขายยาใช้บัญชีตามข้อกำหนดของสินค้า เมื่อขายได้แล้วให้ตรวจใบเสร็จ ปิดกะ และติดตามสถานะรอ ERP หากตั้ง connector ไว้
 
-## 4. Feature flags เพิ่มเติม
-
-| ต้องการใช้ | Flag ใน POS | เงื่อนไข |
-| --- | --- | --- |
-| QR เมนูร้านทั่วไป/ร้านอาหาร | `POS_LOCAL_PUBLIC_MENU_ENABLED=true` | local/testing และ loopback; Pharmacy ไม่เปิด public menu |
-| คืนเงิน/ยกเลิกยอดขาย | `POS_LOCAL_REFUNDS_ENABLED=true` | manager re-auth และ original sale; ERP ต้องเปิด feature ที่ตรงกัน |
-| Cash In-Out | `POS_LOCAL_CASH_MOVEMENTS_ENABLED=true` | manager และ ERP cash-clearing mapping |
-| ส่วนลด | `POS_LOCAL_DISCOUNTS_ENABLED=true` | published manager ceiling และ fresh manager approval |
-| ตรวจของคืนร้านยา | `POS_LOCAL_RETURN_INSPECTIONS_ENABLED=true` | Pharmacy manager + pharmacist qualification ทั้ง POS/ERP |
-| Recall | `POS_LOCAL_RECALLS_ENABLED=true` | ต้อง publish คำสั่ง recall จาก ERP ด้วย feature ที่ตรงกัน |
-| ABB/FULL | `POS_LOCAL_TAX_DOCUMENTS_ENABLED=true` | issuer profile และ terminal/branch identity พร้อมก่อนขาย |
-
-Flags เหล่านี้ไม่ใช่สวิตช์เลือกประเภทร้าน และไม่ใช่การเปิด production. รายการที่ต้อง sync ให้ตั้งค่าทั้ง POS/ERP ตาม feature; ไม่เปิด flags ทั้งหมดเพื่อแก้ error
-
-## 5. ปัญหาที่พบบ่อย
-
-| อาการ | ตรวจอะไร |
+| อาการ | ตรวจจุดนี้ก่อน |
 | --- | --- |
-| เปิดหน้าแล้วว่าง/ไม่พบ Vite manifest | build POS ด้วย `pos/vite.config.mjs` และตรวจ assets ใต้ `pos/public/build` |
-| เข้าไม่ได้ด้วย ERP user | ใช้บัญชีที่สร้างด้วย `pos:staff`; ERP user กับ POS staff แยกกัน |
-| ไม่พบ Terminal | บัญชีอยู่สาขาถูกต้อง และ Terminal ของสาขา active หรือไม่ |
-| ไม่พบสินค้า/catalog หมดอายุ | publish/sync catalog ที่ยัง valid และ scope ตรงสาขา |
-| quota ไม่พอ/lot ขายไม่ได้ | ตรวจ grant, expiry และ recall; อย่าเพิ่ม Stock หรือล้าง quota โดยตรง |
-| หน้าร้านอาหารไม่ขึ้น | branch เป็น restaurant, flag เปิด และ APP_ENV เป็น local/testing |
-| `403` ตอนขายสินค้าที่ต้องมีเภสัชกร | ใช้ role pharmacist; qualified manager สำหรับตรวจคืนไม่แทน role นี้ |
-| `Terminal shift already open` | มีกะเดิมอยู่ ให้ผู้รับผิดชอบปิด/ตรวจตามสิทธิ์ก่อน ไม่เปิดกะซ้อน |
-| Cookie/login บน HTTP loopback ไม่คงอยู่ | APP_URL/session cookie/secure-cookie ต้องตรงกับโหมด local ที่ใช้ |
-| `423` / recovery fence | หยุดขายและทำ recovery ตาม runbook ห้ามล้าง anchor/fence เพื่อข้ามการตรวจ |
-| ไม่ทราบว่ารับเงินสำเร็จหรือยัง | ตรวจ receipt/status ก่อนทำรายการใหม่ ห้ามรับเงินซ้ำเพียงเพราะ timeout |
+| หน้าว่างหรือหา Vite manifest ไม่พบ | รัน `pnpm run build` จาก `pos/` |
+| Login ไม่ผ่านหรือเข้าอีกประเภทร้าน | บัญชี POS, active staff, role และ `business_type` ของสาขา |
+| ไม่เห็นเมนูที่ต้องการ | flags, local/testing, role, branch type และ loopback สำหรับหน้าที่กำหนด |
+| ไม่มีสินค้าหรือขายไม่ได้ | catalog version/expiry, quota, กะ, lot/recipe และ issuer profile ถ้าเปิดเอกสารภาษี |
+| รอ ERP | connector scopes, mappings, signed outbox และสถานะ review ดู [คู่มือปฏิบัติการ](../docs/PHASE_28_OPERATIONS.md) |
 
-คู่มือต่อเนื่อง: [Operations](../docs/PHASE_28_OPERATIONS.md) · [API/routes](PHASE_28_API.md) · [Database upgrade](DATABASE_UPGRADE_20261027.md) · [Local acceptance/recovery](PHASE_28_LOCAL_ACCEPTANCE.md)
+## Feature flags ที่ใช้บ่อย
 
-## Source ที่ใช้ตรวจคู่มือ
+ค่าเริ่มต้นของ flags ด้านล่างปิด เปิดเฉพาะงานที่ต้องทดลองใน `pos/.env` แต่ละ capability ยังตรวจ role และประเภทสาขาของตัวเอง
 
-[Staff routes](../pos/routes/web.php) · [Local commands](../pos/routes/console.php) · [Config/flags](../pos/config/pos.php) · [Frontend build](../pos/vite.config.mjs)
+| งาน | Flag หรือค่าที่ต้องใช้ |
+| --- | --- |
+| คิวครัว โต๊ะ และจองโต๊ะ | `POS_LOCAL_RESTAURANT_ENABLED` |
+| เมนู QR Retail/Restaurant | `POS_LOCAL_PUBLIC_MENU_ENABLED` และ SKU `online_visible` สำหรับมือถือบน LAN ของร้านอาหารดู [Private HTTPS LAN](PHASE_28_8_5_RESTAURANT.md#ติดตั้ง-local) |
+| ขายยา ตรวจคืน Recall | `POS_LOCAL_PHARMACY_ENABLED`, `POS_LOCAL_RETURN_INSPECTIONS_ENABLED`, `POS_LOCAL_RECALLS_ENABLED` ตามงาน |
+| ประวัติผู้ป่วยสังเคราะห์ | `POS_LOCAL_PHARMACY_ENABLED` และ `POS_LOCAL_PATIENT_HISTORY_ENABLED` |
+| ส่วนลด เงินเข้าออก คืนเงิน | `POS_LOCAL_DISCOUNTS_ENABLED`, `POS_LOCAL_CASH_MOVEMENTS_ENABLED`, `POS_LOCAL_REFUNDS_ENABLED` ตามงาน และเปิดฝั่ง ERP เมื่อ flow กำหนด |
+| สมาชิก/โปรโมชัน | `POS_LOCAL_MEMBERSHIP_ENABLED` และข้อมูลที่ ERP เผยแพร่ |
+| จัดส่ง Retail/Restaurant | `POS_LOCAL_DELIVERY_ENABLED` ร้านขายยาปิด Delivery |
+| Offline | `POS_LOCAL_BROWSER_OFFLINE_ENABLED` และ permit/นโยบายจาก POS Server |
+| ABB/FULL local | `POS_LOCAL_TAX_DOCUMENTS_ENABLED` และ issuer profile |
+
+[ค่าที่รองรับทั้งหมด](../pos/.env.example) · [คู่มือ Delivery](PHASE_28_8_1_DELIVERY.md) · [สมาชิก](PHASE_28_8_2_MEMBERSHIP.md) · [Offline](PHASE_28_8_3_OFFLINE.md) · [ประวัติผู้ป่วย](PHASE_28_8_4_PATIENT_HISTORY.md)
+
+## ทดลองด้วยข้อมูลสังเคราะห์
+
+ตัวเลือกนี้ใช้ PHP vendor ของ ERP และฐาน fixture แยกที่ `temp/phase28-pos-browser/database.sqlite` สำหรับดูหน้าจอ ไม่ต้องสร้างสาขาจริง จาก repository root
+
+```powershell
+node backend/node_modules/vite/bin/vite.js build --config pos/vite.config.mjs
+Set-Location pos
+php tests/Browser/prepare.php
+php tests/Browser/prepare-restaurant.php
+php tests/Browser/prepare-pharmacy.php
+php -S 127.0.0.1:8128 -t public tests/Browser/router.php
+```
+
+| ประเภท | บัญชี fixture |
+| --- | --- |
+| Retail | `cashier@pos.test` หรือ `manager@pos.test` |
+| Restaurant | `restaurant@pos.test` |
+| Pharmacy | `pharmacy-manager@pos.test` สำหรับ workflow ตรวจของคืน |
+
+ใช้รหัสผ่าน `local-fixture-password` เฉพาะ fixture นี้ สคริปต์เก็บข้อมูลเดิมไว้และบางตัวสร้างรายการสังเคราะห์เพิ่ม อย่าใช้ fixture ที่ปิดหรือถอนกุญแจแล้วเป็นฐานขาย หยุด process ด้วย Ctrl+C โหมดนี้ไม่เชื่อม ERP จริง
+
+[Diagrams ใช้งาน POS แบบ HTML](24_pos_workflows.html) · [POS workspace และคำสั่งนักพัฒนา](../pos/README.md) · [API](PHASE_28_API.md) · [Schema](PHASE_28_DATABASE.md) · [ผลตรวจล่าสุด](acceptance/phase28_8_5/README.md)
