@@ -1,0 +1,123 @@
+{
+    "scope": "Actual POS offline browser cash -> Manager acceptance -> signed event; synthetic only",
+    "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxn0WPTxlXoKjpK11tzVp\nzmBDcI3OCOG34IwaPVtldymNlKmSoat0qKbEfv1/K1aGHQ07DWEF4p3BPREL8Ojz\nQgmTrD01yjNrsBOlM8lcPyjO9yWTI0NZzcFqP6c9phUgXfhen6My6mM4Hpb/C95v\nvgTqGRNJ0qjRz/RxBNnTboHpKYE34lMTl6R1pIpxxG1hP4Wb+G1PMvRT/b8sQYfa\noa1F5q3mMj6A5+R7VE2rUn6BThRgJyWhw4skXNpSv3pwl2/S6xllQJi/W5FCSXj7\nCb7XNyXNRv2hN1PqYM0alPQYvLrhFkUWA9pMkevzE5ujEexkRyClXLM74BJuI7Eg\nvQIDAQAB\n-----END PUBLIC KEY-----\n",
+    "event": {
+        "aggregate_id": "0b086f14-9bb4-44a5-a8ea-302e65bb4389",
+        "aggregate_version": 1,
+        "domain": "company-os.pos-event.v1",
+        "event_id": "aa0d216b-516a-4c3d-8c55-8e54930451bf",
+        "event_type": "sale.completed",
+        "instance_id": "33333333-3333-4333-8333-333333333333",
+        "key_id": "offline-fixture",
+        "occurred_at": "2026-11-04T07:27:33+00:00",
+        "payload": {
+            "branch_id": "752dff36-3031-4024-9637-dc22c536ff85",
+            "business_timezone": "Asia/Bangkok",
+            "cash_tendered": "10.70",
+            "catalog_version": "offline-v1",
+            "change": "0.00",
+            "currency": "THB",
+            "lines": [
+                {
+                    "allocations": [
+                        {
+                            "epoch": 1,
+                            "grant_id": "115d8306-ebe2-4466-bbad-cc78d5970302",
+                            "lot_id": null,
+                            "quantity": "1.0000"
+                        }
+                    ],
+                    "base_quantity": "1.0000",
+                    "base_step": "0.0001",
+                    "conversion_factor": "1.0000",
+                    "conversion_version": "base",
+                    "discount_amount": "0.00",
+                    "line_id": "d8faee02-2a30-4430-ac92-ff0b140d8d23",
+                    "name": "Synthetic ordinary item",
+                    "pharmacist_id": null,
+                    "product_id": "f3cfafc4-79ea-446f-bd3c-5a2d37c44e05",
+                    "quantity": "1.0000",
+                    "subtotal": "10.00",
+                    "tax_amount": "0.70",
+                    "tax_rate": "7.00",
+                    "total": "10.70",
+                    "unit": "piece",
+                    "unit_price": "10.00"
+                }
+            ],
+            "occurred_at": "2026-11-04T07:27:33+00:00",
+            "offline_receipt": {
+                "accepted_at": "2026-11-04T07:27:33+00:00",
+                "cash_received": "10.70",
+                "catalog_hash": "7512d6f148d7dfb5a1589d68821ec7ae4e0352bcd08f357591d5a6ca1b489b51",
+                "client_created_at": "2026-11-04T07:27:26.975Z",
+                "client_transaction_id": "48f728af-d90a-4f77-99ff-c95bfeee9517",
+                "device_id": "6cf06d2b-21d2-4439-9d92-f1c214da815d",
+                "payload_hash": "95cdc2f98f448ae336fc99ac9a69b1969eaed78367549f8841794a46b01e09c6",
+                "permit_expires_at": "2026-11-04T07:28:26+00:00",
+                "permit_id": "6a5edfeb-24db-40eb-bef3-c1ce56274c12",
+                "permit_issued_at": "2026-11-04T07:27:26+00:00",
+                "policy": "local_manager_cash_review",
+                "reviewed_by": "1eeb2616-07cf-42d0-b2d0-6c7246e62cd0",
+                "server_received_at": "2026-11-04 07:27:29",
+                "slot_id": "9c187774-7b99-4e88-b454-481f09017d93"
+            },
+            "receipt_no": "RETAIL-O1-20261104-00000001",
+            "sale_id": "0b086f14-9bb4-44a5-a8ea-302e65bb4389",
+            "shift_id": "5e1c705f-da59-4115-a391-e4ea3fdc11cc",
+            "staff_id": "1eeb2616-07cf-42d0-b2d0-6c7246e62cd0",
+            "subtotal": "10.00",
+            "tax_amount": "0.70",
+            "terminal_id": "c83e7927-66de-46b1-b5f6-ab72cde3e26b",
+            "total": "10.70"
+        },
+        "payload_hash": "9106a351a729180e57cd343058a0bd533abdfe928a6431f337fa9c025a43844b",
+        "schema_version": 1,
+        "signature": "VzCY+4RXbAmbmtMH6V1SFrfbnokkMFY7XRSuAkcjrRO8260EW8xfqG7gSJU8hPRAe3BynfUQWfKTqy1aY5wR0WNAYDtZ55V6aBsNwBYIeaTT8cT0sCU6TMabRrrdm3EwQyrFLx0wadRgd58p4s5bN0mzQ/ZB+XCQdsYVaTioNNDcjsOYpWYF7/mW9bZXkNO1cJptj6+KB3hBkJ+rgFiyw9ntaLDm2VZS4kJ4X8ftwr7grJRADv4JhocGgHhayY4sz/DBTBXAhxrmg0fZFHlxrxbz0hFbWO11ZJSf0Bo9ED77N9sOaI0hE4x+6WQe5cdCAFigSpS8JOCQCF8jEdPI1Q==",
+        "source_sequence": 1
+    },
+    "catalog": {
+        "id": "1fd81f77-9641-40fa-ba39-1125aa6f9c9e",
+        "branch_id": "752dff36-3031-4024-9637-dc22c536ff85",
+        "version": "offline-v1",
+        "payload_hash": "7512d6f148d7dfb5a1589d68821ec7ae4e0352bcd08f357591d5a6ca1b489b51",
+        "items": "[{\"active\":true,\"max_manager_discount_pct\":\"0.00\",\"name\":\"Synthetic ordinary item\",\"online_visible\":false,\"price\":\"10.00\",\"product_id\":\"f3cfafc4-79ea-446f-bd3c-5a2d37c44e05\",\"tax_rate\":\"7.00\",\"unit\":\"piece\"}]",
+        "valid_until": "2026-11-05 07:20:32",
+        "created_at": "2026-11-04 07:20:32",
+        "updated_at": "2026-11-04 07:20:32"
+    },
+    "catalog_payload": {
+        "branch_id": "752dff36-3031-4024-9637-dc22c536ff85",
+        "valid_until": "2026-11-05T07:20:32+00:00",
+        "items": [
+            {
+                "active": true,
+                "max_manager_discount_pct": "0.00",
+                "name": "Synthetic ordinary item",
+                "online_visible": false,
+                "price": "10.00",
+                "product_id": "f3cfafc4-79ea-446f-bd3c-5a2d37c44e05",
+                "tax_rate": "7.00",
+                "unit": "piece"
+            }
+        ]
+    },
+    "grants": [
+        {
+            "id": "115d8306-ebe2-4466-bbad-cc78d5970302",
+            "branch_id": "752dff36-3031-4024-9637-dc22c536ff85",
+            "product_id": "f3cfafc4-79ea-446f-bd3c-5a2d37c44e05",
+            "lot_id": null,
+            "expires_at": null,
+            "epoch": 1,
+            "granted_quantity": 10,
+            "consumed_quantity": 1,
+            "status": "active",
+            "payload_hash": "99ffcdf3517b72c884141b19fb1cbf4d8126392973a3c9edd0a7f7a4ba18b18e",
+            "created_at": "2026-11-04 07:20:32",
+            "updated_at": "2026-11-04 07:28:29",
+            "freeze_evidence": null,
+            "reserved_quantity": 0
+        }
+    ]
+}

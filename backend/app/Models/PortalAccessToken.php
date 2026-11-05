@@ -9,6 +9,8 @@ class PortalAccessToken extends Model
 {
     use UsesOrderedUuid;
 
+    protected $hidden = ['token_hash'];
+
     protected $fillable = ['portal_user_id', 'token_hash', 'expires_at', 'used_at'];
 
     protected function casts(): array

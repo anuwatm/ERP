@@ -1,0 +1,21 @@
+{
+    "result": "PASS",
+    "counts": {
+        "pos_patients": 1,
+        "pos_patient_revisions": 2,
+        "pos_patient_visits": 2,
+        "pos_patient_dispensing": 1,
+        "pos_orders": 1,
+        "pos_payments": 1,
+        "pos_outbox": 1,
+        "pos_offline_inbox": 0
+    },
+    "current_version": 2,
+    "clinical_fields_encrypted": true,
+    "audit_contains_no_plaintext_health_data": true,
+    "financial_event_contains_no_patient_identity": true,
+    "financial_event_signature_valid": true,
+    "clinical_bill_reference_encrypted": true,
+    "offline_inbox_empty": true,
+    "scope": "Synthetic only; no configuredDB or real health data"
+}

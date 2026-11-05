@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "independent_fixture_counts": {
+    "pos_kitchen_orders": 2,
+    "pos_kitchen_lines": 2,
+    "pos_customer_requests": 2,
+    "pos_orders": 2,
+    "pos_payments": 2,
+    "pos_seating_entries": 4,
+    "pos_table_sessions": 2
+  },
+  "successful_browser_runs": 2,
+  "per_run_orders_payments_and_stock_consumption": 1,
+  "lost_response_replay_no_duplicate": true,
+  "booking_contact_not_stored_plaintext": true,
+  "fixture_server_stopped": true,
+  "active_fixture_staff": 0,
+  "synthetic_signing_key_removed": true,
+  "fixture_session_files_remaining": 0
+}

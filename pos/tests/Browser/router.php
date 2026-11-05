@@ -13,4 +13,7 @@ define('LARAVEL_START', microtime(true));
 require dirname(__DIR__, 2).'/bootstrap/autoload.php';
 $app = require dirname(__DIR__, 2).'/bootstrap/app.php';
 $app->useEnvironmentPath($fixture);
+if (getenv('POS_BROWSER_PHASE_2885') === '1') {
+    $app->useStoragePath($fixture);
+}
 $app->handleRequest(Request::capture());

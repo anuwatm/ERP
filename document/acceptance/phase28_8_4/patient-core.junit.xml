@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\LocalDevine\www\ERP\pos\phpunit.xml" tests="14" assertions="94" errors="0" failures="0" skipped="0" time="11.168974">
+    <testsuite name="POS" tests="14" assertions="94" errors="0" failures="0" skipped="0" time="11.168974">
+      <testsuite name="Pos\Tests\CheckoutTest" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" tests="1" assertions="16" errors="0" failures="0" skipped="0" time="3.313636">
+        <testcase name="test_patient_checkout_links_once_locally_and_never_puts_patient_identity_in_signed_event" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="94" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="16" time="3.313636"/>
+      </testsuite>
+      <testsuite name="Pos\Tests\PatientHistoryScopeTest" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryScopeTest.php" tests="5" assertions="14" errors="0" failures="0" skipped="0" time="2.944113">
+        <testcase name="test_default_off_and_pharmacy_switch_are_both_required" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryScopeTest.php" line="54" class="Pos\Tests\PatientHistoryScopeTest" classname="Pos.Tests.PatientHistoryScopeTest" assertions="3" time="0.618662"/>
+        <testcase name="test_production_and_unprovisioned_instance_are_blocked" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryScopeTest.php" line="63" class="Pos\Tests\PatientHistoryScopeTest" classname="Pos.Tests.PatientHistoryScopeTest" assertions="2" time="0.565421"/>
+        <testcase name="test_retail_restaurant_and_inactive_branch_are_blocked" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryScopeTest.php" line="76" class="Pos\Tests\PatientHistoryScopeTest" classname="Pos.Tests.PatientHistoryScopeTest" assertions="3" time="0.762489"/>
+        <testcase name="test_inactive_changed_branch_or_changed_role_session_is_blocked" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryScopeTest.php" line="87" class="Pos\Tests\PatientHistoryScopeTest" classname="Pos.Tests.PatientHistoryScopeTest" assertions="3" time="0.512611"/>
+        <testcase name="test_scope_returns_current_actor_and_branch_not_patient_data" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryScopeTest.php" line="100" class="Pos\Tests\PatientHistoryScopeTest" classname="Pos.Tests.PatientHistoryScopeTest" assertions="3" time="0.484930"/>
+      </testsuite>
+      <testsuite name="Pos\Tests\PatientHistoryTest" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" tests="8" assertions="64" errors="0" failures="0" skipped="0" time="4.911225">
+        <testcase name="test_profiles_are_encrypted_versioned_idempotent_and_not_written_to_audit_or_outbox" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="64" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="14" time="0.635059"/>
+        <testcase name="test_cashier_and_unqualified_manager_only_receive_masked_selection_and_qualified_manager_can_read" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="94" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="9" time="0.618636"/>
+        <testcase name="test_branch_business_and_feature_scope_cannot_be_bypassed" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="114" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="5" time="0.546356"/>
+        <testcase name="test_visits_correct_by_append_preserve_original_and_replay_once" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="133" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="7" time="0.952506"/>
+        <testcase name="test_http_no_store_session_deadline_and_non_json_requests_never_flash_health_input" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="159" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="10" time="0.605083"/>
+        <testcase name="test_search_is_clinical_exact_match_with_branch_keyed_indexes_and_no_plaintext_audit" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="173" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="13" time="0.593046"/>
+        <testcase name="test_patient_references_cannot_enter_offline_inbox" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="199" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="2" time="0.468658"/>
+        <testcase name="test_unknown_allergies_are_preserved_and_national_id_is_rejected" file="C:\LocalDevine\www\ERP\pos\tests\PatientHistoryTest.php" line="212" class="Pos\Tests\PatientHistoryTest" classname="Pos.Tests.PatientHistoryTest" assertions="4" time="0.491880"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

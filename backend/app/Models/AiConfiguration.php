@@ -55,6 +55,8 @@ class AiConfiguration extends Model
         ],
     ];
 
+    protected $hidden = ['api_key'];
+
     protected $fillable = [
         'org_id',
         'provider_type',

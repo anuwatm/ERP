@@ -1,0 +1,200 @@
+{
+  "date": "2026-11-05",
+  "pos_migrations": 23,
+  "pending": 0,
+  "tables_before": 51,
+  "tables_after": 55,
+  "new_tables_empty": true,
+  "integrity": "ok",
+  "foreign_key_errors": 0,
+  "existing_records_preserved": true,
+  "environment_unchanged": true,
+  "flags_unchanged": true,
+  "environment": "production",
+  "flags": {
+    "pharmacy": false,
+    "patient": false,
+    "offline": false,
+    "delivery": false,
+    "membership": false
+  },
+  "columns": {
+    "pos_patients": [
+      "id",
+      "branch_id",
+      "code",
+      "version",
+      "payload",
+      "name_lookup",
+      "phone_lookup",
+      "created_by",
+      "updated_by",
+      "created_at",
+      "updated_at"
+    ],
+    "pos_patient_revisions": [
+      "id",
+      "branch_id",
+      "patient_id",
+      "version",
+      "operation",
+      "request_key",
+      "request_hash",
+      "payload",
+      "actor_id",
+      "created_at",
+      "updated_at"
+    ],
+    "pos_patient_visits": [
+      "id",
+      "branch_id",
+      "patient_id",
+      "request_key",
+      "request_hash",
+      "supersedes_id",
+      "payload",
+      "actor_id",
+      "created_at",
+      "updated_at"
+    ],
+    "pos_patient_dispensing": [
+      "id",
+      "branch_id",
+      "patient_id",
+      "order_lookup",
+      "payload",
+      "actor_id",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "indexes": {
+    "pos_patients": [
+      {
+        "name": "pos_patients_branch_id_index",
+        "unique": false,
+        "columns": [
+          "branch_id"
+        ]
+      },
+      {
+        "name": "patient_phone_lookup_index",
+        "unique": false,
+        "columns": [
+          "branch_id",
+          "phone_lookup"
+        ]
+      },
+      {
+        "name": "patient_name_lookup_index",
+        "unique": false,
+        "columns": [
+          "branch_id",
+          "name_lookup"
+        ]
+      },
+      {
+        "name": "patient_branch_code_unique",
+        "unique": true,
+        "columns": [
+          "branch_id",
+          "code"
+        ]
+      },
+      {
+        "name": "sqlite_autoindex_pos_patients_1",
+        "unique": true,
+        "columns": [
+          "id"
+        ]
+      }
+    ],
+    "pos_patient_revisions": [
+      {
+        "name": "pos_patient_revisions_patient_id_index",
+        "unique": false,
+        "columns": [
+          "patient_id"
+        ]
+      },
+      {
+        "name": "patient_revision_request_unique",
+        "unique": true,
+        "columns": [
+          "branch_id",
+          "request_key"
+        ]
+      },
+      {
+        "name": "patient_revision_version_unique",
+        "unique": true,
+        "columns": [
+          "patient_id",
+          "version"
+        ]
+      },
+      {
+        "name": "sqlite_autoindex_pos_patient_revisions_1",
+        "unique": true,
+        "columns": [
+          "id"
+        ]
+      }
+    ],
+    "pos_patient_visits": [
+      {
+        "name": "pos_patient_visits_patient_id_index",
+        "unique": false,
+        "columns": [
+          "patient_id"
+        ]
+      },
+      {
+        "name": "patient_visit_correction_unique",
+        "unique": true,
+        "columns": [
+          "supersedes_id"
+        ]
+      },
+      {
+        "name": "patient_visit_request_unique",
+        "unique": true,
+        "columns": [
+          "branch_id",
+          "request_key"
+        ]
+      },
+      {
+        "name": "sqlite_autoindex_pos_patient_visits_1",
+        "unique": true,
+        "columns": [
+          "id"
+        ]
+      }
+    ],
+    "pos_patient_dispensing": [
+      {
+        "name": "pos_patient_dispensing_order_lookup_unique",
+        "unique": true,
+        "columns": [
+          "order_lookup"
+        ]
+      },
+      {
+        "name": "pos_patient_dispensing_patient_id_index",
+        "unique": false,
+        "columns": [
+          "patient_id"
+        ]
+      },
+      {
+        "name": "sqlite_autoindex_pos_patient_dispensing_1",
+        "unique": true,
+        "columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  "backup_sha256": "4df6aa626d0ae4ad5d6c634b79c48b915b73167fdfdda7b9dab541d0945f316c"
+}

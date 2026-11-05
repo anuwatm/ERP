@@ -9,6 +9,8 @@ class NotificationChannel extends Model
 {
     use UsesOrderedUuid;
 
+    protected $hidden = ['config'];
+
     protected $fillable = ['org_id', 'channel', 'name', 'config', 'is_enabled', 'created_by'];
 
     protected function casts(): array

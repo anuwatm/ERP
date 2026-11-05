@@ -88,8 +88,9 @@ class OcrProcessingService
             }
 
             if (! $matchedSupplierId && ! empty($extracted['vendor_name'])) {
+                $escapedVendor = addcslashes(trim((string) $extracted['vendor_name']), '%_\\');
                 $matchedSupplierId = Supplier::where('org_id', $extraction->org_id)
-                    ->where('name', 'like', '%'.trim($extracted['vendor_name']).'%')
+                    ->where('name', 'like', '%'.$escapedVendor.'%')
                     ->value('id');
             }
 
@@ -102,7 +103,8 @@ class OcrProcessingService
                         $query->where('vendor_tax_id', $extracted['tax_id']);
                     }
                     if (! empty($extracted['vendor_name'])) {
-                        $query->orWhere('vendor_name', 'like', '%'.trim($extracted['vendor_name']).'%');
+                        $escapedVendor = addcslashes(trim((string) $extracted['vendor_name']), '%_\\');
+                        $query->orWhere('vendor_name', 'like', '%'.$escapedVendor.'%');
                     }
                 })
                 ->first();

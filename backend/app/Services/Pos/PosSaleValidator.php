@@ -21,6 +21,9 @@ class PosSaleValidator
         $p = validator($event['payload'], ['sale_id' => 'required|uuid', 'branch_id' => 'required|uuid', 'terminal_id' => 'required|uuid', 'shift_id' => 'required|uuid', 'staff_id' => 'required|uuid', 'receipt_no' => 'required|string|max:100', 'catalog_version' => 'required|string|max:80', 'currency' => 'required|string|size:3', 'subtotal' => $this->money(), 'tax_amount' => $this->money(), 'total' => $this->money(), 'cash_tendered' => $this->money(), 'change' => $this->money(), 'occurred_at' => 'required|date', 'business_timezone' => 'required|in:Asia/Bangkok', 'lines' => 'required|array|min:1|max:100', 'lines.*.line_id' => 'required|uuid|distinct', 'lines.*.product_id' => 'required|uuid|distinct', 'lines.*.quantity' => $this->quantity(), 'lines.*.unit_price' => $this->money(), 'lines.*.subtotal' => $this->money(), 'lines.*.tax_amount' => $this->money(), 'lines.*.total' => $this->money(), 'lines.*.tax_rate' => ['required', 'string', 'regex:/^\d{1,2}(\.\d{1,2})?$/D'], 'lines.*.unit' => 'required|string|max:30', 'lines.*.name' => 'required|string|max:255', 'lines.*.allocations' => 'present|array|max:100', 'lines.*.allocations.*.grant_id' => 'required|uuid', 'lines.*.allocations.*.epoch' => 'required|integer|min:1', 'lines.*.allocations.*.quantity' => $this->quantity(), 'lines.*.allocations.*.lot_id' => 'nullable|uuid'])->validate();
         $p = array_merge($p, validator($event['payload'], ['discount_approval_id' => 'sometimes|uuid', 'discount_approved_by' => 'sometimes|uuid', 'discount_approved_at' => 'sometimes|date'])->validate());
         $p = array_merge($p, validator($event['payload'], ['membership' => 'sometimes|array'])->validate());
+        if (array_key_exists('offline_receipt', $event['payload'])) {
+            $p['offline_receipt'] = validator($event['payload'], ['offline_receipt' => 'required|array'])->validate()['offline_receipt'];
+        }
         abort_unless($p['sale_id'] === $event['aggregate_id'] && $p['branch_id'] === $instance->branch_id && in_array($p['terminal_id'], json_decode($instance->terminal_ids, true), true) && $p['occurred_at'] === $event['occurred_at'], 403, 'POS sale scope mismatch.');
         Branch::where('org_id', $instance->org_id)->findOrFail($instance->branch_id);
         Warehouse::where('org_id', $instance->org_id)->findOrFail($instance->warehouse_id);
@@ -30,7 +33,12 @@ class PosSaleValidator
         $occurred = Carbon::parse($p['occurred_at'])->utc();
         abort_if($occurred->gt(now()->addMinutes(5)), 422, 'POS event time is in the future.');
         $catalog = DB::table('pos_catalog_publications')->where('pos_instance_id', $instance->id)->where('version', $p['catalog_version'])->first();
-        abort_unless($catalog && ($instance->business_type === 'restaurant' || $occurred->lte(Carbon::parse($catalog->valid_until))) && $occurred->gte(Carbon::parse($catalog->created_at)), 422, 'POS catalog version unavailable at sale time.');
+        abort_unless($catalog, 422, 'POS catalog version unavailable.');
+        if (isset($p['offline_receipt'])) {
+            $p['offline_receipt'] = app(PosOfflineSalePolicy::class)->validate($instance, $p, $catalog);
+        } else {
+            abort_unless(($instance->business_type === 'restaurant' || $occurred->lte(Carbon::parse($catalog->valid_until))) && $occurred->gte(Carbon::parse($catalog->created_at)), 422, 'POS catalog version unavailable at sale time.');
+        }
         $published = json_decode($catalog->payload, true, flags: JSON_THROW_ON_ERROR);
         abort_unless(hash_equals($catalog->payload_hash, hash('sha256', PosCanonicalJson::encode($published))), 409, 'ERP catalog evidence conflict.');
         $items = collect($published['items'])->keyBy('product_id');
@@ -63,6 +71,7 @@ class PosSaleValidator
             $item = $items->get($line['product_id']);
             abort_unless($item && $item['active'] && $item['tax_rate'] === $line['tax_rate'] && bccomp($line['quantity'], '0', 4) > 0, 422, 'POS line differs from published policy.');
             $pharmacy = $item['pharmacy'] ?? [];
+            abort_if(isset($p['offline_receipt']) && (isset($item['pharmacy']) || isset($item['restaurant']) || isset($item['restaurant_variant']) || bccomp($line['discount_amount'] ?? '0', '0', 2) !== 0), 422, 'Offline clinical/kitchen/discount authority unavailable.');
             $prepared = ($line['stock_effect'] ?? null) === 'prepared';
             abort_unless(($instance->business_type === 'restaurant') === $prepared, 422, 'Restaurant receipts require prepared kitchen evidence.');
             abort_if(! $prepared && isset($line['kitchen_refs']), 422, 'Unexpected kitchen references.');

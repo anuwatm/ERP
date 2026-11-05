@@ -50,7 +50,7 @@ class PortalController extends Controller
         $session = $access->consumeMagicLink($token, $request);
         abort_unless($session, 404);
 
-        return redirect()->route('portal.dashboard')->withCookie(cookie('erp_portal_session', $session, 480, '/', null, false, true, false, 'lax'));
+        return redirect()->route('portal.dashboard')->withCookie(cookie('erp_portal_session', $session, 480, '/', null, (bool) ($request->isSecure() || config('session.secure')), true, false, 'lax'));
     }
 
     public function dashboard(Request $request, PortalAccessService $access): Response

@@ -1,12 +1,25 @@
-import MembershipPicker, {MembershipOptions, MembershipSelection} from './MembershipPicker';
+import SeatingPanel from "./SeatingPanel";
+import MembershipPicker, {
+  MembershipOptions,
+  MembershipSelection,
+} from "./MembershipPicker";
 import React, { useEffect, useState } from "react";
 
 export type RestaurantState = {
   restaurant_enabled: boolean;
-  restaurant_tables: { id: string; label: string; session_id: string | null }[];
+  restaurant_tables: {
+    id: string;
+    label: string;
+    capacity: number;
+    session_id: string | null;
+  }[];
   restaurant_lines: {
     id: string;
     name: string;
+    queue_number: number | null;
+    order_id: string;
+    queue_held: boolean;
+    queued_at: string;
     status: string;
     channel: string;
     table_session_id: string | null;
@@ -51,6 +64,8 @@ export default function RestaurantPanel({
   onReceipt,
 }: Props) {
   const [label, setLabel] = useState("");
+  const [capacity, setCapacity] = useState("4");
+  const [queueReason, setQueueReason] = useState("");
   const [session, setSession] = useState("");
   const [product, setProduct] = useState("");
   const [family, setFamily] = useState("");
@@ -58,7 +73,8 @@ export default function RestaurantPanel({
   const [orderKey, setOrderKey] = useState(() => crypto.randomUUID());
   const [selected, setSelected] = useState<string[]>([]);
   const [billKey, setBillKey] = useState(() => crypto.randomUUID());
-  const [membershipSelection, setMembershipSelection] = useState<MembershipSelection | null>(null);
+  const [membershipSelection, setMembershipSelection] =
+    useState<MembershipSelection | null>(null);
   const [cash, setCash] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [cancelLine, setCancelLine] = useState("");
@@ -74,9 +90,10 @@ export default function RestaurantPanel({
     setPreview(null);
     setBillKey(crypto.randomUUID());
   }, [selected, terminal]);
-  const transition = (id: string, action: string) =>
+  const transition = (id: string, action: string, reason?: string) =>
     run(async () => {
-      await api(`/restaurant/lines/${id}/${action}`, {});
+      await api(`/restaurant/lines/${id}/${action}`, { reason });
+      if (reason) setQueueReason("");
       await reload();
     });
   const statuses: Record<string, string> = {
@@ -102,7 +119,10 @@ export default function RestaurantPanel({
           onSubmit={(e) => {
             e.preventDefault();
             run(async () => {
-              await api("/restaurant/tables", { label });
+              await api("/restaurant/tables", {
+                label,
+                capacity: Number(capacity),
+              });
               setLabel("");
               await reload();
             });
@@ -118,15 +138,35 @@ export default function RestaurantPanel({
               onChange={(e) => setLabel(e.target.value)}
             />
           </label>
+          <label>
+            จำนวนที่นั่ง{" "}
+            <input
+              type="number"
+              required
+              min={1}
+              max={100}
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+            />
+          </label>
           <button disabled={busy}>เพิ่มโต๊ะ</button>
         </form>
       )}
       {cashier && (
         <>
+          <SeatingPanel
+            tables={state.restaurant_tables}
+            busy={busy}
+            api={api}
+            run={run}
+            reload={reload}
+          />
           <div className="products">
             {state.restaurant_tables.map((table) => (
               <div className="panel" key={table.id}>
-                <strong>{table.label}</strong>
+                <strong>
+                  {table.label} · {table.capacity} ที่
+                </strong>
                 <p>{table.session_id ? "เปิดโต๊ะอยู่" : "ว่าง"}</p>
                 <button
                   disabled={busy}
@@ -264,16 +304,59 @@ export default function RestaurantPanel({
           </form>
         </>
       )}
+      {state.staff.role === "manager" && (
+        <label>
+          เหตุผลพัก / คืน / ข้ามคิว{" "}
+          <input
+            maxLength={160}
+            value={queueReason}
+            onChange={(e) => setQueueReason(e.target.value)}
+          />
+        </label>
+      )}
       <ul>
-        {state.restaurant_lines.map((line) => (
+        {state.restaurant_lines.map((line, index, lines) => (
           <li key={line.id} className="panel">
             <strong>{line.name}</strong> ·{" "}
-            {statuses[line.status] || line.status} ·{" "}
+            {line.queue_number === null
+              ? "คิวเดิม"
+              : `คิว #${line.queue_number}`}{" "}
+            ·{" "}
+            <time dateTime={line.queued_at}>
+              {new Date(line.queued_at).toLocaleTimeString("th-TH")}
+            </time>{" "}
+            · {statuses[line.status] || line.status} ·{" "}
             {line.channel === "takeaway"
               ? "กลับบ้าน"
               : state.restaurant_tables.find(
                   (t) => t.session_id === line.table_session_id,
                 )?.label || "โต๊ะ"}
+            {line.queue_held && <strong> · พักคิว</strong>}
+            {state.staff.role === "manager" &&
+              ["reserved", "sent", "acknowledged"].includes(line.status) &&
+              !lines
+                .slice(0, index)
+                .some(
+                  (prior) =>
+                    prior.order_id === line.order_id &&
+                    ["reserved", "sent", "acknowledged"].includes(prior.status),
+                ) && (
+                <button
+                  disabled={busy || !queueReason.trim()}
+                  onClick={() =>
+                    run(async () => {
+                      await api(`/restaurant/orders/${line.order_id}/hold`, {
+                        held: !line.queue_held,
+                        reason: queueReason,
+                      });
+                      setQueueReason("");
+                      await reload();
+                    })
+                  }
+                >
+                  {line.queue_held ? "คืนคิว" : "พักคิว"}
+                </button>
+              )}
             {cashier && line.status === "reserved" && (
               <button
                 disabled={busy}
@@ -292,12 +375,22 @@ export default function RestaurantPanel({
             )}
             {kitchen && line.status === "acknowledged" && (
               <button
-                disabled={busy}
+                disabled={busy || line.queue_held}
                 onClick={() => transition(line.id, "preparing")}
               >
                 เริ่มเตรียม
               </button>
             )}
+            {state.staff.role === "manager" &&
+              line.status === "acknowledged" &&
+              !line.queue_held && (
+                <button
+                  disabled={busy || !queueReason.trim()}
+                  onClick={() => transition(line.id, "preparing", queueReason)}
+                >
+                  ข้ามคิวและเริ่มเตรียม
+                </button>
+              )}
             {kitchen && line.status === "preparing" && (
               <button
                 disabled={busy}
@@ -449,7 +542,15 @@ export default function RestaurantPanel({
             ตรวจยอดบิลอาหาร
           </button>
           {preview && <p role="status">ยอดบิลอาหารรวม VAT {preview}</p>}
-          {state.membership_enabled && <MembershipPicker data={state.membership} input={{terminal_id: terminal, kitchen_line_ids: selected}} disabled={busy || !selected.length} onChange={setMembershipSelection} refresh={reload} />}
+          {state.membership_enabled && (
+            <MembershipPicker
+              data={state.membership}
+              input={{ terminal_id: terminal, kitchen_line_ids: selected }}
+              disabled={busy || !selected.length}
+              onChange={setMembershipSelection}
+              refresh={reload}
+            />
+          )}
           <label>
             รับเงินสดค่าอาหาร
             <input
@@ -460,7 +561,21 @@ export default function RestaurantPanel({
               onChange={(e) => setCash(e.target.value)}
             />
           </label>
-          <button disabled={busy || !shiftOpen || !selected.length || !preview || (!!membershipSelection && (!membershipSelection.ready || membershipSelection.cartKey !== JSON.stringify({terminal_id: terminal, kitchen_line_ids: selected})))}>
+          <button
+            disabled={
+              busy ||
+              !shiftOpen ||
+              !selected.length ||
+              !preview ||
+              (!!membershipSelection &&
+                (!membershipSelection.ready ||
+                  membershipSelection.cartKey !==
+                    JSON.stringify({
+                      terminal_id: terminal,
+                      kitchen_line_ids: selected,
+                    })))
+            }
+          >
             ยืนยันรับเงินค่าอาหาร
           </button>
         </form>

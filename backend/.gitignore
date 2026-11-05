@@ -17,6 +17,9 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/*.pem
+/storage/app/private/database-backups/
+/storage/app/private/db-backups/
 /storage/pail
 /vendor
 Homestead.json

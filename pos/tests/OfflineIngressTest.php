@@ -45,6 +45,41 @@ class OfflineIngressTest extends TestCase
         config(['pos.instance_id' => (string) Str::uuid(), 'pos.local_browser_offline_enabled' => true]);
     }
 
+    public function test_cash_acceptance_and_quota_release_require_manager_reauthentication(): void
+    {
+        $this->withSession(['pos_last_seen' => time(), 'pos_login_at' => time()]);
+        $command = ['inbox_id' => (string) Str::uuid(), 'terminal_id' => $this->terminal, 'payload_hash' => str_repeat('a', 64), 'cash_received' => '10.70', 'evidence_note' => 'Checked original evidence', 'manager_password' => 'synthetic-password'];
+        $this->actingAs($this->staff)->postJson('/offline/accept', $command)->assertForbidden();
+        $this->staff->update(['role' => 'manager']);
+        $command['manager_password'] = 'wrong-password';
+        $this->actingAs($this->staff)->postJson('/offline/accept', $command)->assertForbidden();
+        $this->actingAs($this->staff)->postJson('/offline/close-permit', ['permit_id' => (string) Str::uuid(), 'accepted_transactions' => [], 'unused_confirmed' => true, 'evidence_note' => 'All devices and unused quota inspected', 'manager_password' => 'wrong-password'])->assertForbidden();
+        $command['manager_password'] = 'synthetic-password';
+        $this->actingAs($this->staff)->postJson('/offline/accept', $command)->assertNotFound();
+        $this->assertDatabaseCount('pos_orders', 0);
+        $this->assertDatabaseCount('pos_payments', 0);
+    }
+
+    public function test_review_cursor_exposes_all_pending_evidence_without_cross_branch_leak(): void
+    {
+        $this->withSession(['pos_last_seen' => time(), 'pos_login_at' => time()]);
+        $this->register();
+        $this->staff->update(['role' => 'manager']);
+        $rows = [];
+        for ($i = 0; $i < 102; $i++) {
+            $e = $this->evidence();
+            $bytes = CanonicalJson::encode($e);
+            $rows[] = ['id' => (string) Str::uuid(), 'device_id' => $this->device, 'client_transaction_id' => $e['client_transaction_id'], 'branch_id' => $i === 101 ? (string) Str::uuid() : $this->staff->branch_id, 'staff_id' => $this->staff->id, 'kind' => 'sale.draft', 'client_created_at' => 'untrusted', 'server_received_at' => now()->utc(), 'payload_hash' => hash('sha256', $bytes), 'payload' => Crypt::encryptString($bytes), 'status' => 'review', 'reason_code' => 'operational_request_review', 'created_at' => now(), 'updated_at' => now()];
+        }
+        DB::table('pos_offline_inbox')->insert($rows);
+        $first = $this->actingAs($this->staff)->getJson('/offline/review')->assertOk()->assertJsonCount(100)->json();
+        $last = $first[99];
+        $next = $this->getJson('/offline/review?'.http_build_query(['cursor_at' => $last['server_received_at'], 'cursor_id' => $last['id']]))->assertOk()->assertJsonCount(1)->json();
+        $this->assertNotContains($next[0]['id'], array_column($first, 'id'));
+        $this->assertSame(2, DB::table('pos_audit')->where('action', 'offline.review.read')->count());
+        $this->assertDatabaseCount('pos_orders', 0);
+    }
+
     private function register(): array
     {
         return app(OfflineIngressService::class)->register($this->staff, ['device_id' => $this->device, 'terminal_id' => $this->terminal, 'label' => 'Synthetic browser']);

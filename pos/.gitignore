@@ -1,5 +1,7 @@
 /vendor/
 /.env
+/.env.*
+!/.env.example
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
 /storage/*
@@ -9,3 +11,5 @@
 /node_modules/
 /.phpunit.result.cache
 /.phpunit.cache/
+*.key
+*.pem

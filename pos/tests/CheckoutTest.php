@@ -4,6 +4,8 @@ namespace Pos\Tests;
 
 use Company\Pos\MemberEnvelope;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\RecordNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase;
@@ -21,6 +23,8 @@ use Pos\Services\MemberDraftService;
 use Pos\Services\MembershipService;
 use Pos\Services\OfflineIngressService;
 use Pos\Services\OfflinePermitService;
+use Pos\Services\OfflineReconciliationService;
+use Pos\Services\PatientHistoryService;
 use Pos\Services\PharmacyPolicy;
 use Pos\Services\PrescriptionScanner;
 use Pos\Services\PrescriptionService;
@@ -85,6 +89,69 @@ class CheckoutTest extends TestCase
             unlink($this->keyPath);
         }
         parent::tearDown();
+    }
+
+    public function test_patient_checkout_links_once_locally_and_never_puts_patient_identity_in_signed_event(): void
+    {
+        $this->pharmacyCatalog();
+        config(['pos.local_patient_history_enabled' => true]);
+        $this->staff->update(['role' => 'pharmacist']);
+        $service = app(PatientHistoryService::class);
+        $patient = $service->save($this->staff, ['request_key' => (string) Str::uuid(), 'expected_version' => 0, 'synthetic_confirmed' => true, 'profile' => ['name' => 'Synthetic Patient Checkout Secret', 'birth_date' => null, 'phone' => '+66812345678', 'allergies' => 'Synthetic allergy secret']]);
+        $input = $this->input();
+        $input['catalog_version'] = 'pharmacy-v1';
+        $input['patient_id'] = $patient['id'];
+        $sale = app(CheckoutService::class)->checkout($this->staff, $input);
+        $this->assertSame($sale['sale_id'], app(CheckoutService::class)->checkout($this->staff, $input)['sale_id']);
+        $this->assertDatabaseCount('pos_patient_dispensing', 1);
+        $this->assertDatabaseCount('pos_orders', 1);
+        $this->assertDatabaseCount('pos_payments', 1);
+        $this->assertDatabaseCount('pos_outbox', 1);
+        $event = DB::table('pos_outbox')->value('envelope');
+        foreach ([$patient['id'], 'Synthetic Patient Checkout Secret', '+66812345678', 'Synthetic allergy secret', 'patient_id'] as $secret) {
+            $this->assertStringNotContainsString($secret, $event);
+        }
+        $this->assertStringNotContainsString($sale['sale_id'], json_encode(DB::table('pos_patient_dispensing')->get()));
+        $this->assertStringNotContainsString($sale['sale_id'], json_encode(DB::table('pos_audit')->where('action', 'like', 'patient.%')->get()));
+        $history = $service->timeline($this->staff, $patient['id'], 'dispensing');
+        $this->assertSame($sale['sale_id'], $history['items'][0]['order_id']);
+        $this->assertSame('0.00', $history['items'][0]['refunded_total']);
+        $bad = $input;
+        $bad['request_key'] = 'wrong-patient';
+        $bad['patient_id'] = (string) Str::uuid();
+        try {
+            app(CheckoutService::class)->checkout($this->staff, $bad);
+            $this->fail('Missing patient accepted');
+        } catch (ModelNotFoundException|RecordNotFoundException) {
+        }
+        $this->assertDatabaseCount('pos_orders', 1);
+        $this->assertDatabaseCount('pos_outbox', 1);
+        $this->assertDatabaseCount('pos_patient_dispensing', 1);
+        $this->assertEquals(2, DB::table('pos_grants')->sum('consumed_quantity'));
+    }
+
+    public function test_cashier_can_select_masked_patient_for_ordinary_sale_but_cannot_read_health_history(): void
+    {
+        config(['pos.local_pharmacy_enabled' => true, 'pos.local_patient_history_enabled' => true]);
+        DB::table('pos_branches')->where('id', $this->branch)->update(['business_type' => 'pharmacy']);
+        $this->staff->update(['role' => 'pharmacist']);
+        $service = app(PatientHistoryService::class);
+        $patient = $service->save($this->staff, ['request_key' => (string) Str::uuid(), 'expected_version' => 0, 'synthetic_confirmed' => true, 'profile' => ['name' => 'Cashier Synthetic Patient', 'birth_date' => null, 'phone' => null, 'allergies' => null]]);
+        $this->staff->update(['role' => 'cashier']);
+        $options = $service->options($this->staff);
+        $this->assertFalse($options['clinical_access']);
+        $this->assertSame('C***', $options['items'][0]['name_masked']);
+        $input = $this->input();
+        $input['patient_id'] = $patient['id'];
+        $sale = app(CheckoutService::class)->checkout($this->staff, $input);
+        $this->assertSame($sale['sale_id'], app(CheckoutService::class)->checkout($this->staff, $input)['sale_id']);
+        $this->assertDatabaseCount('pos_patient_dispensing', 1);
+        try {
+            $service->detail($this->staff, $patient['id']);
+            $this->fail('Cashier read clinical data');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(403, $e->getStatusCode());
+        }
     }
 
     public function test_cash_checkout_replay_and_signed_outbox_are_atomic(): void
@@ -1017,7 +1084,7 @@ class CheckoutTest extends TestCase
         $permit = $service->issue($this->staff, $input);
         $this->assertCount(20, $permit['slots']);
         $this->assertTrue($permit['provisional_only']);
-        $this->assertFalse($permit['reconciliation_available']);
+        $this->assertTrue($permit['reconciliation_available']);
         $this->assertSame('1.0000', bcadd((string) DB::table('pos_grants')->value('reserved_quantity'), '0', 4));
         $this->assertSame('0.0000', bcadd((string) DB::table('pos_grants')->value('consumed_quantity'), '0', 4));
         try {
@@ -1041,6 +1108,130 @@ class CheckoutTest extends TestCase
         $this->assertDatabaseCount('pos_orders', 0);
         $this->assertDatabaseCount('pos_payments', 0);
         $this->assertDatabaseCount('pos_outbox', 0);
+    }
+
+    private function offlineCashFixture(): array
+    {
+        config(['pos.local_browser_offline_enabled' => true]);
+        $this->staff->update(['role' => 'manager']);
+        app(OfflinePermitService::class)->configure($this->staff, ['expected_version' => 0, 'permit_minutes' => 15, 'max_offline_transactions' => 2, 'max_offline_amount' => '30.00', 'product_ids' => [$this->product]]);
+        $device = (string) Str::uuid();
+        app(OfflineIngressService::class)->register($this->staff, ['device_id' => $device, 'terminal_id' => $this->terminal, 'label' => 'Offline review fixture']);
+        $permit = app(OfflinePermitService::class)->issue($this->staff, ['device_id' => $device, 'request_key' => (string) Str::uuid(), 'items' => [['product_id' => $this->product, 'quantity' => '2.0000']]]);
+        $evidence = ['device_id' => $device, 'client_transaction_id' => (string) Str::uuid(), 'kind' => 'sale.draft', 'client_created_at' => 'untrusted-time', 'data' => ['permit_id' => $permit['id'], 'slot_id' => $permit['slots'][0]['id'], 'items' => [['product_id' => $this->product, 'quantity' => '1.0000']], 'total' => '10.70']];
+        $ack = app(OfflineIngressService::class)->receive($this->staff, $evidence);
+
+        return [$permit, $evidence, ['inbox_id' => $ack['inbox_id'], 'payload_hash' => DB::table('pos_offline_inbox')->where('id', $ack['inbox_id'])->value('payload_hash'), 'terminal_id' => $this->terminal, 'cash_received' => '10.70', 'evidence_note' => 'Manager checked original cash evidence']];
+    }
+
+    public function test_offline_cash_review_uses_original_grant_and_posts_once_after_expiry_and_shift_change(): void
+    {
+        [$permit, $evidence, $command] = $this->offlineCashFixture();
+        $oldShift = DB::table('pos_shifts')->value('id');
+        app(CheckoutService::class)->closeShift($this->staff, $oldShift, '100.00');
+        $this->travel(2)->days();
+        app(CheckoutService::class)->openShift($this->staff, $this->terminal, '0.00');
+        app(ProvisioningService::class)->catalog('v2', ['branch_id' => $this->branch, 'valid_until' => now()->addDay()->toIso8601String(), 'items' => [['product_id' => $this->product, 'name' => 'New price', 'unit' => 'piece', 'price' => '20.00', 'tax_rate' => '7.00', 'active' => true]]]);
+        $service = app(OfflineReconciliationService::class);
+        $sale = $service->accept($this->staff, $command);
+        $this->assertSame('10.70', $sale['total']);
+        $this->assertNotSame($oldShift, $sale['shift_id']);
+        $this->assertSame('v1', $sale['catalog_version']);
+        $this->assertSame($permit['items'][0]['allocations'][0]['grant_id'], $sale['lines'][0]['allocations'][0]['grant_id']);
+        $this->assertSame($sale['sale_id'], $service->accept($this->staff, $command)['sale_id']);
+        $ack = app(OfflineIngressService::class)->receive($this->staff, $evidence);
+        $this->assertTrue($ack['financial_posted']);
+        $this->assertSame('synced', $ack['status']);
+        $this->assertDatabaseCount('pos_orders', 1);
+        $this->assertDatabaseCount('pos_payments', 1);
+        $this->assertDatabaseCount('pos_outbox', 1);
+        $this->assertEquals(1, DB::table('pos_grants')->sum('reserved_quantity'));
+        $this->assertEquals(1, DB::table('pos_grants')->sum('consumed_quantity'));
+        $this->assertSame('synced', DB::table('pos_offline_inbox')->value('status'));
+        $this->assertSame('local_manager_cash_review', json_decode(DB::table('pos_outbox')->value('envelope'), true)['payload']['offline_receipt']['policy']);
+    }
+
+    public function test_offline_cash_wrong_amount_and_identity_conflict_do_not_post_or_release_stock(): void
+    {
+        [$permit, $evidence, $command] = $this->offlineCashFixture();
+        $command['cash_received'] = '11.00';
+        try {
+            app(OfflineReconciliationService::class)->accept($this->staff, $command);
+            $this->fail('Wrong cash accepted');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(422, $e->getStatusCode());
+        }
+        $command['cash_received'] = '10.70';
+        $evidence['data']['total'] = '11.00';
+        app(OfflineIngressService::class)->receive($this->staff, $evidence);
+        try {
+            app(OfflineReconciliationService::class)->accept($this->staff, $command);
+            $this->fail('Identity conflict accepted');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $this->assertDatabaseCount('pos_orders', 0);
+        $this->assertDatabaseCount('pos_payments', 0);
+        $this->assertEquals(2, DB::table('pos_grants')->sum('reserved_quantity'));
+        $this->assertEquals(0, DB::table('pos_grants')->sum('consumed_quantity'));
+    }
+
+    public function test_offline_quota_release_requires_complete_manifest_and_only_releases_unused_quantity(): void
+    {
+        [$permit,$evidence,$command] = $this->offlineCashFixture();
+        $service = app(OfflineReconciliationService::class);
+        $close = ['permit_id' => $permit['id'], 'accepted_transactions' => [], 'unused_confirmed' => true, 'evidence_note' => 'All device queues checked; remaining quota unused'];
+        try {
+            $service->close($this->staff, $close);
+            $this->fail('Unresolved paid evidence released');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $service->accept($this->staff, $command);
+        try {
+            $service->close($this->staff, $close);
+            $this->fail('Incomplete manifest released');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $close['accepted_transactions'] = [$evidence['client_transaction_id']];
+        try {
+            $service->close($this->staff, $close);
+            $this->fail('Still-valid offline authority released');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $this->assertEquals(1, DB::table('pos_grants')->sum('reserved_quantity'));
+        $this->travel(16)->minutes();
+        $this->assertSame('closed', $service->close($this->staff, $close)['status']);
+        $this->assertSame('closed', $service->close($this->staff, $close)['status']);
+        $this->assertEquals(0, DB::table('pos_grants')->sum('reserved_quantity'));
+        $this->assertEquals(1, DB::table('pos_grants')->sum('consumed_quantity'));
+        $this->assertNull(DB::table('pos_offline_permits')->value('active_terminal_id'));
+        $this->assertSame(1, DB::table('pos_audit')->where('action', 'offline.permit.closed')->count());
+    }
+
+    public function test_offline_review_maps_provisional_to_abb_and_full_without_duplicate_sale_or_cash(): void
+    {
+        [$permit,$evidence,$command] = $this->offlineCashFixture();
+        config(['pos.local_tax_documents_enabled' => true]);
+        $tax = app(TaxDocumentService::class);
+        $tax->provision(['branch_id' => $this->branch, 'version' => 'offline-issuer', 'seller_name' => 'Synthetic seller', 'seller_tax_id' => '0000000000000', 'seller_address' => 'Synthetic address', 'seller_branch_no' => '00000']);
+        $reconcile = app(OfflineReconciliationService::class);
+        $sale = $reconcile->accept($this->staff, $command);
+        $this->assertSame($sale['sale_id'], $reconcile->accept($this->staff, $command)['sale_id']);
+        $abb = DB::table('pos_tax_documents')->firstOrFail();
+        $this->assertStringStartsWith('ABB-B1-T1-', $abb->document_no);
+        $full = $tax->issue($this->staff, ['sale_id' => $sale['sale_id'], 'terminal_id' => $this->terminal, 'kind' => 'FULL', 'request_key' => 'offline-full', 'buyer' => ['name' => 'Synthetic buyer', 'tax_id' => '0000000000000', 'branch_no' => '00000', 'address' => 'Synthetic address']]);
+        $this->assertSame($abb->id, $full['replaces_document_id']);
+        $this->assertSame('10.70', $full['total']);
+        $this->assertDatabaseCount('pos_orders', 1);
+        $this->assertDatabaseCount('pos_payments', 1);
+        $this->assertDatabaseCount('pos_tax_documents', 2);
+        $this->assertDatabaseCount('pos_outbox', 3);
+        $this->assertSame($sale['sale_id'], DB::table('pos_offline_inbox')->value('sale_id'));
+        $this->assertEquals(1, DB::table('pos_grants')->sum('consumed_quantity'));
+        $this->assertSame(0, DB::table('pos_etax_queue')->where('status', 'accepted')->count());
     }
 
     public function test_offline_permit_cannot_authorize_clinical_items_even_for_pharmacist(): void

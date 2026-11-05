@@ -716,6 +716,92 @@ class Phase28PosImportTest extends TestCase
         $this->assertDatabaseCount('pos_import_refunds', 1);
     }
 
+    public function test_offline_review_imports_expired_catalog_at_acceptance_date_and_claims_slot_once(): void
+    {
+        config(['pos.local_browser_offline_enabled' => true]);
+        DB::table('pos_instances')->where('id', $this->instance)->update(['business_type' => 'retail']);
+        $p = $this->event['payload'];
+        DB::table('pos_staff_authorities')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $this->instance, 'source_staff_id' => $p['staff_id'], 'role' => 'manager', 'active' => true]);
+        $row = DB::table('pos_catalog_publications')->where('pos_instance_id', $this->instance)->first();
+        $catalog = json_decode($row->payload, true);
+        $catalog['valid_until'] = now()->subMinutes(5)->utc()->toIso8601String();
+        $catalogHash = hash('sha256', PosCanonicalJson::encode($catalog));
+        DB::table('pos_catalog_publications')->where('id', $row->id)->update(['payload' => PosCanonicalJson::encode($catalog), 'payload_hash' => $catalogHash, 'created_at' => now()->subHour(), 'valid_until' => now()->subMinutes(5)]);
+        $p['cash_tendered'] = $p['total'];
+        $p['change'] = '0.00';
+        $p['offline_receipt'] = ['permit_id' => (string) Str::uuid(), 'slot_id' => (string) Str::uuid(), 'device_id' => (string) Str::uuid(), 'client_transaction_id' => (string) Str::uuid(), 'payload_hash' => str_repeat('a', 64), 'client_created_at' => 'untrusted-device-clock', 'server_received_at' => now()->subMinute()->utc()->toIso8601String(), 'permit_issued_at' => now()->subMinutes(20)->utc()->toIso8601String(), 'permit_expires_at' => $catalog['valid_until'], 'catalog_hash' => $catalogHash, 'reviewed_by' => $p['staff_id'], 'accepted_at' => $p['occurred_at'], 'cash_received' => $p['total'], 'policy' => 'local_manager_cash_review'];
+        $this->event['payload'] = $p;
+        $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($p));
+        $this->sign();
+        $service = app(PosImportService::class);
+        $service->receive($this->instance, [$this->event], 1);
+        $result = $service->process($this->instance, $this->event['event_id']);
+        $this->assertSame('accepted', $result['status']);
+        $this->assertSame($result, $service->process($this->instance, $this->event['event_id']));
+        $this->assertDatabaseCount('pos_offline_receipt_claims', 1);
+        $this->assertSame(PosCanonicalJson::encode($p['offline_receipt']), PosCanonicalJson::encode(json_decode(DB::table('pos_import_sales')->value('source_snapshot'), true)['offline_receipt']));
+        $this->assertSame(now()->toDateString(), Invoice::first()->issue_date->toDateString());
+        $this->event['event_id'] = (string) Str::uuid();
+        $this->event['source_sequence'] = 2;
+        $p['sale_id'] = (string) Str::uuid();
+        $this->event['aggregate_id'] = $p['sale_id'];
+        $this->event['payload'] = $p;
+        $this->event['payload_hash'] = hash('sha256', PosCanonicalJson::encode($p));
+        $this->sign();
+        $service->receive($this->instance, [$this->event], 2);
+        $this->assertSame('needs_review', $service->process($this->instance, $this->event['event_id'])['status']);
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('payments', 1);
+        $this->assertDatabaseCount('pos_offline_receipt_claims', 1);
+    }
+
+    public function test_actual_browser_offline_signed_sale_roundtrip(): void
+    {
+        $path = dirname(__DIR__, 3).'/document/acceptance/phase28_8_3/retail-signed-event.json';
+        $this->assertFileExists($path);
+        $bundle = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+        $event = $bundle['event'];
+        $p = $event['payload'];
+        $this->travelTo(Carbon::parse($p['occurred_at'])->addMinute());
+        config(['pos.local_browser_offline_enabled' => true]);
+        $original = DB::table('pos_instances')->where('id', $this->instance)->first();
+        Branch::unguarded(fn () => Branch::create(['id' => $p['branch_id'], 'org_id' => $original->org_id, 'code' => 'OFFLINE', 'name' => 'Synthetic offline bridge', 'status' => 'active']));
+        foreach ($p['lines'] as $line) {
+            Product::unguarded(fn () => Product::create(['id' => $line['product_id'], 'org_id' => $original->org_id, 'sku' => 'OFF-'.$line['product_id'], 'name' => $line['name'], 'type' => 'product', 'unit' => $line['unit'], 'price' => $line['unit_price'], 'is_active' => true]));
+            StockMovement::create(['org_id' => $original->org_id, 'product_id' => $line['product_id'], 'warehouse_id' => $original->warehouse_id, 'movement_type' => 'adjustment_in', 'movement_date' => now()->toDateString(), 'quantity' => '10.0000', 'base_unit_cost' => '3.00', 'base_total_cost' => '30.00']);
+        }
+        $registered = (array) $original;
+        $registered['id'] = $event['instance_id'];
+        $registered['branch_id'] = $p['branch_id'];
+        $registered['business_type'] = 'retail';
+        $registered['terminal_ids'] = json_encode([$p['terminal_id']]);
+        $registered['signing_keys'] = json_encode([$event['key_id'] => ['active' => true, 'public_key' => $bundle['public_key']]]);
+        DB::table('pos_instances')->insert($registered);
+        DB::table('pos_staff_authorities')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $event['instance_id'], 'source_staff_id' => $p['staff_id'], 'role' => 'manager', 'active' => true]);
+        DB::table('pos_catalog_publications')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $event['instance_id'], 'version' => $p['catalog_version'], 'payload' => PosCanonicalJson::encode($bundle['catalog_payload']), 'payload_hash' => $bundle['catalog']['payload_hash'], 'valid_until' => $bundle['catalog']['valid_until'], 'created_at' => $bundle['catalog']['created_at'], 'updated_at' => $bundle['catalog']['updated_at']]);
+        foreach ($bundle['grants'] as $grant) {
+            DB::table('pos_stock_entitlements')->insert(['id' => $grant['id'], 'org_id' => $original->org_id, 'pos_instance_id' => $event['instance_id'], 'warehouse_id' => $original->warehouse_id, 'product_id' => $grant['product_id'], 'epoch' => $grant['epoch'], 'inventory_lot_id' => $grant['lot_id'], 'granted_quantity' => $grant['granted_quantity'], 'consumed_quantity' => '0.0000', 'status' => 'active']);
+        }
+        $service = app(PosImportService::class);
+        $service->receive($event['instance_id'], [$event], $event['source_sequence']);
+        $result = $service->process($event['instance_id'], $event['event_id']);
+        $this->assertSame('accepted', $result['status']);
+        $this->assertSame($result, $service->process($event['instance_id'], $event['event_id']));
+        $service->receive($event['instance_id'], [$event], $event['source_sequence']);
+        $this->assertSame($result, $service->process($event['instance_id'], $event['event_id']));
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('payments', 1);
+        $this->assertDatabaseCount('pos_import_sales', 1);
+        $this->assertDatabaseCount('pos_offline_receipt_claims', 1);
+        $this->assertSame($p['total'], bcadd((string) Payment::first()->amount, '0', 2));
+        $snapshot = json_decode(DB::table('pos_import_sales')->value('source_snapshot'), true);
+        $this->assertSame($p['offline_receipt']['client_transaction_id'], $snapshot['offline_receipt']['client_transaction_id']);
+        $this->assertDatabaseCount('journal_entries', 3);
+        $this->assertSame(2, StockMovement::where('product_id', $p['lines'][0]['product_id'])->count());
+        $this->assertSame('1.0000', bcadd((string) DB::table('pos_stock_entitlements')->where('pos_instance_id', $event['instance_id'])->sum('consumed_quantity'), '0', 4));
+        $this->assertSame(Carbon::parse($p['occurred_at'])->setTimezone('Asia/Bangkok')->toDateString(), Invoice::first()->issue_date->toDateString());
+    }
+
     private function sign(): void
     {
         unset($this->event['signature']);

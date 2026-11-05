@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Pos\Models\Staff;
 use Pos\Support\CanonicalJson;
+use Pos\Support\PatientDataBoundary;
 
 /** Durable evidence intake only. No offline permits, tax documents or sale authority. */
 class OfflineIngressService
@@ -35,6 +36,7 @@ class OfflineIngressService
     public function receive(Staff $staff, array $input): array
     {
         $this->guard();
+        abort_if(is_array($input['data'] ?? null) && PatientDataBoundary::contains($input['data']), 422, 'Patient records are not permitted in offline evidence.');
         abort_unless(strlen(CanonicalJson::encode($input)) <= 65536, 413, 'Offline evidence exceeds intake limit.');
         // Timestamps and data are evidence, never proof of sale time, paid money or quota.
         $d = validator(['evidence' => $input], ['evidence' => 'required|array:device_id,client_transaction_id,kind,client_created_at,data', 'evidence.device_id' => 'required|uuid', 'evidence.client_transaction_id' => 'required|uuid', 'evidence.kind' => 'required|in:sale.draft,restaurant.order.draft,delivery.request', 'evidence.client_created_at' => 'required|string|max:80', 'evidence.data' => 'present|array'])->validate()['evidence'];
@@ -55,7 +57,7 @@ class OfflineIngressService
                 return $this->ack($row);
             }
             $id = (string) Str::uuid();
-            DB::table('pos_offline_inbox')->insert(['id' => $id, 'device_id' => $device->id, 'client_transaction_id' => $d['client_transaction_id'], 'branch_id' => $staff->branch_id, 'staff_id' => $staff->id, 'kind' => $d['kind'], 'client_created_at' => $d['client_created_at'], 'server_received_at' => now()->utc(), 'payload_hash' => $hash, 'payload' => Crypt::encryptString($bytes), 'status' => 'review', 'reason_code' => 'offline_authority_not_implemented', 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('pos_offline_inbox')->insert(['id' => $id, 'device_id' => $device->id, 'client_transaction_id' => $d['client_transaction_id'], 'branch_id' => $staff->branch_id, 'staff_id' => $staff->id, 'kind' => $d['kind'], 'client_created_at' => $d['client_created_at'], 'server_received_at' => now()->utc(), 'payload_hash' => $hash, 'payload' => Crypt::encryptString($bytes), 'status' => 'review', 'reason_code' => isset($d['data']['permit_id']) && $d['kind'] === 'sale.draft' ? 'manager_cash_review_required' : 'operational_request_review', 'created_at' => now(), 'updated_at' => now()]);
 
             return $this->ack(DB::table('pos_offline_inbox')->where('id', $id)->firstOrFail());
         });

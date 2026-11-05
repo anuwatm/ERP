@@ -2,6 +2,8 @@
 
 namespace Pos\Services;
 
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -21,20 +23,26 @@ class RestaurantService
 
                 return json_decode($old->snapshot, true);
             }
+            $menu = app(PublicMenuService::class);
+            if ($row->status === 'pending') {
+                $menu->accept($staff, $id);
+            }
             $items = json_decode($row->items, true);
-            app(PublicMenuService::class)->claim($staff, $id, $row->catalog_version, $items);
-            $token = DB::table('pos_menu_tokens')->where('id', $row->token_id)->where('branch_id', $branch->id)->firstOrFail();
+            $menu->claim($staff, $id, $row->catalog_version, $items);
+            $token = $menu->activeRequestToken($row);
             $requested = [];
             foreach ($items as $item) {
                 abort_unless(bccomp(bcmod($item['quantity'], '1', 4), '0', 4) === 0 && bccomp($item['quantity'], '50', 4) <= 0, 422);
                 $requested[] = ['product_id' => $item['product_id'], 'quantity' => (int) $item['quantity']];
             }
             $result = $this->createOrder($staff, ['terminal_id' => $terminalId, 'catalog_version' => $row->catalog_version, 'request_key' => 'menu-'.$id, 'channel' => $token->table_session_id ? 'dine_in' : 'takeaway', 'table_session_id' => $token->table_session_id, 'items' => $requested]);
+            DB::table('pos_kitchen_lines')->where('order_id', $result['order_id'])->where('status', 'reserved')
+                ->update(['status' => 'sent', 'updated_at' => now()]);
             DB::table('pos_customer_requests')->where('id', $id)->update(['restaurant_order_id' => $result['order_id'], 'status' => 'ordered', 'updated_at' => now()]);
             $this->audit($staff, 'restaurant.customer_request.claim', $id);
 
             return $result;
-        });
+        }, 3);
     }
 
     private function refreshCustomerRequest(string $orderId): void
@@ -63,35 +71,178 @@ class RestaurantService
         return DB::table('pos_branches')->where('id', $staff->branch_id)->where('business_type', 'restaurant')->where('active', true)->lockForUpdate()->firstOrFail();
     }
 
-    public function createTable(Staff $staff, string $label): string
+    public function createTable(Staff $staff, string $label, int $capacity = 4): string
     {
-        validator(['label' => $label], ['label' => 'required|string|max:60'])->validate();
+        validator(['label' => $label, 'capacity' => $capacity], ['label' => 'required|string|max:60', 'capacity' => 'required|integer|min:1|max:100'])->validate();
 
-        return DB::transaction(function () use ($staff, $label) {
+        return DB::transaction(function () use ($staff, $label, $capacity) {
             $this->actor($staff, ['manager']);
             $id = (string) Str::uuid();
-            DB::table('pos_restaurant_tables')->insert(['id' => $id, 'branch_id' => $staff->branch_id, 'label' => $label, 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('pos_restaurant_tables')->insert(['id' => $id, 'branch_id' => $staff->branch_id, 'label' => $label, 'capacity' => $capacity, 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
             $this->audit($staff, 'restaurant.table.create', $id);
 
             return $id;
-        });
+        }, 3);
     }
 
     public function openTable(Staff $staff, string $tableId): string
     {
         return DB::transaction(function () use ($staff, $tableId) {
             $this->actor($staff, ['cashier', 'manager']);
-            DB::table('pos_restaurant_tables')->where('id', $tableId)->where('branch_id', $staff->branch_id)->where('active', true)->lockForUpdate()->firstOrFail();
+            $table = $this->seatingTable($staff, $tableId);
             $old = DB::table('pos_table_sessions')->where('table_id', $tableId)->whereNotNull('active_slot')->first();
             if ($old) {
                 return $old->id;
             }
-            $id = (string) Str::uuid();
-            DB::table('pos_table_sessions')->insert(['id' => $id, 'table_id' => $tableId, 'branch_id' => $staff->branch_id, 'opened_by' => $staff->id, 'active_slot' => 1, 'created_at' => now(), 'updated_at' => now()]);
-            $this->audit($staff, 'restaurant.table.open', $id);
+            $this->checkWalkInTable($staff, $table, null);
 
-            return $id;
+            return $this->startTableSession($staff, $tableId);
+        }, 3);
+    }
+
+    public function seating(Staff $staff): array
+    {
+        return DB::transaction(function () use ($staff) {
+            $this->actor($staff, ['cashier', 'manager']);
+
+            return DB::table('pos_seating_entries')->where('branch_id', $staff->branch_id)
+                ->whereIn('status', ['waiting', 'called', 'confirmed', 'arrived'])
+                ->orderBy('queue_number')->get()->map(fn ($entry) => [
+                    'id' => $entry->id,
+                    'number' => (int) $entry->queue_number,
+                    'kind' => $entry->kind,
+                    'status' => $entry->status,
+                    'party_size' => (int) $entry->party_size,
+                    'table_id' => $entry->table_id,
+                    'booked_at' => $entry->booked_at === null ? null : Carbon::parse($entry->booked_at, 'UTC')->toIso8601String(),
+                    'joined_at' => Carbon::parse($entry->created_at, 'UTC')->toIso8601String(),
+                    'contact' => $entry->contact === null ? null : Crypt::decryptString($entry->contact),
+                ])->all();
         });
+    }
+
+    public function addSeating(Staff $staff, array $input): array
+    {
+        $data = validator($input, [
+            'request_key' => 'required|uuid',
+            'kind' => 'required|in:walk_in,reservation',
+            'party_size' => 'required|integer|min:1|max:100',
+            'table_id' => 'required_if:kind,reservation|prohibited_if:kind,walk_in|nullable|uuid',
+            'booked_at' => 'required_if:kind,reservation|prohibited_if:kind,walk_in|nullable|date_format:Y-m-d\TH:i:s.v\Z',
+            'contact' => 'required_if:kind,reservation|prohibited_if:kind,walk_in|nullable|string|max:160',
+        ])->validate();
+        $data['party_size'] = (int) $data['party_size'];
+        $hash = hash_hmac('sha256', CanonicalJson::encode($data), (string) config('app.key'));
+
+        return DB::transaction(function () use ($staff, $data, $hash) {
+            $branch = $this->actor($staff, ['cashier', 'manager']);
+            $entries = DB::table('pos_seating_entries')->where('branch_id', $branch->id);
+            $old = (clone $entries)->where('request_key', $data['request_key'])->first();
+            if ($old) {
+                abort_unless(hash_equals($old->request_hash, $hash), 409, 'Seating request changed.');
+
+                return ['id' => $old->id, 'number' => (int) $old->queue_number];
+            }
+            $booked = null;
+            $tableId = $data['table_id'] ?? null;
+            if ($data['kind'] === 'reservation') {
+                $booked = Carbon::parse($data['booked_at'])->utc();
+                abort_if($booked->lte(now()), 422, 'Reservation time must be in the future.');
+                $table = $this->seatingTable($staff, $tableId);
+                abort_if($table->capacity < $data['party_size'], 409, 'Table capacity is too small.');
+                $conflict = (clone $entries)->where('table_id', $tableId)
+                    ->whereIn('status', ['confirmed', 'arrived'])
+                    ->where('booked_at', '>', $booked->copy()->subMinutes(self::TABLE_WINDOW))
+                    ->where('booked_at', '<', $booked->copy()->addMinutes(self::TABLE_WINDOW))->exists();
+                abort_if($conflict, 409, 'Table already has a reservation in this time window.');
+            } else {
+                abort_unless(DB::table('pos_restaurant_tables')->where('branch_id', $branch->id)
+                    ->where('active', true)->where('capacity', '>=', $data['party_size'])->exists(), 422, 'No table can seat this party.');
+            }
+
+            $last = (clone $entries)->orderByDesc('queue_number')->lockForUpdate()->value('queue_number');
+            $id = (string) Str::uuid();
+            $number = (int) $last + 1;
+            DB::table('pos_seating_entries')->insert([
+                'id' => $id, 'branch_id' => $branch->id, 'table_id' => $tableId, 'request_key' => $data['request_key'],
+                'request_hash' => $hash, 'queue_number' => $number, 'kind' => $data['kind'],
+                'status' => $booked ? 'confirmed' : 'waiting', 'party_size' => $data['party_size'], 'booked_at' => $booked,
+                'contact' => $booked ? Crypt::encryptString($data['contact']) : null, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            $this->audit($staff, 'restaurant.seating.create', $id, ['kind' => $data['kind'], 'number' => $number]);
+
+            return ['id' => $id, 'number' => $number];
+        }, 3);
+    }
+
+    public function changeSeating(Staff $staff, string $id, string $action, ?string $tableId): array
+    {
+        return DB::transaction(function () use ($staff, $id, $action, $tableId) {
+            $this->actor($staff, ['cashier', 'manager']);
+            $entry = DB::table('pos_seating_entries')->where('branch_id', $staff->branch_id)->where('id', $id)->lockForUpdate()->firstOrFail();
+            $targets = ['call' => 'called', 'arrive' => 'arrived', 'seat' => 'seated', 'cancel' => 'cancelled', 'no_show' => 'no_show'];
+            abort_unless(isset($targets[$action]), 422);
+            $target = $targets[$action];
+            if ($entry->status === $target) {
+                abort_if($action === 'seat' && $tableId !== $entry->table_id, 409, 'Seating request already used another table.');
+
+                return ['status' => $target, 'session_id' => $entry->session_id];
+            }
+            $allowed = match ($action) {
+                'call' => $entry->status === 'waiting',
+                'arrive' => $entry->status === 'confirmed',
+                'seat' => in_array($entry->status, ['waiting', 'called', 'arrived'], true),
+                'cancel' => in_array($entry->status, ['waiting', 'called', 'confirmed', 'arrived'], true),
+                'no_show' => $entry->status === 'called' || ($entry->status === 'confirmed' && now()->gte(Carbon::parse($entry->booked_at, 'UTC')->addMinutes(15))),
+            };
+            abort_unless($allowed, 409, 'Invalid seating transition.');
+            $session = null;
+            $update = ['status' => $target, 'updated_at' => now()];
+            if ($action === 'seat') {
+                abort_unless($tableId, 422, 'Select a table.');
+                $table = $this->seatingTable($staff, $tableId);
+                abort_if($table->capacity < $entry->party_size, 409, 'Table capacity is too small.');
+                abort_if(DB::table('pos_table_sessions')->where('table_id', $tableId)->whereNotNull('active_slot')->exists(), 409, 'Table is already occupied.');
+                if ($entry->kind === 'reservation') {
+                    abort_unless($entry->table_id === $tableId && now()->gte(Carbon::parse($entry->booked_at, 'UTC')), 409, 'Use the reserved table at the booked time.');
+                } else {
+                    $this->checkWalkInTable($staff, $table, $entry->id);
+                }
+                $session = $this->startTableSession($staff, $tableId);
+                $update += ['table_id' => $tableId, 'session_id' => $session];
+            }
+            DB::table('pos_seating_entries')->where('id', $id)->update($update);
+            $this->audit($staff, 'restaurant.seating.'.$action, $id, ['session_id' => $session]);
+
+            return ['status' => $target, 'session_id' => $session];
+        }, 3);
+    }
+
+    private const TABLE_WINDOW = 90;
+
+    private function seatingTable(Staff $staff, string $id): object
+    {
+        return DB::table('pos_restaurant_tables')->where('id', $id)->where('branch_id', $staff->branch_id)
+            ->where('active', true)->lockForUpdate()->firstOrFail();
+    }
+
+    private function checkWalkInTable(Staff $staff, object $table, ?string $entryId): void
+    {
+        $entries = DB::table('pos_seating_entries')->where('branch_id', $staff->branch_id);
+        abort_if((clone $entries)->where('table_id', $table->id)->whereIn('status', ['confirmed', 'arrived'])
+            ->where('booked_at', '<', now()->addMinutes(self::TABLE_WINDOW))->exists(), 409, 'Table is held for a reservation.');
+        $first = $entries->where('kind', 'walk_in')->whereIn('status', ['waiting', 'called'])
+            ->where('party_size', '<=', $table->capacity)->orderBy('queue_number')->value('id');
+        abort_if($first !== null && $first !== $entryId, 409, 'Seat the oldest party that fits this table first.');
+    }
+
+    private function startTableSession(Staff $staff, string $tableId): string
+    {
+        $id = (string) Str::uuid();
+        DB::table('pos_table_sessions')->insert(['id' => $id, 'table_id' => $tableId, 'branch_id' => $staff->branch_id, 'opened_by' => $staff->id, 'active_slot' => 1, 'created_at' => now(), 'updated_at' => now()]);
+        $this->audit($staff, 'restaurant.table.open', $id);
+
+        return $id;
     }
 
     public function closeTable(Staff $staff, string $sessionId): void
@@ -105,7 +256,7 @@ class RestaurantService
             abort_if(DB::table('pos_kitchen_lines')->whereIn('order_id', DB::table('pos_kitchen_orders')->where('table_session_id', $sessionId)->select('id'))->whereNull('billed_sale_id')->whereNotIn('status', ['cancelled', 'wasted'])->exists(), 409, 'Table still has unsettled kitchen lines.');
             DB::table('pos_table_sessions')->where('id', $sessionId)->update(['active_slot' => null, 'closed_at' => now(), 'updated_at' => now()]);
             $this->audit($staff, 'restaurant.table.close', $sessionId);
-        });
+        }, 3);
     }
 
     public function createOrder(Staff $staff, array $input): array
@@ -135,8 +286,12 @@ class RestaurantService
             $products = collect(json_decode($catalog->items, true))->keyBy('product_id');
             $id = (string) Str::uuid();
             $lineIds = [];
-            $snapshot = ['order_id' => $id, 'channel' => $d['channel'], 'table_session_id' => $d['table_session_id'] ?? null, 'catalog_version' => $d['catalog_version'], 'ordered_at' => now()->utc()->toIso8601String()];
-            DB::table('pos_kitchen_orders')->insert(['id' => $id, 'branch_id' => $branch->id, 'terminal_id' => $d['terminal_id'], 'staff_id' => $staff->id, 'table_session_id' => $d['table_session_id'] ?? null, 'channel' => $d['channel'], 'request_key' => $d['request_key'], 'request_hash' => $hash, 'catalog_version' => $d['catalog_version'], 'snapshot' => CanonicalJson::encode($snapshot), 'created_at' => now(), 'updated_at' => now()]);
+            // actor() holds the branch lock, so every terminal allocates in the same order.
+            $lastNumber = DB::table('pos_kitchen_orders')->where('branch_id', $branch->id)
+                ->whereNotNull('queue_number')->orderByDesc('queue_number')->lockForUpdate()->value('queue_number');
+            $queueNumber = (int) $lastNumber + 1;
+            $snapshot = ['order_id' => $id, 'queue_number' => $queueNumber, 'channel' => $d['channel'], 'table_session_id' => $d['table_session_id'] ?? null, 'catalog_version' => $d['catalog_version'], 'ordered_at' => now()->utc()->toIso8601String()];
+            DB::table('pos_kitchen_orders')->insert(['id' => $id, 'branch_id' => $branch->id, 'terminal_id' => $d['terminal_id'], 'staff_id' => $staff->id, 'queue_number' => $queueNumber, 'table_session_id' => $d['table_session_id'] ?? null, 'channel' => $d['channel'], 'request_key' => $d['request_key'], 'request_hash' => $hash, 'catalog_version' => $d['catalog_version'], 'snapshot' => CanonicalJson::encode($snapshot), 'created_at' => now(), 'updated_at' => now()]);
             foreach ($d['items'] as $requested) {
                 $product = $products->get($requested['product_id']);
                 abort_unless($product && $product['active'] && isset($product['restaurant']), 422, 'Published restaurant item required.');
@@ -155,15 +310,15 @@ class RestaurantService
             $this->audit($staff, 'restaurant.order.reserve', $id);
 
             return $snapshot;
-        });
+        }, 3);
     }
 
-    public function advance(Staff $staff, string $lineId, string $action): array
+    public function advance(Staff $staff, string $lineId, string $action, ?string $overrideReason = null): array
     {
         $sequence = ['reserved', 'sent', 'acknowledged', 'preparing', 'ready', 'served'];
         abort_unless(in_array($action, array_slice($sequence, 1), true), 422);
 
-        return DB::transaction(function () use ($staff, $lineId, $action, $sequence) {
+        return DB::transaction(function () use ($staff, $lineId, $action, $sequence, $overrideReason) {
             $branch = $this->actor($staff, in_array($action, ['sent', 'served'], true) ? ['cashier', 'manager'] : ['kitchen', 'manager']);
             [$order, $line] = $this->line($staff, $lineId);
             $position = array_search($line->status, $sequence, true);
@@ -174,6 +329,19 @@ class RestaurantService
             }
             abort_unless($target === $position + 1, 409, 'Kitchen transition must follow the preparation workflow.');
             if ($action === 'preparing') {
+                abort_if($order->queue_held, 409, 'Resume this held order before preparation.');
+                $first = DB::table('pos_kitchen_orders as o')->where('o.branch_id', $branch->id)
+                    ->where('o.queue_held', false)
+                    ->whereExists(fn ($lines) => $lines->selectRaw('1')->from('pos_kitchen_lines as k')
+                        ->whereColumn('k.order_id', 'o.id')->whereIn('k.status', ['reserved', 'sent', 'acknowledged']))
+                    ->orderByRaw('CASE WHEN o.queue_number IS NULL THEN 0 ELSE 1 END')
+                    ->orderBy('o.queue_number')->orderBy('o.created_at')->orderBy('o.id')->value('o.id');
+                if ($overrideReason !== null) {
+                    abort_unless($staff->role === 'manager', 403);
+                    $this->audit($staff, 'restaurant.queue.skip', $lineId, ['reason' => $overrideReason, 'first_order_id' => $first]);
+                } else {
+                    abort_unless($first === $order->id, 409, 'Start the oldest unheld order first.');
+                }
                 $this->consume($staff, $branch, $order, $line, 'preparation');
             } else {
                 DB::table('pos_kitchen_lines')->where('id', $line->id)->update(['status' => $action, 'updated_at' => now()]);
@@ -181,7 +349,24 @@ class RestaurantService
             $this->audit($staff, 'restaurant.line.'.$action, $line->id);
 
             return ['id' => $line->id, 'status' => $action];
-        });
+        }, 3);
+    }
+
+    public function holdOrder(Staff $staff, string $id, bool $held, string $reason): array
+    {
+        return DB::transaction(function () use ($staff, $id, $held, $reason) {
+            $this->actor($staff, ['manager']);
+            $order = DB::table('pos_kitchen_orders')->where('branch_id', $staff->branch_id)
+                ->where('id', $id)->lockForUpdate()->firstOrFail();
+            if ((bool) $order->queue_held !== $held) {
+                abort_unless(DB::table('pos_kitchen_lines')->where('order_id', $id)
+                    ->whereIn('status', ['reserved', 'sent', 'acknowledged'])->exists(), 409, 'No waiting portions on this order.');
+                DB::table('pos_kitchen_orders')->where('id', $id)->update(['queue_held' => $held, 'updated_at' => now()]);
+                $this->audit($staff, $held ? 'restaurant.queue.hold' : 'restaurant.queue.resume', $id, ['reason' => $reason]);
+            }
+
+            return ['held' => $held];
+        }, 3);
     }
 
     public function cancelCommand(array $input): array

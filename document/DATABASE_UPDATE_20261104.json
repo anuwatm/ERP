@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-04",
+  "scope": "Configured ERP and POS databases, additive schema migrations only",
+  "result": "PASS",
+  "databases": {
+    "backend": {
+      "driver": "mysql",
+      "database": "erp",
+      "applied_before": 83,
+      "applied_after": 88,
+      "code_migrations": 88,
+      "pending": 0,
+      "applied_this_run": [
+        "2026_10_30_000001_create_pos_delivery_revisions",
+        "2026_10_30_000002_create_pos_membership_master",
+        "2026_10_31_000001_create_membership_publications",
+        "2026_10_31_000002_create_member_request_inbox",
+        "2026_11_04_000001_create_pos_offline_receipt_claims"
+      ],
+      "tables_before": 165,
+      "tables_after": 173,
+      "new_tables_empty": true,
+      "existing_row_counts_preserved": true,
+      "unique_constraints_verified": true,
+      "environment_before": "local",
+      "environment_unchanged": true,
+      "flags_unchanged": true,
+      "sqlite_integrity": null,
+      "backup": {
+        "path": "backend/storage/app/private/database-backups/20261104-phase2883/backend-20261104GMT0755220.sql",
+        "bytes": 397210,
+        "sha256": "3aae8a4b4488e62c053cfe92a9a71e0ea4df6141fe783d00b4a421dd05cc7324",
+        "verification": "InnoDB consistent single-transaction dump + successful exit + completion marker"
+      }
+    },
+    "pos": {
+      "driver": "sqlite",
+      "database": "C:\\LocalDevine\\www\\ERP\\pos\\database\\database.sqlite",
+      "applied_before": 17,
+      "applied_after": 22,
+      "code_migrations": 22,
+      "pending": 0,
+      "applied_this_run": [
+        "2026_10_30_000001_create_delivery_workflow",
+        "2026_10_30_000002_add_delivery_operations",
+        "2026_10_31_000001_create_membership_runtime",
+        "2026_10_31_000002_create_member_drafts",
+        "2026_11_01_000001_create_offline_ingress"
+      ],
+      "tables_before": 35,
+      "tables_after": 51,
+      "new_tables_empty": true,
+      "existing_row_counts_preserved": true,
+      "unique_constraints_verified": true,
+      "environment_before": "production",
+      "environment_unchanged": true,
+      "flags_unchanged": true,
+      "sqlite_integrity": "ok",
+      "backup": {
+        "path": "backend/storage/app/private/database-backups/20261104-phase2883/pos-20261104GMT0755220.sqlite",
+        "bytes": 430080,
+        "sha256": "93a68730f155a08df7b3a3a98a54807c87987a2faa51536b20cc8e7bb70d1798",
+        "verification": "SQLite integrity_check + every table row count"
+      }
+    }
+  },
+  "business_data_seeded": false,
+  "env_files_changed": false,
+  "feature_flags_enabled_by_this_update": false,
+  "real_device_testing": false
+}

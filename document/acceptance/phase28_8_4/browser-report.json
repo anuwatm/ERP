@@ -1,0 +1,36 @@
+{
+  "scope": "Synthetic patients only; isolated SQLite; actual Chrome; no real health data/devices",
+  "cases": [
+    {
+      "name": "clinician create/lost-response replay/stale409/append correction/checkout/timeline/no offline storage",
+      "result": "PASS"
+    },
+    {
+      "role": "cashier",
+      "result": "PASS"
+    },
+    {
+      "role": "manager",
+      "result": "PASS"
+    },
+    {
+      "role": "qualified",
+      "result": "PASS"
+    },
+    {
+      "role": "other",
+      "result": "PASS"
+    },
+    {
+      "role": "retail",
+      "result": "PASS"
+    },
+    {
+      "role": "restaurant",
+      "result": "PASS"
+    }
+  ],
+  "errors": [],
+  "patient_id": "a3258b1b-8746-4988-b6a0-660a4e985fb6",
+  "result": "PASS"
+}

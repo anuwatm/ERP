@@ -1,0 +1,32 @@
+{
+  "scope": "Actual Chrome IndexedDB/WebCrypto, permit slot/quota and ACK primitives; server financial/PWA acceptance recorded separately",
+  "cases": [
+    {
+      "name": "durable encrypted write and lock",
+      "result": "PASS",
+      "persistent": false
+    },
+    {
+      "name": "browser restart, incorrect passphrase, scope isolation and atomic cross-tab cap",
+      "result": "PASS"
+    },
+    {
+      "name": "encrypted ACK state machine, lost response, reauthentication, immutable identity and final ACK replay",
+      "result": "PASS"
+    },
+    {
+      "name": "atomic permit slot, exact decimal VAT, per-SKU quota and cross-tab cash cap",
+      "result": "PASS"
+    },
+    {
+      "name": "storage headroom and aborted transaction retain evidence; orphaned metadata cannot reinitialize over old records",
+      "result": "PASS"
+    },
+    {
+      "name": "clock rollback freezes authority; fresh online sample required after new context",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "serverStopped": true
+}

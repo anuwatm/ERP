@@ -1,0 +1,10 @@
+{
+    "result": "PASS",
+    "orders": 2,
+    "payments": 2,
+    "outbox": 2,
+    "inbox": 3,
+    "synced": 2,
+    "restaurant_review": 1,
+    "reserved_remaining": "0.0000"
+}

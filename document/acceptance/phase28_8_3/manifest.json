@@ -1,0 +1,292 @@
+{
+  "date": "2026-11-04",
+  "status": "local_scope_complete",
+  "git_head": "adf1c5008722893d47f94288ea45288935a09290",
+  "scope": "Working tree source and synthetic local acceptance. No real equipment, configured DB migration or production sign-off.",
+  "checks": {
+    "local-pos.junit.xml": {
+      "tests": 93,
+      "assertions": 1958,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "local-erp.junit.xml": {
+      "tests": 57,
+      "assertions": 1792,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "actual-roundtrip.junit.xml": {
+      "tests": 1,
+      "assertions": 14,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    }
+  },
+  "phase_checklist_items_completed": 16,
+  "code_migrations": {
+    "pos": 22,
+    "erp": 88
+  },
+  "configured_database_migrated": false,
+  "feature_flags_default_enabled": false,
+  "pwa_bundle": "app-C5xTDFAC.js",
+  "browser_cases": 3,
+  "storage_case_groups": 6,
+  "fixture_sealed": true,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 44631,
+      "sha256": "abf7a8b394dadd69d6184ea1ef19f11b99b8de25dd5b4c458885548e2514ab58"
+    },
+    {
+      "path": "backend/.env.example",
+      "bytes": 1904,
+      "sha256": "3d9b16284550708da4431c7c30531554cc22823f19760b010f57019fbff4cf71"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosImportService.php",
+      "bytes": 16378,
+      "sha256": "de6d644ed5e8ed6dc75e128e26a29d97cc6791a4ba2fe060722713ac60b6f39d"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosOfflineSalePolicy.php",
+      "bytes": 2246,
+      "sha256": "4c3ea25b0ce6f2e9405b6c970fb835556d41b92eaeab50f2e2ce1b5fca3d23c5"
+    },
+    {
+      "path": "backend/app/Services/Pos/PosSaleValidator.php",
+      "bytes": 14388,
+      "sha256": "b737bc16773f15e7cdf22413a99fc16af332d4908a7ffc38de494685a86ca553"
+    },
+    {
+      "path": "backend/config/pos.php",
+      "bytes": 1384,
+      "sha256": "44a0ff4415ccc9a0fde10805e9f420ed8feaa28c4a1b7c61eb285d2178b6a695"
+    },
+    {
+      "path": "backend/database/migrations/2026_11_04_000001_create_pos_offline_receipt_claims.php",
+      "bytes": 927,
+      "sha256": "edb43d3c1f52fbfec863c887a4e4912ef016af9995a2711e734662dc49f0d7e5"
+    },
+    {
+      "path": "backend/tests/Feature/Phase28PosImportTest.php",
+      "bytes": 106029,
+      "sha256": "78a9de459eab7596e8cf749b8d45a94fb379cec2bb3fcc286cefc3b1d632cc28"
+    },
+    {
+      "path": "checklist.md",
+      "bytes": 214916,
+      "sha256": "f7d4578afe1df67f6c3a210d2c7d6daf82570302b3665d4849480a450cc3b18d"
+    },
+    {
+      "path": "document/PHASE_28_8_3_OFFLINE.md",
+      "bytes": 14509,
+      "sha256": "bf07dedbf913cef0749861fc47f2394144774a6fced1037cbd101731ce620ea3"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/README.md",
+      "bytes": 7801,
+      "sha256": "d1d4ffaf23994b1cdea5d34aa8d3943690c96878fc13e21279ea7e254971d0f3"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/actual-roundtrip.junit.xml",
+      "bytes": 870,
+      "sha256": "dfa84a79387e9972b72e4dd3218193f436be5037bf5f10965233457bf6278e5c"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/cleanup.json",
+      "bytes": 171,
+      "sha256": "8ef9775c3edf7d93e034df3f33213ce1462e9dba8565d9de17ee67fca95ff0af"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/desktop-retail.png",
+      "bytes": 122089,
+      "sha256": "9760d7d88df1cd7e8b0e4eee6809daf146dfdabf4130a0a751e2d9fc9c61ade4"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/foundation-20261101.md",
+      "bytes": 2930,
+      "sha256": "1f8ddba53a0e97e092ba3e99a3f771e4dbdc9e1669773541de94c2ded52f4fef"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/local-erp.junit.xml",
+      "bytes": 18851,
+      "sha256": "e5e3784aa6ad4dba84d0ca627a86df7367b5a6ab0461d6967ff4c4dbd20513dc"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/local-pos.junit.xml",
+      "bytes": 27190,
+      "sha256": "7df142aec75410fbf389762d4512e0036c398b126bbcc2582a06ab9f203db45d"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/mobile-pharmacy.png",
+      "bytes": 116247,
+      "sha256": "bd5ad627a0620a9c054bd048134f02a8fb16c5fa1fbc62566993fe838bf09c18"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/offline-final.junit.xml",
+      "bytes": 2209,
+      "sha256": "7a65c8368d82ded834d617bf88468f4fa53c8593dd1e1ced3af1c2048d8ea04e"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/pwa-browser.json",
+      "bytes": 933,
+      "sha256": "0c0c322abaff3d4e1201f86c3904bf5ae6c26b426300e68a68b8cc16d3ecf67a"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/retail-signed-event.json",
+      "bytes": 6349,
+      "sha256": "ac6a9c7d618507d28505bc569fb2e2f6476570325b124e4392fcb644633e194e"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/server-counters.json",
+      "bytes": 174,
+      "sha256": "40503518cce9db33d7d18614278eee5fe5b4b9c54c0a3d55d3e089c2b5b950b1"
+    },
+    {
+      "path": "document/acceptance/phase28_8_3/storage-final.json",
+      "bytes": 1033,
+      "sha256": "17ad2fdb452b91d08d54f34cc563fdb25fc724b126aafa312aef9ba47b51f06c"
+    },
+    {
+      "path": "gpt.md",
+      "bytes": 23371,
+      "sha256": "2e33ddfbe9a12d799c7ca453942a71027d5661c38e13855c6e40dccb52032a16"
+    },
+    {
+      "path": "pos/README.md",
+      "bytes": 14319,
+      "sha256": "09e443224bc5cb6015fbfc99fe0c2dab64e612ead889a4d19ed8f14b2f2e0dab"
+    },
+    {
+      "path": "pos/app/Services/CheckoutService.php",
+      "bytes": 15074,
+      "sha256": "06c21e241144ec78a6a5cd30728e2ee65cd121e3233461a0bf613fccbead5e17"
+    },
+    {
+      "path": "pos/app/Services/OfflineIngressService.php",
+      "bytes": 5674,
+      "sha256": "084dfc93e155ffa4aef2f9a28493e536304959459639fdd9e7ced898d5be6a3a"
+    },
+    {
+      "path": "pos/app/Services/OfflinePermitService.php",
+      "bytes": 9351,
+      "sha256": "182ef0fda7ee2ccf97507aa004f7d3e1670c061acdb5a625ff6715d5020911e9"
+    },
+    {
+      "path": "pos/app/Services/OfflineReconciliationService.php",
+      "bytes": 10804,
+      "sha256": "60e707361a0e31725af4b8f6d506b36e04f69cd553cfded57ba83deb5a511ab6"
+    },
+    {
+      "path": "pos/app/Services/OfflineSaleAuthority.php",
+      "bytes": 2580,
+      "sha256": "ef64129363265bb5985fdc14c2087dfab36c4b971cac536e4d37e2803041482f"
+    },
+    {
+      "path": "pos/public/offline-manifest.json",
+      "bytes": 211,
+      "sha256": "ac29cfbd552c6f63e7609f206cfe137d2d7f0f6b976cf5444ee8e48af7d2f6e6"
+    },
+    {
+      "path": "pos/public/offline-sw.js",
+      "bytes": 2286,
+      "sha256": "f48540b91d9f883c31befea1783729613f84604ac6a9a55f75e748cd224688b9"
+    },
+    {
+      "path": "pos/resources/offline/EncryptedQueue.ts",
+      "bytes": 22555,
+      "sha256": "2c93e2ad7a6ff60c0a86db1ce9831032474b8a0de679b7b47af0b28b96b53bfb"
+    },
+    {
+      "path": "pos/resources/offline/QueueSync.ts",
+      "bytes": 1502,
+      "sha256": "98896eed1e57836f71f84cecc979bd538d0497a5235bb7449ea55075c5bb4ebd"
+    },
+    {
+      "path": "pos/resources/offline/TrustedClock.ts",
+      "bytes": 3364,
+      "sha256": "2b30be416354c06f87c0fdbf136dcc174857a77b5d61c9377836c2d472a2f60f"
+    },
+    {
+      "path": "pos/resources/offline/app.ts",
+      "bytes": 22744,
+      "sha256": "beedda53020f140562137a7792996f13b9cc4c0cc085e868b97b400afed147d9"
+    },
+    {
+      "path": "pos/resources/pos.tsx",
+      "bytes": 40464,
+      "sha256": "2fd5a796e127bea1fa3a13b685e6db7f24ed939adc86d3f06476d0b982ec42cf"
+    },
+    {
+      "path": "pos/resources/views/offline.blade.php",
+      "bytes": 340,
+      "sha256": "f1795050365721702fd8852fe944b713cc9d672185279da9fa3565d6dc8a95ae"
+    },
+    {
+      "path": "pos/routes/offline.php",
+      "bytes": 6461,
+      "sha256": "d7caa6b277f49939e4575110413ef82004aeed23961292c2d00dbf0a542286f5"
+    },
+    {
+      "path": "pos/routes/web.php",
+      "bytes": 21273,
+      "sha256": "3acd8577f635e89b81f47b354136e016359e992230fc780c77acd8c950b65071"
+    },
+    {
+      "path": "pos/tests/Browser/cleanup-offline.php",
+      "bytes": 1887,
+      "sha256": "ee3aba3c77f4488a0ed242313da14483aabcb4d2963b67e163da4e5e446a34fa"
+    },
+    {
+      "path": "pos/tests/Browser/export-offline.php",
+      "bytes": 2860,
+      "sha256": "c06bd7c91731787b0576fd58999d16cf64d2dfc1df4dddc4576cc4aab663507b"
+    },
+    {
+      "path": "pos/tests/Browser/offline-app.cjs",
+      "bytes": 9007,
+      "sha256": "623438ef1f903da46633e0eaa93e3132b27b2c32683960bf3d8bc82286007fea"
+    },
+    {
+      "path": "pos/tests/Browser/offline-environment.php",
+      "bytes": 1491,
+      "sha256": "a3f4c678fe11f15a6b3443366114ed7fa7231b6b310fa3db179743f0e6275388"
+    },
+    {
+      "path": "pos/tests/Browser/offline-router.php",
+      "bytes": 980,
+      "sha256": "25f41e8e43e51e281c2e09d92ee739905cc218edd9e169b5d081ae9e6c559941"
+    },
+    {
+      "path": "pos/tests/Browser/offline-storage.cjs",
+      "bytes": 18273,
+      "sha256": "d21437c0fea1d42229a70a9567486ee8e49d694f68b1ab43f40a3fbd6d5c531c"
+    },
+    {
+      "path": "pos/tests/Browser/prepare-offline.php",
+      "bytes": 2954,
+      "sha256": "1e59e26949f4afb7defbf658163ff224150733c6e7a6f009448cc76b13135261"
+    },
+    {
+      "path": "pos/tests/CheckoutTest.php",
+      "bytes": 79244,
+      "sha256": "d5d60f9b03ad0e751a3a92c6ad489954404087c6d06c18994109fce537004fba"
+    },
+    {
+      "path": "pos/tests/OfflineIngressTest.php",
+      "bytes": 9905,
+      "sha256": "1089cf5004e10400c34afb56b4c966aa9c3b2cd9e77cd873defbc65f8354dfb1"
+    },
+    {
+      "path": "pos/vite.config.mjs",
+      "bytes": 715,
+      "sha256": "39c45b9e4c873b359b8c302de124e580e7fa0b7e15a3b17a7d2a5d072cb2c91f"
+    }
+  ]
+}

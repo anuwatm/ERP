@@ -46,7 +46,7 @@ class AuditLog extends Model
         foreach ($data as $key => $value) {
             if (static::isSensitiveKey((string) $key)) {
                 $data[$key] = '[REDACTED]';
-            } elseif (strtolower((string) $key) === 'person_id') {
+            } elseif (in_array(strtolower((string) $key), ['person_id', 'citizen_id', 'national_id'], true)) {
                 $data[$key] = PersonIdMask::mask($value === null ? null : (string) $value);
             } elseif (is_array($value)) {
                 $data[$key] = static::redactData($value);
@@ -62,6 +62,10 @@ class AuditLog extends Model
 
         return str_contains($normalized, 'password')
             || str_contains($normalized, 'token')
-            || str_contains($normalized, 'secret');
+            || str_contains($normalized, 'secret')
+            || str_contains($normalized, 'api_key')
+            || str_contains($normalized, 'private_key')
+            || str_contains($normalized, 'recovery_code')
+            || str_contains($normalized, 'webhook_url');
     }
 }

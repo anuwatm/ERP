@@ -1,8 +1,16 @@
 # Standalone POS workspace — development preview
 
-> **Phase28.8.3 In Progress — 2026-11-01:** เริ่มoffline foundation/Stockquota/encrypted browser queue/clock guard. [สถานะและงานต่อ](../document/PHASE_28_8_3_OFFLINE.md). ยังไม่พร้อมรับเงินoffline และยังไม่migrateฐานใช้งานจริง
+> **Phase 28.8.5 — Restaurant POS:** คิวครัวตามลำดับรับออเดอร์, คิวที่นั่ง, จองโต๊ะ และ QR สั่งอาหารผูกโต๊ะ [คู่มือและ diagram](../document/PHASE_28_8_5_RESTAURANT.md) · [หลักฐาน](../document/acceptance/phase28_8_5/README.md) **ยังไม่ได้ทดสอบกับระบบจริง**
 
-> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](../document/PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](../document/acceptance/phase28_8_2/README.md). Default-off; configuredDBยังไม่migrateส่วนนี้ และ **ยังไม่ได้ทดสอบกับระบบจริง**
+> **Phase 28.8.4 Local Complete — 2026-11-05:** ประวัติผู้ป่วยเฉพาะ Pharmacy, เข้ารหัส/แยกสาขา/สิทธิ์/ผูกบิล; synthetic-only ไม่ส่ง ERP/offline. POS108 tests /2,059 assertions และ Chromeผ่าน. [คู่มือ/diagram](../document/PHASE_28_8_4_PATIENT_HISTORY.md) · [หลักฐาน](../document/acceptance/phase28_8_4/README.md)
+
+> **ฐานปัจจุบัน:** POS SQLite 25/25 migrations, pending 0 และ ERP 88/88 ตามรายงานรอบก่อน [ผลอัปเดตฐาน POS](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md)
+
+> **Database updated — 2026-11-04:** configured ERP MySQL **88/88**, POS SQLite **22/22**, pending0. สำรองก่อนรันและตรวจข้อมูลเดิมครบ; environment/flagsเดิมไม่เปลี่ยน. [รายงาน/ข้อมูลสำรอง](../document/DATABASE_UPDATE_20261104.md)
+
+> **Phase28.8.3 Local Complete — 2026-11-04:** PWA `/offline/app`, encrypted queue/quota/slots, sync/ACK, Manager cash review และ signed POS → ERP ผ่าน local acceptance. [คู่มือ/diagram](../document/PHASE_28_8_3_OFFLINE.md) · [หลักฐาน](../document/acceptance/phase28_8_3/README.md). Flag defaultfalse; configuredDBmigrateครบแล้วตามรายงานด้านบน และ **ยังไม่ได้ทดสอบกับระบบจริง**
+
+> **Phase28.8.2 local — 2026-11-01:** สมาชิก/โปรโมชันทุกPOSผ่านlocal acceptance; ERP `/pos-membership`, POS `/membership` และตัวเลือกตอนรับเงิน. [คู่มือ/diagram](../document/PHASE_28_8_2_MEMBERSHIP.md) · [หลักฐาน](../document/acceptance/phase28_8_2/README.md). Default-off; configuredDBmigrateครบแล้ว2026-11-04 และ **ยังไม่ได้ทดสอบกับระบบจริง**
 
 
 ## Phase28.8.1 Delivery — local operational scope complete 2026-10-30
@@ -21,7 +29,7 @@ Laravel 13 / PHP 8.3 / React 18. Config, DB, session, staff credentials, migrati
 
 ## สถานะ — 2026-10-27
 
-**Local Complete / Gemini PASS; Production Pending.** Retail/Restaurant/Pharmacy, variants/table QR/kitchen polling, manager refund/void/discount/Cash In-Out, pharmacy inspection/recall, ABB/FULL replacement/print, signed checkpoints และ encrypted archive/restore/fencing พัฒนาและตรวจ localแล้ว. ไม่มี patient history
+**Local Complete / Gemini PASS; Production Pending.** Retail/Restaurant/Pharmacy, variants/table QR/kitchen polling, manager refund/void/discount/Cash In-Out, pharmacy inspection/recall, ABB/FULL replacement/print, signed checkpoints และ encrypted archive/restore/fencing พัฒนาและตรวจ localแล้ว. ข้อจำกัดไม่มี patient history เป็น baseline Phase28; โมดูล local ใหม่ดู Phase28.8.4 ด้านบน
 
 Configured POS SQLite รันครบ17 migrations / pending0; เป็นฐานใหม่ยังไม่มี staff/orders. ERP MySQL `erp` รันครบ83 migrations / pending0. [หลักฐานและ backup](../document/DATABASE_UPGRADE_20261027.md)
 

@@ -1705,7 +1705,7 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 
 ### 28.8 POS extensions — ลำดับงานตามผู้ใช้ 2026-10-30
 
-28.8.1 และ28.8.2 พัฒนาและตรวจ local scope แล้วตามหลักฐานย่อย; 28.8.3 เป็นต้นไปยังเป็นแผน ไม่ถือว่าพัฒนาหรือทดสอบผ่าน. ให้เริ่ม 28.8.1–28.8.3 สำหรับทุกประเภท POS (ร้านขายของทั่วไป/ร้านอาหาร/ร้านขายยา). ไม่เปลี่ยนสถานะ local cash release เดิม.
+28.8.1–28.8.5 พัฒนาและตรวจ local scope แล้วตามหลักฐานย่อย และ 28.8.6 ยังเลื่อนไว้. ให้เริ่ม 28.8.1–28.8.3 สำหรับทุกประเภท POS (ร้านขายของทั่วไป/ร้านอาหาร/ร้านขายยา). ไม่เปลี่ยนสถานะ local cash release เดิม.
 
 ปรับแผนตาม Gemini หมวด18 และ review ร่วมวันที่2026-10-30: รับข้อเสนอด้าน delivery settlement, member custody, offline security และ Restaurant server authority; ปรับข้อจำกัด storage, signing, quota, waste และ clinical guard ตามรายการด้านล่าง. ข้อที่ยังต้องกำหนดนโยบายเป็นงานออกแบบ ไม่ถือว่าอนุมัติรายละเอียดธุรกิจ/ภาษี/การแพทย์แล้ว.
 
@@ -1749,53 +1749,57 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 
 #### 28.8.3 Browser / PWA offline — ทำก่อน, ทุก POS
 
-สถานะ2026-11-01: **In Progress — foundation**. ผู้ใช้ยืนยันcashเฉพาะquota/ราคาล่วงหน้า; defaults15นาที/20ธุรกรรม/10,000บาท Managerปรับได้; รหัสปลดล็อกdevice12ตัวอักษรไม่เก็บplaintext, ไม่มีrecovery; restart/clockผิดปกติต้องonlineใหม่; conflictรับเงินจริงให้Managerตรวจหลักฐานและรับเงินเข้ากะปัจจุบัน ใช้วันที่ตรวจรับสำหรับlocal รอaccounting/tax reviewจริง. มีdevice/inbox/conflict ledger, policy/Stockholds/slots API, encrypted IndexedDB และclock guardแล้ว แต่ยังไม่ต่อPWA UI/financial reconcile. [คู่มือ/งานต่อ](document/PHASE_28_8_3_OFFLINE.md) · [foundation evidence](document/acceptance/phase28_8_3/README.md). ยังไม่ติ๊กปิดรายการรวม ไม่migrateconfiguredDB (codePOS22/ERP87).
+สถานะ2026-11-04: **Local Complete — ตามกติกาที่ผู้ใช้ยืนยัน**. PWA shell, encrypted IndexedDB/permit/slots/SKU quota/hash chain, clock guard, durable sync/ACK และ Manager cash review เข้ากะปัจจุบันแล้วสร้างsaleครั้งเดียว. Retail/Pharmacyสินค้าทั่วไปรับcashตามpermit; Restaurant/clinical/member/promo/Deliveryเป็นคำขอเท่านั้น. คืนunused quotaได้หลังpermitหมดอายุและManagerตรวจmanifestครบ. POS93/1958; ERPsubset57/1792; actualRetail signed roundtrip1/14; Chromeสามประเภทและstorage6กลุ่มผ่าน. [คู่มือ/diagram](document/PHASE_28_8_3_OFFLINE.md) · [หลักฐาน](document/acceptance/phase28_8_3/README.md). CodePOS22/ERP88; configuredDBอัปเดตครบแล้ว2026-11-04ตาม[รายงาน](document/DATABASE_UPDATE_20261104.md), `.env`/environment/flagsเดิมไม่เปลี่ยน, ยังไม่ได้ทดสอบกับระบบจริงและรอบัญชี/ภาษี production.
 
-- [ ] ออกแบบข้อมูลที่เก็บบนเครื่อง อายุข้อมูล ความปลอดภัย และการแยกองค์กร/สาขา/ผู้ใช้
-- [ ] ออกแบบคิวบนเครื่องให้คงอยู่หลังปิด/เปิดโปรแกรม พร้อมสถานะ pending/syncing/synced/failed/review และการ retry
-- [ ] กำหนดการออกเลขเอกสารและจัดสรร/ใช้ quota ต่อสาขา/Terminal/device ขณะ offline; ห้ามเลขซ้ำหรือใช้เกิน quota
-- [ ] เก็บ POS instance event/checkpoint private key ที่ POS Server เท่านั้น ไม่ส่งลง IndexedDB/localStorage/browser; แยก event signature ออกจาก e-Tax document signature และไม่อ้างว่า signed event ทำให้เอกสารภาษีลงนามแล้ว
-- [ ] กำหนด offline provisional receipt/transaction identity และช่วงเลขที่จัดสรรล่วงหน้า พร้อมขั้นตอน POS Server ตรวจรับ/ลงนามevent/ผูกhash chain และเชื่อมเอกสารจริงเมื่อsync; ไม่ถือ provisional receipt เป็น ABB/FULL ที่ตรวจรับแล้ว และไม่สร้างยอดขาย/VATซ้ำ
-- [ ] จัดสรร offline stock/สิทธิ์ quota จาก POS Server ต่อเครื่องอย่างไม่ทับซ้อน; ออกเลขไม่ซ้ำเพียงอย่างเดียวไม่ป้องกัน oversell. กำหนดอายุสิทธิ์ การป้องกันcopy/rollbackคิว การตรวจreplay และการคืนquotaหลังreconcile โดยไม่คืนสิทธิ์ที่อาจถูกใช้แล้วซ้ำ
-- [ ] กำหนด offline hard-blocks: Refund/Void บิลที่ยังไม่sync, FULL replacement ข้ามเครื่อง และงานที่ต้องตรวจสิทธิ์/สถานะล่าสุดจากserver; ยาที่recallหรือจำเป็นต้องตรวจใบสั่งยา/สถานะสดต้องblockเมื่อไม่มีหลักฐานล่าสุดตามนโยบาย ไม่ถือsnapshotเก่าว่ายังปลอดภัยเสมอ
-- [ ] Delivery online authority สำหรับรุ่นแรก: การdispatch/ยืนยันส่งสำเร็จ รับเงินCODคืนเข้าร้าน และรับคืนจากfailed delivery ต้องได้รับการตรวจรับจาก POS Server; browser offlineเก็บได้เพียงdraft/คำขอpending ไม่แสดงสถานะสำเร็จหรือเพิ่มยอดเงิน/Stockเอง. ใช้version/state guardและidempotencyป้องกันหลายเครื่องทำรายการเดียวกันซ้ำ; exclusive offline leaseเป็นข้อเสนอออกแบบแยก ไม่เปิดโดยปริยาย
-- [ ] เมื่อlogout/idle timeout/absolute timeout/เปลี่ยนกะ ห้ามลบ pending/failed/review queue; แยกสิทธิ์อ่าน/ถอดรหัสตามองค์กร/สาขา/บทบาท กำหนดkey custody/re-auth และสิทธิ์syncหลังsessionหมดอายุ ไม่เก็บplaintextหรือkeyถอดรหัสข้างข้อมูลโดยไม่มีการควบคุม
-- [ ] กำหนด max_offline_transactions/max_offline_amount/storage headroom และพฤติกรรมเมื่อเต็ม: ต้องเขียนคิวสำเร็จก่อนแสดงรับรายการสำเร็จ; หยุดรับรายการใหม่เมื่อเกินเพดานโดยรักษาคิวเดิม
-- [ ] ขอ Persistent Storage และตรวจผลอนุญาต/พื้นที่จริง; ไม่รับประกันbrowserจะอนุญาตหรือผู้ใช้ล้างข้อมูลไม่ได้. ออกแบบการแจ้งเตือนและrecovery เมื่อstorageถูกล้าง/evict/เขียนไม่ได้ พร้อมระบุรายการที่กู้จากserverได้หรือไม่ได้อย่างตรงจริง — อ้างอิง https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist
-- [ ] กำหนด sync/reconnect, idempotency/dedupe, acknowledgement และ recovery หลัง crash/response หาย โดยไม่ลงยอดขาย/VAT/Stock ซ้ำ
-- [ ] กำหนดนโยบาย conflict เมื่อราคา/โปรโมชัน/สิทธิ์สมาชิก/Stock/สถานะเอกสารเปลี่ยนระหว่าง offline; ระบุกรณี block/review และผู้มีสิทธิ์ตัดสิน
-- [ ] กำหนด clock skew/rollback guard: เก็บ client_created_at (เวลาที่clientอ้าง) และ server_received_at (เวลาที่POS Serverรับครั้งแรก; retryไม่เขียนทับ) แยกกัน พร้อม last trusted server timestamp/permit version. ใช้ performance.now() ประกอบตรวจelapsedในบริบทเดียวกันเท่านั้น ไม่ถือเป็นtrusted clockข้ามreload/restart/sleep หรือหลักฐานป้องกันการแก้browser
-- [ ] กำหนดอายุสิทธิ์offline/โปรโมชันจากนโยบายที่serverรับรอง; เมื่อพิสูจน์เวลา/อายุquotaไม่ได้ให้หยุดใช้สิทธิ์ที่ต้องพึ่งเวลาและส่งรายการที่มีอยู่เข้าreview ไม่เชื่อclient clockหรือserver_received_atว่าเป็นเวลาขายจริง. ห้ามลบหลักฐานหรือทิ้งรายการที่รับเงินแล้วเพราะclock skew ต้องรักษาคิวและให้ผู้มีสิทธิ์reconcileโดยไม่สร้างยอดซ้ำ
-- [ ] พัฒนาและทดสอบ offline/online/reconnect/retry/crash/conflict ครบทุกประเภท POS; ไม่ถือว่า queue ฝั่ง POS server เดิมเท่ากับ browser offline
+- [x] ออกแบบข้อมูลที่เก็บบนเครื่อง อายุข้อมูล ความปลอดภัย และการแยกองค์กร/สาขา/ผู้ใช้
+- [x] ออกแบบคิวบนเครื่องให้คงอยู่หลังปิด/เปิดโปรแกรม พร้อมสถานะ pending/syncing/synced/failed/review และการ retry
+- [x] กำหนดการออกเลขเอกสารและจัดสรร/ใช้ quota ต่อสาขา/Terminal/device ขณะ offline; ห้ามเลขซ้ำหรือใช้เกิน quota
+- [x] เก็บ POS instance event/checkpoint private key ที่ POS Server เท่านั้น ไม่ส่งลง IndexedDB/localStorage/browser; แยก event signature ออกจาก e-Tax document signature และไม่อ้างว่า signed event ทำให้เอกสารภาษีลงนามแล้ว
+- [x] กำหนด offline provisional receipt/transaction identity และช่วงเลขที่จัดสรรล่วงหน้า พร้อมขั้นตอน POS Server ตรวจรับ/ลงนามevent/ผูกhash chain และเชื่อมเอกสารจริงเมื่อsync; ไม่ถือ provisional receipt เป็น ABB/FULL ที่ตรวจรับแล้ว และไม่สร้างยอดขาย/VATซ้ำ
+- [x] จัดสรร offline stock/สิทธิ์ quota จาก POS Server ต่อเครื่องอย่างไม่ทับซ้อน; ออกเลขไม่ซ้ำเพียงอย่างเดียวไม่ป้องกัน oversell. กำหนดอายุสิทธิ์ การป้องกันcopy/rollbackคิว การตรวจreplay และการคืนquotaหลังreconcile โดยไม่คืนสิทธิ์ที่อาจถูกใช้แล้วซ้ำ
+- [x] กำหนด offline hard-blocks: Refund/Void บิลที่ยังไม่sync, FULL replacement ข้ามเครื่อง และงานที่ต้องตรวจสิทธิ์/สถานะล่าสุดจากserver; ยาที่recallหรือจำเป็นต้องตรวจใบสั่งยา/สถานะสดต้องblockเมื่อไม่มีหลักฐานล่าสุดตามนโยบาย ไม่ถือsnapshotเก่าว่ายังปลอดภัยเสมอ
+- [x] Delivery online authority สำหรับรุ่นแรก: การdispatch/ยืนยันส่งสำเร็จ รับเงินCODคืนเข้าร้าน และรับคืนจากfailed delivery ต้องได้รับการตรวจรับจาก POS Server; browser offlineเก็บได้เพียงdraft/คำขอpending ไม่แสดงสถานะสำเร็จหรือเพิ่มยอดเงิน/Stockเอง. ใช้version/state guardและidempotencyป้องกันหลายเครื่องทำรายการเดียวกันซ้ำ; exclusive offline leaseเป็นข้อเสนอออกแบบแยก ไม่เปิดโดยปริยาย
+- [x] เมื่อlogout/idle timeout/absolute timeout/เปลี่ยนกะ ห้ามลบ pending/failed/review queue; แยกสิทธิ์อ่าน/ถอดรหัสตามองค์กร/สาขา/บทบาท กำหนดkey custody/re-auth และสิทธิ์syncหลังsessionหมดอายุ ไม่เก็บplaintextหรือkeyถอดรหัสข้างข้อมูลโดยไม่มีการควบคุม
+- [x] กำหนด max_offline_transactions/max_offline_amount/storage headroom และพฤติกรรมเมื่อเต็ม: ต้องเขียนคิวสำเร็จก่อนแสดงรับรายการสำเร็จ; หยุดรับรายการใหม่เมื่อเกินเพดานโดยรักษาคิวเดิม
+- [x] ขอ Persistent Storage และตรวจผลอนุญาต/พื้นที่จริง; ไม่รับประกันbrowserจะอนุญาตหรือผู้ใช้ล้างข้อมูลไม่ได้. ออกแบบการแจ้งเตือนและrecovery เมื่อstorageถูกล้าง/evict/เขียนไม่ได้ พร้อมระบุรายการที่กู้จากserverได้หรือไม่ได้อย่างตรงจริง — อ้างอิง https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist
+- [x] กำหนด sync/reconnect, idempotency/dedupe, acknowledgement และ recovery หลัง crash/response หาย โดยไม่ลงยอดขาย/VAT/Stock ซ้ำ
+- [x] กำหนดนโยบาย conflict เมื่อราคา/โปรโมชัน/สิทธิ์สมาชิก/Stock/สถานะเอกสารเปลี่ยนระหว่าง offline; ระบุกรณี block/review และผู้มีสิทธิ์ตัดสิน
+- [x] กำหนด clock skew/rollback guard: เก็บ client_created_at (เวลาที่clientอ้าง) และ server_received_at (เวลาที่POS Serverรับครั้งแรก; retryไม่เขียนทับ) แยกกัน พร้อม last trusted server timestamp/permit version. ใช้ performance.now() ประกอบตรวจelapsedในบริบทเดียวกันเท่านั้น ไม่ถือเป็นtrusted clockข้ามreload/restart/sleep หรือหลักฐานป้องกันการแก้browser
+- [x] กำหนดอายุสิทธิ์offline/โปรโมชันจากนโยบายที่serverรับรอง; เมื่อพิสูจน์เวลา/อายุquotaไม่ได้ให้หยุดใช้สิทธิ์ที่ต้องพึ่งเวลาและส่งรายการที่มีอยู่เข้าreview ไม่เชื่อclient clockหรือserver_received_atว่าเป็นเวลาขายจริง. ห้ามลบหลักฐานหรือทิ้งรายการที่รับเงินแล้วเพราะclock skew ต้องรักษาคิวและให้ผู้มีสิทธิ์reconcileโดยไม่สร้างยอดซ้ำ
+- [x] พัฒนาและทดสอบ offline/online/reconnect/retry/crash/conflict ครบทุกประเภท POS; ไม่ถือว่า queue ฝั่ง POS server เดิมเท่ากับ browser offline
 
 #### 28.8.4 Patient history / เวชระเบียน — เฉพาะ POS ร้านขายยา
 
-- [ ] กำหนดขอบเขตประวัติผู้ป่วย/เวชระเบียนและข้อมูลที่จำเป็นก่อนพัฒนา
-- [ ] ระบุ decision supersede: ข้อจำกัดไม่มีpatient historyใน28.1และsynthetic-only guardsเดิมเป็นbaselineของreleaseเดิม; รองรับเวชระเบียนจริงเมื่อโมดูล28.8.4พัฒนาและผ่านการตรวจรับพร้อมเปิดเฉพาะPharmacy ไม่เปิดใช้งานข้อมูลจริงจากการแก้checklistนี้
-- [ ] กำหนด custody ของข้อมูลสุขภาพที่ POS Server/private storage และการจัดการkey/backup; ระบุว่าจะเก็บเฉพาะPOSหรือsyncข้อมูลใดผ่านsigned event/authorized connector ไม่มี direct ERP DB write และไม่cacheเวชระเบียนในbrowserโดยอัตโนมัติ
-- [ ] เข้ารหัสข้อมูลสุขภาพ/ประวัติแพ้ยา/เลขประจำตัวที่กำหนด, maskตามสิทธิ์ และauditการอ่าน/แก้ไขด้วยmetadataเท่าที่จำเป็น; ไม่เก็บเนื้อหาเวชระเบียนในaudit/logดิบหรือเปิดผ่านpublic API
-- [ ] แยก Drug Allergy / Contraindication Guard อัตโนมัติเป็นข้อเสนอรอกำหนดขอบเขต แหล่งข้อมูลที่ตรวจรับและผู้รับผิดชอบเภสัชกร; ไม่รวมระบบวินิจฉัย/ตัดสินการใช้ยาอัตโนมัติโดยปริยายกับงานประวัติผู้ป่วย
-- [ ] เปิดฟังก์ชันเฉพาะ POS ประเภท Pharmacy; Retail/Restaurant ไม่แสดงเมนูและเรียก API ส่วนนี้ไม่ได้
-- [ ] กำหนดสิทธิ์ผู้ใช้งาน การแยกข้อมูล การเข้าถึง/audit และนโยบายเก็บข้อมูล พร้อมทดสอบการปิดกั้นข้ามประเภท POS
+สถานะ2026-11-05: **Local Complete / synthetic-only** ตามคำตอบผู้ใช้ทั้งสามข้อ. POS108tests/2,059assertions, Chrome7กรณีสิทธิ์/สาขา/ประเภท และ offline storage7กลุ่มผ่าน. [คู่มือ/diagram](document/PHASE_28_8_4_PATIENT_HISTORY.md) · [หลักฐาน](document/acceptance/phase28_8_4/README.md). Configured POS23/23; flagsเดิมปิด. ยังไม่ได้ทดสอบกับระบบจริง; retention/key custody/clinical/privacy approval สำหรับข้อมูลจริงยังรอตรวจรับ ไม่รวม automatic clinical guard.
+
+- [x] กำหนดขอบเขตประวัติผู้ป่วย/เวชระเบียนและข้อมูลที่จำเป็นก่อนพัฒนา
+- [x] ระบุ decision supersede: ข้อจำกัดไม่มีpatient historyใน28.1และsynthetic-only guardsเดิมเป็นbaselineของreleaseเดิม; รองรับเวชระเบียนจริงเมื่อโมดูล28.8.4พัฒนาและผ่านการตรวจรับพร้อมเปิดเฉพาะPharmacy ไม่เปิดใช้งานข้อมูลจริงจากการแก้checklistนี้
+- [x] กำหนด custody ของข้อมูลสุขภาพที่ POS Server/private storage และการจัดการkey/backup; ระบุว่าจะเก็บเฉพาะPOSหรือsyncข้อมูลใดผ่านsigned event/authorized connector ไม่มี direct ERP DB write และไม่cacheเวชระเบียนในbrowserโดยอัตโนมัติ
+- [x] เข้ารหัสข้อมูลสุขภาพ/ประวัติแพ้ยา/เลขประจำตัวที่กำหนด, maskตามสิทธิ์ และauditการอ่าน/แก้ไขด้วยmetadataเท่าที่จำเป็น; ไม่เก็บเนื้อหาเวชระเบียนในaudit/logดิบหรือเปิดผ่านpublic API
+- [x] แยก Drug Allergy / Contraindication Guard อัตโนมัติเป็นข้อเสนอรอกำหนดขอบเขต แหล่งข้อมูลที่ตรวจรับและผู้รับผิดชอบเภสัชกร; ไม่รวมระบบวินิจฉัย/ตัดสินการใช้ยาอัตโนมัติโดยปริยายกับงานประวัติผู้ป่วย
+- [x] เปิดฟังก์ชันเฉพาะ POS ประเภท Pharmacy; Retail/Restaurant ไม่แสดงเมนูและเรียก API ส่วนนี้ไม่ได้
+- [x] กำหนดสิทธิ์ผู้ใช้งาน การแยกข้อมูล การเข้าถึง/audit และนโยบายเก็บข้อมูล พร้อมทดสอบการปิดกั้นข้ามประเภท POS
 
 #### 28.8.5 Kitchen queue / Seating queue & reservations — เฉพาะ POS ร้านอาหาร
 
-- [ ] ต่อยอด public menu/table-session + staff acceptance ที่มีใน Phase28: ลูกค้าสแกน QR Code ที่โต๊ะ เปิดเมนูบนมือถือ เลือกอาหาร/ขนาด/ตัวเลือก/จำนวน และส่งคำสั่งซื้อได้เอง
-- [ ] QR ผูกสาขา/โต๊ะ/table session ที่ถูกต้อง มีอายุและการเพิกถอน; ปิด session แล้ว QR เดิมต้องไม่ส่งออเดอร์เข้าลูกค้ารอบใหม่
-- [ ] แสดงราคาและสถานะพร้อมขายจาก POS server; ตรวจราคา/ตัวเลือก/ความพร้อมอีกครั้งก่อนรับออเดอร์ พร้อมแจ้งลูกค้าหากข้อมูลเปลี่ยน
-- [ ] เชื่อมออเดอร์จาก QR เข้าคิวครัวตามลำดับเมื่อรับออเดอร์ พร้อมแสดงผลรับคำสั่งซื้อและสถานะให้ลูกค้า; คง staff acceptance เดิมจนกว่าจะกำหนดนโยบาย auto-accept แยก
-- [ ] รองรับสั่งเพิ่มใน table session เดิมและหลายมือถือร่วมโต๊ะ; ป้องกันกดส่งซ้ำ/retry แล้วเกิดออเดอร์ซ้ำ และแยกคำสั่งซื้อข้ามโต๊ะ/สาขา
-- [ ] ทดสอบ QR menu/order บนมือถือ, QR หมดอายุ/ถูกเพิกถอน, โต๊ะปิด/เปิดรอบใหม่, เมนูหมด, network failure และ reconnect; การสั่งผ่าน QR ไม่รวม QR payment ที่ยังเลื่อนไว้
-- [ ] ระบบคิวทำอาหารเรียงตามลำดับรับออเดอร์ พร้อมเลขคิว เวลาเข้า และรายการอาหาร; กำหนดเงื่อนไขการจัดลำดับเมื่อมีการสั่งเพิ่ม/แก้ไขก่อนพัฒนา
-- [ ] กำหนดสถานะคิวครัวและสิทธิ์เปลี่ยนสถานะ: รอทำ/กำลังทำ/พร้อมเสิร์ฟ/เสิร์ฟแล้ว/ยกเลิก; เชื่อมกับ kitchen/table session เดิม โดยไม่ตัดวัตถุดิบหรือส่งงานซ้ำ
-- [ ] กำหนดสิทธิ์และเหตุผลกรณีข้ามคิว/พักคิว/เปลี่ยนลำดับ พร้อม audit trail; ไม่แซงคิวอัตโนมัติโดยไม่มีกติกาที่ตกลง
-- [ ] ระบบคิวรอที่นั่ง: จำนวนลูกค้า ลำดับคิว เวลาเข้า สถานะรอ/เรียกคิว/ได้ที่นั่ง/ยกเลิก/ไม่มา และการจัดโต๊ะตามจำนวนที่นั่ง
-- [ ] ระบบจองที่นั่ง/โต๊ะล่วงหน้า: วันเวลา จำนวนลูกค้า ข้อมูลติดต่อ สถานะจอง/ยืนยัน/มาถึง/ยกเลิก/ไม่มา; กำหนดระยะเวลาถือโต๊ะและนโยบายมาสายก่อนพัฒนา
-- [ ] กำหนดกติกาจัดสรรโต๊ะระหว่างผู้จองกับคิว walk-in; เชื่อมเมื่อเข้าที่นั่งกับ table session และคืนโต๊ะเมื่อพร้อมรับลูกค้ารอบใหม่
-- [ ] ป้องกันจอง/จัดโต๊ะซ้ำเมื่อหลาย Terminal ทำงานพร้อมกัน; กำหนดพฤติกรรมระหว่าง offline/sync และ conflict review
-- [ ] POS Server เป็นauthorityสำหรับ public QR order acceptance, table session และการจัดสรรโต๊ะจากwalk-in/reservation; browserที่ขาดการเชื่อมต่อเก็บได้เพียงคำขอรอตรวจรับ ไม่ยืนยันโต๊ะ/ส่งคิวครัวสำเร็จเอง และต้องแจ้งสถานะรอsyncโดยไม่สร้างsplit-brainเมื่อreconnect
-- [ ] การจองรอบนี้ไม่มี online deposit/pre-payment; ไม่สร้างpayment integrationเพิ่มเติมจากงานจองโต๊ะ และคงQR/Card/EDCไว้ใน28.8.6
-- [ ] เปิดเมนูและ API เฉพาะ Restaurant พร้อม permission/branch isolation; ทดสอบลำดับคิว การเปลี่ยนสถานะ การยกเลิก การชนกันของโต๊ะ และ reconnect โดยไม่สร้างคิวซ้ำ
+**Local Complete — 2026-11-05.** คิวครัว FIFO ตามเวลารับ รายการเพิ่มเข้าท้ายคิว Manager พัก/ข้ามคิวพร้อมเหตุผล การจองใช้ช่วงโต๊ะ 90 นาที และเผื่อมาสาย 15 นาทีจนพนักงานยืนยันไม่มา Walk-in ใช้คิวเก่าสุดที่โต๊ะรองรับ POS 113 tests / 2,118 assertions และ Chrome ผ่าน POS SQLite 25/25 migrations ยังไม่ได้ทดสอบกับระบบจริง [คู่มือ](document/PHASE_28_8_5_RESTAURANT.md) · [หลักฐาน](document/acceptance/phase28_8_5/README.md)
+
+- [x] ต่อยอด public menu/table-session + staff acceptance ที่มีใน Phase28: ลูกค้าสแกน QR Code ที่โต๊ะ เปิดเมนูบนมือถือ เลือกอาหาร/ขนาด/ตัวเลือก/จำนวน และส่งคำสั่งซื้อได้เอง
+- [x] QR ผูกสาขา/โต๊ะ/table session ที่ถูกต้อง มีอายุและการเพิกถอน; ปิด session แล้ว QR เดิมต้องไม่ส่งออเดอร์เข้าลูกค้ารอบใหม่
+- [x] แสดงราคาและสถานะพร้อมขายจาก POS server; ตรวจราคา/ตัวเลือก/ความพร้อมอีกครั้งก่อนรับออเดอร์ พร้อมแจ้งลูกค้าหากข้อมูลเปลี่ยน
+- [x] เชื่อมออเดอร์จาก QR เข้าคิวครัวตามลำดับเมื่อรับออเดอร์ พร้อมแสดงผลรับคำสั่งซื้อและสถานะให้ลูกค้า; คง staff acceptance เดิมจนกว่าจะกำหนดนโยบาย auto-accept แยก
+- [x] รองรับสั่งเพิ่มใน table session เดิมและหลายมือถือร่วมโต๊ะ; ป้องกันกดส่งซ้ำ/retry แล้วเกิดออเดอร์ซ้ำ และแยกคำสั่งซื้อข้ามโต๊ะ/สาขา
+- [x] ทดสอบ QR menu/order บนมือถือ, QR หมดอายุ/ถูกเพิกถอน, โต๊ะปิด/เปิดรอบใหม่, เมนูหมด, network failure และ reconnect; การสั่งผ่าน QR ไม่รวม QR payment ที่ยังเลื่อนไว้
+- [x] ระบบคิวทำอาหารเรียงตามลำดับรับออเดอร์ พร้อมเลขคิว เวลาเข้า และรายการอาหาร; กำหนดเงื่อนไขการจัดลำดับเมื่อมีการสั่งเพิ่ม/แก้ไขก่อนพัฒนา
+- [x] กำหนดสถานะคิวครัวและสิทธิ์เปลี่ยนสถานะ: รอทำ/กำลังทำ/พร้อมเสิร์ฟ/เสิร์ฟแล้ว/ยกเลิก; เชื่อมกับ kitchen/table session เดิม โดยไม่ตัดวัตถุดิบหรือส่งงานซ้ำ
+- [x] กำหนดสิทธิ์และเหตุผลกรณีข้ามคิว/พักคิว/เปลี่ยนลำดับ พร้อม audit trail; ไม่แซงคิวอัตโนมัติโดยไม่มีกติกาที่ตกลง
+- [x] ระบบคิวรอที่นั่ง: จำนวนลูกค้า ลำดับคิว เวลาเข้า สถานะรอ/เรียกคิว/ได้ที่นั่ง/ยกเลิก/ไม่มา และการจัดโต๊ะตามจำนวนที่นั่ง
+- [x] ระบบจองที่นั่ง/โต๊ะล่วงหน้า: วันเวลา จำนวนลูกค้า ข้อมูลติดต่อ สถานะจอง/ยืนยัน/มาถึง/ยกเลิก/ไม่มา; กำหนดระยะเวลาถือโต๊ะและนโยบายมาสายก่อนพัฒนา
+- [x] กำหนดกติกาจัดสรรโต๊ะระหว่างผู้จองกับคิว walk-in; เชื่อมเมื่อเข้าที่นั่งกับ table session และคืนโต๊ะเมื่อพร้อมรับลูกค้ารอบใหม่
+- [x] ป้องกันจอง/จัดโต๊ะซ้ำเมื่อหลาย Terminal ทำงานพร้อมกัน; กำหนดพฤติกรรมระหว่าง offline/sync และ conflict review
+- [x] POS Server เป็นauthorityสำหรับ public QR order acceptance, table session และการจัดสรรโต๊ะจากwalk-in/reservation; browserที่ขาดการเชื่อมต่อเก็บได้เพียงคำขอรอตรวจรับ ไม่ยืนยันโต๊ะ/ส่งคิวครัวสำเร็จเอง และต้องแจ้งสถานะรอsyncโดยไม่สร้างsplit-brainเมื่อreconnect
+- [x] การจองรอบนี้ไม่มี online deposit/pre-payment; ไม่สร้างpayment integrationเพิ่มเติมจากงานจองโต๊ะ และคงQR/Card/EDCไว้ใน28.8.6
+- [x] เปิดเมนูและ API เฉพาะ Restaurant พร้อม permission/branch isolation; ทดสอบลำดับคิว การเปลี่ยนสถานะ การยกเลิก การชนกันของโต๊ะ และ reconnect โดยไม่สร้างคิวซ้ำ
 
 #### 28.8.6 ยังเลื่อนไว้ / ต้องออกแบบแยก
 

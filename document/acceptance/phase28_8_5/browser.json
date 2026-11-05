@@ -1,0 +1,17 @@
+{
+  "qrTableScope": "pass",
+  "staffAcceptance": "pass",
+  "selectedOption": "large + egg",
+  "kitchenPolling": "pass",
+  "passivePolls": 12,
+  "total": "16.05",
+  "customerCompleted": true,
+  "seating": "pass",
+  "offlineReconnectAndLostResponse": "pass",
+  "customerKitchenProgress": "pass",
+  "responsive": [
+    1440,
+    390
+  ],
+  "consoleErrors": []
+}

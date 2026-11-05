@@ -1,3 +1,10 @@
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -6,8 +13,17 @@
     RewriteEngine On
     RewriteBase /ERP/
 
-    # Setup credentials and implementation are never web-accessible.
-    RewriteRule ^backend/setup(?:/|$) - [F,L]
+    # Block dotfiles and hidden directories (.env, .git, .ua, .agents, .codex, .cursor, .gemini, etc.)
+    RewriteRule (?:^|/)\.(?!well-known(?:/|$)) - [F,L]
+
+    # Block direct web access to internal application, documentation, and temporary directories
+    RewriteRule ^backend/(?!public(?:/|$)) - [F,L]
+    RewriteRule ^pos/(?!public(?:/|$)) - [F,L]
+    RewriteRule ^(?:shared|deploy|docs|document|examples|temp)(?:/|$) - [F,L]
+
+    # Block direct web access to sensitive file types and root metadata
+    RewriteRule \.(?:env|sqlite|sqlite3|sql|key|pem|p12|pfx|log|lock|md|sh|zip|cjs|mjs)$ - [F,L,NC]
+    RewriteRule ^(?:composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml(?:\.dist)?)$ - [F,L,NC]
 
     # Direct static asset requests to backend/public
     RewriteRule ^build/(.*)$ backend/public/build/$1 [L]

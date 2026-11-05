@@ -1,46 +1,11 @@
-# GPT Handoff — สถานะปัจจุบันและงานต่อ
+# GPT Handoff — งานที่ยังเปิด
 
-อัปเดต 2026-11-01. ใช้ [checklist.md](checklist.md) เป็นทะเบียนงาน, [gemini.md](gemini.md) เป็นบันทึก reviewer และ source/tests เป็นหลักฐาน implementation. รายละเอียดงานที่ปิดแล้วเก็บในเอกสารเฉพาะเรื่อง ไม่คัดลอกผลหลายรอบมาซ้ำใน handoff.
+อัปเดต 2026-11-05 ใช้ [checklist](checklist.md) ติดตามงาน และ [Gemini](gemini.md) ดูผลตรวจรับล่าสุด
 
-## สถานะที่ยืนยันแล้ว
+## งานถัดไป
 
-- งานค้าง local ในขอบเขตเดิมปิดแล้ว: Phase18 polish, local production tooling/runbooks, Phase23.1 browser acceptance, External API local acceptance และ diagram cleanup. [ผลรวม/ข้อจำกัด](docs/LOCAL_ACCEPTANCE_20261030.md) · [หลักฐาน](document/acceptance/20261030/README.md).
-- ผลตรวจรอบปิดงาน: ERP538 tests/9424assertions รวม2skippedที่ต้องใช้isolated MySQL Phase23/24; POS45tests/268assertions; frontend38PASS. Dialog matrix284PASS/0FAIL และ60NO_CREATE_SURFACEที่ไม่นับผ่าน; contextual36PASS. เป็นผลbaselineรอบ2026-10-30; ผลPhase28.8.xรอบใหม่แยกด้านล่าง.
-- Phase28 core Retail/Restaurant/Pharmacy และ POS Config ผ่าน local scope; Geminiหมวด17เป็นPhase28 baseline และ [POS Config review](document/POS_CONFIG_GEMINI_REVIEW_20261029.md) ครอบคลุมเฉพาะ6ไฟล์ที่อนุญาต ไม่ใช่การรับรองERP fixesทั้งหมดหรือproduction.
-- External Read API P0–P6 มีimplementationและผ่านtechnical reviewตามGeminiหมวด12; localHTTP9/browser key lifecycle2ผ่านแล้ว. ไม่คงRound2/หน้าAPIAccessเป็นpendingจากบันทึกเก่า. P7 sensitive/write APIs ถูกตัดออกตามขอบเขตเดิม. [API contract](docs/EXTERNAL_SUMMARY_API.md) · [API checklist](docs/EXTERNAL_SUMMARY_API_CHECKLIST.md).
-- Diagram18/18ผ่านautomated showcase/containment; visualReview=pendingยังไม่ใช่human sign-off. [Diagram status](document/DOCUMENTATION_UPDATE_20261029.md).
-- Understand publishล่าสุดก่อนปรับchecklist28.8/cleanupนี้:1125files/3242nodes/10175edges/10layers/22tour, source drift0ขณะpublish. กราฟยังไม่รวมโค้ดPhase28.8.1/28.8.2และเอกสารหลังpublish ไม่อ้างว่าfingerprintsยังcurrent. [Pipeline/ข้อจำกัด](document/UNDERSTAND_PIPELINE.md).
-- Configured DB snapshot2026-10-27: ERP83/POS17migrations,pending0;ไม่ใช่การตรวจฐานจริงใหม่วันนี้. [Upgrade evidence](document/DATABASE_UPGRADE_20261027.md). รอบDeliveryมีcode totals POS19/ERP84; ปัจจุบันรวม28.8.2เป็นPOS21/ERP87 ยังไม่migrateconfigured DBและไม่แก้.envจริง.
-- Fixture serverปิดแล้ว, synthetic credentials/portal tokens/sessionถูกถอนหรือลบ;เก็บหลักฐานผลทดสอบไว้ ไม่ใช้สถานะruntimeจากประวัติเป็นปัจจุบัน.
-
-## Phase28.8 — สถานะและงานถัดไป
-
-### กำลังทำ28.8.3 — 2026-11-01
-
-Foundationแล้ว: OfflineIngressService/OfflinePermitService/API/migration2026_11_01_000001, managerpolicy+Stockholds+20slots, noexpiryreclaim, encrypted IndexedDB(PBKDF2/AES-GCM)+revisionCAS+partial-loss guard, TrustedClock(context-only/freshonline/rollback/suspend). ยังไม่มีPWA UI/serviceworker/quota queue binding/sync ACK/financial reconciliation; ทุกinboxreviewและoffline_sale_authorized=false. ผู้ใช้ยืนยันdefaults15min/20txn/THB10000(Managerปรับ), unlockpassphrase12ไม่เก็บplaintext/no recovery, cashเฉพาะordinary approvedSKU; clinical/member/promo/kitchen/Deliverydraft-only. Late/price/closedshift: Managerรับcustodyเข้ากะปัจจุบันและreviewยอดเดิม ใช้วันที่ตรวจรับในlocal รอtax/accountingจริง. POSreg86/1891ก่อนHTTPtestเพิ่ม, targetedfinal6/53+TS+Chrome storage/clockผ่าน, persistent=falseจริง. [สถานะ/งานต่อ](document/PHASE_28_8_3_OFFLINE.md) · [หลักฐานfoundation](document/acceptance/phase28_8_3/README.md). CodePOS22/ERP87; configuredDB/.envไม่แตะ. ใช้nativePHP/TS/Playwrightทดสอบจริงก่อนปิดphase. Phase28.8.2manifestเป็นsnapshotเก่า ไม่อ้างsourcehashcurrentหลังเริ่ม28.8.3.
-
-### ปิด local 28.8.2 — 2026-11-01
-
-Local membership/promotions complete ตามผู้ใช้ยืนยัน: ERP master/encrypted pending enrollment/manual review/masked publication15min, exclusive fixed/percentก่อนVAT, allocated rights/CAS, partial/full refund, COD fees/retry/inspection/release แยกStock. ERP subset82/1937, POS81/1851, TS/buildทั้งสองapp, browser1280/375ทุกPOS+stale409/lost-response/reviewผ่าน. ActualRetail signed roundtrip10events=7sales+3requests, replayไม่เพิ่มInvoice/Payment/GL/claim; independent26signaturesผ่าน. [หลักฐาน](document/acceptance/phase28_8_2/README.md) · [คู่มือ/diagram](document/PHASE_28_8_2_MEMBERSHIP.md). Fixturesealed: serverหยุด, activeusers0, sessions/privatekeysถอน; ไม่ลบmember/audit. ConfiguredDB/.envไม่เปลี่ยน; codeERP87/POS21ยังไม่migrateฐานจริง. Production gates: บัญชี/ภาษี/privacy/retention/keyrotation, two-server/mTLS/MySQL concurrency/อุปกรณ์จริง. Geminiตรวจlocal scopeแล้วตามgemini.mdหมวด9ที่ผู้ใช้ให้ดู; ไม่ส่งไฟล์เพิ่มออกภายนอก. ห้ามreusefixtureที่sealed.
-
-### ปิด local 28.8.1 — 2026-10-30
-
-Retail/Restaurant: workflow/edit/retry/fees/return ครบ, shared quota reservation, Restaurant kitchen/waste เดิม, prepaid refund/inspection bridge, COD collect/remit/refund และข้ามกะเป็น cash-custody evidence ตามผู้ใช้ยืนยัน. Pharmacy Delivery ปิด. Signed delivery revisions เข้า ERP/checkpoint โดยไม่สร้าง COD ABB/Payment/GL/Stock Movement; ส่งสำเร็จยัง hold stock รอ settlement review. [คู่มือ/diagram](document/PHASE_28_8_1_DELIVERY.md) · [หลักฐาน](document/acceptance/phase28_8_1/README.md).
-
-ผลใหม่: POS61tests/432assertions; ERP Phase28/Manufacturing62tests/509assertions (subset ไม่ใช่full ERP); Chrome1280/375 สอง lifecycle ผ่านพร้อม stale409/lost-response/รับคืน/คืนเงิน/restock; actual POS signed roundtrip35revisions/checkpoint verified/issues=[]. ชุดตรวจทับซ้อน ไม่บวกยอด. Gemini review เดิมไม่ครอบคลุมโค้ดนี้ ไม่ส่งออกด้วยสิทธิ์POSConfig6ไฟล์.
-
-Releaseแยก: บัญชี/ภาษี COD/fees, ABB/FULL/COGS/account mapping/settle stock และระบบ/อุปกรณ์จริง/two-server/mTLS/MariaDB concurrency. POS2/ERP1 migrations ใหม่ยังไม่รันกับconfigured DB; flagdefaultfalse และไม่แก้.envจริง. ไม่ขยาย28.8.2/28.8.3โดยอัตโนมัติ.
-
-Geminiหมวด18.3รับรองระดับแผนพร้อมdesign notes ไม่ใช่ผลทดสอบฟีเจอร์ใหม่. Checklistรวมข้อเสนอ5เรื่องล่าสุดแล้ว:COD documents,delivery fee/promotion eligibility,online delivery authority,redemption reversalและclock skew.
-
-1. **28.8.1 Ordering/Delivery:** local operational scopeปิดตามด้านบน;เหลือrelease/accounting gates.
-2. **28.8.2 Membership/Promotions — ทุกPOS:** member master/custody/cross-branch,กติกาและการปัดเศษ,limited redemption,refund/failed deliveryคืนสิทธิ์เพียงครั้งเดียว. การคืนStockต้องรับคืน/ตรวจสภาพก่อน ไม่เพิ่มจากสถานะfailedโดยอัตโนมัติ.
-3. **28.8.3 Browser/PWA offline — ทุกPOS:** durable local queue,เลขเอกสารและstock quotaแยกกัน,server-held signing keys,provisional receipts,sync/dedupe/recovery/conflict,logout isolation,storage limitsและclock-skew review. ห้ามทิ้งรายการที่รับเงินแล้วเพราะเวลาเครื่องผิด.
-4. **28.8.4 ประวัติผู้ป่วย/เวชระเบียน — Pharmacyเท่านั้น:** supersedeข้อจำกัดเดิมเฉพาะโมดูลที่พัฒนา/ตรวจรับแล้ว;custody/encryption/ACL/access auditก่อนข้อมูลจริง. Drug Allergy/Contraindicationอัตโนมัติเป็นข้อเสนอรอกำหนดขอบเขต ไม่รวมโดยปริยาย.
-5. **28.8.5 Restaurantเท่านั้น:** ต่อยอดQRเมนู/สั่งอาหาร/table sessionเดิม,คิวครัวตามลำดับ,คิวที่นั่งและจองโต๊ะ. คงstaff acceptanceจนกว่าจะตกลงauto-accept;POS Serverยืนยันโต๊ะ/รับออเดอร์,ไม่มีonline depositรอบนี้.
-6. **28.8.6 ยังคงเลื่อน:** QR payment/provider/late callbacks,Card/EDC/mixed tender;shared-stock real-time reservationหรือconnection modelใหม่ต้องออกแบบ/อนุมัติแยก.
-
-ก่อนพัฒนาให้กำหนดนโยบายที่ยังเปิดอยู่ในchecklist เช่นCOD lifecycle,member master,โปรโมชัน,offline limits,คิว/ถือโต๊ะ/มาสาย และclinical/data custody. รุ่นแรกdispatch/ยืนยันส่งสำเร็จ/CODรับคืน/รับของคืนต้องผ่านPOS Server;offlineเป็นdraft/pending. ไม่เดารายละเอียดบัญชี/ภาษี/เภสัชกรรมแทนผู้รับผิดชอบ.
+- Phase 28.8.6 ยังเลื่อนไว้ ขอบเขตการจ่าย QR, Card/EDC, mixed tender และ shared-stock connection model อยู่ใน checklist
+- Restaurant POS ยังรอทดสอบมือถือ, HTTPS LAN และอุปกรณ์จริง ใช้คู่มือ Phase 28.8.5 สำหรับตั้งค่า
 
 ## งานที่ยังรอระบบจริงและข้อจำกัด
 
@@ -98,7 +63,6 @@ Geminiหมวด18.3รับรองระดับแผนพร้อมd
 
 ### Phase 22 and later
 
-- Phase 23 implementation details and diagram: `docs/PHASE_23_PAYMENT_GATEWAY.md`. Intent amount uses integer satang; webhook hashes exact bytes with a five-minute signature window, deduplicates events and locks invoice before receipt/GL posting. Closed periods roll back the entire event transaction. Late/mismatched payments are review-only.
 - HMAC is a trusted settlement-bridge protocol, not an assumed provider API. Opn requires API verification, 2C2P uses provider JWT and inquiry contracts, GB Prime Pay requires the contracted integration version. No live settlement claim without provider evidence.
 - Opn reserves `creating` before an external API call; ambiguous results become `creation_unknown` and block retries. Pending/unresolved charges block provider, mode and merchant-key changes; uncertain creation also blocks receiver changes after local expiry. Provider callback confirmation alone never posts accounting.
 - Opn `provider_paid_at` comes from authenticated charge retrieval and is distinct from final `settled_at`. QR expiry checks customer payment time; receipt/GL uses settlement date. A two-day payout delay is covered by the native-provider fixture test. Do not collapse these timestamps when implementing the real settlement bridge.
@@ -110,7 +74,6 @@ Geminiหมวด18.3รับรองระดับแผนพร้อมd
 - e-Tax ต้องใช้ certified provider, key vault/HSM boundary, outbox/reconciliation และ legal review; ห้ามเก็บ private key ใน database.
 - OCR สร้าง assisted draft พร้อม confidence, source retention และ human review เท่านั้น; ห้าม auto-post.
 - Forecast ต้องมี scenario/assumption snapshot และไม่เปิด raw cash balance.
-- Manufacturing/POS มี local implementation แล้ว; ฟีเจอร์ใหม่ให้ยึดขอบเขตและลำดับใน checklist ปัจจุบัน.
 
 ## ประวัติและแหล่งอ้างอิง
 

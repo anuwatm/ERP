@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'local_browser_offline_enabled' => env('POS_LOCAL_BROWSER_OFFLINE_ENABLED', false),
     'membership_fee_tax_rates' => ['0.00', '7.00'],
     'local_membership_enabled' => env('POS_LOCAL_MEMBERSHIP_ENABLED', false),
     'member_lookup_key' => env('POS_MEMBER_LOOKUP_KEY'),

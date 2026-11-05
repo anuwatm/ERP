@@ -1,0 +1,40 @@
+{
+  "scope": "Synthetic SQLite, actual Chrome PWA and encrypted queue; no real equipment",
+  "cases": [
+    {
+      "type": "retail",
+      "offlineReload": true,
+      "lostResponseReplayed": true,
+      "financial": "manager accepted once",
+      "cacheUrls": [
+        "/offline/app",
+        "/build/assets/app-C5xTDFAC.js"
+      ],
+      "overflow": false
+    },
+    {
+      "type": "pharmacy",
+      "offlineReload": true,
+      "lostResponseReplayed": true,
+      "financial": "manager accepted once",
+      "cacheUrls": [
+        "/offline/app",
+        "/build/assets/app-C5xTDFAC.js"
+      ],
+      "overflow": false
+    },
+    {
+      "type": "restaurant",
+      "offlineReload": true,
+      "lostResponseReplayed": true,
+      "financial": "request only",
+      "cacheUrls": [
+        "/offline/app",
+        "/build/assets/app-C5xTDFAC.js"
+      ],
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "result": "PASS"
+}

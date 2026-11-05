@@ -1,14 +1,14 @@
 # Gemini Review & Architecture Reference
 
-Last updated: 2026-11-01 (Phase 1–27 & External Read API Complete; Phase 28 Standalone POS, Phase 28.8.1 & 28.8.2 Local Scope Passed; Phase 28.8.3 Offline Foundation Verified)
+Last updated: 2026-11-05 (Phase 1–27 & External Read API Complete; Phase 28 Standalone POS & Phase 28.8.1–28.8.5 Local Scope Complete; Configured Databases Upgraded to ERP 88/88 & POS 25/25)
 
-Purpose: บันทึกข้อมูลอ้างอิงสถาปัตยกรรม (Architecture Reference), Security Guardrails, ข้อกำหนดเชิงระบบที่ยังมีผลต่อการพัฒนา (Decisions That Still Matter), สรุปผลการตรวจรับงาน (Acceptance Verdicts), และแนวทางการพัฒนาสำหรับ Phase ปัจจุบัน (`Phase 28.8`). รายละเอียดงานย้อนหลัง Phase 1–27 ดูได้ที่ `checklist.md`, `README.md`, `gpt.md`, `docs/`, `document/` และ Git history.
+Purpose: บันทึกข้อมูลอ้างอิงสถาปัตยกรรม (Architecture Reference), Security Guardrails, ข้อกำหนดเชิงระบบที่ยังมีผลต่อการพัฒนา (Decisions That Still Matter), สรุปผลการตรวจรับงาน (Acceptance Verdicts), และขอบเขตที่ยังเลื่อนไว้ (`Phase 28.8.6`). รายละเอียดงานย้อนหลังดูได้ที่ `checklist.md`, `README.md`, `gpt.md`, `docs/`, `document/` และ Git history.
 
 ---
 
 ## 1. สถานะโครงการปัจจุบัน (Current Status)
 
-**สถานะล่าสุด (2026-11-01): Phase 1–27 และ External Read API (P0–P6) เสร็จสมบูรณ์ 100%; Phase 28 (Standalone POS & ERP Connector), Phase 28.8.1 (Ordering / Delivery) และ Phase 28.8.2 (Membership / Promotions) ผ่านการตรวจรับระดับ Local Scope (PASS) แล้ว; Phase 28.8.3 (Browser / PWA Offline — Foundation Stage) ผ่านการตรวจรับระดับโครงสร้างพื้นฐาน (PASS Foundation) พร้อมพัฒนาส่วน PWA UI, Sync State Machine และ Server Reconciliation ต่อ**
+**สถานะล่าสุด (2026-11-05): Phase 1–27 และ External Read API (P0–P6) เสร็จสมบูรณ์ 100%; Phase 28 (Standalone POS & ERP Connector) และ Phase 28.8.1–28.8.5 (Ordering / Delivery, Membership / Promotions, Browser / PWA Offline, Pharmacy Patient History, และ Restaurant QR / Kitchen & Seating Queue) ผ่านการตรวจรับระดับ Local Scope (PASS) ครบ 100% ทุกโมดูลแล้ว; อัปเกรดฐานข้อมูลที่ใช้งานจริงตาม Config ครบถ้วน (`ERP 88/88` และ `POS 25/25` Migrations); คงเหลือเฉพาะรายการที่เลื่อนไว้ใน `Phase 28.8.6` และ Production Gates**
 
 - **Phase 1–27 (รวม Phase 18.1, 23.1, 23.2, 23.3, 24, 25, 26, 27): เสร็จสมบูรณ์และปิดรอบ 100% (Complete & Closed)**
   - Core MVP, CRM/Sales, Finance, Delivery, Multi-role Dashboards, VAT/Number Sequences, Suppliers & POs (Phase 1–7)
@@ -35,7 +35,10 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
   - แยกแอปพลิเคชันและฐานข้อมูล (`pos/`) ออกจาก ERP (`backend/`) เด็ดขาด, ERP Outbound Connector, Shared `InventoryMovementService`, Signed Events/Checkpoints, Independent Recovery Anchor & Fence, Encrypted 90-Day Archive, โมดูล Retail / Restaurant / Pharmacy, และอัปเกรดฐานข้อมูลจริงตาม Config แล้ว (`document/DATABASE_UPGRADE_20261027.md`)
   - **Phase 28.8.1: Ordering / Delivery (Local Operational Scope — PASSED):** รองรับการจัดส่งและรับที่ร้านสำหรับ Retail และ Restaurant POS (`prepaid_cash` / `cod_cash`), ระบบจองโควตาสต็อก/ครัว, แยกเงินสด COD (`collect` / `remit` เข้ากะผู้จัดการที่เปิดอยู่ / `refund`), ตรวจรับของคืน (`restock` / `destroy`), บล็อก Pharmacy Delivery 100%, และซิงค์ `delivery.updated` พร้อมลายเซ็น RSA-SHA256 เข้า ERP Inbox & Checkpoint (`document/PHASE_28_8_1_DELIVERY.md`)
   - **Phase 28.8.2: Membership / Promotions (Local Scope — PASSED):** ERP เป็น Member Master, สมัครสมาชิกจาก POS แบบเข้ารหัส Hybrid (`AES-256-GCM` + `RSA-OAEP` ใน `MemberEnvelope`) รอผู้มีสิทธิ์ตรวจรับ/จับคู่สมาชิกเดิม, เผยแพร่เฉพาะข้อมูล Mask (`name_masked`, `phone_masked`) อายุไม่เกิน 15 นาที, คำนวณส่วนลด Exclusive Fixed/Percent ก่อน VAT ด้วย `PromotionCalculator` ตัวเดียวกันทั้ง POS/ERP (ปัดเศษสตางค์ Largest Remainder), จัดสรรสิทธิ์คูปองจำกัดจำนวนล่วงหน้า (`pos_promotion_allocations` / `pos_promotion_rights`), และเชื่อมการคืนสิทธิ์คูปองเมื่อ Full Refund หรือ Cancelled/Returned Delivery แยกจากการคืนสต็อกจริง (`document/PHASE_28_8_2_MEMBERSHIP.md`)
-  - **Phase 28.8.3: Browser / PWA Offline (In Progress — Foundation Stage PASSED):** พัฒนาและตรวจรับส่วนรากฐาน (`OfflineIngressService`, `OfflinePermitService`, `EncryptedQueue.ts`, `TrustedClock.ts`, Migration `2026_11_01_000001_create_offline_ingress.php`) เรียบร้อยแล้ว; งานถัดไปคือการเชื่อม PWA Shell / Service Worker, UI จัดการคิว/ปลดล็อก, Sync/ACK State Machine และ Server Financial Reconciliation (`document/PHASE_28_8_3_OFFLINE.md`)
+  - **Phase 28.8.3: Browser / PWA Offline (Local Scope — PASSED):** รองรับ PWA Shell (`/offline/app` + `offline-sw.js`), คิวเข้ารหัส `PBKDF2-SHA256` 600k + `AES-256-GCM` พร้อม Hash Chain/Revision CAS, `TrustedClock` Guard, State Machine (`pending`/`syncing`/`synced`/`failed`/`review`), การตรวจรับเงินสด Offline โดยผู้จัดการเข้ากะปัจจุบันตามราคา Permit ณ เวลาขายและตัดโควตาที่จองไว้เดิม (`OfflineReconciliationService` / `OfflineSaleAuthority`), การบล็อกคืนโควตาที่ไม่ได้ใช้จนกว่า Permit หมดอายุและผู้จัดการยืนยัน Manifest ครบถ้วน, และการตรวจรับฝั่ง ERP (`PosOfflineSalePolicy` + `pos_offline_receipt_claims`) (`document/PHASE_28_8_3_OFFLINE.md`)
+  - **Phase 28.8.4: Pharmacy Patient History / เวชระเบียน (Local Scope, Synthetic-Only — PASSED):** รองรับทะเบียนผู้ป่วยเฉพาะโมดูล Pharmacy POS (`pos_patients`, `pos_patient_revisions`, `pos_patient_visits`, `pos_patient_dispensing`), เข้ารหัสข้อมูลสุขภาพ/ประวัติแพ้ยา/บันทึกรับบริการ/อ้างอิงบิลด้วย Laravel `Crypt` พร้อม Branch-Keyed HMAC Lookup, จำกัดสิทธิ์อ่าน/แก้ไขรายละเอียดเฉพาะเภสัชกรและผู้จัดการที่มี `pharmacist_qualified=true` (Cashier เห็นเฉพาะรหัสและชื่อ Mask เพื่อผูกบิล), แก้ไขบันทึกรับบริการแบบ Append-only (`supersedes_id`), บล็อก Retail/Restaurant/ข้ามสาขา 100%, และป้องกันข้อมูลผู้ป่วยหลุดเข้า Audit Log, Offline Queue (`PatientDataBoundary`), หรือ Signed Event ที่ส่งไป ERP (`document/PHASE_28_8_4_PATIENT_HISTORY.md`)
+  - **Phase 28.8.5: Restaurant QR / Kitchen Queue / Seating Queue & Reservations (Local Scope — PASSED):** รองรับ QR สั่งอาหารผูกกับ `table_session_id` ที่เปิดอยู่พร้อมตรวจสอบความพร้อมของวัตถุดิบและราคา Catalog ปัจจุบันก่อนรับเข้าครัว (`PublicMenuService` / `RestaurantService::fromCustomerRequest`), คิวครัวเรียงตาม `queue_number` ต่อสาขาแบบ FIFO (สั่งเพิ่มได้เลขคิวใหม่) พร้อมระบบพักคิว/คืนคิว/ข้ามคิวโดยผู้จัดการพร้อมเหตุผลลง Audit (`holdOrder` / `advance`), ระบบคิวที่นั่ง Walk-in (เลือกคิวเก่าสุดที่ความจุโต๊ะรองรับ) และจองโต๊ะล่วงหน้าช่วงละ 90 นาทีพร้อมระยะผ่อนผันมาสาย 15 นาทีก่อนกด `no_show` (`pos_seating_entries`, ข้อมูลติดต่อเข้ารหัสด้วย `Crypt` และไม่ส่งไป ERP) (`document/PHASE_28_8_5_RESTAURANT.md`)
+  - **Configured Databases Upgrade (2026-11-04 & 2026-11-05 — COMPLETED):** อัปเกรดฐานข้อมูลที่ใช้งานจริงตาม Config ทั้ง ERP MySQL `erp` (`83 → 88/88` migrations, `165 → 173` tables) และ POS SQLite (`17 → 22 → 23 → 25/25` migrations, `35 → 56` tables) พร้อมสำรองข้อมูลและตรวจ Checksum/Integrity ครบถ้วน (`document/DATABASE_UPDATE_20261104.md`, `document/DATABASE_UPDATE_20261105.md`, `document/DATABASE_UPDATE_20261105_PHASE28_8_5.md`)
 - **Closed Phase Governance:** งานที่เป็น Security Vulnerability, Data Integrity Bug, Regression Fix หรือ Production Blocker ใน Phase ที่ปิดแล้ว (Phase 1–27) สามารถแก้ไขได้โดยต้องมี Feature Test ครอบคลุมและบันทึกเหตุผลชัดเจน ห้ามเพิ่มฟีเจอร์ใหม่ย้อนกลับเข้า Phase ที่ปิดแล้วโดยไม่มี Decision/Checklist ใหม่
 
 ---
@@ -70,6 +73,7 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 | **Non-User Payroll & Payslip Delivery Guard** | สลิปเงินเดือนของพนักงานที่ไม่มี User Account ในระบบ ให้จัดส่งทางอีเมลส่วนตัว (`personal_email`) ผ่าน `PayslipMail` ภายใต้การควบคุมสิทธิ์ `payroll.manage` โดยต้องไม่เปิดเผยข้อมูลเงินเดือนแก่พนักงานอื่น |
 | **External Read API Guard** | `/api/v1` รองรับเฉพาะ `GET`/`HEAD` ด้วย Bearer Key `erp_<public_id>.<secret>` (เก็บเฉพาะ SHA-256 hash), ดึง `org_id` จาก key เท่านั้น, ห้ามเปิดเผยข้อมูลเงินเดือน/บัญชีธนาคาร/เลขบัตร ปชช./ยอดเงินสดรวมองค์กร และแสดง Secret เต็มเพียงครั้งเดียวตอนสร้าง |
 | **Standalone POS & ERP Connector Guard** | แยกแอปและฐานข้อมูล `pos/` ออกจาก `backend/` 100%, ERP เป็นฝ่ายเชื่อมต่อไปยัง POS ฝ่ายเดียว (ไม่มี POS write เข้า ERP DB), เก็บ Private Key สำหรับเซ็น Event/Checkpoint บน POS Server เท่านั้น (ห้ามส่งลง Browser/IndexedDB), ตัดสต็อกผ่าน `InventoryMovementService` เส้นทางเดียว (`pos_sale` / `recipe_consumption`), แยก `financial_imported` จาก `inventory_pending`, และจำกัดยอดเงินสดกะ POS เฉพาะในกะ ห้ามปนกับยอดเงินสดรวมขององค์กร |
+| **POS Extensions Guard (28.8.1–28.8.5)** | บล็อก Pharmacy Delivery 100%, แยกเงินสด COD (`collect`/`remit`/`refund`) ไม่ให้แตะกะที่ปิดแล้ว, เข้ารหัสใบสมัครสมาชิกด้วย Hybrid Envelope (`AES-256-GCM` + `RSA-OAEP`) และส่งออกเฉพาะข้อมูล Mask อายุ $\le 15$ นาที, คิว Browser Offline เข้ารหัส `PBKDF2-SHA256` 600k + `AES-256-GCM` พร้อมบังคับผู้จัดการตรวจรับเงินสดตามราคา Permit เดิมและห้ามคืนโควตาก่อน Permit หมดอายุ, เวชระเบียน Pharmacy (`pos_patients*`) เข้ารหัสด้วย `Crypt` จำกัดเฉพาะเภสัชกร/ผู้จัดการที่มี `pharmacist_qualified=true` โดยห้ามหลุดเข้า Audit Log/Offline Queue/ERP, และระบบคิวครัว/คิวที่นั่ง/QR โต๊ะของ Restaurant POS ใช้ POS Server เป็น Authority เดียวพร้อมเข้ารหัสข้อมูลติดต่อจองโต๊ะด้วย `Crypt` และบล็อก `retail`/`pharmacy` 100% |
 
 ---
 
@@ -94,9 +98,10 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
   - ใช้ `UniversalOpenAiVisionAdapter` รองรับทั้ง Local AI (Ollama/LM Studio) และ Cloud AI; สกัด JPEG จาก Scanned PDF (`extractJpegFromPdf`), ใช้ `detail: 'high'`, บังคับ JSON output, และตรวจ Modulo 11 ของเลขผู้เสียภาษี 13 หลักและสมการ $Subtotal + VAT = Total$
 - **Manufacturing & BOM Architecture (Phase 27):**
   - ตาราง `bill_of_materials`, `bom_items`, `work_orders`, `work_order_items`, `production_costs`; บริการ `ProductionCostingService` คำนวณ Multi-level explosion พร้อมป้องกัน Circular dependency; บันทึกบัญชี WIP (`1160`) และ Finished Goods (`1140`) อัตโนมัติ
-- **Standalone POS & ERP Connector Architecture (Phase 28):**
+- **Standalone POS & ERP Connector Architecture (Phase 28 & 28.8.1–28.8.5):**
   - ใช้ Shared Core + Business Modules (`Retail`, `Restaurant`, `Pharmacy`) บนฐานข้อมูล POS แยกอิสระ; ซิงค์ผ่าน Signed Events เข้า ERP Inbox
   - การตัดสต็อกรวมศูนย์ที่ `InventoryMovementService` พร้อม Pessimistic Row Lock บน Product; ร้านอาหารตัดวัตถุดิบทางตรงด้วย `recipe_consumption` (ไม่สร้าง Work Order รายจาน) และแยกอาหารเสียหลังเข้าครัวเป็น `food_waste_spoilage`; ร้านขายยาบังคับให้ผู้จัดการที่เป็นเภสัชกร (`pharmacist_qualified = true`) ตรวจรับยาคืนก่อน `restock`/`destroy` และมีระบบกักกัน Lot Recall ทั้งฝั่ง POS และ ERP
+  - รองรับ Ordering/Delivery (`prepaid_cash`/`cod_cash`, `pos_delivery_cash`), Membership/Promotions (`PromotionCalculator` ตัวเดียวกันทั้ง POS/ERP, `MemberEnvelope`, `pos_promotion_rights`), Browser/PWA Offline (`EncryptedQueue.ts`, `TrustedClock.ts`, `OfflineReconciliationService`, `PosOfflineSalePolicy`, `pos_offline_receipt_claims`), Pharmacy Patient History (`PatientHistoryService`, `PatientHistoryScope`, Append-only Visits `supersedes_id`, `PatientDataBoundary`), และ Restaurant QR / Kitchen & Seating Queue (`PublicMenuService`, `RestaurantService`, `pos_seating_entries`, FIFO `queue_number` + Manager `queue_held`/override audit, 90-minute reservation window + 15-minute no-show grace)
 
 ---
 
@@ -140,144 +145,21 @@ Purpose: บันทึกข้อมูลอ้างอิงสถาป�
 | **Phase 28: Standalone POS & ERP Connector (28.1–28.7 Local Scope)** | 2026-10-27 | **PASSED — Local Development & Architecture Acceptance**<br>- ERP Phase 28 + External Webhook: **46 passed / 422 assertions** (หลังอัปเกรดฐาน MySQL `erp` 83 migrations)<br>- POS Isolated PHPUnit: **41 passed / 242 assertions** (ฐาน POS SQLite 17 migrations)<br>- Browser Headless Fixtures (1440px / 390px): ผ่านครบทุกโมดูล (Retail, Restaurant, Pharmacy, ABB→Full Tax)<br>*(ดูรายละเอียดใน `document/PHASE_28_LOCAL_ACCEPTANCE.md` และ `document/DATABASE_UPGRADE_20261027.md`)* |
 | **Phase 28.8.1: Ordering / Delivery (Local Operational Scope)** | 2026-10-30 | **PASSED — Local Operational Scope Acceptance**<br>- POS Isolated PHPUnit: **71 passed / 1,781 assertions** (`DeliveryTest` 20 cases + regression)<br>- ERP Phase 28 + Manufacturing: **62 passed / 509 assertions** (`Phase28PosImportTest` 16 cases + regression)<br>- POS TypeScript (`tsc --noEmit`), Vite Build & Pint (Phase 28.8.1 files): **Clean (0 errors)**<br>- Browser Headless (`1280x900` / `375x812`) & Signed Outbox→ERP Roundtrip (35 revisions): **Verified 100%**<br>*(ดูรายละเอียดใน `document/PHASE_28_8_1_DELIVERY.md` และ `document/acceptance/phase28_8_1/`)* |
 | **Phase 28.8.2: Membership / Promotions (Local Scope)** | 2026-11-01 | **PASSED — Local Scope Acceptance**<br>- POS Isolated PHPUnit: **81 passed / 1,851 assertions** (`PromotionCalculatorTest`, `DeliveryTest`, `CheckoutTest` + regression)<br>- ERP Phase 28 + Manufacturing + Membership: **82 passed / 1,937 assertions** (`PosPromotionCalculatorTest`, `PosMemberEnvelopeTest`, `Phase28PosImportTest`)<br>- POS & ERP TypeScript (`tsc --noEmit`), Vite Builds & Pint (Phase 28.8.2 files): **Clean (0 errors)**<br>- Browser Headless (`1280x900` / `375x812` ทั้ง Retail/Restaurant/Pharmacy), Stale `409`/Replay & Signed Retail→ERP Roundtrip (10 events / 26 signatures): **Verified 100%**<br>*(ดูรายละเอียดใน `document/PHASE_28_8_2_MEMBERSHIP.md` และ `document/acceptance/phase28_8_2/`)* |
-| **Phase 28.8.3: Browser / PWA Offline (Foundation Stage)** | 2026-11-01 | **PASSED — Foundation Stage Acceptance (In Progress)**<br>- POS Isolated PHPUnit: **87 passed / 1,904 assertions** (รวม `OfflineIngressTest` 6 cases / 53 assertions + full POS regression)<br>- POS TypeScript (`tsc -p pos/tsconfig.json --noEmit`) & Pint (Phase 28.8.3 foundation files): **Clean (0 errors)**<br>- Chrome IndexedDB / WebCrypto & `TrustedClock` (`storage-browser.json`): **PASSED 100%** (PBKDF2 600k + AES-256-GCM, Cross-tab CAS cap, Partial loss guard, Clock rollback freeze)<br>*(ดูรายละเอียดใน `document/PHASE_28_8_3_OFFLINE.md` และ `document/acceptance/phase28_8_3/`)* |
+| **Phase 28.8.3: Browser / PWA Offline (Local Scope) & Configured DB Upgrade** | 2026-11-04 | **PASSED — Full Local Scope Acceptance & Configured DBs Migrated**<br>- POS Isolated PHPUnit: **93 passed / 1,958 assertions** (รวม `OfflineIngressTest` 8 cases + `CheckoutTest` offline authority)<br>- ERP Phase 28 + Manufacturing + Membership + Offline: **84 passed / 1,960 assertions** (`PosOfflineSalePolicy` + `pos_offline_receipt_claims`)<br>- POS TypeScript (`tsc -p pos/tsconfig.json --noEmit`) & Pint (Phase 28.8.3 files): **Clean (0 errors)**<br>- Chrome PWA (`pwa-browser.json`), Storage/Clock (`storage-final.json`) & Signed Outbox→ERP Roundtrip: **PASSED 100%**<br>- Configured Databases Upgraded: **ERP MySQL `88/88`** & **POS SQLite `22/22`** (`0` pending)<br>*(ดูรายละเอียดใน `document/PHASE_28_8_3_OFFLINE.md`, `document/acceptance/phase28_8_3/` และ `document/DATABASE_UPDATE_20261104.md`)* |
+| **Phase 28.8.4: Pharmacy Patient History / เวชระเบียน (Local Scope, Synthetic-Only) & POS DB `23/23`** | 2026-11-05 | **PASSED — Local Scope Acceptance (Synthetic-Only) & POS DB Migrated**<br>- POS Isolated PHPUnit: **108 passed / 2,059 assertions** (รวม `PatientHistoryTest` 8 cases + `PatientHistoryScopeTest` 5 cases + `CheckoutTest` patient link)<br>- POS TypeScript (`tsc -p pos/tsconfig.json --noEmit`) & Pint (Phase 28.8.4 files): **Clean (0 errors)**<br>- Chrome 7 Access/Scope Cases (`browser-report.json`), Server Encryption/Audit (`server-report.json`) & IndexedDB Boundary (`storage-final.json` 7 groups): **PASSED 100%**<br>- Configured POS SQLite Upgraded: **`22 → 23/23` migrations** (`51 → 55` tables, `0` pending)<br>*(ดูรายละเอียดใน `document/PHASE_28_8_4_PATIENT_HISTORY.md`, `document/acceptance/phase28_8_4/` และ `document/DATABASE_UPDATE_20261105.md`)* |
+| **Phase 28.8.5: Restaurant QR / Kitchen Queue / Seating Queue & Reservations (Local Scope) & POS DB `25/25`** | 2026-11-05 | **PASSED — Local Scope Acceptance & POS DB Migrated (`25/25`)**<br>- POS Isolated PHPUnit: **113 passed / 2,125 assertions** (รวม `RestaurantTest` 14 cases ทดสอบ FIFO queue, Manager hold/skip audit, 90-min reservation window, 15-min no-show, Walk-in oldest-fit, QR table session & catalog re-check)<br>- POS TypeScript (`tsc -p pos/tsconfig.json --noEmit`) & Pint (Phase 28.8.5 files): **Clean (0 errors)**<br>- Chrome Customer QR (`390px`) & POS (`1440px`/`390px`) (`browser.json`) + Fixture Server Verification (`server.json` 2 runs): **PASSED 100%** (`consoleErrors: []`, replay-safe, encrypted booking contact)<br>- Configured POS SQLite Upgraded: **`23 → 25/25` migrations** (`55 → 56` tables, `0` pending)<br>*(ดูรายละเอียดใน `document/PHASE_28_8_5_RESTAURANT.md`, `document/acceptance/phase28_8_5/` และ `document/DATABASE_UPDATE_20261105_PHASE28_8_5.md`)* |
 
-### รายการ External Gates ที่ยังค้างสำหรับ Production ของ Phase 28 (ไม่ใช่ Blocker ของงานพัฒนา Local):
+### รายการ External & Policy Gates ที่ยังค้างสำหรับ Production ของ Phase 28 / 28.8 (ไม่ใช่ Blocker ของงานพัฒนา Local):
 1. **e-Tax Live Provider & Signing Gate:** รอเลือกผู้ให้บริการ e-Tax Provider จริงและผูกใบรับรองดิจิทัล (HSM/Cloud Key) สำหรับส่งข้อมูลจริงแทนสถานะ `awaiting_provider`
-2. **Target Two-Server Network & Hardware Gate:** ติดตั้ง mTLS Reverse Proxy/Firewall ข้าม 2 Server จริง และทดสอบร่วมกับเครื่องพิมพ์ใบเสร็จความร้อน (Thermal Printer) / เครื่องสแกนบาร์โค้ดจริง
-3. **MariaDB High-Concurrency Stress & Operational UAT Gate:** ทดสอบการแย่งโควตาสต็อกพร้อมกันหลาย Terminal บน MariaDB จริง และซ้อมแผนกู้คืนข้อมูล (Recovery Drill) ร่วมกับผู้ดูแลระบบ
+2. **Target Two-Server Network, Private HTTPS LAN & Hardware Gate:** ติดตั้ง mTLS Reverse Proxy/Firewall ข้าม 2 Server จริง, ทดสอบสแกน QR สั่งอาหารด้วยมือถือจริงผ่าน HTTPS LAN, และทดสอบร่วมกับเครื่องพิมพ์ใบเสร็จความร้อน (Thermal Printer) / เครื่องสแกนบาร์โค้ดจริง
+3. **MariaDB High-Concurrency Stress & Operational UAT Gate:** ทดสอบการแย่งโควตาสต็อก/คิวโต๊ะพร้อมกันหลาย Terminal บน MariaDB จริง และซ้อมแผนกู้คืนข้อมูล (Recovery Drill) ร่วมกับผู้ดูแลระบบ
+4. **COD / Promotion Accounting, PDPA Retention, Key Custody & Clinical Sign-off Gate:** รออนุมัติผังบัญชี/ภาษีสำหรับรายการ `cod_cash` (`policy_pending`), นโยบายการเก็บรักษา/หมุนเวียนกุญแจข้อมูลสมาชิกและเวชระเบียนจริง, และการกำหนดขอบเขตระบบเตือนแพ้ยาอัตโนมัติโดยเภสัชกรก่อนเปิดใช้งานข้อมูลจริง
 
 ---
 
-## 7. การตรวจรับ Checklist และข้อกำหนดสถาปัตยกรรมสำหรับ Phase 28.8 (POS Extensions — 2026-10-30)
+## 7. ขอบเขตงานที่ยังเลื่อนไว้ (`Phase 28.8.6 — Deferred Scope`)
 
-**สถานะ:** **ผ่านการตรวจรับสมบูรณ์ 100% (APPROVED — Checklist Ready for Phase 28.8.1–28.8.3 Design & Implementation)**  
-**เอกสารอ้างอิง:** [checklist.md](checklist.md#L1706-L1788) (หัวข้อ `28.8 POS extensions`)
+เอกสารอ้างอิง: [checklist.md](checklist.md#L1804-L1807)
 
-รายการใน [checklist.md](checklist.md#L1706-L1788) ได้รวมทั้ง Guardrails หลักและจุดเชื่อมระหว่างโมดูล (Cross-Module Edge Cases ทั้ง 5 ข้อ) ครบถ้วนทุกประเด็นแล้ว สรุปกรอบสถาปัตยกรรมที่ล็อกไว้สำหรับใช้พัฒนา `28.8.1` – `28.8.5` ดังนี้:
-
-1. **Ordering / Delivery (`28.8.1`):**
-   - ใช้ Account Mapping ขององค์กรแทนการ Hardcode รหัสบัญชี GL และแยกเงินสดระหว่างจัดส่ง (COD) ไม่ให้ปนกับเงินสดในลิ้นชักของกะที่ปิดแล้ว
-   - แยกใบส่งของ หลักฐานรับเงิน และ ABB/FULL ออกจากกัน; หากออกเอกสารขายแล้วแต่ส่งไม่สำเร็จต้องใช้ Reversal / Return / Credit Note พร้อม Source Correlation (ไม่ตีความ Failed Delivery ว่าเกิด Cash Refund โดยอัตโนมัติ)
-   - แยก `delivery_fee` / `packaging_fee` ออกจากยอดสินค้า พร้อม Snapshot กติกาส่วนลดและภาษี
-   - แยกการจัดการของคืนจากงานจัดส่งตามประเภทธุรกิจ (Retail ตรวจสภาพก่อนคืน Stock, Restaurant บันทึก `waste` อ้างอิง `recipe_consumption` ต้นทุนเดิมโดยไม่ตัดซ้ำ, Pharmacy ให้ผู้จัดการที่เป็นเภสัชกรตรวจรับก่อน `restock`/`destroy` และให้เภสัชกรอนุมัติก่อนปล่อยจัดส่งยา)
-2. **Membership / Promotions (`28.8.2`):**
-   - ERP เป็น Master หรือรับ Draft Member จาก POS ผ่าน Signed Event เดิม (ไม่มี Direct ERP DB Write) พร้อมทำ PDPA Masking/Encryption
-   - คำนวณส่วนลดโปรโมชันและสมาชิกเป็น Trade Discount ก่อน VAT ให้สอดคล้องกันทุก POS และปันส่วนยอดสุทธิจริงสำหรับ ABB/FULL/GL และ Refund
-   - โปรโมชันจำกัดสิทธิ์ (Limited Redemption / คูปองใช้ครั้งเดียว) ต้องผ่าน Online Check หรือโควตาที่จัดสรรเฉพาะเครื่อง และเชื่อมการคืนสิทธิ์คูปอง (`Redemption Reversal`) เข้ากับกรณี Void/Cancelled/Failed Delivery (แยกจากการคืน Stock จริงที่ต้องผ่านการตรวจรับสภาพก่อน)
-3. **Browser / PWA Offline (`28.8.3`):**
-   - เก็บ `POS Instance Event/Checkpoint Private Key` ที่ POS Server เท่านั้น (ไม่ส่งลง Browser/IndexedDB) และแยก Event Signature ออกจาก e-Tax Document Signature
-   - แยก `Offline Provisional Receipt` / `Offline Number Quota` ออกจาก `Offline Stock Quota` เพื่อกัน Oversell และกำหนด Hard-Blocks ขณะ Offline (ห้าม Refund/Void บิลที่ยังไม่ซิงค์, ห้ามเปลี่ยน FULL ข้ามเครื่อง, ห้ามจ่ายยาติด Recall/ต้องตรวจสถานะสด)
-   - งานจัดส่ง (`Dispatch`, `COD Settlement`, `Failed Delivery Return`) ใช้ **POS Server เป็น Online Authority** สำหรับรุ่นแรก (Browser Offline เก็บได้เฉพาะคำขอ Pending)
-   - เมื่อ Logout/Timeout/เปลี่ยนกะ ห้ามลบคิว `pending`/`failed`/`review` แต่ต้องแยกสิทธิ์อ่าน/ถอดรหัสตามบทบาทและสาขา พร้อมกำหนดเพดาน `max_offline_transactions` / `max_offline_amount` และตรวจผล `StorageManager.persist()` จริง
-   - บันทึก `client_created_at` แยกจาก `server_received_at` (ไม่เขียนทับเมื่อ Retry) พร้อมตรวจจับ Clock Skew / Rollback โดยห้ามทิ้งรายการที่รับเงินแล้วแต่ให้ส่งเข้าคิว Review
-4. **Vertical Extensions (`28.8.4` Pharmacy & `28.8.5` Restaurant) & Deferred (`28.8.6`):**
-   - `28.8.4`: ระบุ Decision Supersede ของเวชระเบียนเฉพาะเมื่อพัฒนาและเปิดใช้ใน Pharmacy POS, เข้ารหัสข้อมูลสุขภาพ at rest, ไม่ Cache เวชระเบียนใน Browser อัตโนมัติ, และแยก `Drug Allergy Guard` รอกำหนดขอบเขตจากเภสัชกร
-   - `28.8.5`: POS Server เป็น Authority เดียวสำหรับ Public QR Order Acceptance, Table Session และการจัดสรรโต๊ะ Walk-in / Reservation (ไม่มี Online Deposit ในรอบนี้)
-
-**สรุปผลการตรวจรับ:** Checklist ของ **Phase 28.8** พร้อมสมบูรณ์ 100% **สามารถเริ่มงาน `28.8.1` $\rightarrow$ `28.8.2` $\rightarrow$ `28.8.3` ได้ทันที**
-
----
-
-## 8. ผลการตรวจรับงาน Phase 28.8.1: Ordering / Delivery (Local Operational Scope — 2026-10-30)
-
-**สถานะ:** **ผ่านการตรวจรับระดับ Local Operational Scope (PASSED — Ready for Phase 28.8.2 Membership / Promotions)**  
-**เอกสารอ้างอิง:** [document/PHASE_28_8_1_DELIVERY.md](document/PHASE_28_8_1_DELIVERY.md), [document/acceptance/phase28_8_1/README.md](document/acceptance/phase28_8_1/README.md), [checklist.md](checklist.md#L1712-L1728)
-
-### 8.1 สรุปการตรวจสอบสถาปัตยกรรมและ Security Guardrails (Verified Controls)
-1. **POS Server Authority, Optimistic Concurrency & Idempotency:**
-   - ทุกการสร้างและเปลี่ยนสถานะงานจัดส่งใน `pos/app/Services/DeliveryService.php` และ `pos/app/Services/DeliveryOperations.php` ทำงานภายใต้ Transaction + `lockForUpdate()`, บังคับตรวจ `version` (`409 Conflict` เมื่อ Stale), และตรวจ `request_key` + `request_hash` (SHA-256) ใน `pos_delivery_actions` ป้องกันการยิงซ้ำหรือใช้ Key ซ้ำแต่เปลี่ยน Payload
-2. **PDPA & Privacy Isolation:**
-   - ข้อมูลผู้รับ/ที่อยู่จัดส่ง (`Delivery::$casts['contact'] = 'encrypted:array'`) เข้ารหัส at rest, ซ่อนจาก JSON (`$hidden`), ไม่ส่งออกใน `pos_audit` หรือ `pos_outbox` (`delivery.updated`), และหน้าใบนำส่ง (`delivery-slip.blade.php`) ส่ง Header `Cache-Control: private, no-store` พร้อม Escape ข้อมูลทุกจุด
-3. **Pharmacy Hard-Block (100%):**
-   - บล็อกโมดูล `pharmacy` ทั้งใน `DeliveryService::actor()` (`403 Forbidden` ทุกบทบาท) และฝั่ง ERP `PosDeliveryImportService::import()` (`PosSignatureException` ปฏิเสธ Event หากมี `business_type = pharmacy` หลุดเข้ามา)
-4. **การแยก Prepaid Cash vs COD Cash-Custody และเพดานบัญชี (`policy_pending`):**
-   - **Prepaid Cash (`prepaid_cash`):** ผูกกับบิลเงินสดที่ชำระแล้ว (`pos_orders` แบบ 1:1 unique `sale_id`) โดยไม่สร้างยอดขาย/ภาษี/ตัดสต็อกซ้ำ และไม่อนุญาตให้กด `collect` ซ้ำ
-   - **COD Cash (`cod_cash`):** คำนวณราคาและ VAT 7% ฝั่ง Server จาก Catalog ปัจจุบัน แยก `delivery_fee` และ `packaging_fee` ออกจากยอดสินค้า; แยกขั้นตอนรับเงินของคนส่ง (`collect` $\rightarrow$ `collected_unremitted`) ออกจากขั้นตอนนำส่งเงินเข้าลิ้นชักผู้จัดการที่เปิดกะอยู่ (`remit` ลง `pos_delivery_cash` คำนวณใน `ShiftCashService::totals()` โดยไม่แตะกะที่ปิดแล้ว) และทำเครื่องหมาย `financial_status = policy_pending` โดยไม่แอบสร้าง `pos_orders`, `pos_payments`, `invoices`, หรือ `journal_entries` ก่อนมีนโยบายบัญชี/ภาษีอนุมัติ
-5. **การจองโควตาสต็อก งานครัว และการจัดการของคืนแยกตามธุรกิจ:**
-   - **Retail COD:** จองโควตาใน `pos_grants` (`pos_delivery_reservations`); หากส่งไม่สำเร็จ (`fail`) จะยังไม่คืนสต็อกและไม่ตีความว่าคืนเงินอัตโนมัติ จนกว่าจะรับของกลับเข้าสาขา (`receive`) และผู้จัดการตรวจสภาพ (`inspect` เลือก `restock` ที่ตรวจ Lot Recall/วันหมดอายุ หรือ `destroy`)
-   - **Restaurant COD:** สร้างใบงานครัว Takeaway (`pos_delivery_kitchen_lines`) บล็อกการคิดเงินซ้ำผ่าน `RestaurantService::bill()`, บังคับสถานะครัว `ready`/`served` ก่อนปล่อยรถ (`dispatch`), และเมื่อรับของคืนจากงานที่ส่งไม่สำเร็จจะบังคับ `destroy` (อาหารเสีย `food_waste_spoilage` อ้างอิง `recipe_consumption` เดิมโดยไม่ตัดวัตถุดิบซ้ำ)
-6. **Signed Outbox Revisions & ERP Checkpoint Verification:**
-   - ทุกการเปลี่ยนสถานะสร้าง `delivery.updated` พร้อมลายเซ็น RSA-SHA256; ฝั่ง ERP (`PosDeliveryImportService`) ตรวจลายเซ็น, บังคับลำดับ `version` ต่อเนื่อง (`version - 1` ต้องมีอยู่ มิฉะนั้นโยน `PosDependencyPending` เพื่อรอรอบซิงค์), และ `PosCheckpointService` ตรวจนับความครบถ้วนของ `delivery.updated` เทียบกับ `pos_import_delivery_revisions` (ปิดค่าเริ่มต้นด้วย `config('pos.local_delivery_enabled') === false` เพื่อไม่กระทบเครื่องที่ยังไม่รัน Migration)
-
-### 8.2 หลักฐานการทดสอบเชิงประจักษ์ (Empirical Verification Snapshot)
-- **POS Isolated PHPUnit (`pos/phpunit.xml`):** **PASSED — 71 tests / 1,781 assertions** (รวม `DeliveryTest` 20 cases ครบทุก Lifecycle, Concurrency, Idempotency, Prepaid/COD, Kitchen/Return Inspection, Pharmacy Block)
-- **ERP Phase 28 & Manufacturing Suite:** **PASSED — 62 tests / 509 assertions** (รวม `Phase28PosImportTest` 16 cases ทดสอบการนำเข้า `delivery.updated`, Out-of-order Version Dependency, Pharmacy Block, และ Checkpoint Audit)
-- **Static Analysis, Build & Code Style:**
-  - `tsc -p pos/tsconfig.json --noEmit` & `vite build --config pos/vite.config.mjs`: **PASSED (0 errors)**
-  - `pint --test` (เฉพาะไฟล์ในขอบเขต Phase 28.8.1 ทั้ง `pos/` และ `backend/`): **PASSED (Clean)**
-- **Browser & Signed Sync Roundtrip Fixtures (`document/acceptance/phase28_8_1/`):**
-  - ผ่านการทดสอบ Headless Chrome ทั้งขนาด `1280x900` และ `375x812` (`consoleErrors: []`, `pageErrors: []`, `overflow: false`) และซิงค์ `delivery.updated` ครบ 35 Revisions เข้า ERP Inbox พร้อมยืนยันลายเซ็นสำเร็จ 100%
-
-### 8.3 รายการ Release Gates ที่ค้างไว้ตามขอบเขต (Non-Blocking for Phase 28.8.2)
-1. **COD & Delivery Fee Financial/Tax Policy Gate:** รอกำหนดผังบัญชีและจังหวะการออกใบกำกับภาษี (ABB/FULL), การรับรู้รายได้ค่าขนส่ง/ค่าบรรจุภัณฑ์, และการตัดสต็อกจริง/COGS ใน ERP สำหรับรายการ `cod_cash` (ปัจจุบันแยกสถานะเป็น `policy_pending` อย่างปลอดภัย)
-2. **Operational Database Migration Gate:** ไฟล์ Migration ใหม่ 3 ไฟล์ (`pos/database/migrations/2026_10_30_000001_create_delivery_workflow.php`, `2026_10_30_000002_add_delivery_operations.php`, และ `backend/database/migrations/2026_10_30_000001_create_pos_delivery_revisions.php`) ทดสอบใน Isolated SQLite เรียบร้อยแล้ว รอคำสั่งอนุมัติก่อนรันอัปเกรดลงฐานข้อมูล Operational จริงตาม Config
-
----
-
-## 9. ผลการตรวจรับงาน Phase 28.8.2: Membership / Promotions (Local Scope — 2026-11-01)
-
-**สถานะ:** **ผ่านการตรวจรับระดับ Local Scope (PASSED — Ready for Phase 28.8.3 Browser / PWA Offline)**  
-**เอกสารอ้างอิง:** [document/PHASE_28_8_2_MEMBERSHIP.md](document/PHASE_28_8_2_MEMBERSHIP.md), [document/acceptance/phase28_8_2/README.md](document/acceptance/phase28_8_2/README.md), [checklist.md](checklist.md#L1729-L1749)
-
-### 9.1 สรุปการตรวจสอบสถาปัตยกรรมและ Security Guardrails (Verified Controls)
-1. **ERP Member Master, Hybrid Encrypted Enrollment & PDPA Masking:**
-   - ERP เป็น Member Master (`pos_members` ใน `PosMembershipMasterService`) โดยจัดเก็บ `contact` แบบ `encrypted:array`, ซ่อนใน `$hidden`, และค้นหาหมายเลขซ้ำด้วย Keyed HMAC-SHA256 Fingerprint แยกตาม `org_id` (`phone_fingerprint`) โดยไม่รวมบัญชีอัตโนมัติ (ต้องให้ผู้ถือสิทธิ์ `pos.manage` ยืนยันจับคู่หรืออนุมัติ)
-   - คำขอสมัครสมาชิกจาก POS (`MemberDraftService` $\rightarrow$ `member.requested`) เข้ารหัสข้อมูลติดต่อด้วย Hybrid Envelope (`AES-256-GCM` ผูก AAD `instance_id|branch_id|request_id` + `RSA-OAEP` 2048-bit แยกคนละคู่กุญแจกับ Event Signing Key ใน `shared/pos/MemberEnvelope.php`) ไม่ส่ง Plaintext PII ลง Outbox
-   - Publication ที่ส่งให้ POS (`PosMembershipPublicationService` $\rightarrow$ `MembershipService::provision()`) ส่งเฉพาะข้อมูลที่ Mask แล้ว (`name_masked`, `phone_masked` รูปแบบ `***1234`), จำกัดขนาดไม่เกิน 2 MiB และมีอายุสูงสุด 15 นาที (ต่ออายุเมื่อเหลือ $\le 5$ นาที)
-2. **Shared Deterministic Promotion Calculator & Pre-VAT Trade Discount:**
-   - ใช้ `Company\Pos\PromotionCalculator` (`shared/pos/PromotionCalculator.php`) ตัวเดียวกันทั้งฝั่ง POS และ ERP คำนวณส่วนลดแบบ Exclusive (`fixed` หรือ `percent` ก่อน VAT, 1 โปรโมชันต่อบิล, ห้ามซ้อนกับ `discount_approval_id` ของผู้จัดการ)
-   - แยกการตั้งค่าองค์ประกอบยอดซื้อขั้นต่ำ (`minimum_components`: `merchandise`, `delivery`, `packaging`) ออกจากฐานที่ได้รับส่วนลด (`discount_components`), ปันส่วนส่วนลดระดับสตางค์ด้วยวิธี Largest Remainder ผูกกับ Line ID คงที่ และคำนวณ VAT หลังหักส่วนลดอย่างแม่นยำทั้งใน `CheckoutService`, `PosSaleValidator`, และ `PosImportService`
-3. **Pre-Allocated Limited Redemption Rights & Dependency-Safe Reversal:**
-   - โปรโมชันจำกัดจำนวน (`max_uses` / `per_member_limit`) ใช้สิทธิ์ที่ ERP จัดสรรล่วงหน้าให้แต่ละ Instance (`pos_promotion_allocations` $\rightarrow$ `pos_promotion_rights`) และล็อกตัดสิทธิ์ใน Transaction เดียวกับการขาย/การจัดส่ง (`MembershipService::claim()`)
-   - การคืนสิทธิ์ (`release` / `releaseRefundedSale`) เกิดขึ้นครั้งเดียวเมื่อบิลถูก Full Refund ครบทุกบรรทัด (Partial Refund ไม่คืนสิทธิ์) หรือเมื่อ COD Delivery ถูกยกเลิกก่อนรับเงิน / รับของคืนผ่านการตรวจสภาพ (`returned_inspected` / `disposed`) หรือคืนเงินครบแล้วเท่านั้น โดยแยกขาดจากการคืนสต็อกพร้อมขาย
-   - หากบิลใหม่ที่ใช้ Slot เดิมซิงค์มาถึง ERP ก่อนที่ Event `sale.refunded` ของบิลเก่าจะมาถึง `PosMembershipImportService::accept()` จะโยน `PosDependencyPending('promotion_release')` เพื่อรอ Event ต้นทางโดยไม่สร้างเอกสารบัญชีซ้ำหรือปฏิเสธผิดพลาด
-
-### 9.2 หลักฐานการทดสอบเชิงประจักษ์ (Empirical Verification Snapshot)
-- **POS Isolated PHPUnit (`pos/phpunit.xml`):** **PASSED — 81 tests / 1,851 assertions** (ครอบคลุม `PromotionCalculatorTest`, `DeliveryTest`, `CheckoutTest`, `RestaurantTest`, `ConfigurationTest` ครบทุกธุรกิจ)
-- **ERP Phase 28, Manufacturing & Membership Suite:** **PASSED — 82 tests / 1,937 assertions** (ครอบคลุม `PosPromotionCalculatorTest`, `PosMemberEnvelopeTest`, `Phase28PosImportTest` ทดสอบครบทั้งการคำนวณส่วนลด, Hybrid Envelope, การซิงค์ `member.requested`, Stale/Replay, Partial vs Full Refund Release, และ `promotion_release` Dependency)
-- **Static Analysis, Build & Code Style:**
-  - `tsc` & `vite build` ทั้งฝั่ง `pos/` และ `backend/`: **PASSED (0 errors)**
-  - `pint --test` (ไฟล์ในขอบเขต Phase 28.8.2 ทั้ง `shared/`, `pos/`, และ `backend/`): **PASSED (Clean)**
-- **Browser & Signed Sync Roundtrip Fixtures (`document/acceptance/phase28_8_2/`):**
-  - ผ่านการทดสอบ Headless Chrome ทั้งขนาด `1280x900` และ `375x812` ครบทั้ง Retail, Restaurant, และ Pharmacy (`pageErrors: []`, `noHorizontalOverflow: true`), ทดสอบ Stale Publication `409` + Refresh/Reprice, และซิงค์ Signed Events จริง 10 รายการ (7 Sales + 3 Enrollment Requests) พร้อมตรวจลายเซ็น 26 Envelopes ผ่าน 100%
-
-### 9.3 รายการ Release Gates ที่ค้างไว้ตามขอบเขต (Non-Blocking for Phase 28.8.3)
-1. **Promotion & COD Accounting/Tax, PDPA Retention & Key Rotation Gate:** รอตรวจรับผังบัญชี/ภาษีสำหรับส่วนลดโปรโมชันและค่าจัดส่ง COD, นโยบายการเก็บรักษา/ลบข้อมูลส่วนบุคคลของสมาชิกจริง, และกลไกหมุนเวียนกุญแจ `POS_MEMBER_ENROLLMENT_PRIVATE_KEY_PATH` / `POS_MEMBER_LOOKUP_KEY`
-2. **Operational Database Migration Gate:** ปัจจุบันโค้ดมี Migration รวม `ERP 87 / POS 21` (เพิ่มจากที่รันในฐานข้อมูลจริงรอบ `2026-10-27` ซึ่งอยู่ที่ `ERP 83 / POS 17` คือ Migration ของ `28.8.1` และ `28.8.2` รวมฝั่งละ 4 ไฟล์) ทดสอบใน Isolated SQLite ผ่านครบถ้วนแล้ว รอคำสั่งอนุมัติก่อนรันอัปเกรดลงฐานข้อมูล Operational จริงตาม Config
-
----
-
-## 10. ผลการตรวจรับงาน Phase 28.8.3: Browser / PWA Offline — Foundation Stage (2026-11-01)
-
-**สถานะ:** **ผ่านการตรวจรับส่วนโครงสร้างพื้นฐาน (PASSED Foundation Stage — In Progress: Ready for PWA Shell/UI, Sync State Machine & Server Reconciliation)**  
-**เอกสารอ้างอิง:** [document/PHASE_28_8_3_OFFLINE.md](document/PHASE_28_8_3_OFFLINE.md), [document/acceptance/phase28_8_3/README.md](document/acceptance/phase28_8_3/README.md), [checklist.md](checklist.md#L1750-L1769)
-
-### 10.1 สรุปการตรวจสอบสถาปัตยกรรมและ Security Guardrails (Verified Foundation Controls)
-1. **Server Offline Evidence Ingress & Conflict Preservation (`OfflineIngressService` / `/offline/devices`, `/offline/inbox`):**
-   - ผูก `device_id` กับ `instance_id`, `branch_id`, `terminal_id`, และ `staff_id` ภายใต้ Pessimistic Lock (`pos_offline_devices`) พร้อมคืนค่า `offline_sale_authorized: false` ชัดเจนในระยะ Foundation
-   - รับหลักฐาน (`sale.draft`, `restaurant.order.draft`, `delivery.request` ขนาดไม่เกิน 64 KB) โดยบันทึก `client_created_at` แยกจาก `server_received_at` ครั้งแรกอย่างเป็น Immutable (การยิงซ้ำไม่เขียนทับ `server_received_at`) และเข้ารหัส Payload at rest ด้วย `Crypt::encryptString`
-   - หากส่ง `client_transaction_id` เดิมซ้ำแต่ Payload เปลี่ยน (`payload_hash` ไม่ตรง) ระบบจะรักษา Payload ต้นฉบับไว้ใน `pos_offline_inbox` และบันทึก Payload ที่ขัดแย้งลง `pos_offline_conflicts` แบบเข้ารหัส พร้อมตั้งสถานะ `review` (`reason_code = identity_conflict`) โดยไม่ทับหลักฐานเดิมและไม่สร้างรายการขายซ้ำ
-2. **Manager Policy & Pre-Allocated Stock/Slot Permits (`OfflinePermitService` / `/offline/policies`, `/offline/permits`):**
-   - ค่าเริ่มต้นต่อสาขา: `permit_minutes = 15`, `max_offline_transactions = 20`, `max_offline_amount = 10000.00`, `product_ids = []`; การแก้ไขผ่าน `POST /offline/policies` บังคับใช้ `ManagerApproval::verify` (ยืนยันรหัสผ่านผู้จัดการสด) และตรวจ `expected_version` (`409 Conflict` เมื่อ Stale)
-   - การออก Permit (`POST /offline/permits`) จำกัดเฉพาะธุรกิจ `retail`/`pharmacy` สกุลเงิน `THB` และเฉพาะสินค้าทั่วไปที่อยู่ใน `policy.product_ids` เท่านั้น (บล็อกสินค้าที่มี Metadata `pharmacy` เวชภัณฑ์/ยาควบคุม และ `restaurant` งานครัวด้วย `422`), บังคับให้มีเพียง 1 Permit ที่ยังไม่ Reconcile ต่อ Terminal (`active_terminal_id` unique — แม้หมดอายุก็ไม่คืนโควตาอัตโนมัติป้องกันกรณีรับเงินสดไปแล้ว), จองสต็อกเข้า `pos_grants.reserved_quantity` + `pos_offline_reservations` ผ่าน `EntitlementAllocator::take(..., offlinePermitId: $id)`, และสร้างช่องเลขเอกสาร `pos_offline_slots` ล่วงหน้า
-3. **Browser Encrypted IndexedDB Queue (`pos/resources/offline/EncryptedQueue.ts`):**
-   - ใช้ WebCrypto `PBKDF2-SHA256` (`600,000` iterations, salt 16 bytes, รหัสปลดล็อก 12–128 ตัวอักษร) สร้างกุญแจ `AES-256-GCM` แบบ Non-extractable ใน Memory เท่านั้น (ล็อกอัตโนมัติเมื่อ `pagehide` และไม่เก็บรหัสผ่านหรือ Plaintext Key ลง Storage)
-   - ผูก AAD เข้ากับ `scopeHash|recordId` (`instanceId`, `branchId`, `staffId`, `terminalId`, `deviceId`) ป้องกันการคัดลอกข้อมูลข้ามสาขา/ผู้ใช้/อุปกรณ์
-   - ตรวจ `StorageManager.persist()` และ `navigator.storage.estimate()` ก่อนเขียน, ใช้ IndexedDB Transaction (`durability: 'strict'`) พร้อม Revision CAS กันหลายแท็บเขียนชนกัน, บังคับเพดาน `maxTransactions` / `maxAmountCents`, และตรวจทานจำนวน/ผลรวมยอดเงินของ Records เทียบกับ Vault Metadata ทุกครั้ง (`entries()`) หากพบว่า Record บางส่วนหายไปจะหยุดรับรายการใหม่ทันทีโดยคงหลักฐานที่เหลือไว้
-4. **Honest-Client Monotonic & Wall-Clock Guard (`pos/resources/offline/TrustedClock.ts`):**
-   - บังคับเริ่มต้นจากเวลา Server สด (`rtt <= 5000ms`), ตรวจความต่างระหว่าง `Date.now()` กับ `performance.now()` (หากคลาดเคลื่อนเกิน `2000ms` จะเปลี่ยนสถานะเป็น `clock_changed`), ตรวจจับการพับหน้าจอ/หลับเครื่อง (`visibilitychange` หรือ Timer ขาดช่วงเกิน `5000ms` $\rightarrow$ `context_suspended`) และการหมดอายุ Permit (`permit_expired`), และล็อกสิทธิ์จนกว่าจะออนไลน์รับเวลาใหม่
-
-### 10.2 หลักฐานการทดสอบเชิงประจักษ์ (Empirical Verification Snapshot)
-- **POS Isolated PHPUnit (`pos/phpunit.xml`):** **PASSED — 87 tests / 1,904 assertions** (รวม `OfflineIngressTest` 6 cases / 53 assertions ทดสอบ Replay, Conflict Preservation, Permit Stock Reservation, No Auto-Reclaim on Expiry, Clinical/Kitchen Block, และ Manager Policy Re-authentication)
-- **Static Analysis & Code Style:**
-  - `tsc -p pos/tsconfig.json --noEmit`: **PASSED (0 errors)**
-  - `pint --test` (ไฟล์ในขอบเขต Phase 28.8.3 Foundation): **PASSED (Clean)**
-- **Browser IndexedDB / WebCrypto & Clock Fixture (`document/acceptance/phase28_8_3/storage-browser.json`):**
-  - ผ่านการทดสอบบน Headless Chrome จริงครบทั้ง 3 หมวด (`durable encrypted write and lock`, `browser restart, incorrect passphrase, scope isolation and atomic cross-tab cap`, และ `clock rollback freezes authority; fresh online sample required after new context`)
-
-### 10.3 งานถัดไปเพื่อให้จบ Phase 28.8.3 สมบูรณ์ (Next Implementation Steps)
-1. **PWA Shell, Service Worker & Offline UI:** เชื่อมหน้าจอตั้งค่า Device, ปลดล็อกคิว, แจ้งเตือนสถานะพื้นที่จัดเก็บ (`persistent` / headroom), แสดงรายการในคิว และออกเลขใบรับเงินชั่วคราว (Provisional Receipt ที่แยกจาก ABB/FULL) พร้อมบล็อกคำสั่งที่ต้องออนไลน์
-2. **Quota/Slot Binding & Sync/ACK State Machine:** ผูกการตัดโควตาสต็อก/เพดานเงินสดและ Slot เข้ากับ `EncryptedQueue` ใน Browser และทำ State Machine การซิงค์ (`pending` $\rightarrow$ `syncing` $\rightarrow$ `synced` / `failed` / `review`) ที่ทนทานต่อการปิดโปรแกรม/เน็ตหลุด/เปลี่ยนกะ
-3. **Server Financial Reconciliation & Manager Conflict Review:** พัฒนาตัวตรวจรับฝั่ง POS Server เพื่อตรวจสอบราคา/วันหมดอายุ/Lot Recall/กะ/เวลา แล้วสร้างบิลขาย (`pos_orders`), เอกสารภาษี และ Signed Outbox Event เพียงครั้งเดียว พร้อมหน้าจอให้ผู้จัดการตรวจรับเงินสดเข้ากะปัจจุบันสำหรับรายการที่ติด `review` และคืนโควตาที่ไม่ได้ใช้หลัง Reconcile เสร็จสิ้น
-4. **End-to-End Browser Offline Acceptance & ERP Roundtrip:** ทดสอบครบทั้ง Retail, Restaurant และ Pharmacy POS ตั้งแต่ Offline $\rightarrow$ Reconnect $\rightarrow$ Reconcile $\rightarrow$ ERP Sync Roundtrip ก่อนติ๊กปิดหัวข้อ `28.8.3` ใน `checklist.md`
+1. **QR Payment / Provider / Late-Callback Acceptance & Card / EDC / Mixed Tender:** เลื่อนการเชื่อมต่อ Payment Gateway / EDC และการรับชำระแบบแยกหลายช่องทางในบิลเดียวออกไปออกแบบและอนุมัติแยกต่างหาก
+2. **Shared-Stock Real-Time Reservation / New Connection Model:** การตัดหรือจองสต็อกร่วมกันแบบ Real-time ข้ามเครื่องนอกเหนือจากระบบโควตาที่จัดสรรล่วงหน้า (`pos_grants`) ต้องออกแบบและอนุมัติสถาปัตยกรรมแยกต่างหาก

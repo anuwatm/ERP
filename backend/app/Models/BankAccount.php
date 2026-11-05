@@ -15,6 +15,8 @@ class BankAccount extends Model
 
     public const STATUSES = ['active', 'inactive'];
 
+    protected $hidden = ['account_number', 'account_number_hash'];
+
     protected $fillable = ['org_id', 'branch_id', 'chart_of_account_id', 'bank_name', 'bank_code', 'branch_name', 'account_name', 'account_number', 'account_number_hash', 'account_type', 'currency', 'is_cash_account', 'status', 'opening_balance', 'base_opening_balance', 'base_balance', 'opening_balance_date', 'created_by', 'updated_by'];
 
     protected function casts(): array

@@ -9,6 +9,8 @@ class PortalSession extends Model
 {
     use UsesOrderedUuid;
 
+    protected $hidden = ['token_hash'];
+
     protected $fillable = ['portal_user_id', 'token_hash', 'user_agent_hash', 'ip_hash', 'expires_at', 'revoked_at', 'last_seen_at'];
 
     protected function casts(): array

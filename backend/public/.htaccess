@@ -1,9 +1,19 @@
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Block dotfiles
+    RewriteRule (?:^|/)\.(?!well-known(?:/|$)) - [F,L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

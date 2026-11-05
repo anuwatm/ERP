@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\LocalDevine\www\ERP\backend\phpunit.xml" tests="1" assertions="14" errors="0" failures="0" skipped="0" time="5.202952">
+    <testsuite name="Feature" tests="1" assertions="14" errors="0" failures="0" skipped="0" time="5.202952">
+      <testsuite name="Tests\Feature\Phase28PosImportTest" file="C:\LocalDevine\www\ERP\backend\tests\Feature\Phase28PosImportTest.php" tests="1" assertions="14" errors="0" failures="0" skipped="0" time="5.202952">
+        <testcase name="test_actual_browser_offline_signed_sale_roundtrip" file="C:\LocalDevine\www\ERP\backend\tests\Feature\Phase28PosImportTest.php" line="758" class="Tests\Feature\Phase28PosImportTest" classname="Tests.Feature.Phase28PosImportTest" assertions="14" time="5.202952"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

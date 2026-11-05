@@ -11,6 +11,8 @@ class Employee extends Model
 {
     use UsesOrderedUuid;
 
+    protected $hidden = ['national_id', 'bank_account_number'];
+
     protected $fillable = [
         'org_id', 'user_id', 'branch_id', 'division_id', 'department_id', 'position_id', 'manager_id', 'employee_code',
         'title', 'first_name', 'last_name', 'nickname', 'national_id', 'tax_id', 'date_of_birth', 'gender',

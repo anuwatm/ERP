@@ -82,6 +82,11 @@ class PosImportService
                     abort_unless(hash_equals($sale->payload_hash, $event['payload_hash']), 409, 'POS sale source conflict.');
                     $mapping = PosAccountMapping::forSale($instanceId, $sale->id);
                 } else {
+                    if (isset($payload['offline_receipt'])) {
+                        $o = $payload['offline_receipt'];
+                        abort_if(DB::table('pos_offline_receipt_claims')->where('pos_instance_id', $instanceId)->where(fn ($q) => $q->where('slot_id', $o['slot_id'])->orWhere(fn ($q) => $q->where('device_id', $o['device_id'])->where('client_transaction_id', $o['client_transaction_id'])))->exists(), 409, 'Offline receipt identity already claimed.');
+                        DB::table('pos_offline_receipt_claims')->insert(['id' => (string) Str::uuid(), 'pos_instance_id' => $instanceId, 'permit_id' => $o['permit_id'], 'slot_id' => $o['slot_id'], 'device_id' => $o['device_id'], 'client_transaction_id' => $o['client_transaction_id'], 'source_sale_id' => $payload['sale_id'], 'created_at' => now(), 'updated_at' => now()]);
+                    }
                     $mapping = PosAccountMapping::forInstance($instanceId);
                     if (isset($payload['membership'])) {
                         app(PosMembershipImportService::class)->accept($instance, 'sale', $payload['sale_id'], $payload['membership']);

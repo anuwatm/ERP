@@ -9,6 +9,8 @@ class TwoFactorTrustedDevice extends Model
 {
     use UsesOrderedUuid;
 
+    protected $hidden = ['token_hash'];
+
     protected $fillable = ['user_id', 'token_hash', 'expires_at', 'last_used_at', 'user_agent_hash'];
 
     protected function casts(): array

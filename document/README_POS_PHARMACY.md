@@ -53,7 +53,7 @@ php artisan pos:staff $posBranchId manager.pharmacy@pos.test --role=manager --ph
 5. ระบบเลือก lot จาก grant ตาม expiry policy และบล็อก lot หมดอายุ/recall/quota ไม่พอ. ตรวจเลขบิลและ lot ที่ส่งมอบตามหลักฐานของรายการ
 6. รับเงินสด ยืนยันรายการ ตรวจเงินทอนและ receipt. ภาษี/การพิมพ์ทดสอบใช้ workflow กลางเมื่อ issuer profile พร้อม
 
-ไม่เก็บ patient history ในรุ่นนี้. ใบสั่งยาแนบมีเฉพาะ local synthetic fixture ตาม hash allowlist และ scanner policy; ไม่ใช้ช่องทดลองนี้รับไฟล์หรือข้อมูลผู้ป่วยจริง
+Phase28.8.4 เพิ่มประวัติผู้ป่วยแบบ local synthetic-only: ทะเบียน/แพ้ยาที่บันทึกเอง/บันทึกรับบริการ/ผูกบิล เข้ารหัสเฉพาะสาขา ไม่ sync ERP หรือ offline. เภสัชกรและ Manager ที่ pharmacist_qualified อ่าน/แก้ได้; cashier เห็นรหัส/ชื่อ mask. ดู [คู่มือและ diagram](PHASE_28_8_4_PATIENT_HISTORY.md). ยังไม่เปิดรับข้อมูลจริงและไม่มี automated allergy/diagnosis guard. ใบสั่งยาแนบมีเฉพาะ local synthetic fixture ตาม hash allowlist และ scanner policy; ไม่ใช้ช่องทดลองนี้รับไฟล์หรือข้อมูลผู้ป่วยจริง
 
 ## คืนเงินและตรวจของคืน
 

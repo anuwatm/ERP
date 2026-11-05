@@ -242,6 +242,23 @@ class RestaurantTest extends TestCase
         $this->assertSame(0.0, (float) DB::table('pos_grants')->sum('reserved_quantity'));
     }
 
+    public function test_kitchen_queue_keeps_acceptance_order_in_the_same_second_and_on_replay(): void
+    {
+        $this->freezeTime();
+        $first = $this->order('first-queue', 1);
+        $second = $this->order('second-queue', 1);
+        $this->assertSame(1, $first['queue_number']);
+        $this->assertSame(2, $second['queue_number']);
+        $this->assertEquals($first, $this->order('first-queue', 1));
+
+        $this->actingAs($this->kitchen)->withSession(['pos_login_at' => time(), 'pos_last_seen' => time()])
+            ->getJson('/state')->assertOk()
+            ->assertJsonPath('restaurant_lines.0.order_id', $first['order_id'])
+            ->assertJsonPath('restaurant_lines.0.queue_number', 1)
+            ->assertJsonPath('restaurant_lines.1.order_id', $second['order_id'])
+            ->assertJsonPath('restaurant_lines.1.queue_number', 2);
+    }
+
     public function test_kitchen_passive_poll_does_not_extend_staff_idle_timeout(): void
     {
         $lastSeen = time() - 30;
@@ -289,5 +306,126 @@ class RestaurantTest extends TestCase
         $this->assertSame($before, DB::table('pos_grants')->value('consumed_quantity'));
         $this->assertSame('prepared', $sale['lines'][0]['stock_effect']);
         $this->assertDatabaseCount('pos_promotion_claims', 1);
+    }
+
+    private function loginRestaurant(Staff $staff): void
+    {
+        $this->actingAs($staff)->withSession(['pos_login_at' => time(), 'pos_last_seen' => time()]);
+    }
+
+    public function test_seating_reservation_window_fifo_idempotent_assignment_and_branch_gate(): void
+    {
+        $this->freezeTime();
+        $service = app(RestaurantService::class);
+        $small = $service->createTable($this->manager, 'Small', 2);
+        $large = $service->createTable($this->manager, 'Large', 6);
+        $this->loginRestaurant($this->cashier);
+        $book = ['request_key' => (string) Str::uuid(), 'kind' => 'reservation', 'party_size' => 2, 'table_id' => $small, 'booked_at' => now()->addMinutes(10)->utc()->format('Y-m-d\TH:i:s.v\Z'), 'contact' => 'synthetic-only'];
+        $reservation = $this->postJson('/restaurant/seating', $book)->assertOk()->json('id');
+        $this->postJson('/restaurant/seating', $book)->assertOk()->assertJsonPath('id', $reservation);
+        $this->postJson('/restaurant/seating', array_replace($book, ['request_key' => (string) Str::uuid(), 'booked_at' => now()->addMinutes(80)->utc()->format('Y-m-d\TH:i:s.v\Z')]))->assertConflict();
+        $this->assertStringNotContainsString('synthetic-only', DB::table('pos_seating_entries')->where('id', $reservation)->value('contact'));
+        $this->getJson('/restaurant/seating')->assertOk()->assertJsonPath('entries.0.contact', 'synthetic-only');
+        $first = $this->postJson('/restaurant/seating', ['request_key' => (string) Str::uuid(), 'kind' => 'walk_in', 'party_size' => 4])->assertOk()->json('id');
+        $second = $this->postJson('/restaurant/seating', ['request_key' => (string) Str::uuid(), 'kind' => 'walk_in', 'party_size' => 2])->assertOk()->json('id');
+        $this->postJson("/restaurant/seating/{$second}/seat", ['table_id' => $large])->assertConflict();
+        $this->postJson("/restaurant/seating/{$second}/seat", ['table_id' => $small])->assertConflict();
+        $this->postJson("/restaurant/tables/{$small}/open")->assertConflict();
+        $this->postJson("/restaurant/seating/{$reservation}/no_show")->assertConflict();
+        $this->travel(25)->minutes();
+        $this->postJson("/restaurant/seating/{$reservation}/no_show")->assertOk();
+        $session = $this->postJson("/restaurant/seating/{$second}/seat", ['table_id' => $small])->assertOk()->json('session_id');
+        $this->postJson("/restaurant/seating/{$second}/seat", ['table_id' => $small])->assertOk()->assertJsonPath('session_id', $session);
+        $this->postJson("/restaurant/seating/{$second}/seat", ['table_id' => $large])->assertConflict();
+        $this->postJson("/restaurant/seating/{$first}/seat", ['table_id' => $small])->assertConflict();
+        $largeSession = $this->postJson("/restaurant/seating/{$first}/seat", ['table_id' => $large])->assertOk()->json('session_id');
+        $this->assertDatabaseCount('pos_table_sessions', 2);
+        $this->postJson("/restaurant/sessions/{$largeSession}/close")->assertOk();
+        $arrival = $this->postJson('/restaurant/seating', array_replace($book, [
+            'request_key' => (string) Str::uuid(), 'table_id' => $large, 'booked_at' => now()->addMinutes(10)->utc()->format('Y-m-d\TH:i:s.v\Z'),
+        ]))->assertOk()->json('id');
+        $this->postJson("/restaurant/seating/{$arrival}/arrive")->assertOk()->assertJsonPath('status', 'arrived');
+        $this->postJson("/restaurant/seating/{$arrival}/seat", ['table_id' => $large])->assertConflict();
+        $this->travel(10)->minutes();
+        $this->postJson("/restaurant/seating/{$arrival}/seat", ['table_id' => $large])->assertOk()->assertJsonPath('status', 'seated');
+        $this->postJson("/restaurant/sessions/{$session}/close")->assertOk();
+        $this->assertNull(DB::table('pos_table_sessions')->where('id', $session)->value('active_slot'));
+        $this->loginRestaurant($this->kitchen);
+        $this->getJson('/restaurant/seating')->assertForbidden();
+        DB::table('pos_branches')->where('id', $this->branch)->update(['business_type' => 'retail']);
+        $this->loginRestaurant($this->cashier);
+        $this->getJson('/restaurant/seating')->assertNotFound();
+    }
+
+    public function test_manager_hold_and_skip_are_audited_and_kitchen_cannot_override_fifo(): void
+    {
+        $this->freezeTime();
+        $first = $this->order('first', 1);
+        $second = $this->order('second', 1);
+        $third = $this->order('third', 1);
+        $line = $second['line_ids'][0];
+        $lastLine = $third['line_ids'][0];
+        $service = app(RestaurantService::class);
+        foreach ([$line, $lastLine] as $id) {
+            $service->advance($this->cashier, $id, 'sent');
+            $service->advance($this->kitchen, $id, 'acknowledged');
+        }
+        $this->loginRestaurant($this->kitchen);
+        $this->postJson("/restaurant/lines/{$line}/preparing")->assertConflict();
+        $this->postJson("/restaurant/lines/{$line}/preparing", ['reason' => 'not permitted'])->assertForbidden();
+        $this->postJson("/restaurant/orders/{$first['order_id']}/hold", ['held' => true, 'reason' => 'not permitted'])->assertForbidden();
+        $this->loginRestaurant($this->manager);
+        $this->postJson("/restaurant/orders/{$first['order_id']}/hold", ['held' => true, 'reason' => 'customer asked to wait'])->assertOk();
+        $this->postJson("/restaurant/lines/{$lastLine}/preparing", ['reason' => 'approved priority'])->assertOk();
+        $this->postJson("/restaurant/lines/{$lastLine}/preparing", ['reason' => 'approved priority'])->assertOk();
+        $this->assertSame(1, DB::table('pos_audit')->where('action', 'restaurant.queue.skip')->count());
+        $this->loginRestaurant($this->kitchen);
+        $this->postJson("/restaurant/lines/{$line}/preparing")->assertOk();
+        $this->assertSame(1.0, (float) DB::table('pos_grants')->sum('consumed_quantity'));
+    }
+
+    public function test_restaurant_qr_uses_reviewed_catalog_and_accepts_once_with_progress(): void
+    {
+        config(['pos.local_public_menu_enabled' => true, 'app.url' => 'http://127.0.0.1:8128']);
+        $product = json_decode(DB::table('pos_catalogs')->value('items'), true)[0];
+        $product['online_visible'] = true;
+        $catalog = ['branch_id' => $this->branch, 'valid_until' => now()->addDay()->toIso8601String(), 'items' => [$product]];
+        $provision = app(ProvisioningService::class);
+        $provision->catalog('qr-v1', $catalog);
+        $service = app(RestaurantService::class);
+        $session = $service->openTable($this->cashier, $service->createTable($this->manager, 'QR Table'));
+        $menu = app(PublicMenuService::class);
+        $token = $menu->issue($this->manager, 60, $session)['token'];
+        $line = ['product_id' => $this->menu, 'quantity' => '1'];
+        $request = $menu->submit($token, 'old-menu', [$line], 'qr-v1');
+        $catalog['items'][0]['price'] = '12.00';
+        $provision->catalog('qr-v2', $catalog);
+        $this->postJson('/menu/requests', ['token' => $token, 'request_key' => 'stale', 'catalog_version' => 'qr-v1', 'items' => [$line]])->assertConflict();
+        $this->assertSame($request, $menu->submit($token, 'old-menu', [$line], 'qr-v1'));
+        $this->assertSame('menu_changed', $menu->status($token, $request['id'])['review']);
+        $this->loginRestaurant($this->cashier);
+        $terminal = ['terminal_id' => $this->terminal];
+        $this->postJson("/restaurant/customer-requests/{$request['id']}", $terminal)->assertConflict();
+        $this->assertDatabaseCount('pos_kitchen_orders', 0);
+        $current = $menu->submit($token, 'current-menu', [$line], 'qr-v2');
+        $order = $this->postJson("/restaurant/customer-requests/{$current['id']}", $terminal)->assertOk()->json();
+        $this->postJson("/restaurant/customer-requests/{$current['id']}", $terminal)->assertOk()->assertJsonPath('order_id', $order['order_id']);
+        $this->assertDatabaseCount('pos_kitchen_orders', 1);
+        $this->assertSame(['sent' => 1], $menu->status($token, $current['id'])['progress']);
+        $this->assertSame(1, $menu->status($token, $current['id'])['queue_number']);
+        $this->postJson('/menu/requests', ['token' => $token, 'request_key' => 'too-many', 'catalog_version' => 'qr-v2', 'items' => [array_replace($line, ['quantity' => '4'])]])->assertUnprocessable();
+    }
+
+    public function test_private_lan_menu_requires_opt_in_https_and_exact_private_origin(): void
+    {
+        config(['pos.local_public_menu_enabled' => true, 'app.url' => 'https://192.168.1.20:8128']);
+        $menu = app(PublicMenuService::class);
+        $this->assertFalse($menu->allowsPrivateLan('https://192.168.1.20:8128', '192.168.1.30'));
+        config(['pos.local_menu_private_lan_enabled' => true]);
+        $this->assertTrue($menu->allowsPrivateLan('https://192.168.1.20:8128', '192.168.1.30'));
+        $this->assertFalse($menu->allowsPrivateLan('https://192.168.1.20:8128', '203.0.113.1'));
+        $this->assertFalse($menu->allowsPrivateLan('https://192.168.1.20:9999', '192.168.1.30'));
+        config(['app.url' => 'http://192.168.1.20:8128']);
+        $this->assertFalse($menu->allowsPrivateLan('http://192.168.1.20:8128', '192.168.1.30'));
     }
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\LocalDevine\www\ERP\pos\phpunit.xml" tests="14" assertions="130" errors="0" failures="0" skipped="0" time="53.930241">
+    <testsuite name="POS" tests="14" assertions="130" errors="0" failures="0" skipped="0" time="53.930241">
+      <testsuite name="Pos\Tests\CheckoutTest" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" tests="1" assertions="11" errors="0" failures="0" skipped="0" time="13.942421">
+        <testcase name="test_public_request_is_deduplicated_and_does_not_take_cash_before_acceptance" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="594" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="11" time="13.942421"/>
+      </testsuite>
+      <testsuite name="Pos\Tests\RestaurantTest" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" tests="13" assertions="119" errors="0" failures="0" skipped="0" time="39.987820">
+        <testcase name="test_cod_delivery_uses_existing_kitchen_and_waste_never_consumes_ingredients_twice" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="98" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="5" time="2.710868"/>
+        <testcase name="test_reservation_blocks_other_consumers_and_freeze_until_manager_releases" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="131" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="8" time="7.167260"/>
+        <testcase name="test_kitchen_consumes_once_and_split_merge_checkout_never_consumes_again" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="161" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="15" time="6.251140"/>
+        <testcase name="test_size_modifier_sku_uses_frozen_recipe_price_and_settles_after_catalog_expiry" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="193" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="4" time="2.895224"/>
+        <testcase name="test_table_menu_request_is_reserved_once_and_old_table_qr_cannot_order_again" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="218" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="7" time="3.319606"/>
+        <testcase name="test_kitchen_queue_keeps_acceptance_order_in_the_same_second_and_on_replay" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="245" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="8" time="2.464450"/>
+        <testcase name="test_kitchen_passive_poll_does_not_extend_staff_idle_timeout" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="262" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="4" time="1.359875"/>
+        <testcase name="test_waste_before_and_after_preparation_use_one_stock_path" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="269" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="6" time="5.084918"/>
+        <testcase name="test_restaurant_promotion_uses_frozen_bill_and_never_consumes_ingredients_twice" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="293" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="4" time="1.370211"/>
+        <testcase name="test_seating_reservation_window_fifo_idempotent_assignment_and_branch_gate" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="316" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="32" time="1.531733"/>
+        <testcase name="test_manager_hold_and_skip_are_audited_and_kitchen_cannot_override_fifo" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="360" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="9" time="1.825493"/>
+        <testcase name="test_restaurant_qr_uses_reviewed_catalog_and_accepts_once_with_progress" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="387" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="12" time="2.425333"/>
+        <testcase name="test_private_lan_menu_requires_opt_in_https_and_exact_private_origin" file="C:\LocalDevine\www\ERP\pos\tests\RestaurantTest.php" line="419" class="Pos\Tests\RestaurantTest" classname="Pos.Tests.RestaurantTest" assertions="5" time="1.581709"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

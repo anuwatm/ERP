@@ -13,6 +13,7 @@ use Carbon\CarbonPeriod;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Symfony\Component\Process\Process;
 
 class AttendanceReconciliationService
 {
@@ -99,108 +100,128 @@ class AttendanceReconciliationService
      */
     public function parseXlsx(string $path): array
     {
-        $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'xlsx_'.uniqid();
-        @mkdir($tempDir, 0777, true);
+        $sharedStringsRaw = null;
+        $sheetRaw = null;
 
-        try {
-            if (class_exists(\ZipArchive::class)) {
-                $zip = new \ZipArchive;
-                if ($zip->open($path) === true) {
-                    $zip->extractTo($tempDir);
-                    $zip->close();
+        if (class_exists(\ZipArchive::class)) {
+            $zip = new \ZipArchive;
+            if ($zip->open($path) === true) {
+                $sharedEntry = $zip->getFromName('xl/sharedStrings.xml');
+                $sheetEntry = $zip->getFromName('xl/worksheets/sheet1.xml');
+                if (is_string($sharedEntry)) {
+                    $sharedStringsRaw = $sharedEntry;
                 }
-            } else {
-                @exec('tar -xf "'.escapeshellarg($path).'" -C "'.escapeshellarg($tempDir).'" 2>&1');
+                if (is_string($sheetEntry)) {
+                    $sheetRaw = $sheetEntry;
+                }
+                $zip->close();
             }
+        } else {
+            $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'xlsx_'.bin2hex(random_bytes(8));
+            @mkdir($tempDir, 0700, true);
+            try {
+                $process = new Process([
+                    'tar', '-xf', $path, '-C', $tempDir, 'xl/sharedStrings.xml', 'xl/worksheets/sheet1.xml',
+                ]);
+                $process->setTimeout(15);
+                $process->run();
 
-            $sharedStringsFile = $tempDir.DIRECTORY_SEPARATOR.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
-            $sheetFile = $tempDir.DIRECTORY_SEPARATOR.'xl'.DIRECTORY_SEPARATOR.'worksheets'.DIRECTORY_SEPARATOR.'sheet1.xml';
+                $sharedStringsFile = $tempDir.DIRECTORY_SEPARATOR.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
+                $sheetFile = $tempDir.DIRECTORY_SEPARATOR.'xl'.DIRECTORY_SEPARATOR.'worksheets'.DIRECTORY_SEPARATOR.'sheet1.xml';
 
-            if (! file_exists($sheetFile)) {
-                if (! class_exists(\ZipArchive::class)) {
-                    throw new \RuntimeException('PHP extension "zip" is required to parse XLSX files when extraction fallback is unavailable.');
+                if (is_file($sharedStringsFile)) {
+                    $sharedStringsRaw = (string) file_get_contents($sharedStringsFile);
                 }
-
-                return [];
+                if (is_file($sheetFile)) {
+                    $sheetRaw = (string) file_get_contents($sheetFile);
+                }
+            } finally {
+                $this->deleteDirectory($tempDir);
             }
-
-            $sharedStrings = [];
-            if (file_exists($sharedStringsFile)) {
-                $xml = simplexml_load_file($sharedStringsFile);
-                if ($xml) {
-                    foreach ($xml->si as $si) {
-                        if (isset($si->t)) {
-                            $sharedStrings[] = (string) $si->t;
-                        } elseif (isset($si->r)) {
-                            $text = '';
-                            foreach ($si->r as $r) {
-                                $text .= (string) $r->t;
-                            }
-                            $sharedStrings[] = $text;
-                        } else {
-                            $sharedStrings[] = '';
-                        }
-                    }
-                }
-            }
-
-            $sheetXml = simplexml_load_file($sheetFile);
-            if (! $sheetXml || ! isset($sheetXml->sheetData->row)) {
-                return [];
-            }
-
-            $rows = [];
-            $header = [];
-            foreach ($sheetXml->sheetData->row as $row) {
-                $rowCells = [];
-                foreach ($row->c as $c) {
-                    $val = (string) $c->v;
-                    $type = (string) $c['t'];
-                    if ($type === 's' && isset($sharedStrings[(int) $val])) {
-                        $val = $sharedStrings[(int) $val];
-                    } elseif ($type === 'inlineStr' && isset($c->is->t)) {
-                        $val = (string) $c->is->t;
-                    }
-                    $rowCells[] = trim($val);
-                }
-
-                if (empty($header)) {
-                    $header = array_map(fn ($col) => strtolower(trim((string) $col)), $rowCells);
-
-                    continue;
-                }
-
-                $codeIdx = array_search('employee_code', $header, true);
-                if ($codeIdx === false) {
-                    $codeIdx = array_search('code', $header, true);
-                }
-                $timeIdx = array_search('punch_time', $header, true);
-                if ($timeIdx === false) {
-                    $timeIdx = array_search('time', $header, true);
-                }
-                $typeIdx = array_search('punch_type', $header, true);
-                $deviceIdx = array_search('device_id', $header, true);
-
-                if ($codeIdx === false || $timeIdx === false) {
-                    continue;
-                }
-
-                $code = $rowCells[$codeIdx] ?? '';
-                $time = $rowCells[$timeIdx] ?? '';
-                if ($code !== '' && $time !== '') {
-                    $rows[] = [
-                        'employee_code' => $code,
-                        'punch_time' => $time,
-                        'punch_type' => $typeIdx !== false ? ($rowCells[$typeIdx] ?? 'auto') : 'auto',
-                        'device_id' => $deviceIdx !== false ? ($rowCells[$deviceIdx] ?? null) : null,
-                    ];
-                }
-            }
-
-            return $rows;
-        } finally {
-            $this->deleteDirectory($tempDir);
         }
+
+        if ($sheetRaw === null || $sheetRaw === '') {
+            if (! class_exists(\ZipArchive::class)) {
+                throw new \RuntimeException('PHP extension "zip" is required to parse XLSX files when extraction fallback is unavailable.');
+            }
+
+            return [];
+        }
+
+        $sharedStrings = [];
+        if ($sharedStringsRaw !== null && $sharedStringsRaw !== '') {
+            $xml = $this->loadSafeXml($sharedStringsRaw);
+            if ($xml) {
+                foreach ($xml->si as $si) {
+                    if (isset($si->t)) {
+                        $sharedStrings[] = (string) $si->t;
+                    } elseif (isset($si->r)) {
+                        $text = '';
+                        foreach ($si->r as $r) {
+                            $text .= (string) $r->t;
+                        }
+                        $sharedStrings[] = $text;
+                    } else {
+                        $sharedStrings[] = '';
+                    }
+                }
+            }
+        }
+
+        $sheetXml = $this->loadSafeXml($sheetRaw);
+        if (! $sheetXml || ! isset($sheetXml->sheetData->row)) {
+            return [];
+        }
+
+        $rows = [];
+        $header = [];
+        foreach ($sheetXml->sheetData->row as $row) {
+            $rowCells = [];
+            foreach ($row->c as $c) {
+                $val = (string) $c->v;
+                $type = (string) $c['t'];
+                if ($type === 's' && isset($sharedStrings[(int) $val])) {
+                    $val = $sharedStrings[(int) $val];
+                } elseif ($type === 'inlineStr' && isset($c->is->t)) {
+                    $val = (string) $c->is->t;
+                }
+                $rowCells[] = trim($val);
+            }
+
+            if (empty($header)) {
+                $header = array_map(fn ($col) => strtolower(trim((string) $col)), $rowCells);
+
+                continue;
+            }
+
+            $codeIdx = array_search('employee_code', $header, true);
+            if ($codeIdx === false) {
+                $codeIdx = array_search('code', $header, true);
+            }
+            $timeIdx = array_search('punch_time', $header, true);
+            if ($timeIdx === false) {
+                $timeIdx = array_search('time', $header, true);
+            }
+            $typeIdx = array_search('punch_type', $header, true);
+            $deviceIdx = array_search('device_id', $header, true);
+
+            if ($codeIdx === false || $timeIdx === false) {
+                continue;
+            }
+
+            $code = $rowCells[$codeIdx] ?? '';
+            $time = $rowCells[$timeIdx] ?? '';
+            if ($code !== '' && $time !== '') {
+                $rows[] = [
+                    'employee_code' => $code,
+                    'punch_time' => $time,
+                    'punch_type' => $typeIdx !== false ? ($rowCells[$typeIdx] ?? 'auto') : 'auto',
+                    'device_id' => $deviceIdx !== false ? ($rowCells[$deviceIdx] ?? null) : null,
+                ];
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -208,7 +229,7 @@ class AttendanceReconciliationService
      */
     public function parseXmlSpreadsheet(string $content): array
     {
-        $xml = @simplexml_load_string($content);
+        $xml = $this->loadSafeXml($content);
         if (! $xml) {
             return [];
         }
@@ -527,6 +548,17 @@ class AttendanceReconciliationService
 
             return $stats;
         });
+    }
+
+    private function loadSafeXml(string $content): ?\SimpleXMLElement
+    {
+        if ($content === '' || preg_match('/<!(?:DOCTYPE|ENTITY)\b/i', $content)) {
+            return null;
+        }
+
+        $xml = @simplexml_load_string($content, \SimpleXMLElement::class, LIBXML_NONET | LIBXML_NOCDATA);
+
+        return $xml instanceof \SimpleXMLElement ? $xml : null;
     }
 
     private function deleteDirectory(string $dir): void

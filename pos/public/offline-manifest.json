@@ -1,0 +1,9 @@
+{
+  "name": "POS Offline Local",
+  "short_name": "POS Offline",
+  "start_url": "/offline/app",
+  "scope": "/offline/app",
+  "display": "standalone",
+  "background_color": "#f3f6f7",
+  "theme_color": "#123b45"
+}

@@ -10,6 +10,9 @@ $fixture = require __DIR__.'/environment.php';
 require dirname(__DIR__, 2).'/bootstrap/autoload.php';
 $app = require dirname(__DIR__, 2).'/bootstrap/app.php';
 $app->useEnvironmentPath($fixture);
+if (getenv('POS_BROWSER_PHASE_2885') === '1') {
+    $app->useStoragePath($fixture);
+}
 $app->make(Kernel::class)->bootstrap();
 if (config('database.default') !== 'sqlite' || config('database.connections.sqlite.database') !== $fixture.'/database.sqlite') {
     throw new RuntimeException('Refusing non-fixture database.');

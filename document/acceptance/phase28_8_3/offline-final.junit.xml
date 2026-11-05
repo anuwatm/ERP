@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\LocalDevine\www\ERP\pos\phpunit.xml" tests="6" assertions="60" errors="0" failures="0" skipped="0" time="9.505992">
+    <testsuite name="POS" tests="6" assertions="60" errors="0" failures="0" skipped="0" time="9.505992">
+      <testsuite name="Pos\Tests\CheckoutTest" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" tests="6" assertions="60" errors="0" failures="0" skipped="0" time="9.505992">
+        <testcase name="test_offline_permit_reserves_stock_and_document_slots_without_posting_or_expiry_reclaim" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1006" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="15" time="4.059959"/>
+        <testcase name="test_offline_cash_review_uses_original_grant_and_posts_once_after_expiry_and_shift_change" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1059" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="14" time="1.467165"/>
+        <testcase name="test_offline_cash_wrong_amount_and_identity_conflict_do_not_post_or_release_stock" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1086" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="6" time="1.033057"/>
+        <testcase name="test_offline_quota_release_requires_complete_manifest_and_only_releases_unused_quantity" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1103" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="10" time="0.964588"/>
+        <testcase name="test_offline_review_maps_provisional_to_abb_and_full_without_duplicate_sale_or_cash" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1126" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="11" time="0.636776"/>
+        <testcase name="test_offline_permit_cannot_authorize_clinical_items_even_for_pharmacist" file="C:\LocalDevine\www\ERP\pos\tests\CheckoutTest.php" line="1146" class="Pos\Tests\CheckoutTest" classname="Pos.Tests.CheckoutTest" assertions="4" time="1.344446"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

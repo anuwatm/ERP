@@ -46,13 +46,14 @@ class AiConfigurationController extends Controller
 
         $validated = $request->validate([
             'provider_type' => ['required', 'string', 'in:'.implode(',', array_keys(AiConfiguration::PROVIDERS))],
-            'base_url' => ['required', 'string', 'max:255'],
+            'base_url' => ['required', 'string', 'max:255', 'url:http,https'],
             'api_key' => ['nullable', 'string', 'max:500'],
             'model_name' => ['required', 'string', 'max:100'],
             'temperature' => ['required', 'numeric', 'between:0,1'],
             'timeout_seconds' => ['required', 'integer', 'between:5,300'],
             'is_active' => ['boolean'],
         ]);
+        abort_if(AiConnectionTesterService::isBlockedEndpoint($validated['base_url']), 422, 'The specified AI endpoint URL is not permitted.');
 
         $config = AiConfiguration::where('org_id', $user->org_id)->first();
 
@@ -105,11 +106,12 @@ class AiConfigurationController extends Controller
 
         $validated = $request->validate([
             'provider_type' => ['nullable', 'string'],
-            'base_url' => ['required', 'string'],
+            'base_url' => ['required', 'string', 'max:255', 'url:http,https'],
             'api_key' => ['nullable', 'string'],
             'model_name' => ['required', 'string'],
             'timeout_seconds' => ['nullable', 'integer'],
         ]);
+        abort_if(AiConnectionTesterService::isBlockedEndpoint($validated['base_url']), 422, 'The specified AI endpoint URL is not permitted.');
 
         $config = AiConfiguration::where('org_id', $user->org_id)->first();
 

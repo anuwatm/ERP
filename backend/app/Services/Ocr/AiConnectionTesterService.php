@@ -8,10 +8,35 @@ use Illuminate\Support\Facades\Http;
 class AiConnectionTesterService
 {
     /**
+     * Guard against SSRF targeting cloud metadata or non-HTTP(S) schemes.
+     */
+    public static function isBlockedEndpoint(string $rawUrl): bool
+    {
+        $url = trim($rawUrl);
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        $host = strtolower(trim((string) parse_url($url, PHP_URL_HOST), '[]'));
+
+        if (! in_array($scheme, ['http', 'https'], true) || $host === '') {
+            return true;
+        }
+
+        if (in_array($host, ['169.254.169.254', '100.100.100.200', 'metadata.google.internal', 'metadata', 'fd00:ec2::254'], true)
+            || str_starts_with($host, '169.254.')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Resolve the chat completions endpoint from various URL formats.
      */
     public static function resolveChatEndpoint(string $rawUrl): string
     {
+        if (self::isBlockedEndpoint($rawUrl)) {
+            throw new \InvalidArgumentException('The specified AI endpoint URL is not permitted.');
+        }
+
         $url = trim($rawUrl);
         $url = rtrim($url, '/');
 

@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Pos\Models\Staff;
 use Pos\Support\CanonicalJson;
 
-/** Permit allocation only. Reconciliation/financial acceptance is a separate stage. */
+/** Allocate immutable local cash authority; every submitted cash bill requires Manager review. */
 class OfflinePermitService
 {
     public function current(Staff $staff): array
@@ -100,7 +100,7 @@ class OfflinePermitService
                 DB::table('pos_offline_slots')->insert($slot);
                 $slots[] = ['id' => $slot['id'], 'ordinal' => $i];
             }
-            $payload = ['id' => $id, 'instance_id' => config('pos.instance_id'), 'branch_id' => $branch->id, 'staff_id' => $staff->id, 'device_id' => $device->id, 'terminal_id' => $device->terminal_id, 'shift_id' => $shift->id, 'issued_at' => now()->utc()->toIso8601String(), 'expires_at' => $expires->utc()->toIso8601String(), 'currency' => $branch->currency, 'policy' => $policy, 'catalog_version' => $catalog->version, 'catalog_hash' => $catalog->payload_hash, 'items' => $lines, 'slots' => $slots, 'provisional_only' => true, 'reconciliation_available' => false];
+            $payload = ['id' => $id, 'instance_id' => config('pos.instance_id'), 'branch_id' => $branch->id, 'staff_id' => $staff->id, 'device_id' => $device->id, 'terminal_id' => $device->terminal_id, 'shift_id' => $shift->id, 'issued_at' => now()->utc()->toIso8601String(), 'expires_at' => $expires->utc()->toIso8601String(), 'currency' => $branch->currency, 'policy' => $policy, 'catalog_version' => $catalog->version, 'catalog_hash' => $catalog->payload_hash, 'items' => $lines, 'slots' => $slots, 'provisional_only' => true, 'reconciliation_available' => true];
             DB::table('pos_offline_permits')->insert(['id' => $id, 'device_id' => $device->id, 'branch_id' => $branch->id, 'staff_id' => $staff->id, 'terminal_id' => $device->terminal_id, 'active_terminal_id' => $device->terminal_id, 'shift_id' => $shift->id, 'request_key' => $d['request_key'], 'request_hash' => $hash, 'status' => 'active', 'issued_at' => now(), 'expires_at' => $expires, 'payload' => CanonicalJson::encode($payload), 'created_at' => now(), 'updated_at' => now()]);
 
             return $payload;

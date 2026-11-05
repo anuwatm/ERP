@@ -10,9 +10,12 @@ class LocalPublicMenu
 {
     public function handle(Request $request, Closure $next)
     {
-        app(PublicMenuService::class)->guard();
-        abort_unless(in_array($request->ip(), ['127.0.0.1', '::1'], true), 403, 'Loopback menu development only.');
+        $menu = app(PublicMenuService::class);
+        $menu->guard();
+        if (! in_array($request->ip(), ['127.0.0.1', '::1'], true)) {
+            abort_unless($menu->allowsPrivateLan($request->getSchemeAndHttpHost(), $request->ip() ?? ''), 403);
+        }
 
-        return $next($request);
+        return $next($request)->header('Cache-Control', 'private, no-store')->header('Referrer-Policy', 'no-referrer');
     }
 }

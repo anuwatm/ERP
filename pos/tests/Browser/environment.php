@@ -1,6 +1,7 @@
 <?php
 
-$fixture = dirname(__DIR__, 3).'/temp/phase28-pos-browser';
+$phase2885 = getenv('POS_BROWSER_PHASE_2885') === '1';
+$fixture = dirname(__DIR__, 3).'/temp/'.($phase2885 ? 'phase2885-restaurant-browser' : 'phase28-pos-browser');
 if (! is_dir($fixture)) {
     mkdir($fixture, 0777, true);
 }
@@ -13,6 +14,15 @@ $values['POS_LOCAL_PHARMACY_ENABLED'] = 'true';
 $values['POS_LOCAL_RETURN_INSPECTIONS_ENABLED'] = 'true';
 $values['POS_LOCAL_TAX_DOCUMENTS_ENABLED'] = getenv('POS_BROWSER_TAX_FIXTURE') === '1' ? 'true' : 'false';
 $values['POS_LOCAL_RECALLS_ENABLED'] = 'true';
+if ($phase2885) {
+    $values['SESSION_COOKIE'] = 'phase2885_fixture_session';
+    foreach (['framework/sessions', 'framework/cache/data', 'framework/views', 'logs'] as $directory) {
+        if (! is_dir($fixture.'/'.$directory)) {
+            mkdir($fixture.'/'.$directory, 0777, true);
+        }
+    }
+    file_put_contents($fixture.'/.htaccess', "Require all denied\n");
+}
 foreach ($values as $name => $value) {
     putenv($name.'='.$value);
     $_ENV[$name] = $_SERVER[$name] = $value;

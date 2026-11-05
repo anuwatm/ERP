@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'local_patient_history_enabled' => env('POS_LOCAL_PATIENT_HISTORY_ENABLED', false),
     'local_browser_offline_enabled' => env('POS_LOCAL_BROWSER_OFFLINE_ENABLED', false),
     'local_membership_enabled' => env('POS_LOCAL_MEMBERSHIP_ENABLED', false),
     'local_delivery_enabled' => env('POS_LOCAL_DELIVERY_ENABLED', false),
@@ -30,6 +31,7 @@ return [
     'local_pharmacy_enabled' => env('POS_LOCAL_PHARMACY_ENABLED', false),
     'local_quota_recovery_enabled' => false,
     'local_public_menu_enabled' => env('POS_LOCAL_PUBLIC_MENU_ENABLED', false),
+    'local_menu_private_lan_enabled' => env('POS_LOCAL_MENU_PRIVATE_LAN_ENABLED', false),
     'local_refunds_enabled' => env('POS_LOCAL_REFUNDS_ENABLED', false),
     'local_cash_movements_enabled' => env('POS_LOCAL_CASH_MOVEMENTS_ENABLED', false),
     'local_discounts_enabled' => env('POS_LOCAL_DISCOUNTS_ENABLED', false),

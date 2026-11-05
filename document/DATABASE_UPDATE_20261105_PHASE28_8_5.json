@@ -1,0 +1,27 @@
+{
+  "phase": "28.8.5",
+  "date": "2026-11-05",
+  "configured_pos_migrations": 25,
+  "pending": 0,
+  "tables_before": 55,
+  "tables_after": 56,
+  "new_table_rows": 0,
+  "sqlite_integrity": "ok",
+  "sqlite_foreign_key_errors": 0,
+  "unique_indexes_verified": true,
+  "existing_table_counts_preserved": true,
+  "environment": "production",
+  "flags": {
+    "restaurant": false,
+    "public_menu": false,
+    "menu_lan": false,
+    "pharmacy": false,
+    "patient": false,
+    "offline": false,
+    "delivery": false,
+    "membership": false
+  },
+  "backup": "pos-20261105T071808Z.sqlite",
+  "backup_bytes": 749568,
+  "backup_sha256": "651681d73ac938bad281c0b9197503fba4ccf32da207b0ae53952421a1b39214"
+}

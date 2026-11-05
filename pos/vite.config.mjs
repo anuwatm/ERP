@@ -8,5 +8,5 @@ export default {
     root,
     publicDir: false,
     resolve: { alias: { 'react-dom/client': resolve(modules, 'react-dom/client.js'), react: resolve(modules, 'react/index.js') } },
-    build: { outDir: 'public/build', manifest: 'manifest.json', rollupOptions: { input: [resolve(root, 'resources/pos.tsx'), resolve(root, 'resources/menu.tsx')] } },
+    build: { outDir: 'public/build', manifest: 'manifest.json', rollupOptions: { input: [resolve(root, 'resources/pos.tsx'), resolve(root, 'resources/menu.tsx'), resolve(root, 'resources/patients.ts'), resolve(root, 'resources/offline/app.ts')] } },
 };
