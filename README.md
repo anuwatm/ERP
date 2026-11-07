@@ -8,6 +8,20 @@
 
 ระบบบริหารองค์กรสำหรับ SME บริษัทบริการ ทีมโครงการ และธุรกิจจัดซื้อ/คลังสินค้า เชื่อมข้อมูลลูกค้า การขาย การเงิน โครงการ สินค้าคงคลัง และบุคลากรในระบบเดียว รองรับหลายองค์กรด้วยการแยกข้อมูลและสิทธิ์ผู้ใช้งาน
 
+## สารบัญด่วน (Table of Contents)
+
+- [ความสามารถหลัก](#ความสามารถหลัก) · [ตัวอย่างหน้าจอจริง (UI Showcase — Light / Dark Mode)](#ตัวอย่างหน้าจอจริง-ui-showcase--light--dark-mode)
+- [ฟีเจอร์แยกตามโมดูล](#ฟีเจอร์แยกตามโมดูล) · [ตารางบทบาทและสิทธิ์การใช้งาน (RBAC Roles & Access Matrix)](#ตารางบทบาทและสิทธิ์การใช้งาน-rbac-roles--access-matrix)
+- [สถาปัตยกรรมระบบ (System Architecture)](#สถาปัตยกรรมระบบ-system-architecture) · [Diagrams ทั้งหมด (27 หมวด)](#diagrams-และเอกสารสถาปัตยกรรม)
+- [Technology Stack & Overview Diagram](#technology-stack--overview-diagram)
+- [โครงสร้างฐานข้อมูลและ ER Diagram (ครบ 225 ตาราง)](#โครงสร้างฐานข้อมูลและ-er-diagram-database-schema--table-reference)
+  - [ERP Table Dictionary (170 Application Tables)](#3-คำอธิบายตารางฐานข้อมูล-erp-ทั้งหมด-complete-erp-table-dictionary--170-application-tables)
+  - [Standalone POS Table Dictionary (55 Application Tables)](#4-คำอธิบายตารางฐานข้อมูล-standalone-pos-ทั้งหมด-complete-pos-table-dictionary--55-application-tables)
+- [การติดตั้ง (Web Setup Wizard, Local Dev, Ports & `.env` Reference)](#การติดตั้ง)
+- [External Read-only API (`/api/v1` — 62 GET Endpoints & Webhooks)](#external-read-only-api)
+- [Security & Data Integrity](#security--data-integrity) · [การทดสอบและพัฒนา (ERP, POS & Frontend Tests)](#การทดสอบและพัฒนา)
+- [ติดตั้ง ตั้งค่า และใช้งาน Standalone POS (Retail / Restaurant / Pharmacy)](#ติดตั้ง-ตั้งค่า-และใช้งาน-pos)
+
 ## ความสามารถหลัก
 
 | กลุ่มงาน | ความสามารถ |
@@ -24,6 +38,18 @@
 | Portals & Notifications | Customer/Supplier Portal ผ่าน Magic Link การแจ้งเตือนในระบบ อีเมล และ External Channel Outbox |
 | External Read API | Summary, Reference, Products, Inventory, HR/Employee, Sales, Procurement, Projects, Approvals, Manufacturing และ Documents |
 | Administration | โครงสร้างองค์กร Users/Roles/Permissions Audit Logs 2FA และการจัดการ Integration Keys |
+
+## ตัวอย่างหน้าจอจริง (UI Showcase — Light / Dark Mode)
+
+ภาพบันทึกจากแอปพลิเคชันจริงที่ความกว้าง `1440px` บนฐานข้อมูลสังเคราะห์ แสดงระบบธีมคู่ (`Light / Dark / System`) ที่ใช้โครงสร้างข้อมูลและลำดับการมองเห็นเดียวกันทั้งสองโหมด (ดูหลักฐานการตรวจรับเพิ่มเติมใน [`document/design/ui-acceptance-register.md`](document/design/ui-acceptance-register.md)):
+
+| หน้าจออ้างอิง | Light Mode (`#F5F2EA` Ivory Canvas) | Dark Mode (`#101A18` Forest Slate) |
+| :--- | :---: | :---: |
+| **ERP Business Overview Dashboard**<br>KPI ตามสิทธิ์, แยกกราฟยอดขายและเงินรับจริง, และรายการงานเร่งด่วน | ![ERP Dashboard Light](document/design/redesign-reference/verified/dashboard-light.png) | ![ERP Dashboard Dark](document/design/redesign-reference/verified/dashboard-dark.png) |
+| **Create Purchase Order (2-Column Master Dialog)**<br>ข้อมูลหลักและรายการย่อยด้านซ้าย สรุปยอด `Preview totals` จาก Server ด้านขวา | ![Create PO Light](document/design/redesign-reference/verified/purchase-order-light.png) | ![Create PO Dark](document/design/redesign-reference/verified/purchase-order-dark.png) |
+| **Retail POS Register**<br>ค้นหา/สแกนบาร์โค้ด ตะกร้าสินค้า ยอดก่อนส่วนลด และปุ่มรับชำระเงินในหน้าเดียว | ![Retail POS Light](document/design/redesign-reference/verified/retail-pos-light.png) | ![Retail POS Dark](document/design/redesign-reference/verified/retail-pos-dark.png) |
+| **Restaurant POS & Floor Map**<br>ผังโต๊ะอาหาร คิวที่นั่ง Walk-in/จองโต๊ะ คิวครัว FIFO และจัดการ QR ประจำโต๊ะ | ![Restaurant POS Light](document/design/redesign-reference/verified/restaurant-pos-light.png) | ![Restaurant POS Dark](document/design/redesign-reference/verified/restaurant-pos-dark.png) |
+| **Pharmacy POS Register**<br>แสดงหน่วยขาย ล็อต วันหมดอายุในตะกร้า เงื่อนไขเภสัชกร และการผูกผู้ป่วยแบบ Mask | ![Pharmacy POS Light](document/design/redesign-reference/verified/pharmacy-pos-light.png) | ![Pharmacy POS Dark](document/design/redesign-reference/verified/pharmacy-pos-dark.png) |
 
 ## ฟีเจอร์แยกตามโมดูล
 
@@ -209,6 +235,24 @@
 - ระบบธีม `Light / Dark / System` ที่จำค่าบนอุปกรณ์โดยไม่กะพริบตอนโหลด (`erp-theme.js` และ POS Theme Sync) บนโทนสีพื้นงาช้าง (`Ivory`), เมนูเขียวเข้ม (`Deep Forest Green`), สถานะปกติสี `Mint`, และปุ่มหลักสี `Coral` พร้อมแยกหน้าพิมพ์เอกสาร/PDF ให้ใช้พื้นขาวบริสุทธิ์ (`#FFFFFF`) เสมอ
 - `CreateEditDialog` และหน้าต่างเฉพาะ BOM/Work Order พร้อม dirty detection, discard guard และ focus สำหรับคีย์บอร์ด ใช้ Single Active Editor Coordinator ในหน้าที่มีหลาย editor และคำนวณยอดจาก server (`Preview totals` บนฟอร์มใบสั่งซื้อแบบ 2 คอลัมน์) ดู [มาตรฐาน UI](document/design/ui-standards.md) และ [ทะเบียนหน้าจอ](document/design/ui-screen-inventory.md)
 - File preview/download ตาม parent permission และการตั้งค่าองค์กร/เลขเอกสาร/notification channels จากหน้าผู้ดูแล
+
+## ตารางบทบาทและสิทธิ์การใช้งาน (RBAC Roles & Access Matrix)
+
+ระบบบังคับใช้สิทธิ์ผ่าน `User::hasPermissionCode()` (Effective Permissions) ร่วมกับกฎการแบ่งแยกหน้าที่ (**Strict SoD**: ห้ามผู้อนุมัติกดอนุมัติคำขอของตนเองทุกกรณี) โดยแบ่งบทบาทมาตรฐานออกเป็น 3 กลุ่มระบบดังนี้:
+
+| ระบบ | บทบาท (Role) | ขอบเขตหน้าที่และ Dashboard ที่เข้าถึงได้ | ข้อจำกัดด้านความปลอดภัยสำคัญ (Security Guardrails) |
+| :--- | :--- | :--- | :--- |
+| **ERP (`backend/`)** | **`owner`** (เจ้าขององค์กร) | เข้าถึงครบทุกโดเมน, Executive Dashboard, ตั้งค่าองค์กร/2FA/API Keys/POS Connector, และรีเซ็ต 2FA ให้พนักงาน | อยู่ภายใต้กฎ Strict SoD (ห้ามอนุมัติคำขอที่ตนเองเป็นผู้ยื่น) และบังคับ Enroll 2FA เมื่อเปิดนโยบายองค์กร |
+| **ERP (`backend/`)** | **`admin`** (ผู้ดูแลระบบ) | จัดการผู้ใช้ (`users`), บทบาท (`roles`), โครงสร้างสาขา/ฝ่าย/แผนก, คลังเอกสาร DMS, และตรวจสอบ Audit Logs | ไม่สามารถรีเซ็ต 2FA ของ Owner และถูกบังคับ Enroll 2FA เมื่อเปิด `required_for_privileged_roles` |
+| **ERP (`backend/`)** | **`finance`** (การเงินและบัญชี) | Finance Dashboard, ใบแจ้งหนี้, รับชำระ, รายจ่าย, จ่ายคู่ค้า, ธนาคาร/กระทบยอด, บัญชีแยกประเภท (GL), สินทรัพย์ถาวร, e-Tax, AI OCR, และ Payroll | บังคับยืนยันรหัสผ่าน (`password.confirm`) ก่อนทำรายการสำคัญ และห้ามแก้ไของค์ประกอบงวดบัญชีที่ปิดแล้ว (`closed`) |
+| **ERP (`backend/`)** | **`sales`** (ฝ่ายขาย) | Sales Dashboard, ลูกค้า (`customers`), ผู้ติดต่อ, Deals Pipeline, กิจกรรมติดตาม, และใบเสนอราคา (`quotations`) | ไม่เห็นข้อมูลสรุปการเงินองค์กร, ไม่เห็นเงินเดือนพนักงานอื่น, และไม่มีสิทธิ์ผ่านรายการบัญชี GL |
+| **ERP (`backend/`)** | **`pm`** (ผู้จัดการโครงการ) | Delivery Dashboard, จัดการโครงการ (`projects`), สมาชิกโครงการ, งานย่อย (`tasks`), และติดตามต้นทุนโครงการเทียบงบประมาณ | แก้ไขได้เฉพาะโครงการที่รับผิดชอบ; ต้นทุนจริงคำนวณเฉพาะรายจ่ายที่อนุมัติแล้ว |
+| **ERP (`backend/`)** | **`member`** (พนักงานทั่วไป) | My Work Dashboard (`/my-work`), อัปเดตสถานะงาน (`status`) ที่ได้รับมอบหมาย, ลงเวลา/ขอลางาน (`hr.self.view`), และดาวน์โหลดสลิปเงินเดือนของตนเอง | แก้ไขได้เฉพาะ `status` ของ Task ที่ตนเป็น Assignee และดูสลิปเงินเดือนของผู้อื่นไม่ได้ 100% |
+| **ERP (`backend/`)** | **`viewer`** (ผู้ตรวจสอบ/อ่านอย่างเดียว) | เปิดดูหน้ารายการและรายงานตามสิทธิ์ `.view` ที่ได้รับมอบหมายโดยไม่มีปุ่มสร้าง/แก้ไข/ลบ | ระบบซ่อน Action แก้ไขบน UI และปฏิเสธคำขอ `POST`/`PATCH`/`DELETE` ที่ระดับ Middleware (`403`) |
+| **POS (`pos/`)** | **`manager`** (ผู้จัดการสาขา) | เปิด/ปิดกะ, ขาย/คืนเงิน, อนุมัติส่วนลดเกินสิทธิ์, รับเงิน COD เข้ากะ (`remit`), พัก/ข้ามคิวครัวพร้อมเหตุผล, ตรวจรับบิล Offline, และตั้งค่าสาขาผ่าน `/config` | อ่านเวชระเบียนผู้ป่วยหรือตรวจรับยาคืนได้เฉพาะผู้จัดการที่มี `pharmacist_qualified = true` เท่านั้น |
+| **POS (`pos/`)** | **`pharmacist`** (เภสัชกรประจำสาขา) | ขายยาควบคุม (`requires_pharmacist`), บันทึกใบสั่งยา, อ่าน/แก้ไขเวชระเบียนและประวัติแพ้ยา (`pos_patients*`), และตรวจรับยาคืน (`quarantine`/`destroy`) | จำกัดเฉพาะสาขาตนเอง (`branch_id`) และเฉพาะร้านประเภท `pharmacy` เท่านั้น |
+| **POS (`pos/`)** | **`cashier`** (แคชเชียร์หน้าร้าน) | เปิดกะขายสินค้าทั่วไป, สแกนบาร์โค้ด, รับชำระเงินสด, จัดโต๊ะ/คิวครัวร้านอาหาร, และค้นหารหัสสมาชิก/ผู้ป่วยเพื่อผูกบิล | เห็นเฉพาะชื่อ/เบอร์โทรสมาชิกแบบ Mask (`name_masked`, `phone_masked`) และชื่อผู้ป่วยแบบ Mask (ไม่เห็นประวัติแพ้ยา/เวชระเบียน) |
+| **Portal (`/portal`)** | **`customer` / `supplier`** | เข้าสู่ระบบแบบไร้รหัสผ่านด้วย Magic Link (30 นาที) เพื่อดู/กดยืนยันใบเสนอราคา ดูใบแจ้งหนี้ หรือส่งใบวางบิลคู่ค้า | แยก `portal_users` และ `portal_sessions` ออกจากพนักงาน 100%; ใบวางบิลถูกกักกันที่ `pending_scan` จนกว่าจะตรวจผ่าน |
 
 ## สถาปัตยกรรมระบบ (System Architecture)
 
@@ -1009,6 +1053,38 @@ php artisan schedule:run
 
 `queue:work` เป็น process ต่อเนื่อง ส่วน `schedule:run` ให้เรียกผ่าน cron/task scheduler การเชื่อม Payment Gateway, e-Tax และ notification channels ต้องตั้ง credentials และตรวจปลายทางของแต่ละบริการก่อนใช้งาน
 
+### ตารางพอร์ตและจุดเข้าใช้งานเริ่มต้น (Default Local Ports & Entry URLs Cheat Sheet)
+
+| ระบบ / โมดูล | URL จุดเข้าใช้งานเริ่มต้น (Local Dev) | ผู้ใช้งาน / การยืนยันตัวตน | หน้าที่หลัก |
+| :--- | :--- | :--- | :--- |
+| **ERP Web Application** | `http://127.0.0.1:8000` (หรือ `/login`, `/dashboard`) | พนักงานองค์กร (`users` + TOTP 2FA) | ระบบบริหารองค์กรหลัก 8 โดเมน (CRM, Finance, GL, Inventory, Manufacturing, HR/Payroll, DMS, Workflows) |
+| **ERP Setup Wizard** | `http://127.0.0.1:8000/setup` | ผู้ติดตั้งระบบ (`SETUP_TOKEN` $\ge 32$ ตัวอักษร) | ติดตั้งระบบ ERP ครั้งแรกผ่านเว็บ ตั้งค่า `.env` รัน Migrations และสร้างบัญชี Owner |
+| **ERP System Requirements** | `http://127.0.0.1:8000/setup/system-requirements.php` | ผู้ติดตั้งระบบ | ตรวจสอบเวอร์ชัน PHP 8.3+, Extensions และสิทธิ์การเขียนโฟลเดอร์ก่อนติดตั้ง |
+| **Customer & Supplier Portal** | `http://127.0.0.1:8000/portal/sign-in` | ลูกค้าและคู่ค้าภายนอก (`portal_users` Magic Link) | พอร์ทัลบริการตนเองสำหรับลูกค้า (ยืนยันใบเสนอราคา/ดูใบแจ้งหนี้) และคู่ค้า (ติดตาม PO/ส่งใบวางบิล) |
+| **External Read-only API** | `http://127.0.0.1:8000/api/v1/*` | ระบบภายนอก (`Authorization: Bearer erp_...`) | API อ่านข้อมูล 62 GET Endpoints ตามสัญญา OpenAPI 3.1 พร้อม Cursor Pagination & Watermark |
+| **Standalone POS Register** | `http://127.0.0.1:8128/` | พนักงานสาขา (`pos_staff`: Cashier / Pharmacist / Manager) | หน้าจอขายหน้าร้านหลัก ปรับตามประเภทสาขาอัตโนมัติ (`retail`, `restaurant`, `pharmacy`) |
+| **POS Setup Wizard** | `http://127.0.0.1:8128/setup` | ผู้ติดตั้ง POS (`POS_SETUP_TOKEN` บน Loopback) | สร้างสาขาแรก (`pos_branches`), เครื่องจุดขาย (`pos_terminals`), และบัญชีผู้จัดการคนแรก |
+| **POS Branch Configuration** | `http://127.0.0.1:8128/config` | ผู้จัดการสาขา (`role = manager` บน Loopback) | จัดการข้อมูลสาขา เครื่องจุดขาย และเพิ่ม/เปิด–ปิดพนักงานภายในสาขาตนเอง |
+| **POS Secondary Modules** | `http://127.0.0.1:8128/deliveries`<br>`http://127.0.0.1:8128/membership`<br>`http://127.0.0.1:8128/patients` | พนักงานสาขาตามสิทธิ์และประเภทธุรกิจ | จัดการใบงานเดลิเวอรี/เงินสด COD (`28.8.1`), สมัครสมาชิก/โปรโมชัน (`28.8.2`), และเวชระเบียนผู้ป่วยร้านขายยา (`28.8.4`) |
+| **POS Browser / PWA Offline** | `http://127.0.0.1:8128/offline/app` | พนักงานสาขาที่ได้รับ `OfflinePermit` | หน้าจอขายออฟไลน์ผ่าน Service Worker (`pos-offline-shell-v3`) และคิวเข้ารหัส `AES-256-GCM` ใน IndexedDB (`28.8.3`) |
+| **Restaurant Public QR Menu** | `http://127.0.0.1:8128/menu?token=<QR_TOKEN>` | ลูกค้าที่สแกน QR ประจำโต๊ะอาหาร | หน้าเมนูอาหารดิจิทัลสำหรับลูกค้ากดสั่งอาหารเข้าคิวรอตรวจรับของร้านอาหาร (`28.8.5`) |
+
+### ตารางตัวแปร `.env` สำคัญ (Key Environment Variables Reference)
+
+| ไฟล์ | ตัวแปร (Variable) | ค่าเริ่มต้น (Default) | คำอธิบายหน้าที่และการใช้งาน |
+| :--- | :--- | :--- | :--- |
+| **`backend/.env`** | `APP_KEY` | *(สร้างจาก `key:generate`)* | กุญแจหลักสำหรับเข้ารหัสข้อมูลอ่อนไหว (2FA Secrets, เลขบัญชีธนาคาร, ข้อมูลพนักงาน PDPA, AI Keys, Notification Configs) **ห้ามเปลี่ยนหลังใช้งานจริง** |
+| **`backend/.env`** | `DB_CONNECTION` / `DB_DATABASE` | `mysql` / `erp` | ฐานข้อมูลหลักของระบบ ERP (`88` migrations / `173` ตาราง) |
+| **`backend/.env`** | `EXTERNAL_API_WEBHOOKS_ENABLED` | `false` | เปิด/ปิดการส่ง Outbound Webhooks ไปยังระบบภายนอก (เปิดเมื่อตั้ง Queue Worker และตรวจรับปลายทางแล้ว) |
+| **`backend/.env`** | `OPS_HEARTBEATS_ENABLED` | `false` | เปิด/ปิดการบันทึก Heartbeat ติดตามสถานะ Queue (`default,etax`) และ Scheduler |
+| **`backend/.env`** | `POS_LOCAL_DELIVERY_ENABLED`<br>`POS_LOCAL_MEMBERSHIP_ENABLED`<br>`POS_LOCAL_BROWSER_OFFLINE_ENABLED` | `false` | Feature Flags ฝั่ง ERP สำหรับเปิดรับการซิงค์ข้อมูล Delivery (`28.8.1`), Membership (`28.8.2`), และใบเสร็จ Offline (`28.8.3`) ในสภาพแวดล้อม Local/Testing |
+| **`pos/.env`** | `DB_CONNECTION` / `DB_DATABASE` | `sqlite` หรือ `mysql` | ฐานข้อมูลแยกอิสระของ Standalone POS (`25` migrations / `56` ตาราง) ห้ามชี้ไปที่ฐานข้อมูลเดียวกันกับ ERP เด็ดขาด |
+| **`pos/.env`** | `POS_SETUP_TOKEN` | *(ว่าง)* | โทเคนความยาวอย่างน้อย 32 ตัวอักษรสำหรับเปิดใช้งานหน้าติดตั้ง `/setup` บนเครื่องจุดขาย (Loopback) |
+| **`pos/.env`** | `POS_INSTANCE_ID` & `POS_SIGNING_KEY_PATH` | *(ตามสาขา)* | รหัสประจำเครื่อง POS และพาธเก็บ Private Key (`RSA-SHA256`) สำหรับเซ็นรับรองเหตุการณ์ใน `pos_outbox` |
+| **`pos/.env`** | `POS_REQUIRE_MTLS` & `POS_CONNECTOR_FINGERPRINT` | `true` | บังคับตรวจสอบใบรับรอง mTLS และลายนิ้วมือของ ERP Connector ก่อนอนุญาตให้ดึงข้อมูลซิงค์ |
+| **`pos/.env`** | `POS_LOCAL_RESTAURANT_ENABLED`<br>`POS_LOCAL_PHARMACY_ENABLED`<br>`POS_LOCAL_PATIENT_HISTORY_ENABLED` | `false` | Feature Flags สำหรับเปิดใช้งานโมดูลร้านอาหาร (`28.8.5`), ร้านขายยา, และเวชระเบียนผู้ป่วยสังเคราะห์ (`28.8.4`) ในขอบเขต Local |
+| **`pos/.env`** | `POS_LOCAL_DELIVERY_ENABLED`<br>`POS_LOCAL_MEMBERSHIP_ENABLED`<br>`POS_LOCAL_BROWSER_OFFLINE_ENABLED` | `false` | Feature Flags สำหรับเปิดใช้งานเดลิเวอรี/COD (`28.8.1`), สมาชิก/โปรโมชัน (`28.8.2`), และ PWA Offline (`28.8.3`) บนเครื่อง POS |
+
 ## External Read-only API
 
 คู่มือราย endpoint: [API_Document — วิธีเรียก, output, fields และ errors](document/API_Document.md)
@@ -1072,23 +1148,36 @@ List ใช้ cursor ค่าเริ่มต้น50 สูงสุด100�
 
 ## การทดสอบและพัฒนา
 
-รันจาก `backend/` โดยตรวจให้ environment ทดสอบแยกจากฐานใช้งานจริง:
+1. **ทดสอบและตรวจสอบคุณภาพโค้ดฝั่ง ERP (`backend/` — 566+ PHPUnit Tests & 39 Frontend Tests)**
+   รันจาก `backend/` โดยตรวจให้ environment ทดสอบแยกจากฐานใช้งานจริง:
 
 ```sh
 php artisan test
+node --test tests/Frontend/*.test.mjs
+pnpm exec tsc --noEmit
 php vendor/bin/pint --test
 pnpm run lint
 pnpm run check-format
 pnpm run build
 ```
 
-ทดสอบตัวอย่าง API client/receiver จาก repository root:
+2. **ทดสอบและตรวจสอบคุณภาพโค้ดฝั่ง Standalone POS (`pos/` — 116 PHPUnit Tests / 2,171 Assertions)**
+   รันจาก repository root เพื่อทดสอบ POS บน SQLite in-memory แบบแยกอิสระ:
+
+```sh
+php backend/vendor/bin/phpunit --configuration pos/phpunit.xml
+pnpm --dir pos exec tsc --noEmit
+pnpm --dir pos run build
+```
+
+3. **ทดสอบตัวอย่าง External API Client & Webhook Verifier (13 Tests)**
+   รันจาก repository root:
 
 ```sh
 node --test examples/external-api/summary-client.test.mjs examples/external-api/webhook-verifier.test.mjs
 ```
 
-สัญญา API และเอกสารโดเมนอยู่ใน [docs/](docs/README.md) การแก้ fields/scopes/metrics ต้องปรับ contract และ tests ให้สอดคล้องกัน
+สัญญา API และเอกสารโดเมนอยู่ใน [docs/](docs/README.md) ส่วนหลักฐานการตรวจรับ UI ด้วย Headless Chrome อยู่ใน [ทะเบียนตรวจรับ UI](document/design/ui-acceptance-register.md) การแก้ fields/scopes/metrics ต้องปรับ contract และ tests ให้สอดคล้องกัน
 
 ## ติดตั้ง ตั้งค่า และใช้งาน POS
 
