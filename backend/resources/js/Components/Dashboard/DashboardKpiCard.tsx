@@ -45,17 +45,19 @@ export default function DashboardKpiCard({
     return (
         <Card
             className={tones[tone]}
-            bodyClassName="p-5"
-            description={question}
-            title={unit ? `${unit} metric` : 'Metric'}
+            bodyClassName="space-y-2 p-5"
         >
+            <h3 className="text-sm font-semibold text-erp-ink">{question}</h3>
             <output
                 aria-label={question}
                 className="block text-3xl font-bold tracking-tight text-slate-950 dark:text-white"
             >
                 {content}
+                {unit && state === 'ready' && (
+                    <span className="ml-1.5 text-sm font-medium">{unit}</span>
+                )}
             </output>
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+            <p className="text-xs text-slate-600 dark:text-slate-300">
                 {context}
             </p>
             {state === 'error' && onRetry && (

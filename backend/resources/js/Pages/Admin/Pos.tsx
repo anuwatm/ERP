@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from '@/Components/UI/PageHeader';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import PosSetup, { SetupOptions } from './PosSetup';
 
@@ -86,19 +87,30 @@ export default function Pos({
         if (reason?.trim()) router.post(url, { reason });
     };
     return (
-        <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold">POS Integration</h2>}
-        >
+        <AuthenticatedLayout>
             <Head title="POS Integration" />
-            <div className="mx-auto max-w-7xl space-y-6 p-6">
-                <p className="rounded bg-amber-50 p-4 text-amber-900">
+            <PageHeader
+                title="POS Integration"
+                description="จัดการ instance, การส่งข้อมูล และการกระทบยอด POS"
+            />
+            <div className="mx-auto max-w-7xl space-y-6">
+                <p className="rounded-lg bg-amber-50 p-4 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
                     Transport จริงยังไม่เปิด · รอ provision ปลายทาง · e-Tax
                     ยังไม่ผ่าน acceptance
                 </p>
-                {canManage && membershipEnabled && <p><a href="/pos-membership" className="text-blue-700 underline">สมาชิกและโปรโมชัน POS</a></p>}
+                {canManage && membershipEnabled && (
+                    <p>
+                        <a
+                            href="/pos-membership"
+                            className="text-emerald-800 underline dark:text-emerald-200"
+                        >
+                            สมาชิกและโปรโมชัน POS
+                        </a>
+                    </p>
+                )}
                 {canManage && recallsEnabled && (
                     <form
-                        className="space-y-4 rounded bg-white p-6 shadow"
+                        className="space-y-4 erp-surface p-4 sm:p-6"
                         onSubmit={(e) => {
                             e.preventDefault();
                             recall.post('/pos-integration/recalls', {
@@ -120,7 +132,7 @@ export default function Pos({
                             <select
                                 aria-label="สินค้าและ lot"
                                 required
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 disabled={recall.processing}
                                 value={recall.data.lot_id}
                                 onChange={(e) =>
@@ -142,7 +154,7 @@ export default function Pos({
                             <input
                                 required
                                 maxLength={500}
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 disabled={recall.processing}
                                 value={recall.data.reason}
                                 onChange={(e) =>
@@ -151,12 +163,12 @@ export default function Pos({
                             />
                         </label>
                         {Object.values(recall.errors).map((error, i) => (
-                            <p role="alert" className="text-red-700" key={i}>
+                            <p role="alert" className="erp-field-error" key={i}>
                                 {error}
                             </p>
                         ))}
                         <button
-                            className="rounded border px-4 py-2"
+                            className="erp-button erp-secondary"
                             disabled={recall.processing}
                         >
                             ยืนยันเรียกคืน lot
@@ -171,7 +183,7 @@ export default function Pos({
                 )}
                 {canManage && taxDocumentsEnabled && (
                     <form
-                        className="space-y-4 rounded bg-white p-6 shadow"
+                        className="space-y-4 erp-surface p-4 sm:p-6"
                         onSubmit={(e) => {
                             e.preventDefault();
                             issuer.post('/pos-integration/tax-profile', {
@@ -191,7 +203,7 @@ export default function Pos({
                             <select
                                 aria-label="POS instance สำหรับภาษี"
                                 required
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 value={issuer.data.instance_id}
                                 onChange={(e) =>
                                     issuer.setData(
@@ -213,7 +225,7 @@ export default function Pos({
                             <input
                                 required
                                 maxLength={80}
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 value={issuer.data.version}
                                 onChange={(e) =>
                                     issuer.setData('version', e.target.value)
@@ -226,7 +238,7 @@ export default function Pos({
                                 required
                                 pattern="[0-9]{5}"
                                 maxLength={5}
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 value={issuer.data.branch_no}
                                 onChange={(e) =>
                                     issuer.setData('branch_no', e.target.value)
@@ -234,12 +246,12 @@ export default function Pos({
                             />
                         </label>
                         {Object.values(issuer.errors).map((error, i) => (
-                            <p role="alert" className="text-red-700" key={i}>
+                            <p role="alert" className="erp-field-error" key={i}>
                                 {error}
                             </p>
                         ))}
                         <button
-                            className="rounded border px-4 py-2"
+                            className="erp-button erp-secondary"
                             disabled={issuer.processing}
                         >
                             เตรียมข้อมูลผู้ออกเอกสาร
@@ -248,7 +260,7 @@ export default function Pos({
                 )}
                 {canManage && (
                     <form
-                        className="space-y-4 rounded bg-white p-6 shadow"
+                        className="space-y-4 erp-surface p-4 sm:p-6"
                         onSubmit={(e) => {
                             e.preventDefault();
                             option.transform((d) => ({
@@ -273,7 +285,7 @@ export default function Pos({
                             เมนูหลัก
                             <select
                                 aria-label="เมนูหลัก"
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 required
                                 value={option.data.parent_product_id}
                                 onChange={(e) =>
@@ -295,7 +307,7 @@ export default function Pos({
                             SKU ชุดตัวเลือก
                             <select
                                 aria-label="SKU ชุดตัวเลือก"
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 required
                                 value={option.data.product_id}
                                 onChange={(e) =>
@@ -315,7 +327,7 @@ export default function Pos({
                         <label>
                             ชื่อชุดตัวเลือก
                             <input
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 required
                                 maxLength={100}
                                 value={option.data.label}
@@ -327,7 +339,7 @@ export default function Pos({
                         <label>
                             ขนาด
                             <input
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 required
                                 maxLength={60}
                                 value={option.data.size}
@@ -339,7 +351,7 @@ export default function Pos({
                         <label>
                             ตัวเลือกเพิ่ม คั่นด้วยจุลภาค
                             <input
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 value={option.data.modifiers}
                                 onChange={(e) =>
                                     option.setData('modifiers', e.target.value)
@@ -347,12 +359,12 @@ export default function Pos({
                             />
                         </label>
                         {Object.values(option.errors).map((error, i) => (
-                            <p role="alert" className="text-red-700" key={i}>
+                            <p role="alert" className="erp-field-error" key={i}>
                                 {error}
                             </p>
                         ))}
                         <button
-                            className="rounded border px-4 py-2"
+                            className="erp-button erp-secondary"
                             disabled={option.processing}
                         >
                             บันทึกชุดตัวเลือก
@@ -362,13 +374,13 @@ export default function Pos({
                 {canProvision && setupOptions && (
                     <PosSetup options={setupOptions} instances={instances} />
                 )}
-                <div className="flex gap-6">
+                <div className="flex flex-wrap gap-3 sm:gap-6">
                     <p>Stock/COGS ค้าง: {inventoryPending}</p>
                     <p>Integrity conflicts: {integrityConflicts}</p>
                 </div>
                 {canManage && (
                     <form
-                        className="space-y-4 rounded bg-white p-6 shadow"
+                        className="space-y-4 erp-surface p-4 sm:p-6"
                         onSubmit={(e) => {
                             e.preventDefault();
                             tax.transform((data) => ({
@@ -392,7 +404,7 @@ export default function Pos({
                         <label className="block">
                             ผู้รับผิดชอบ
                             <select
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 value={tax.data.signing_owner_id}
                                 disabled={tax.processing}
                                 onChange={(e) =>
@@ -425,7 +437,7 @@ export default function Pos({
                         <label className="block">
                             เหตุผลเปลี่ยนผู้รับผิดชอบ
                             <input
-                                className="block w-full rounded border p-2"
+                                className="erp-input block w-full"
                                 required
                                 maxLength={500}
                                 disabled={tax.processing}
@@ -436,19 +448,19 @@ export default function Pos({
                             />
                         </label>
                         {Object.values(tax.errors).map((error, i) => (
-                            <p role="alert" key={i} className="text-red-700">
+                            <p role="alert" key={i} className="erp-field-error">
                                 {error}
                             </p>
                         ))}
                         <button
                             disabled={tax.processing}
-                            className="rounded border px-4 py-2"
+                            className="erp-button erp-secondary"
                         >
                             บันทึกผู้รับผิดชอบ e-Tax
                         </button>
                     </form>
                 )}
-                <section className="rounded bg-white p-6 shadow">
+                <section className="erp-surface p-4 sm:p-6">
                     <h3 className="mb-4 font-semibold">POS instances</h3>
                     {instances.length === 0 && (
                         <p>ยังไม่มี instance ที่ลงทะเบียน</p>
@@ -456,18 +468,32 @@ export default function Pos({
                     {instances.map((i) => (
                         <div
                             key={i.id}
-                            className="flex items-center justify-between border-b py-4"
+                            className="flex flex-wrap items-center justify-between gap-3 border-b py-4 dark:border-slate-700"
                         >
                             <div>
                                 {i.name} · {i.active ? 'Active' : 'Paused'} ·
                                 Cursor {i.durable_cursor}
-                                <p>Sync ล่าสุด (UTC): {i.last_sync_at || 'ยังไม่สำเร็จ'} · Checkpoint {i.checkpoint_cursor}</p>
-                                {i.last_sync_error && <p className="text-red-700">Sync error: {i.last_sync_error} · retry หลัง {i.next_sync_at} UTC</p>}
-                                {i.recovery_fenced_at && <p className="text-red-700">Recovery fenced — หยุดโพสต์จนตรวจหลักฐานครบ</p>}
+                                <p>
+                                    Sync ล่าสุด (UTC):{' '}
+                                    {i.last_sync_at || 'ยังไม่สำเร็จ'} ·
+                                    Checkpoint {i.checkpoint_cursor}
+                                </p>
+                                {i.last_sync_error && (
+                                    <p className="erp-field-error">
+                                        Sync error: {i.last_sync_error} · retry
+                                        หลัง {i.next_sync_at} UTC
+                                    </p>
+                                )}
+                                {i.recovery_fenced_at && (
+                                    <p className="erp-field-error">
+                                        Recovery fenced —
+                                        หยุดโพสต์จนตรวจหลักฐานครบ
+                                    </p>
+                                )}
                                 {canReconcile && (
                                     <Link
                                         href={`/pos-integration/${i.id}/reconciliation`}
-                                        className="ml-4 text-sky-700 underline"
+                                        className="ml-4 text-emerald-800 underline dark:text-emerald-200"
                                     >
                                         ตรวจหลักฐาน ERP
                                     </Link>
@@ -475,7 +501,7 @@ export default function Pos({
                             </div>
                             {i.active && (
                                 <button
-                                    className="rounded border px-4 py-2"
+                                    className="erp-button erp-secondary"
                                     onClick={() =>
                                         action(`/pos-integration/${i.id}/pause`)
                                     }
@@ -486,7 +512,7 @@ export default function Pos({
                         </div>
                     ))}
                 </section>
-                <section className="overflow-x-auto rounded bg-white p-6 shadow">
+                <section className="overflow-x-auto erp-surface p-4 sm:p-6">
                     <h3 className="mb-4 font-semibold">100 events ล่าสุด</h3>
                     <table className="w-full text-left">
                         <thead>
@@ -512,7 +538,7 @@ export default function Pos({
                                     <td>
                                         {e.status !== 'accepted' && (
                                             <button
-                                                className="rounded border px-3 py-2"
+                                                className="erp-button erp-secondary"
                                                 onClick={() =>
                                                     action(
                                                         `/pos-events/${e.id}/replay`,

@@ -1,8 +1,8 @@
-# Phase 28 — API and route inventory — 2026-10-27
+# Phase 28 & 28.8.1–28.8.5 — API and route inventory — อัปเดต 2026-11-06
 
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+> **อัปเดตล่าสุด (2026-11-06):** ครอบคลุม Routes ของ Phase 28 Core, **POS Setup Wizard (`/setup`)**, **Manager Config (`/config`)**, **Phase 28.8.1 Delivery (`/deliveries`)**, **Phase 28.8.2 Membership (`/membership`, `/pos-membership`)**, **Phase 28.8.3 Browser Offline (`/offline/*`)**, **Phase 28.8.4 Pharmacy Patient History (`/patients/*`)**, **Phase 28.8.5 Restaurant Queue & Seating (`/restaurant/seating`, `/restaurant/orders/{id}/hold`)**, และ **`POST /purchase-orders/preview`** สำหรับคำนวณยอดตัวอย่างใบสั่งซื้อใน ERP.
 
-Local implementation ผ่าน Gemini; ฐานตาม config อัปเดตแล้ว. ตารางด้านล่างอ่านจาก Laravel route metadata ปัจจุบัน. นี่ไม่ใช่ public ERP Write API และไม่นับรวมใน External Read API 62 GET paths
+Local implementation ผ่านการตรวจรับครบถ้วน; ฐานตาม config อัปเดตแล้ว (`ERP 88/88` และ `POS 25/25`). ตารางด้านล่างอ่านจาก Laravel route metadata ปัจจุบัน. นี่ไม่ใช่ public ERP Write API และไม่นับรวมใน External Read API 62 GET paths
 
 ## Authentication and boundaries
 
@@ -12,9 +12,9 @@ Local implementation ผ่าน Gemini; ฐานตาม config อัปเ
 - Connector base `/connector/v1`: service authentication/mTLS ingress verification + instance/branch/scope allowlists. Transport ทดสอบเฉพาะ loopback HTTPS; production/remote ยังปิด
 - `401/403`: auth/scope/feature denied; `409`: state/evidence conflict; `422`: validation; `423`: recovery fence; `429`: throttled. เก็บ response error จริง ไม่ตีความ network timeout เป็น success
 
-## ERP routes
+## ERP routes (POS Integration, Membership & PO Preview)
 
-| Method | URI | Route name |
+| Method | URI | Route name / Scope |
 | --- | --- | --- |
 | `POST` | `/pos-events/{inbox}/replay` | `pos.replay` |
 | `GET / HEAD` | `/pos-integration` | `pos.index` |
@@ -32,56 +32,95 @@ Local implementation ผ่าน Gemini; ฐานตาม config อัปเ
 | `GET / HEAD` | `/pos-integration/{instance}/reconciliation` | `pos.reconciliation` |
 | `POST` | `/pos-integration/{instance}/recover` | `pos.recover` |
 | `POST` | `/pos-integration/{instance}/signing-keys` | `pos.signing-key` |
+| `GET / HEAD` | `/pos-membership` | `pos.membership.index` (Phase 28.8.2) |
+| `POST` | `/pos-membership/members` | `pos.membership.members` (Phase 28.8.2) |
+| `POST` | `/pos-membership/promotions` | `pos.membership.promotions` (Phase 28.8.2) |
+| `POST` | `/pos-membership/allocations` | `pos.membership.allocations` (Phase 28.8.2) |
+| `POST` | `/pos-membership/publications` | `pos.membership.publications` (Phase 28.8.2) |
+| `POST` | `/pos-membership/requests/{id}/review` | `pos.membership.review` (Phase 28.8.2) |
+| `POST` | `/purchase-orders/preview` | `purchase-orders.preview` (UI Redesign 2-Column Server Preview) |
 
-## POS routes
+## POS routes (Core, Connector, Setup, Config & Phase 28.8.1–28.8.5)
 
 | Method | URI | Boundary |
 | --- | --- | --- |
 | `GET / HEAD` | `/` | Session/staff or page/health |
-| `POST` | `/checkout` | Session/staff or page/health |
+| `GET / HEAD` | `/setup` | Local/loopback POS Setup Wizard (`setup.show`) |
+| `POST` | `/setup` | Local/loopback + `POS_SETUP_TOKEN` + empty DB (`setup.install`) |
+| `GET / HEAD` | `/config` | Manager / own branch / local-loopback |
+| `POST` | `/config/{section}` | `branch` / `terminal` / `staff` + manager password |
+| `POST` | `/checkout` | Session/staff |
 | `PUT` | `/connector/v1/catalog/{version}` | Connector |
 | `GET / HEAD` | `/connector/v1/checkpoint` | Connector |
 | `PUT` | `/connector/v1/checkpoints/{id}/ack` | Connector |
 | `GET / HEAD` | `/connector/v1/events` | Connector |
 | `PUT` | `/connector/v1/grants/{id}` | Connector |
 | `PUT` | `/connector/v1/grants/{id}/freeze` | Connector |
+| `PUT` | `/connector/v1/membership/{version}` | Connector (`membership:publish`, Phase 28.8.2) |
 | `PUT` | `/connector/v1/recalls/{id}` | Connector |
 | `PUT` | `/connector/v1/results/{id}` | Connector |
 | `PUT` | `/connector/v1/tax-profile` | Connector |
-| `POST` | `/customer-requests/{id}/accept` | Session/staff or page/health |
-| `POST` | `/customer-requests/{id}/reject` | Session/staff or page/health |
-| `POST` | `/local-cash-movements` | Session/staff or page/health |
-| `POST` | `/local-discount-approvals` | Session/staff or page/health |
-| `POST` | `/local-fixtures/prescriptions` | Session/staff or page/health |
-| `GET / HEAD` | `/local-fixtures/prescriptions/{id}` | Session/staff or page/health |
-| `POST` | `/local-refunds` | Session/staff or page/health |
-| `GET / HEAD` | `/local-return-inspections` | Session/staff or page/health |
-| `POST` | `/local-return-inspections` | Session/staff or page/health |
-| `POST` | `/local-voids` | Session/staff or page/health |
-| `POST` | `/login` | Session/staff or page/health |
-| `POST` | `/logout` | Session/staff or page/health |
+| `POST` | `/customer-requests/{id}/accept` | Session/staff |
+| `POST` | `/customer-requests/{id}/reject` | Session/staff |
+| `GET / HEAD` | `/deliveries` | Session/staff + local/loopback (Phase 28.8.1, non-Pharmacy) |
+| `POST` | `/deliveries` | Session/staff + local/loopback (Phase 28.8.1) |
+| `POST` | `/deliveries/{id}/transition` | Session/staff + local/loopback (Phase 28.8.1) |
+| `GET / HEAD` | `/deliveries/{id}/slip` | Session/staff + local/loopback (Phase 28.8.1) |
+| `GET / HEAD` | `/membership` | Session/staff + local/loopback (Phase 28.8.2) |
+| `POST` | `/membership/drafts` | Session/staff + local/loopback (Phase 28.8.2) |
+| `POST` | `/membership/quote` | Session/staff + local/loopback (Phase 28.8.2) |
+| `GET / HEAD` | `/offline/app` | Local/testing PWA Shell (Phase 28.8.3) |
+| `GET / HEAD` | `/offline/context` | Session/staff + local/loopback (Phase 28.8.3) |
+| `GET / HEAD` | `/offline/session` | Session/staff + local/loopback (Phase 28.8.3) |
+| `POST` | `/offline/devices` | Session/staff + local/loopback (Phase 28.8.3) |
+| `POST` | `/offline/policies` | Manager + password + local/loopback (Phase 28.8.3) |
+| `GET / POST` | `/offline/permits` | Session/staff or Manager + local/loopback (Phase 28.8.3) |
+| `POST` | `/offline/inbox` | Session/staff + local/loopback (Phase 28.8.3) |
+| `GET / HEAD` | `/offline/review` | Manager + local/loopback (Phase 28.8.3) |
+| `POST` | `/offline/accept` | Manager + password + local/loopback (Phase 28.8.3) |
+| `POST` | `/offline/close-permit` | Manager + password + local/loopback (Phase 28.8.3) |
+| `GET / HEAD` | `/patients` | Pharmacy staff + local/loopback (Phase 28.8.4) |
+| `GET / HEAD` | `/patients/options` | Pharmacy staff + JSON + local/loopback (Phase 28.8.4) |
+| `POST` | `/patients` | Clinical authority + JSON + local/loopback (Phase 28.8.4) |
+| `POST` | `/patients/search` | Clinical authority + JSON + local/loopback (Phase 28.8.4) |
+| `GET / POST` | `/patients/{id}` | Clinical authority + JSON + local/loopback (Phase 28.8.4) |
+| `GET / HEAD` | `/patients/{id}/{kind}` | Clinical authority + JSON + local/loopback (Phase 28.8.4) |
+| `POST` | `/patients/{id}/visits` | Clinical authority + JSON + local/loopback (Phase 28.8.4) |
+| `POST` | `/local-cash-movements` | Session/staff |
+| `POST` | `/local-discount-approvals` | Session/staff |
+| `POST` | `/local-fixtures/prescriptions` | Session/staff |
+| `GET / HEAD` | `/local-fixtures/prescriptions/{id}` | Session/staff |
+| `POST` | `/local-refunds` | Session/staff |
+| `GET / HEAD` | `/local-return-inspections` | Session/staff |
+| `POST` | `/local-return-inspections` | Session/staff |
+| `POST` | `/local-voids` | Session/staff |
+| `POST` | `/login` | Session/staff |
+| `POST` | `/logout` | Session/staff |
 | `GET / HEAD` | `/menu` | Public token/menu |
-| `POST` | `/menu-tokens` | Session/staff or page/health |
-| `POST` | `/menu-tokens/{id}/revoke` | Session/staff or page/health |
+| `POST` | `/menu-tokens` | Session/staff |
+| `POST` | `/menu-tokens/{id}/revoke` | Session/staff |
 | `POST` | `/menu/catalog` | Public token/menu |
 | `POST` | `/menu/requests` | Public token/menu |
 | `POST` | `/menu/status` | Public token/menu |
-| `POST` | `/restaurant/bill-preview` | Session/staff or page/health |
-| `POST` | `/restaurant/cancel` | Session/staff or page/health |
-| `POST` | `/restaurant/checkout` | Session/staff or page/health |
-| `POST` | `/restaurant/customer-requests/{id}` | Session/staff or page/health |
-| `POST` | `/restaurant/lines/{id}/{action}` | Session/staff or page/health |
-| `POST` | `/restaurant/orders` | Session/staff or page/health |
-| `POST` | `/restaurant/sessions/{id}/close` | Session/staff or page/health |
-| `POST` | `/restaurant/tables` | Session/staff or page/health |
-| `POST` | `/restaurant/tables/{id}/open` | Session/staff or page/health |
-| `POST` | `/shifts` | Session/staff or page/health |
-| `POST` | `/shifts/{id}/close` | Session/staff or page/health |
-| `GET / HEAD` | `/state` | Session/staff or page/health |
-| `GET / HEAD` | `/tax-documents` | Session/staff or page/health |
-| `POST` | `/tax-documents` | Session/staff or page/health |
-| `GET / HEAD` | `/tax-documents/{id}/print` | Session/staff or page/health |
-| `GET / HEAD` | `/up` | Session/staff or page/health |
+| `POST` | `/restaurant/bill-preview` | Session/staff |
+| `POST` | `/restaurant/cancel` | Session/staff |
+| `POST` | `/restaurant/checkout` | Session/staff |
+| `POST` | `/restaurant/customer-requests/{id}` | Session/staff |
+| `POST` | `/restaurant/lines/{id}/{action}` | Session/staff |
+| `POST` | `/restaurant/orders` | Session/staff |
+| `POST` | `/restaurant/orders/{id}/hold` | Manager hold/release queue + reason (Phase 28.8.5) |
+| `GET / POST` | `/restaurant/seating` | Walk-in & 90-min table reservation queue (Phase 28.8.5) |
+| `POST` | `/restaurant/seating/{id}/{action}` | `call` / `seat` / `cancel` / `no_show` (Phase 28.8.5) |
+| `POST` | `/restaurant/sessions/{id}/close` | Session/staff |
+| `POST` | `/restaurant/tables` | Session/staff (`+capacity`) |
+| `POST` | `/restaurant/tables/{id}/open` | Session/staff |
+| `POST` | `/shifts` | Session/staff |
+| `POST` | `/shifts/{id}/close` | Session/staff |
+| `GET / HEAD` | `/state` | Session/staff |
+| `GET / HEAD` | `/tax-documents` | Session/staff |
+| `POST` | `/tax-documents` | Session/staff |
+| `GET / HEAD` | `/tax-documents/{id}/print` | Session/staff |
+| `GET / HEAD` | `/up` | Health |
 
 ## Payload and idempotency contracts
 

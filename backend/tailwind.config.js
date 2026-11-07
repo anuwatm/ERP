@@ -14,7 +14,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', 'Outfit', 'Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Sarabun', ...defaultTheme.fontFamily.sans],
             },
             boxShadow: {
                 'subtle': '0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04)',

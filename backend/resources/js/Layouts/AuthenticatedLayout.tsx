@@ -1189,11 +1189,11 @@ export default function AuthenticatedLayout({
         }))
         .filter((section) => section.items.length > 0);
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+        <div className="erp-canvas min-h-screen text-slate-900 dark:text-slate-100 flex flex-col md:flex-row font-sans selection:bg-teal-800 selection:text-white">
             {/* Desktop Sidebar */}
-            <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-slate-900 dark:bg-slate-950/90 backdrop-blur-xl border-r border-slate-800/70 text-slate-300 z-30 shadow-2xl">
+            <aside className="erp-rail hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r border-white/15 text-emerald-50 z-30">
                 {/* Brand Logo */}
-                <div className="flex h-16 items-center gap-3 px-5 bg-slate-950 border-b border-slate-800/80">
+                <div className="erp-rail-inset flex h-16 items-center gap-3 px-5 border-b border-white/15">
                     {org?.logo_url ? (
                         <img
                             src={org.logo_url}
@@ -1201,7 +1201,7 @@ export default function AuthenticatedLayout({
                             className="h-9 w-9 object-contain rounded-lg bg-white/10 p-1 border border-white/10 shadow-sm"
                         />
                     ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 font-bold text-white shadow-lg shadow-indigo-500/30 ring-1 ring-white/20">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 font-bold text-emerald-950">
                             <svg
                                 className="h-5 w-5"
                                 fill="none"
@@ -1239,23 +1239,12 @@ export default function AuthenticatedLayout({
                                     <Link
                                         key={item.name}
                                         href={item.href}
-                                        className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                                            item.active
-                                                ? 'bg-gradient-to-r from-indigo-600/90 to-indigo-700/90 text-white shadow-lg shadow-indigo-600/25 ring-1 ring-indigo-400/30'
-                                                : 'text-slate-300 hover:bg-slate-900/90 hover:text-white hover:translate-x-0.5'
-                                        }`}
+                                        aria-current={
+                                            item.active ? 'page' : undefined
+                                        }
+                                        className="erp-rail-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold"
                                     >
-                                        {/* Active Left Pill */}
-                                        {item.active && (
-                                            <span className="absolute left-0 top-2 bottom-2 w-1 bg-white rounded-r-full shadow-sm" />
-                                        )}
-                                        <span
-                                            className={`transition-colors duration-200 ${
-                                                item.active
-                                                    ? 'text-white'
-                                                    : 'text-slate-300 group-hover:text-indigo-400'
-                                            }`}
-                                        >
+                                        <span aria-hidden="true">
                                             {item.icon}
                                         </span>
                                         <span className="truncate">
@@ -1269,7 +1258,7 @@ export default function AuthenticatedLayout({
                 </div>
 
                 {/* Org Footer Info */}
-                <div className="p-4 bg-slate-950 border-t border-slate-800/80">
+                <div className="erp-rail-inset p-4 border-t border-white/15">
                     <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800/60">
                         <div className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -1292,11 +1281,14 @@ export default function AuthenticatedLayout({
 
             {/* Mobile Drawer */}
             <div
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-950/95 backdrop-blur-2xl text-slate-300 border-r border-slate-800/80 transition-transform duration-300 ease-in-out md:hidden ${
-                    sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                id="erp-mobile-navigation"
+                className={`erp-rail fixed inset-y-0 left-0 z-50 flex w-64 flex-col text-emerald-50 border-r border-white/15 transition-transform duration-300 ease-in-out md:hidden ${
+                    sidebarOpen
+                        ? 'visible translate-x-0'
+                        : 'invisible -translate-x-full'
                 }`}
             >
-                <div className="flex h-16 items-center justify-between px-6 bg-slate-950 border-b border-slate-800/80">
+                <div className="erp-rail-inset flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/15">
                     <div className="font-bold text-white text-sm flex items-center gap-2 truncate">
                         <span className="h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />
                         <span className="truncate">
@@ -1304,7 +1296,9 @@ export default function AuthenticatedLayout({
                         </span>
                     </div>
                     <button
+                        type="button"
                         onClick={() => setSidebarOpen(false)}
+                        aria-label="Close navigation"
                         className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900"
                     >
                         <svg
@@ -1322,7 +1316,7 @@ export default function AuthenticatedLayout({
                         </svg>
                     </button>
                 </div>
-                <div className="px-4 py-6 space-y-6 overflow-y-auto">
+                <div className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
                     {visibleNavItems.map((section, idx) => (
                         <div key={idx}>
                             <div className="px-3 mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
@@ -1334,11 +1328,10 @@ export default function AuthenticatedLayout({
                                         key={item.name}
                                         href={item.href}
                                         onClick={() => setSidebarOpen(false)}
-                                        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                                            item.active
-                                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                                                : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
-                                        }`}
+                                        aria-current={
+                                            item.active ? 'page' : undefined
+                                        }
+                                        className="erp-rail-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold"
                                     >
                                         {item.icon}
                                         {item.name}
@@ -1351,11 +1344,15 @@ export default function AuthenticatedLayout({
             </div>
 
             {/* Main Layout Area */}
-            <div className="flex-1 md:ms-64 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+            <div className="min-w-0 flex-1 md:ms-64 flex flex-col min-h-screen">
                 {/* Top Header */}
                 <header className="sticky top-0 z-20 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 md:px-8 flex items-center justify-between shadow-sm transition-colors duration-200">
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                         <button
+                            type="button"
+                            aria-label="Open navigation"
+                            aria-expanded={sidebarOpen}
+                            aria-controls="erp-mobile-navigation"
                             onClick={() => setSidebarOpen(true)}
                             className="md:hidden text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60"
                         >
@@ -1376,7 +1373,7 @@ export default function AuthenticatedLayout({
                         {org && (
                             <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900/80 text-xs font-bold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-800 shadow-inner">
                                 <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400 shadow-sm shadow-indigo-400/50" />
-                                {org.name}
+                                <span className="truncate">{org.name}</span>
                             </span>
                         )}
                     </div>
@@ -1471,12 +1468,13 @@ export default function AuthenticatedLayout({
                             <Dropdown.Trigger>
                                 <button
                                     type="button"
+                                    aria-label={`Account menu for ${user.name}`}
                                     className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 px-3.5 py-1.5 text-sm font-bold text-slate-800 dark:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/40 shadow-sm"
                                 >
                                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 font-bold text-xs text-white shadow-sm shadow-indigo-500/30">
                                         {user.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <span className="max-w-[120px] truncate text-xs font-bold">
+                                    <span className="hidden max-w-[120px] truncate text-xs font-bold sm:inline">
                                         {user.name}
                                     </span>
                                     <svg

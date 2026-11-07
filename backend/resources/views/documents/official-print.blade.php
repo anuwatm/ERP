@@ -5,6 +5,7 @@
     <title>{{ $document['title'] }} {{ $document['number'] }}</title>
     <style>
 @include('documents.pdf-fonts')
+@include('documents.paper-colors')
 
         @page { size: A4; margin: 14mm; }
         * { box-sizing: border-box; }

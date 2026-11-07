@@ -1,3 +1,4 @@
+import ThemeToggle from '@/Components/UI/ThemeToggle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -125,22 +126,23 @@ export default function PortalDashboard({
     return (
         <>
             <Head title="ERP Portal" />
-            <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
+            <main className="erp-canvas min-h-screen px-4 py-8 text-erp-ink">
                 <div className="mx-auto max-w-5xl space-y-8">
-                    <header>
-                        <p className="text-sm font-medium text-indigo-700">
+                    <header className="relative min-w-0 border-b border-slate-300 pb-5 pr-28 dark:border-slate-700">
+                        <ThemeToggle className="absolute right-0 top-0" />
+                        <p className="text-sm font-medium text-teal-800 dark:text-teal-200">
                             ERP Portal
                         </p>
-                        <h1 className="text-2xl font-bold">
+                        <h1 className="break-words text-2xl font-bold">
                             {portalUser.name || portalUser.email}
                         </h1>
-                        <p className="text-sm text-slate-600 capitalize">
+                        <p className="text-sm text-slate-600 dark:text-slate-300 capitalize">
                             {portalUser.party_type} account
                         </p>
                         <button
                             type="button"
                             onClick={() => router.post(route('portal.logout'))}
-                            className="mt-3 text-sm text-slate-600 underline"
+                            className="mt-3 text-sm text-slate-600 dark:text-slate-300 underline"
                         >
                             Sign out
                         </button>
@@ -165,7 +167,7 @@ export default function PortalDashboard({
                                 return (
                                     <div
                                         key={key}
-                                        className="rounded-lg border border-slate-200 bg-white p-3"
+                                        className="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-3"
                                     >
                                         <p>
                                             {label}: page {page.current} of{' '}
@@ -176,7 +178,7 @@ export default function PortalDashboard({
                                                 <Link
                                                     href={page.previous}
                                                     aria-label={`Previous ${label} page`}
-                                                    className="text-indigo-700 underline"
+                                                    className="text-teal-800 dark:text-teal-200 underline"
                                                 >
                                                     Previous
                                                 </Link>
@@ -185,7 +187,7 @@ export default function PortalDashboard({
                                                 <Link
                                                     href={page.next}
                                                     aria-label={`Next ${label} page`}
-                                                    className="text-indigo-700 underline"
+                                                    className="text-teal-800 dark:text-teal-200 underline"
                                                 >
                                                     Next
                                                 </Link>
@@ -203,9 +205,9 @@ export default function PortalDashboard({
                             <a
                                 key={summary.label}
                                 href={`#${summary.target}`}
-                                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-5 shadow-sm transition hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
-                                <span className="block text-sm text-slate-600">
+                                <span className="block text-sm text-slate-600 dark:text-slate-300">
                                     {summary.label}
                                 </span>
                                 <span className="mt-2 block text-2xl font-bold">
@@ -222,14 +224,14 @@ export default function PortalDashboard({
                                 </h2>
                                 <div className="space-y-2">
                                     {quotations.length === 0 && (
-                                        <p className="text-sm text-slate-600">
+                                        <p className="text-sm text-slate-600 dark:text-slate-300">
                                             No quotations available.
                                         </p>
                                     )}
                                     {quotations.map((quote) => (
                                         <div
                                             key={quote.id}
-                                            className="flex items-center justify-between border bg-white p-4"
+                                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4"
                                         >
                                             <span>
                                                 {quote.quotation_no} ·{' '}
@@ -270,14 +272,14 @@ export default function PortalDashboard({
                                 </h2>
                                 <div className="space-y-2">
                                     {invoices.length === 0 && (
-                                        <p className="text-sm text-slate-600">
+                                        <p className="text-sm text-slate-600 dark:text-slate-300">
                                             No invoices available.
                                         </p>
                                     )}
                                     {invoices.map((invoice) => (
                                         <div
                                             key={invoice.id}
-                                            className="border bg-white p-4"
+                                            className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4"
                                         >
                                             {invoice.invoice_no} ·{' '}
                                             {invoice.status} ·{' '}
@@ -310,14 +312,14 @@ export default function PortalDashboard({
                                     Purchase orders
                                 </h2>
                                 {purchaseOrders.length === 0 && (
-                                    <p className="text-sm text-slate-600">
+                                    <p className="text-sm text-slate-600 dark:text-slate-300">
                                         No purchase orders available.
                                     </p>
                                 )}
                                 {purchaseOrders.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="border bg-white p-4"
+                                        className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4"
                                     >
                                         {item.po_no} · {item.currency}{' '}
                                         {item.total} · {item.status}
@@ -329,14 +331,14 @@ export default function PortalDashboard({
                                     Payment status
                                 </h2>
                                 {payables.length === 0 && (
-                                    <p className="text-sm text-slate-600">
+                                    <p className="text-sm text-slate-600 dark:text-slate-300">
                                         No payment status available.
                                     </p>
                                 )}
                                 {payables.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="border bg-white p-4"
+                                        className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4"
                                     >
                                         {item.expense_no} · {item.currency}{' '}
                                         {item.balance_due} · {item.status}
@@ -344,12 +346,12 @@ export default function PortalDashboard({
                                 ))}
                             </section>
                             <section>
-                                <div className="flex items-center justify-between border bg-white p-4">
+                                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4">
                                     <div>
                                         <h2 className="text-lg font-bold">
                                             Submit vendor bill
                                         </h2>
-                                        <p className="text-sm text-slate-600">
+                                        <p className="text-sm text-slate-600 dark:text-slate-300">
                                             Upload and submit your invoice for
                                             review and payment.
                                         </p>
@@ -368,14 +370,14 @@ export default function PortalDashboard({
                                     Submitted bills
                                 </h2>
                                 {submissions.length === 0 && (
-                                    <p className="text-sm text-slate-600">
+                                    <p className="text-sm text-slate-600 dark:text-slate-300">
                                         No submitted bills.
                                     </p>
                                 )}
                                 {submissions.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="border bg-white p-4"
+                                        className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4"
                                     >
                                         {item.vendor_invoice_no} ·{' '}
                                         {item.currency} {item.amount} ·{' '}
@@ -389,14 +391,14 @@ export default function PortalDashboard({
                         <h2 className="mb-3 text-lg font-bold">Documents</h2>
                         <div className="space-y-2">
                             {documents.length === 0 && (
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-600 dark:text-slate-300">
                                     No documents available.
                                 </p>
                             )}
                             {documents.map((document) => (
                                 <div
                                     key={document.id}
-                                    className="border bg-white p-4"
+                                    className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4"
                                 >
                                     <div className="font-medium">
                                         {document.document_no} ·{' '}
@@ -405,7 +407,7 @@ export default function PortalDashboard({
                                     {document.current_version?.scan_status ===
                                     'clean' ? (
                                         <a
-                                            className="text-sm text-indigo-700 underline"
+                                            className="text-sm text-teal-800 dark:text-teal-200 underline"
                                             href={route(
                                                 'portal.documents.download',
                                                 document.current_version.id,
@@ -417,7 +419,7 @@ export default function PortalDashboard({
                                             }
                                         </a>
                                     ) : (
-                                        <p className="text-sm text-slate-600">
+                                        <p className="text-sm text-slate-600 dark:text-slate-300">
                                             {document.current_version
                                                 ?.scan_status ??
                                                 'No file available'}

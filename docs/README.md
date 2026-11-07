@@ -1,18 +1,20 @@
 # ERP Documentation
 
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](../document/POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+> **อัปเดตล่าสุด (2026-11-06) — System-wide UI & Layout Redesign, POS Setup Wizard (`/setup`), Phase 28.8.1–28.8.5 & Full Local Closure:**
+> - [รายงานตรวจรับรวม Local Closure (2026-11-05)](../document/acceptance/local-closure-20261105/README.md) · [รายงานความปลอดภัย](../document/SECURITY_REVIEW_20261105.md) · [ทะเบียนตรวจรับ UI Redesign](../document/design/ui-acceptance-register.md)
+> - [POS Setup Wizard (`/setup`) & Manager Config (`/config`)](../document/POS_CONFIGURATION.md): สร้างสาขาแรกผ่าน `/setup` และให้ Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS **115 tests / 2,160 assertions**. ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
 
-**คู่มือใช้งาน POS:** [วิธีเปิดใช้และเลือกประเภทร้าน](../document/README_POS.md) — ร้านค้าทั่วไป ร้านอาหาร และร้านขายยา พร้อมคู่มือแยกแต่ละประเภทใน `document/`
+**คู่มือใช้งาน POS:** [วิธีเปิดใช้และเลือกประเภทร้าน](../document/README_POS.md) — ร้านค้าทั่วไป ร้านอาหาร และร้านขายยา พร้อมคู่มือแยกแต่ละประเภทและส่วนขยาย Phase 28.8.1–28.8.5 ใน `document/`
 
 **API Reference ราย endpoint:** [API_Document](../document/API_Document.md) — วิธีเรียก ตัวอย่าง output, field dictionary และ errors ของ62 GET endpoints
 
 เอกสารออกแบบระบบ Company OS / Lightweight ERP
 
-**External App API (2026-10-19):** [คู่มือ Read API P1–P6](EXTERNAL_READ_API.md), [OpenAPI รวม 62 GET paths](openapi/external-read-v1.json), [Integration/client](EXTERNAL_API_INTEGRATION.md), [checklist](EXTERNAL_SUMMARY_API_CHECKLIST.md). P7 sensitive/write ตัดออกตามคำสั่งผู้ใช้; Geminiตรวจรับเทคนิคแล้วตามgemini.mdหมวด12; Browser UATยังpending; deployment/integration/SLA deferred. [หลักฐาน](../gpt.md)
+**External App API (2026-10-19):** [คู่มือ Read API P1–P6](EXTERNAL_READ_API.md), [OpenAPI รวม 62 GET paths](openapi/external-read-v1.json), [Integration/client](EXTERNAL_API_INTEGRATION.md), [checklist](EXTERNAL_SUMMARY_API_CHECKLIST.md). P7 sensitive/write ตัดออกตามคำสั่งผู้ใช้; Geminiตรวจรับเทคนิคแล้วตามgemini.mdหมวด12; deployment/integration/SLA deferred. [หลักฐาน](../gpt.md)
 
-> สถานะเอกสาร: ไฟล์ `modules/` และ `database/DATABASE.md` ส่วนใหญ่เป็น planning baseline ของ MVP. สำหรับ implementation ปัจจุบัน ให้ยึด `backend/database/migrations`, `backend/routes/web.php`, `document/DATABASE_ERD.md`, `document/GROUPS_WORKFLOW.md` และ `checklist.md` ตามลำดับ
+> สถานะเอกสาร: ไฟล์ `modules/` และ `database/DATABASE.md` ส่วนใหญ่เป็น planning baseline ของ MVP. สำหรับ implementation ปัจจุบัน ให้ยึด `backend/database/migrations`, `pos/database/migrations`, `backend/routes/web.php`, `document/DATABASE_ERD.md`, `document/PHASE_28_DATABASE.md`, `document/GROUPS_WORKFLOW.md` และ `checklist.md` ตามลำดับ
 
-**เริ่มอ่าน implementation ปัจจุบัน:** [`CURRENT_IMPLEMENTATION.md`](./CURRENT_IMPLEMENTATION.md) และสถานะ HR Phase 23.3: [`PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](./PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md)
+**เริ่มอ่าน implementation ปัจจุบัน:** [`CURRENT_IMPLEMENTATION.md`](./CURRENT_IMPLEMENTATION.md), [`PHASE_28_POS.md`](./PHASE_28_POS.md) และสถานะ HR Phase 23.3: [`PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md`](./PHASE_23_3_HR_EMPLOYEE_ATTENDANCE.md)
 
 **เริ่มที่:** [`../PROJECT.md`](../PROJECT.md) — นิยามโปรเจกต์ + stack + authority ของเอกสาร
 
@@ -22,6 +24,7 @@
 | --- | --- |
 | [`../PROJECT.md`](../PROJECT.md) | **Project definition** (ตัวตน, stack, phase, authority) |
 | [`CURRENT_IMPLEMENTATION.md`](./CURRENT_IMPLEMENTATION.md) | **Current runtime scope** — capability, boundary และ source navigation ณ Phase 18 |
+| [`PHASE_28_POS.md`](./PHASE_28_POS.md) | **Standalone POS & Phase 28.8.1–28.8.5** — สถานะปัจจุบันและขอบเขตการเชื่อม ERP |
 | [`../MVP_SCOPE.md`](../MVP_SCOPE.md) | ขอบเขต MVP ที่ล็อกแล้ว (authority สูงสุดเรื่อง scope) |
 | [`ARCHITECTURE_DECISIONS.md`](./ARCHITECTURE_DECISIONS.md) | กฎ override schema/plan |
 | [`SECURITY_REQUIREMENTS.md`](./SECURITY_REQUIREMENTS.md) | ข้อกำหนด security |
@@ -41,12 +44,14 @@
 | [`database/DATABASE.md`](./database/DATABASE.md) | Schema planning baseline (ไม่ใช่ schema runtime หลัง Phase 8) |
 | [`modules/README.md`](./modules/README.md) | ดัชนี module docs (31 ไฟล์) |
 | [`modules/*.md`](./modules/) | รายละเอียดต่อ module: หน้าที่, workflow, data flow, DB |
-| [`../document/index.html`](../document/index.html) | **Diagram Portal Hub** — รวม Interactive Standalone HTML Diagrams ทั้ง 17 รายการ |
-| [`../document/README.md`](../document/README.md) | สารบัญและ Mermaid Diagrams ทั้งหมด 17 รายการหลักของระบบ |
-| [`../document/GROUPS_WORKFLOW.md`](../document/GROUPS_WORKFLOW.md) | ผังการทำงาน 6 กลุ่มโมดูลหลัก (31 Modules / 23 Diagrams) |
-| [`../document/DATABASE_ERD.md`](../document/DATABASE_ERD.md) | **Full Database ER Diagram** (50+ ตาราง ครอบคลุม 12 โดเมน) |
+| [`../document/index.html`](../document/index.html) | **Diagram Portal Hub** — รวม Interactive Standalone HTML Diagrams ทั้งหมด (01–24) |
+| [`../document/README.md`](../document/README.md) | สารบัญและ Mermaid Diagrams ทั้งหมด (01–27) ของระบบ |
+| [`../document/GROUPS_WORKFLOW.md`](../document/GROUPS_WORKFLOW.md) | ผังการทำงาน 7 กลุ่มโมดูลหลัก (35 Modules / 25+ Diagrams) |
+| [`../document/DATABASE_ERD.md`](../document/DATABASE_ERD.md) | **Full Database ER Diagram** (ERP 88 migrations / 173 ตาราง + POS 25 migrations / 56 ตาราง) |
+| [`../document/design/ui-acceptance-register.md`](../document/design/ui-acceptance-register.md) | **UI & Layout Redesign Register** — Light/Dark/System Theme & Print Isolation |
 | [`../ERP_FEATURE_PLAN.md`](../ERP_FEATURE_PLAN.md) | แผนยาว / backlog (authority ต่ำสุดเมื่อขัด MVP) |
-| [`../backend/`](../backend/) | Laravel app |
+| [`../backend/`](../backend/) | Laravel ERP app |
+| [`../pos/`](../pos/) | Standalone Laravel POS app |
 
 ## กฎสำคัญ
 

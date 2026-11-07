@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ $document['document_no'] }}</title>
-<style>body{font:16px system-ui,sans-serif;max-width:900px;margin:24px auto;padding:16px;color:#172b41}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:10px;border-bottom:1px solid #ccc}p{overflow-wrap:anywhere}.notice{background:#fff2cd;padding:16px}.actions{margin:20px 0}@media print{.actions{display:none}.notice{border:1px solid #333}body{margin:0}}@media(max-width:600px){th,td{padding:6px;font-size:13px}}</style></head><body>
+<style>body{font:16px system-ui,sans-serif;max-width:900px;margin:24px auto;padding:16px;color:#172b41}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:10px;border-bottom:1px solid #ccc}p{overflow-wrap:anywhere}.notice{background:#fff2cd;padding:16px}.actions{margin:20px 0}@media print{.actions{display:none}.notice{border:1px solid #333}body{margin:0}}@media(max-width:600px){th,td{padding:6px;font-size:13px}}</style>@include('partials.paper')</head><body>
 <p class="notice">เอกสารทดสอบ local — ยังไม่ผ่านการตรวจรับภาษี/เครื่องพิมพ์ · e-Tax: {{ $etax }} · สำเนาสำหรับพิมพ์ซ้ำ</p>
 <h1>{{ $document['kind'] === 'ABB' ? 'ใบกำกับภาษีอย่างย่อ' : 'ใบกำกับภาษี' }}</h1>
 <p>{{ $document['issuer']['seller_name'] }} · เลขผู้เสียภาษี {{ $document['issuer']['seller_tax_id'] }} · สาขา {{ $document['issuer']['seller_branch_no'] }}</p>

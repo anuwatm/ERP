@@ -4,10 +4,13 @@ const path = require("node:path");
 const { chromium } = require(path.join(process.argv[2], "playwright"));
 const base = "http://127.0.0.1:8128";
 const phase = process.env.POS_BROWSER_PHASE_2885 === "1";
+const run = process.env.POS_BROWSER_UI_RUN || "";
+assert(!run || (phase && /^[a-z0-9-]+$/.test(run)));
 const output = path.resolve(
   __dirname,
   "../../../temp",
-  phase ? "phase2885-restaurant-browser" : "phase28-pos-browser",
+  (phase ? "phase2885-restaurant-browser" : "phase28-pos-browser") +
+    (run ? "-" + run : ""),
 );
 (async () => {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -200,16 +203,29 @@ const output = path.resolve(
     }
     for (const width of [1440, 390]) {
       await staff.setViewportSize({ width, height: 1000 });
-      assert(
-        await staff.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth,
-        ),
-        `Restaurant online overflow ${width}`,
-      );
-      await staff.screenshot({
-        path: path.join(output, `restaurant-online-${width}.png`),
-        fullPage: true,
-      });
+      for (const theme of ["light", "dark"]) {
+        await staff
+          .getByRole("combobox", { name: "ธีมหน้าขาย" })
+          .selectOption(theme);
+        await staff.waitForFunction(
+          (value) =>
+            getComputedStyle(document.documentElement).colorScheme === value,
+          theme,
+        );
+        assert(
+          await staff.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          `Restaurant online overflow ${width} ${theme}`,
+        );
+        await staff.screenshot({
+          path: path.join(
+            output,
+            `restaurant-online-${width}${theme === "dark" ? "-dark" : ""}.png`,
+          ),
+          fullPage: true,
+        });
+      }
     }
     await panel.getByLabel("รับเงินสดค่าอาหาร", { exact: true }).fill("20.00");
     const paid = staff.waitForResponse(
@@ -262,6 +278,7 @@ const output = path.resolve(
           }
         : {}),
       responsive: [1440, 390],
+      themes: ["light", "dark"],
       consoleErrors: errors,
     };
     fs.writeFileSync(

@@ -68,6 +68,24 @@ class Phase7ProcurementAndMembersTest extends TestCase
             ]],
         ];
 
+        $this->actingAsOrgUser($finance)
+            ->postJson(route('purchase-orders.preview'), $payload)
+            ->assertOk()
+            ->assertExactJson(['currency' => 'THB', 'totals' => [
+                'subtotal' => '2000.00', 'discount_amount' => '100.00',
+                'tax_amount' => '133.00', 'total' => '2033.00',
+            ]]);
+        $this->assertDatabaseCount('purchase_orders', 0);
+        $this->actingAsOrgUser($finance)
+            ->postJson(route('purchase-orders.preview'), array_replace($payload, ['supplier_id' => (string) \Illuminate\Support\Str::uuid()]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('supplier_id');
+        $viewer = User::factory()->create(['org_id' => $finance->org_id]);
+        $this->attachRole($viewer, 'po-viewer', ['purchase_orders.view']);
+        $this->actingAsOrgUser($viewer)
+            ->postJson(route('purchase-orders.preview'), $payload)
+            ->assertForbidden();
+
         $this->actingAsOrgUser($finance)->withSession(['auth.password_confirmed_at' => time()])
             ->post(route('purchase-orders.store'), $payload)
             ->assertRedirect();

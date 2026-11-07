@@ -43,6 +43,7 @@ export default function DeleteUserForm({
     };
 
     const closeModal = () => {
+        if (processing) return;
         setConfirmingUserDeletion(false);
 
         clearErrors();
@@ -52,11 +53,11 @@ export default function DeleteUserForm({
     return (
         <section className={`space-y-6 ${className}`}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                     Delete Account
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                     Once your account is deleted, all of its resources and data
                     will be permanently deleted. Before deleting your account,
                     please download any data or information that you wish to
@@ -68,13 +69,18 @@ export default function DeleteUserForm({
                 Delete Account
             </DangerButton>
 
-            <Modal show={confirmingUserDeletion} onClose={closeModal}>
+            <Modal
+                show={confirmingUserDeletion}
+                title="Delete Account"
+                onClose={closeModal}
+                closeable={!processing}
+            >
                 <form onSubmit={deleteUser} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                         Are you sure you want to delete your account?
                     </h2>
 
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                         Once your account is deleted, all of its resources and
                         data will be permanently deleted. Please enter your
                         password to confirm you would like to permanently delete
@@ -83,13 +89,13 @@ export default function DeleteUserForm({
 
                     <div className="mt-6">
                         <InputLabel
-                            htmlFor="password"
+                            htmlFor="delete-account-password"
                             value="Password"
                             className="sr-only"
                         />
 
                         <TextInput
-                            id="password"
+                            id="delete-account-password"
                             type="password"
                             name="password"
                             ref={passwordInput}
@@ -100,20 +106,31 @@ export default function DeleteUserForm({
                             className="mt-1 block w-3/4"
                             isFocused
                             placeholder="Password"
+                            autoComplete="current-password"
+                            aria-invalid={Boolean(errors.password)}
+                            aria-describedby={
+                                errors.password
+                                    ? 'delete-account-error'
+                                    : undefined
+                            }
                         />
 
                         <InputError
+                            id="delete-account-error"
                             message={errors.password}
                             className="mt-2"
                         />
                     </div>
 
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={closeModal}>
+                    <div className="mt-6 flex flex-wrap justify-end gap-3">
+                        <SecondaryButton
+                            onClick={closeModal}
+                            disabled={processing}
+                        >
                             Cancel
                         </SecondaryButton>
 
-                        <DangerButton className="ms-3" disabled={processing}>
+                        <DangerButton disabled={processing}>
                             Delete Account
                         </DangerButton>
                     </div>

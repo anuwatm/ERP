@@ -139,11 +139,12 @@ export default function Users({
                     title="Users Directory"
                     description={`${filteredUsers.length} visible records`}
                     action={
-                        <div className="grid min-w-[560px] gap-2 md:grid-cols-4">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
                             <TextInput
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search"
+                                className="min-w-0 w-full"
                             />
                             <select
                                 className={inputClass}

@@ -1,5 +1,9 @@
-/* Cache only the public shell and immutable Vite assets. No API/session/PII caching. */
-const CACHE = "pos-offline-shell-v1";
+/* Cache only the public shell and immutable assets. No API/session/PII caching. */
+const CACHE = "pos-offline-shell-v3";
+const LOCAL_FONTS = [
+  "/fonts/sarabun-regular-v1.ttf",
+  "/fonts/sarabun-bold-v1.ttf",
+];
 self.addEventListener("install", (event) =>
   event.waitUntil(
     (async () => {
@@ -24,7 +28,7 @@ self.addEventListener("install", (event) =>
         throw new Error("Offline shell has no immutable script");
       const cache = await caches.open(CACHE);
       await cache.put("/offline/app", response);
-      await cache.addAll([...new Set(urls)]);
+      await cache.addAll([...new Set([...urls, ...LOCAL_FONTS])]);
     })(),
   ),
 );
@@ -49,7 +53,10 @@ self.addEventListener("fetch", (event) => {
       ),
     );
   } else if (
-    /^\/build\/assets\/[A-Za-z0-9_.-]+\.(js|css|woff2?)$/.test(url.pathname) &&
+    (LOCAL_FONTS.includes(url.pathname) ||
+      /^\/build\/assets\/[A-Za-z0-9_.-]+\.(js|css|woff2?)$/.test(
+        url.pathname,
+      )) &&
     !url.search
   ) {
     event.respondWith(

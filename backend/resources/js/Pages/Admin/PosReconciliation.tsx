@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from '@/Components/UI/PageHeader';
+import InputError from '@/Components/InputError';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -27,19 +29,16 @@ type Report = {
 export default function PosReconciliation({ report }: { report: Report }) {
     const [from, setFrom] = useState(report.from),
         [to, setTo] = useState(report.to);
+    const [filterError, setFilterError] = useState('');
+    const [loading, setLoading] = useState(false);
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold">
-                    POS Ledger Reconciliation
-                </h2>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="POS Ledger Reconciliation" />
-            <div className="mx-auto max-w-7xl space-y-6 p-6">
+            <PageHeader title="POS Ledger Reconciliation" />
+            <div className="mx-auto max-w-7xl space-y-6">
                 <Link
                     href="/pos-integration"
-                    className="text-sky-700 underline"
+                    className="text-emerald-800 underline dark:text-emerald-200"
                 >
                     กลับ POS Integration
                 </Link>
@@ -48,7 +47,7 @@ export default function PosReconciliation({ report }: { report: Report }) {
                     สกุลเงิน: {report.currency || 'ไม่มีรายการ'} · จำกัด 100
                     records/type และ 1000 stock allocations ต่อรายงาน
                 </p>
-                <p className="rounded bg-amber-50 p-4 text-amber-900">
+                <p className="rounded-lg bg-amber-50 p-4 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
                     ตรวจหลักฐานที่ ERP รับไว้ ณ ปัจจุบัน · Checkpoint:{' '}
                     {report.source_checkpoint}
                     {report.checkpoint_through !== null && (
@@ -67,40 +66,87 @@ export default function PosReconciliation({ report }: { report: Report }) {
                     เงินสดเคลื่อนไหวไม่ใช่ยอดเงินสดองค์กรหรือยอดปิดกะ
                 </p>
                 <form
-                    className="flex flex-wrap items-end gap-4 rounded bg-white p-6"
+                    className="flex flex-wrap items-end gap-4 erp-surface p-4 sm:p-6"
                     onSubmit={(e) => {
                         e.preventDefault();
+                        if (loading) return;
+                        const days =
+                            (Date.parse(to) - Date.parse(from)) / 86_400_000;
+                        if (days < 0 || days > 30) {
+                            setFilterError(
+                                'เลือกช่วงวันตามลำดับและไม่เกิน 31 วัน',
+                            );
+                            return;
+                        }
+                        setFilterError('');
                         router.get(
                             `/pos-integration/${report.instance_id}/reconciliation`,
                             { from, to },
+                            {
+                                preserveState: true,
+                                onStart: () => setLoading(true),
+                                onFinish: () => setLoading(false),
+                                onError: (errors) =>
+                                    setFilterError(
+                                        errors.from ||
+                                            errors.to ||
+                                            'ตรวจช่วงวันไม่สำเร็จ',
+                                    ),
+                            },
                         );
                     }}
                 >
                     <label>
                         จากวันที่
                         <input
-                            className="block rounded border p-2"
+                            className="erp-input block max-w-full"
                             type="date"
                             required
                             value={from}
-                            onChange={(e) => setFrom(e.target.value)}
+                            aria-invalid={Boolean(filterError)}
+                            aria-describedby={
+                                filterError
+                                    ? 'reconciliation-filter-error'
+                                    : undefined
+                            }
+                            onChange={(e) => {
+                                setFrom(e.target.value);
+                                setFilterError('');
+                            }}
                         />
                     </label>
                     <label>
                         ถึงวันที่
                         <input
-                            className="block rounded border p-2"
+                            className="erp-input block max-w-full"
                             type="date"
                             required
                             value={to}
-                            onChange={(e) => setTo(e.target.value)}
+                            aria-invalid={Boolean(filterError)}
+                            aria-describedby={
+                                filterError
+                                    ? 'reconciliation-filter-error'
+                                    : undefined
+                            }
+                            onChange={(e) => {
+                                setTo(e.target.value);
+                                setFilterError('');
+                            }}
                         />
                     </label>
-                    <button className="rounded border px-4 py-2">
-                        ตรวจช่วงวัน (สูงสุด 31 วัน)
+                    <button
+                        className="erp-button erp-primary"
+                        disabled={loading}
+                    >
+                        {loading ? 'กำลังตรวจ…' : 'ตรวจช่วงวัน (สูงสุด 31 วัน)'}
                     </button>
+                    <InputError
+                        id="reconciliation-filter-error"
+                        className="w-full"
+                        message={filterError}
+                    />
                 </form>
-                <dl className="grid gap-4 rounded bg-white p-6 sm:grid-cols-2 lg:grid-cols-4">
+                <dl className="grid gap-4 erp-surface p-4 sm:p-6 sm:grid-cols-2 lg:grid-cols-4">
                     {[
                         ['ขายต้นฉบับ', report.gross_sales],
                         ['คืนเงิน', report.refunds],
@@ -112,12 +158,12 @@ export default function PosReconciliation({ report }: { report: Report }) {
                         ['Stock/COGS ค้าง', report.inventory_pending],
                     ].map(([label, value]) => (
                         <div key={label}>
-                            <dt className="text-sm text-gray-600">{label}</dt>
+                            <dt className="text-sm text-erp-muted">{label}</dt>
                             <dd className="text-xl font-semibold">{value}</dd>
                         </div>
                     ))}
                 </dl>
-                <section className="overflow-x-auto rounded bg-white p-6">
+                <section className="overflow-x-auto erp-surface p-4 sm:p-6">
                     <h3 className="mb-4 font-semibold">
                         พบ {report.issues.length} ข้อที่ต้องตรวจ
                     </h3>

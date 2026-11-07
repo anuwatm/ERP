@@ -33,11 +33,11 @@ export default function UpdateProfileInformation({
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                     Profile Information
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                     Update your account's profile information and email address.
                 </p>
             </header>
@@ -54,9 +54,17 @@ export default function UpdateProfileInformation({
                         required
                         isFocused
                         autoComplete="name"
+                        aria-invalid={Boolean(errors.name)}
+                        aria-describedby={
+                            errors.name ? 'profile-name-error' : undefined
+                        }
                     />
 
-                    <InputError className="mt-2" message={errors.name} />
+                    <InputError
+                        id="profile-name-error"
+                        className="mt-2"
+                        message={errors.name}
+                    />
                 </div>
 
                 <div>
@@ -70,27 +78,35 @@ export default function UpdateProfileInformation({
                         onChange={(e) => setData('email', e.target.value)}
                         required
                         autoComplete="username"
+                        aria-invalid={Boolean(errors.email)}
+                        aria-describedby={
+                            errors.email ? 'profile-email-error' : undefined
+                        }
                     />
 
-                    <InputError className="mt-2" message={errors.email} />
+                    <InputError
+                        id="profile-email-error"
+                        className="mt-2"
+                        message={errors.email}
+                    />
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
-                        <p className="mt-2 text-sm text-gray-800">
+                        <p className="mt-2 text-sm text-slate-800 dark:text-slate-200">
                             Your email address is unverified.
                             <Link
                                 href={route('verification.send')}
                                 method="post"
                                 as="button"
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                className="rounded-md text-sm text-slate-600 dark:text-slate-300 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                             >
                                 Click here to re-send the verification email.
                             </Link>
                         </p>
 
                         {status === 'verification-link-sent' && (
-                            <div className="mt-2 text-sm font-medium text-green-600">
+                            <div className="mt-2 text-sm font-medium text-green-700 dark:text-green-300">
                                 A new verification link has been sent to your
                                 email address.
                             </div>
@@ -108,7 +124,9 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">Saved.</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                            Saved.
+                        </p>
                     </Transition>
                 </div>
             </form>

@@ -78,4 +78,43 @@ class ConfigurationTest extends TestCase
         auth()->logout();
         $this->get('/config')->assertUnauthorized();
     }
+
+    public function test_pharmacy_register_only_shows_available_lots_from_its_own_branch(): void
+    {
+        config(['pos.local_pharmacy_enabled' => true]);
+        $branch = $this->manager->branch_id;
+        $other = (string) Str::uuid();
+        $product = (string) Str::uuid();
+        DB::table('pos_branches')->insert(['id' => $other, 'code' => 'B2', 'name' => 'Other pharmacy', 'business_type' => 'pharmacy']);
+        $today = now('Asia/Bangkok')->toDateString();
+        $expired = now('Asia/Bangkok')->subDay()->toDateString();
+        $lots = [];
+
+        foreach (['available', 'expired', 'recalled', 'consumed', 'foreign'] as $kind) {
+            $lots[$kind] = (string) Str::uuid();
+            DB::table('pos_grants')->insert([
+                'id' => (string) Str::uuid(),
+                'branch_id' => $kind === 'foreign' ? $other : $branch,
+                'product_id' => $product,
+                'lot_id' => $lots[$kind],
+                'expires_at' => $kind === 'expired' ? $expired : $today,
+                'epoch' => 1,
+                'granted_quantity' => '1',
+                'consumed_quantity' => $kind === 'consumed' ? '1' : '0',
+                'status' => 'active',
+                'payload_hash' => hash('sha256', $kind),
+            ]);
+        }
+        DB::table('pos_lot_recalls')->insert([
+            'id' => (string) Str::uuid(), 'branch_id' => $branch, 'product_id' => $product,
+            'lot_id' => $lots['recalled'], 'reason' => 'Synthetic recall', 'recalled_at' => now(),
+            'payload_hash' => hash('sha256', 'recall'),
+        ]);
+
+        $this->getJson('/state')->assertOk()->assertJsonMissingPath('pharmacy_lots');
+        DB::table('pos_branches')->where('id', $branch)->update(['business_type' => 'pharmacy']);
+        $this->getJson('/state')->assertOk()->assertJsonPath('pharmacy_lots.'.$product, [
+            ['lot_id' => $lots['available'], 'expires_at' => $today],
+        ]);
+    }
 }

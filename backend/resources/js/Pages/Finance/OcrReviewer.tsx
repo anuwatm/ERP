@@ -14,7 +14,7 @@ type ExtractionDetail = {
     id: string;
     status: string;
     document_type: string;
-    confidence_score: number;
+    confidence_score: number | string | null;
     math_mismatch: boolean;
     tax_id_valid: boolean | null;
     target_type?: string | null;
@@ -87,7 +87,9 @@ export default function OcrReviewer({
 
     const [zoom, setZoom] = useState(100);
     const [rotation, setRotation] = useState(0);
-    const [targetType, setTargetType] = useState<'expense' | 'vendor_bill'>('expense');
+    const [targetType, setTargetType] = useState<'expense' | 'vendor_bill'>(
+        'expense',
+    );
 
     const initialTotal = parsed.total_amount ?? 0;
     const initialVat = parsed.vat_amount ?? 0;
@@ -116,7 +118,8 @@ export default function OcrReviewer({
         : '';
 
     const candidatePOs = (purchaseOrders || []).filter(
-        (po) => !form.data.supplier_id || po.supplier_id === form.data.supplier_id,
+        (po) =>
+            !form.data.supplier_id || po.supplier_id === form.data.supplier_id,
     );
 
     const handleConvert = (e: React.FormEvent) => {
@@ -143,8 +146,16 @@ export default function OcrReviewer({
     const numVat = Number(form.data.tax_amount) || 0;
     const computedSubtotal = Math.max(0, numAmount - numVat);
 
-    const getConfidenceBadge = (confidence?: number) => {
-        const score = confidence ?? 0.85;
+    const getConfidenceBadge = (confidence?: number | string | null) => {
+        const score =
+            confidence == null || confidence === '' ? NaN : Number(confidence);
+        if (!Number.isFinite(score)) {
+            return (
+                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    Confidence unavailable
+                </span>
+            );
+        }
         if (score >= 0.9) {
             return (
                 <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
@@ -232,7 +243,8 @@ export default function OcrReviewer({
                 </div>
 
                 {/* OCR Error Banner if Failed */}
-                {(extraction.status === 'failed' || extraction.error_message) && (
+                {(extraction.status === 'failed' ||
+                    extraction.error_message) && (
                     <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200">
                         <div className="flex items-start gap-2.5">
                             <span className="text-lg">⚠️</span>
@@ -241,7 +253,8 @@ export default function OcrReviewer({
                                     AI OCR Scan Failed / Notice:
                                 </strong>
                                 <p className="mt-1 font-mono text-[11px] leading-relaxed text-rose-700 dark:text-rose-300">
-                                    {extraction.error_message || 'The AI model could not extract text from this document. Please verify your AI Configuration, model quota, or try uploading an image format (JPG/PNG).'}
+                                    {extraction.error_message ||
+                                        'The AI model could not extract text from this document. Please verify your AI Configuration, model quota, or try uploading an image format (JPG/PNG).'}
                                 </p>
                             </div>
                         </div>
@@ -250,13 +263,17 @@ export default function OcrReviewer({
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                     {/* Left Panel: Document Viewer (6 cols) */}
-                    <div className="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-6">
+                    <div
+                        id="ocr-source-document"
+                        tabIndex={-1}
+                        className="min-w-0 scroll-mt-20 rounded-xl border border-gray-200 bg-white shadow-sm focus-visible:outline focus-visible:outline-teal-600 dark:border-gray-800 dark:bg-gray-900 lg:col-span-6"
+                    >
                         {/* Viewer Toolbar */}
-                        <div className="flex items-center justify-between border-b border-gray-100 p-3 text-xs dark:border-gray-800">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-3 text-xs dark:border-gray-800">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
-                                📄 Original Document
+                                Original Document
                             </span>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex flex-wrap items-center gap-1.5">
                                 <button
                                     type="button"
                                     onClick={() =>
@@ -302,15 +319,37 @@ export default function OcrReviewer({
                                 </button>
                             </div>
                         </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 px-3 py-2 text-sm">
+                            {previewUrl && (
+                                <a
+                                    href={previewUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-medium text-teal-800 underline underline-offset-2 dark:text-teal-200"
+                                >
+                                    Open original in new tab
+                                </a>
+                            )}
+                            <a
+                                href="#ocr-review-fields"
+                                className="font-medium text-teal-800 underline underline-offset-2 dark:text-teal-200 lg:hidden"
+                            >
+                                Go to extracted fields
+                            </a>
+                        </div>
 
                         {/* Document View Canvas */}
-                        <div className="flex-1 overflow-auto bg-gray-100/70 p-4 dark:bg-gray-950 flex items-center justify-center min-h-[520px] max-h-[750px]">
-                            {isPdf ? (
+                        <div className="flex h-[min(55svh,24rem)] items-center justify-center overflow-auto bg-gray-100/70 p-3 dark:bg-gray-950 lg:h-[min(75svh,46rem)]">
+                            {!previewUrl ? (
+                                <p className="p-4 text-center text-sm text-slate-600 dark:text-slate-300">
+                                    The original document is unavailable.
+                                </p>
+                            ) : isPdf ? (
                                 <iframe
                                     src={`${previewUrl}#toolbar=0`}
+                                    title="Original PDF document"
                                     className="h-full w-full rounded border border-gray-200 dark:border-gray-800"
                                     style={{
-                                        minHeight: '600px',
                                         transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
                                         transformOrigin: 'center center',
                                     }}
@@ -331,13 +370,23 @@ export default function OcrReviewer({
                     </div>
 
                     {/* Right Panel: Verified Draft Form (6 cols) */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-6 space-y-5">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+                    <div
+                        id="ocr-review-fields"
+                        tabIndex={-1}
+                        className="min-w-0 scroll-mt-20 space-y-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm focus-visible:outline focus-visible:outline-teal-600 dark:border-gray-800 dark:bg-gray-900 sm:p-6 lg:col-span-6"
+                    >
+                        <a
+                            href="#ocr-source-document"
+                            className="inline-block text-sm font-medium text-teal-800 underline underline-offset-2 dark:text-teal-200 lg:hidden"
+                        >
+                            Back to original document
+                        </a>
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 dark:border-gray-800">
                             <div>
                                 <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100">
                                     AI-Extracted Data & Verification
                                 </h3>
-                                <p className="text-[11px] text-gray-500">
+                                <p className="text-xs text-gray-600 dark:text-gray-300">
                                     Verify fields and select accounting
                                     dimensions.
                                 </p>
@@ -358,8 +407,17 @@ export default function OcrReviewer({
                                 type="button"
                                 onClick={() => {
                                     setTargetType('expense');
-                                    if (form.data.title.startsWith('Vendor Bill:')) {
-                                        form.setData('title', parsed.vendor_name ? `Expense - ${parsed.vendor_name}` : 'Expense draft from OCR');
+                                    if (
+                                        form.data.title.startsWith(
+                                            'Vendor Bill:',
+                                        )
+                                    ) {
+                                        form.setData(
+                                            'title',
+                                            parsed.vendor_name
+                                                ? `Expense - ${parsed.vendor_name}`
+                                                : 'Expense draft from OCR',
+                                        );
                                     }
                                 }}
                                 className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition ${
@@ -374,8 +432,15 @@ export default function OcrReviewer({
                                 type="button"
                                 onClick={() => {
                                     setTargetType('vendor_bill');
-                                    if (!form.data.title.startsWith('Vendor Bill:')) {
-                                        form.setData('title', `Vendor Bill: ${parsed.invoice_no || parsed.vendor_name || 'Supplier'}`);
+                                    if (
+                                        !form.data.title.startsWith(
+                                            'Vendor Bill:',
+                                        )
+                                    ) {
+                                        form.setData(
+                                            'title',
+                                            `Vendor Bill: ${parsed.invoice_no || parsed.vendor_name || 'Supplier'}`,
+                                        );
                                     }
                                 }}
                                 className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition ${
@@ -396,7 +461,9 @@ export default function OcrReviewer({
                             <div>
                                 <div className="flex items-center justify-between mb-1">
                                     <label className="font-semibold text-gray-700 dark:text-gray-300">
-                                        {targetType === 'vendor_bill' ? 'Bill Title / Description *' : 'Expense Title / Description *'}
+                                        {targetType === 'vendor_bill'
+                                            ? 'Bill Title / Description *'
+                                            : 'Expense Title / Description *'}
                                     </label>
                                     {getConfidenceBadge(
                                         parsed.vendor_name ? 0.95 : 0.75,
@@ -418,7 +485,10 @@ export default function OcrReviewer({
                                 <div>
                                     <div className="flex items-center justify-between mb-1">
                                         <label className="font-semibold text-gray-700 dark:text-gray-300">
-                                            Supplier / Vendor {targetType === 'vendor_bill' ? '*' : ''}
+                                            Supplier / Vendor{' '}
+                                            {targetType === 'vendor_bill'
+                                                ? '*'
+                                                : ''}
                                         </label>
                                         {parsed.matched_supplier_id && (
                                             <span className="rounded bg-emerald-50 px-1 text-[10px] text-emerald-700 font-medium dark:bg-emerald-950 dark:text-emerald-300">
@@ -438,7 +508,9 @@ export default function OcrReviewer({
                                         className="w-full rounded-lg border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                     >
                                         <option value="">
-                                            {targetType === 'vendor_bill' ? '-- Select Supplier (Required for AP Bill) --' : '-- No Supplier (General Merchant) --'}
+                                            {targetType === 'vendor_bill'
+                                                ? '-- Select Supplier (Required for AP Bill) --'
+                                                : '-- No Supplier (General Merchant) --'}
                                         </option>
                                         {suppliers.map((s) => (
                                             <option key={s.id} value={s.id}>
@@ -673,11 +745,13 @@ export default function OcrReviewer({
                                         </label>
                                         {candidatePOs.length > 0 ? (
                                             <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] text-indigo-800 font-semibold dark:bg-indigo-900 dark:text-indigo-200">
-                                                {candidatePOs.length} open PO(s) found
+                                                {candidatePOs.length} open PO(s)
+                                                found
                                             </span>
                                         ) : (
                                             <span className="text-[10px] text-gray-400">
-                                                No open POs found for this supplier
+                                                No open POs found for this
+                                                supplier
                                             </span>
                                         )}
                                     </div>
@@ -691,10 +765,18 @@ export default function OcrReviewer({
                                         }
                                         className="w-full rounded-lg border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                     >
-                                        <option value="">-- No Linked Purchase Order --</option>
+                                        <option value="">
+                                            -- No Linked Purchase Order --
+                                        </option>
                                         {candidatePOs.map((po) => (
                                             <option key={po.id} value={po.id}>
-                                                {po.po_no} (Total: ฿{Number(po.total).toLocaleString('en-US', { minimumFractionDigits: 2 })})
+                                                {po.po_no} (Total: ฿
+                                                {Number(
+                                                    po.total,
+                                                ).toLocaleString('en-US', {
+                                                    minimumFractionDigits: 2,
+                                                })}
+                                                )
                                             </option>
                                         ))}
                                     </select>

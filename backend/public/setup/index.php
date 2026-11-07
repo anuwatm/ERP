@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use Setup\Installer;
+use function Setup\renderInstallerStatus;
 
 header('Cache-Control: private, no-store');
 header('Referrer-Policy: no-referrer');
 
 require_once __DIR__.'/../../setup/Installer.php';
+require_once __DIR__.'/../../setup/InstallerStatusPage.php';
 
 session_name('erp_setup');
 session_set_cookie_params([
@@ -42,15 +44,11 @@ function redirectSetup(int $step): never
 }
 
 if ($installer->isInstalled()) {
-    http_response_code(404);
-    echo '<!doctype html><title>Installer unavailable</title><p>Installation is locked. <a href="../login">Go to login</a>.</p>';
-    exit;
+    renderInstallerStatus(true);
 }
 
 if (! $installer->isEnabled()) {
-    http_response_code(403);
-    echo '<!doctype html><title>Installer disabled</title><p>Installer is disabled. Set a <code>SETUP_TOKEN</code> web-server environment variable, or create <code>backend/setup/enable.php</code> from <code>enable.php.example</code> with a random token, then open this page again.</p>';
-    exit;
+    renderInstallerStatus(false);
 }
 
 $step = max(1, min(4, (int) ($_GET['step'] ?? 1)));
@@ -160,6 +158,30 @@ $preflightOk = ! array_filter($checks, fn (array $check): bool => ! $check['ok']
   <title>ERP Setup Wizard</title>
   <style>
     :root { color-scheme: light dark; font-family: system-ui, sans-serif; } body { margin: 0; background: #f4f7fb; color: #172033; } main { width: min(760px, calc(100% - 32px)); margin: 36px auto; background: white; border-radius: 16px; padding: 32px; box-shadow: 0 12px 40px #10204018; } h1 { margin-top: 0; } .steps { display: flex; gap: 8px; margin: 20px 0 28px; } .step { flex: 1; padding: 8px; text-align: center; border-radius: 8px; background: #e7edf7; color: #52627c; font-size: 13px; } .step.active { background: #2463eb; color: white; font-weight: 700; } label { display:block; font-weight: 650; margin: 14px 0 5px; } input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #b9c4d5; border-radius: 8px; font: inherit; } .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 0 16px; } button { margin-top: 22px; padding: 11px 16px; border: 0; border-radius: 8px; background: #2463eb; color: white; font: inherit; font-weight: 700; cursor:pointer; } button:disabled { background:#9aa8c0; cursor:not-allowed; } .check { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e5eaf2; } .ok { color:#087b43; } .bad,.errors { color:#b42318; } .errors { background:#fff0ef; padding:12px 16px; border-radius:8px; } .hint { color:#61708a; font-size:14px; line-height:1.5; } code { background:#edf1f7; padding:2px 5px; border-radius:4px; } @media (prefers-color-scheme: dark) { body { background:#101622; color:#e6edf8; } main { background:#182131; } input { background:#111827; color:#fff; border-color:#3a475d; } .step { background:#253247; color:#b7c4d9; } .check { border-color:#2d3a50; } .hint { color:#b3c0d5; } code { background:#263449; } .errors { background:#4a2020; } }
+    * { box-sizing: border-box; }
+    body { background: #f5f2ea; color: #112e28; }
+    main { border: 1px solid #aebbb5; box-shadow: none; }
+    .step { background: #e6efe9; color: #344e44; }
+    .step.active { background: #103a32; color: #fff; }
+    button:not(:disabled) { background: #a33b2c; color: #fff8f1; }
+    :focus-visible { outline: 2px solid #08765e; outline-offset: 3px; }
+    @media (max-width: 36rem) {
+      main { margin: 16px auto; padding: 16px; }
+      .grid { grid-template-columns: 1fr; }
+      .steps { flex-wrap: wrap; }
+      .step { flex: 1 1 42%; }
+      .check { gap: 12px; }
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #101a18; color: #eaf4ef; }
+      main { background: #192a25; border-color: #657e73; }
+      .step { background: #263d34; color: #b7cbc2; }
+      .step.active { background: #a0d9bf; color: #09231e; }
+      .bad, .errors { color: #ffc2b3; }
+      .ok { color: #a0d9bf; }
+      button:not(:disabled) { background: #ffae9a; color: #32140e; }
+      :focus-visible { outline-color: #a0d9bf; }
+    }
   </style>
 </head>
 <body><main>

@@ -3,18 +3,19 @@
 declare(strict_types=1);
 
 use Setup\Installer;
+use function Setup\renderInstallerStatus;
 
 header('Cache-Control: private, no-store');
 header('Referrer-Policy: no-referrer');
 
 require_once __DIR__.'/../backend/setup/Installer.php';
+require_once __DIR__.'/../backend/setup/InstallerStatusPage.php';
 
 $basePath = dirname(__DIR__).'/backend';
 $installer = new Installer($basePath);
 
 if ($installer->isInstalled()) {
-    http_response_code(404);
-    exit('Installer unavailable.');
+    renderInstallerStatus(true);
 }
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -147,6 +148,22 @@ $groups = [
   <title>ERP System Requirements Check</title>
   <style>
     :root{color-scheme:light;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#10213f;background:#edf2f9;--ink:#10213f;--muted:#53657e;--line:#dce4ef;--surface:#fff;--navy:#142d57;--blue:#2267db;--success:#087a4a;--success-soft:#e8f8ef;--danger:#bd2c2c;--danger-soft:#fff0f0;--warning:#a35e00;--warning-soft:#fff6e4}*{box-sizing:border-box}body{min-width:320px;margin:0;background:radial-gradient(circle at 14% 0%,#dbeafe 0,transparent 31rem),#edf2f9}.shell{width:min(1040px,calc(100% - 32px));margin:clamp(24px,5vw,64px) auto}.masthead{position:relative;overflow:hidden;padding:clamp(28px,5vw,52px);border-radius:16px 16px 0 0;background:var(--navy);color:#fff}.masthead:after{position:absolute;right:-4rem;bottom:-5rem;width:18rem;height:18rem;border:1px solid #8ab1ef55;border-radius:50%;content:""}.masthead:before{position:absolute;right:5rem;top:-9rem;width:13rem;height:13rem;border:1px solid #8ab1ef33;border-radius:50%;content:""}.eyebrow{position:relative;margin:0 0 12px;color:#bad3ff;font-size:.75rem;font-weight:750;letter-spacing:.08em;text-transform:uppercase}.masthead h1{position:relative;max-width:18ch;margin:0;font-size:clamp(2rem,4vw,3.25rem);letter-spacing:-.035em;line-height:1.04;text-wrap:balance}.masthead p{position:relative;max-width:58ch;margin:16px 0 0;color:#d6e4fb;line-height:1.65;text-wrap:pretty}.report{overflow:hidden;border-radius:0 0 16px 16px;background:var(--surface);box-shadow:0 7px 8px #1c355114}.overview{display:flex;align-items:center;gap:24px;padding:28px clamp(24px,5vw,52px);border-bottom:1px solid var(--line)}.state-icon{display:grid;position:relative;flex:0 0 auto;width:54px;height:54px;place-items:center;border:4px solid currentColor;border-radius:50%;font-size:1.45rem;font-weight:800}.state-icon.pass{color:var(--success);background:var(--success-soft)}.state-icon.fail{color:var(--danger);background:var(--danger-soft)}.overview-copy{min-width:0}.overview h2{margin:0;color:var(--ink);font-size:1.15rem;letter-spacing:-.01em}.overview p{margin:5px 0 0;color:var(--muted);line-height:1.55}.progress{margin-left:auto;min-width:140px;text-align:right}.progress-label{display:block;color:var(--muted);font-size:.8rem}.progress-bar{width:140px;height:7px;margin-top:8px;overflow:hidden;border-radius:99px;background:#dce6f3}.progress-bar span{display:block;width:<?= $progress ?>%;height:100%;border-radius:inherit;background:<?= $allRequired ? '#087a4a' : '#bd2c2c' ?>;transform-origin:left;transition:transform .55s cubic-bezier(.16,1,.3,1)}body[data-ready] .progress-bar span{animation:grow .65s cubic-bezier(.16,1,.3,1) both}.group{padding:0 clamp(24px,5vw,52px)}.group+.group{border-top:1px solid var(--line)}.group-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:28px 0 12px}.group h3{margin:0;font-size:1rem;letter-spacing:-.01em}.group-head p{margin:0;color:var(--muted);font-size:.86rem}.check-list{padding-bottom:20px}.check-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 0;transition:background-color .18s ease}.check-row+.check-row{border-top:1px solid #edf1f6}.check-mark{display:grid;width:22px;height:22px;place-items:center;border-radius:50%;font-size:.78rem;font-weight:900}.check-mark.pass{color:#fff;background:var(--success)}.check-mark.fail{color:#fff;background:var(--danger)}.check-mark.warn{color:#724300;background:#ffe2a5}.check-name{font-size:.94rem;font-weight:650}.check-detail{margin:3px 0 0;color:var(--muted);font-size:.8rem;line-height:1.35}.status{font-size:.78rem;font-weight:750}.status.pass{color:var(--success)}.status.fail{color:var(--danger)}.status.warn{color:var(--warning)}.advice{grid-column:2/-1;margin:2px 0 2px;padding:10px 12px;border-radius:8px;background:var(--danger-soft);color:#7f1d1d;font-size:.82rem;line-height:1.5}.advice.warn{background:var(--warning-soft);color:#714500}.fix-form{grid-column:2/-1;margin:0}.fix-button{min-height:34px;padding:7px 11px;border:1px solid #b7c9e9;border-radius:7px;background:#fff;color:#164b9f;font:inherit;font-size:.8rem;font-weight:750;cursor:pointer;transition:background-color .18s ease,border-color .18s ease}.fix-button:hover{border-color:#2267db;background:#edf4ff}.fix-button:focus-visible{outline:3px solid #8bb5ff;outline-offset:2px}.notice{margin:20px clamp(24px,5vw,52px) 0;padding:12px 14px;border-radius:8px;font-size:.88rem;font-weight:650;line-height:1.5}.notice.pass{background:var(--success-soft);color:#075f39}.notice.fail{background:var(--danger-soft);color:#8f1f1f}.notice.warn{background:var(--warning-soft);color:#714500}.footnote{margin:0;padding:22px clamp(24px,5vw,52px);background:#f7f9fc;color:var(--muted);font-size:.84rem;line-height:1.6}.scan-line{position:absolute;right:clamp(28px,5vw,52px);top:24px;width:56px;height:2px;overflow:hidden;background:#ffffff33}.scan-line:after{position:absolute;width:26px;height:2px;background:#a8c7ff;content:"";animation:scan 1.6s cubic-bezier(.65,0,.35,1) infinite}@keyframes scan{from{transform:translateX(-30px)}to{transform:translateX(60px)}}@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}body[data-ready] .check-row{animation:row-in .38s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--item) * 35ms)}body[data-ready] .check-mark{animation:mark-in .34s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(90ms + var(--item) * 35ms)}body[data-ready] .state-icon{animation:state-in .52s cubic-bezier(.16,1,.3,1) both}body[data-ready] .state-icon:after{position:absolute;inset:-9px;border:1px solid currentColor;border-radius:50%;content:"";animation:signal 1.1s cubic-bezier(.16,1,.3,1) .28s both}.state-icon:after{content:none}@keyframes row-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}@keyframes mark-in{from{opacity:0;transform:scale(.35) rotate(-24deg)}to{opacity:1;transform:scale(1) rotate(0)}}@keyframes state-in{from{opacity:.2;transform:scale(.72)}to{opacity:1;transform:scale(1)}}@keyframes signal{from{opacity:.7;transform:scale(.78)}to{opacity:0;transform:scale(1.4)}}@media (hover:hover){.check-row:hover{background:#f7faff}}@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}@media(max-width:640px){.shell{width:min(100% - 20px,1040px);margin:10px auto}.masthead{border-radius:12px 12px 0 0}.report{border-radius:0 0 12px 12px}.overview{align-items:flex-start}.progress{display:none}.group-head{display:block}.group-head p{margin-top:5px}.check-row{grid-template-columns:25px minmax(0,1fr)}.status{grid-column:2}.advice,.fix-form{grid-column:2}.masthead h1{font-size:2rem}}
+    :root{color-scheme:light dark;--ink:#112e28;--muted:#455e55;--line:#aebbb5;--surface:#fffdf8;--navy:#103a32;--blue:#17614d;color:var(--ink);background:#f5f2ea}
+    body{min-width:0;background:#f5f2ea}
+    .check-row+.check-row{border-color:var(--line)}
+    .check-detail,.advice{overflow-wrap:anywhere}
+    .footnote{background:var(--surface)}
+    :focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+    @media(prefers-color-scheme:dark){
+      :root{--ink:#eaf4ef;--muted:#b7cbc2;--line:#657e73;--surface:#192a25;--navy:#0b2924;--blue:#a0d9bf;--success:#a0d9bf;--success-soft:#244339;--danger:#ffc2b3;--danger-soft:#4a2925;--warning:#ffd791;--warning-soft:#47361d;background:#101a18}
+      body{background:#101a18}
+      .check-mark.pass,.check-mark.fail{color:#17241e}
+      .advice,.notice.fail{color:var(--danger)}
+      .advice.warn,.notice.warn{color:var(--warning)}
+      .notice.pass{color:var(--success)}
+      .fix-button{background:var(--surface);color:var(--blue);border-color:var(--line)}
+      .fix-button:hover,.check-row:hover{background:#263d34}
+    }
   </style>
 </head>
 <body>

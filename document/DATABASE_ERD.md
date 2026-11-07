@@ -1,10 +1,8 @@
 # ผังแบบจำลองฐานข้อมูล ERP และส่วนขยาย POS
 
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+> **อัปเดตล่าสุด (2026-11-06):** ฐานข้อมูลที่ตั้งค่าใช้งานจริงอัปเกรดครบ **ERP MySQL `88/88` migrations (`173` ตาราง)** และ **POS SQLite `25/25` migrations (`56` ตาราง)** (`pending = 0`). ดูรายละเอียดตารางส่วนขยาย Phase 28 และ Phase 28.8.1–28.8.5 ได้ที่ [`PHASE_28_DATABASE.md`](PHASE_28_DATABASE.md), [`DATABASE_UPDATE_20261104.md`](DATABASE_UPDATE_20261104.md), [`DATABASE_UPDATE_20261105.md`](DATABASE_UPDATE_20261105.md), และ [`DATABASE_UPDATE_20261105_PHASE28_8_5.md`](DATABASE_UPDATE_20261105_PHASE28_8_5.md).
 
-**อัปเดต 2026-10-27:** ผังหลักด้านล่างเป็น baseline Phase0–26 ไม่รวมทุกตาราง runtime ล่าสุด. อ่าน [Phase28 tables/relationships](PHASE_28_DATABASE.md) และ [database upgrade](DATABASE_UPGRADE_20261027.md) เพิ่ม; ERP83/POS17 migrations applied, pending0. ห้ามใช้จำนวนตาราง/migrationsเก่าเป็นสถานะปัจจุบัน.
-
-ผังหลักด้านล่างเก็บ baseline Phase0–26/Setup Wizard ณ58 migration files เดิม. Schema runtime ปัจจุบันให้ยึด migrations และส่วนขยายที่ลิงก์ด้านบน: ERP83 migration files และ POS17 files appliedแล้ว. การปิด Phase1–26 ใน baseline ไม่ใช่การรับรอง production ของ POS Phase28.
+ผังหลักในเอกสารนี้แสดงโครงสร้างฐานข้อมูลแกนกลางของ ERP (Phase 0–26 + Setup Wizard) ส่วนตารางที่เพิ่มใน Phase 27 (Manufacturing BOM & Work Orders), External Webhook Outbox, และ Phase 28 / 28.8.1–28.8.5 (Standalone POS, Delivery, Membership/Promotions, Browser Offline, Pharmacy Patient History, และ Restaurant Queue/Seating) สรุปไว้ใน [`PHASE_28_DATABASE.md`](PHASE_28_DATABASE.md).
 
 ---
 

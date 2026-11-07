@@ -6,9 +6,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Pos\Models\Staff;
+use Pos\Http\SetupController;
 use Pos\Services\CashMovementService;
 use Pos\Services\CheckoutService;
 use Pos\Services\DiscountService;
+use Pos\Services\EntitlementAllocator;
 use Pos\Services\ManagerApproval;
 use Pos\Services\MembershipService;
 use Pos\Services\PrescriptionService;
@@ -26,6 +28,8 @@ require __DIR__.'/patients.php';
 require __DIR__.'/delivery.php';
 
 Route::get('/', fn () => view('pos'));
+Route::get('/setup', [SetupController::class, 'show'])->name('setup.show');
+Route::post('/setup', [SetupController::class, 'install'])->middleware('throttle:5,1')->name('setup.install');
 Route::middleware(['pos.local-menu', 'throttle:pos-public'])->group(function () {
     Route::get('/menu', fn () => view('menu'));
     Route::post('/menu/catalog', function (Request $r, PublicMenuService $service) {
@@ -255,6 +259,15 @@ Route::middleware('pos.staff')->group(function () {
         }) : [];
         $refundData = ['refunds_enabled' => $refundsEnabled, 'refundable_sales' => $refundable, 'cash_movements_enabled' => app()->environment(['local', 'testing']) && config('pos.local_cash_movements_enabled') === true && $user->role === 'manager'];
         $branch = DB::table('pos_branches')->where('id', $user->branch_id)->firstOrFail();
+        $refundData['cash_preview_available'] = $branch->active
+            && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true)
+            && ($branch->business_type === 'retail' || ($branch->business_type === 'pharmacy'
+                && app()->environment(['local', 'testing']) && config('pos.local_pharmacy_enabled') === true));
+        if (app()->environment(['local', 'testing']) && config('pos.local_pharmacy_enabled') === true
+            && $branch->active && $branch->business_type === 'pharmacy'
+            && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true)) {
+            $refundData['pharmacy_lots'] = (object) app(EntitlementAllocator::class)->availableLots($branch->id, $branch->timezone);
+        }
         $membershipEnabled = app()->environment(['local', 'testing']) && config('pos.local_membership_enabled') === true && $branch->active && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true);
         $refundData['membership_enabled'] = $membershipEnabled;
         $refundData['patient_history_enabled'] = app()->environment(['local', 'testing']) && config('pos.local_patient_history_enabled') === true && config('pos.local_pharmacy_enabled') === true && $branch->active && $branch->business_type === 'pharmacy' && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true) && in_array($r->ip(), ['127.0.0.1', '::1'], true);
@@ -287,6 +300,9 @@ Route::middleware('pos.staff')->group(function () {
 
         return response()->json($s->closeShift($r->user(), $id, $d['counted_cash']));
     });
+    Route::post('/checkout/preview', fn (Request $r, CheckoutService $s) => response()
+        ->json($s->preview($r->user(), $r->all()))->header('Cache-Control', 'private, no-store'))
+        ->middleware('throttle:30,1');
     Route::post('/checkout', function (Request $r, CheckoutService $s) {
         if ($r->has('patient_id')) {
             abort_unless($r->expectsJson(), 406);

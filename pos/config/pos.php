@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'setup_token' => env('POS_SETUP_TOKEN'),
     'local_patient_history_enabled' => env('POS_LOCAL_PATIENT_HISTORY_ENABLED', false),
     'local_browser_offline_enabled' => env('POS_LOCAL_BROWSER_OFFLINE_ENABLED', false),
     'local_membership_enabled' => env('POS_LOCAL_MEMBERSHIP_ENABLED', false),

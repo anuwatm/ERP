@@ -110,6 +110,10 @@ export default function RestaurantPanel({
   return (
     <section className="panel" aria-label="ร้านอาหาร">
       <h2>โต๊ะและครัว</h2>
+      <nav className="restaurant-navigation" aria-label="เมนูร้านอาหาร">
+        {cashier && <a href="#restaurant-floor">ผังโต๊ะและจองที่นั่ง</a>}
+        <a href="#restaurant-kitchen">คิวครัว</a>
+      </nav>
       <p>
         กันวัตถุดิบเมื่อสั่ง ตัดเมื่อเริ่มเตรียม
         เลือกรายการที่เสิร์ฟแล้วเพื่อแยกบิล
@@ -154,57 +158,69 @@ export default function RestaurantPanel({
       )}
       {cashier && (
         <>
-          <SeatingPanel
-            tables={state.restaurant_tables}
-            busy={busy}
-            api={api}
-            run={run}
-            reload={reload}
-          />
-          <div className="products">
-            {state.restaurant_tables.map((table) => (
-              <div className="panel" key={table.id}>
-                <strong>
-                  {table.label} · {table.capacity} ที่
-                </strong>
-                <p>{table.session_id ? "เปิดโต๊ะอยู่" : "ว่าง"}</p>
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    run(async () => {
-                      if (table.session_id) setSession(table.session_id);
-                      else {
-                        const result = await api(
-                          `/restaurant/tables/${table.id}/open`,
-                          {},
-                        );
-                        setSession(result.id);
-                        await reload();
-                      }
-                    })
-                  }
-                >
-                  เลือกโต๊ะ {table.label}
-                </button>
-                {table.session_id && (
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      run(async () => {
-                        await api(
-                          `/restaurant/sessions/${table.session_id}/close`,
-                          {},
-                        );
-                        if (session === table.session_id) setSession("");
-                        await reload();
-                      })
-                    }
+          <div className="restaurant-floor" id="restaurant-floor">
+            <section aria-label="ผังโต๊ะ">
+              <h3>ผังโต๊ะ</h3>
+              {state.restaurant_tables.length === 0 && (
+                <p>ยังไม่มีโต๊ะที่เปิดใช้งาน</p>
+              )}
+              <div className="products">
+                {state.restaurant_tables.map((table) => (
+                  <div
+                    className="panel table-tile"
+                    data-occupied={Boolean(table.session_id)}
+                    key={table.id}
                   >
-                    ปิดโต๊ะ {table.label}
-                  </button>
-                )}
+                    <strong>
+                      {table.label} · {table.capacity} ที่
+                    </strong>
+                    <p>{table.session_id ? "เปิดโต๊ะอยู่" : "ว่าง"}</p>
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        run(async () => {
+                          if (table.session_id) setSession(table.session_id);
+                          else {
+                            const result = await api(
+                              `/restaurant/tables/${table.id}/open`,
+                              {},
+                            );
+                            setSession(result.id);
+                            await reload();
+                          }
+                        })
+                      }
+                    >
+                      เลือกโต๊ะ {table.label}
+                    </button>
+                    {table.session_id && (
+                      <button
+                        disabled={busy}
+                        onClick={() =>
+                          run(async () => {
+                            await api(
+                              `/restaurant/sessions/${table.session_id}/close`,
+                              {},
+                            );
+                            if (session === table.session_id) setSession("");
+                            await reload();
+                          })
+                        }
+                      >
+                        ปิดโต๊ะ {table.label}
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            </section>
+            <SeatingPanel
+              tables={state.restaurant_tables}
+              busy={busy}
+              api={api}
+              run={run}
+              reload={reload}
+            />
           </div>
           <form
             onSubmit={(e) => {
@@ -304,142 +320,153 @@ export default function RestaurantPanel({
           </form>
         </>
       )}
-      {state.staff.role === "manager" && (
-        <label>
-          เหตุผลพัก / คืน / ข้ามคิว{" "}
-          <input
-            maxLength={160}
-            value={queueReason}
-            onChange={(e) => setQueueReason(e.target.value)}
-          />
-        </label>
-      )}
-      <ul>
-        {state.restaurant_lines.map((line, index, lines) => (
-          <li key={line.id} className="panel">
-            <strong>{line.name}</strong> ·{" "}
-            {line.queue_number === null
-              ? "คิวเดิม"
-              : `คิว #${line.queue_number}`}{" "}
-            ·{" "}
-            <time dateTime={line.queued_at}>
-              {new Date(line.queued_at).toLocaleTimeString("th-TH")}
-            </time>{" "}
-            · {statuses[line.status] || line.status} ·{" "}
-            {line.channel === "takeaway"
-              ? "กลับบ้าน"
-              : state.restaurant_tables.find(
-                  (t) => t.session_id === line.table_session_id,
-                )?.label || "โต๊ะ"}
-            {line.queue_held && <strong> · พักคิว</strong>}
-            {state.staff.role === "manager" &&
-              ["reserved", "sent", "acknowledged"].includes(line.status) &&
-              !lines
-                .slice(0, index)
-                .some(
-                  (prior) =>
-                    prior.order_id === line.order_id &&
-                    ["reserved", "sent", "acknowledged"].includes(prior.status),
-                ) && (
-                <button
-                  disabled={busy || !queueReason.trim()}
-                  onClick={() =>
-                    run(async () => {
-                      await api(`/restaurant/orders/${line.order_id}/hold`, {
-                        held: !line.queue_held,
-                        reason: queueReason,
-                      });
-                      setQueueReason("");
-                      await reload();
-                    })
-                  }
-                >
-                  {line.queue_held ? "คืนคิว" : "พักคิว"}
-                </button>
-              )}
-            {cashier && line.status === "reserved" && (
-              <button
-                disabled={busy}
-                onClick={() => transition(line.id, "sent")}
-              >
-                ส่งครัว
-              </button>
-            )}
-            {kitchen && line.status === "sent" && (
-              <button
-                disabled={busy}
-                onClick={() => transition(line.id, "acknowledged")}
-              >
-                ครัวรับออเดอร์
-              </button>
-            )}
-            {kitchen && line.status === "acknowledged" && (
-              <button
-                disabled={busy || line.queue_held}
-                onClick={() => transition(line.id, "preparing")}
-              >
-                เริ่มเตรียม
-              </button>
-            )}
-            {state.staff.role === "manager" &&
-              line.status === "acknowledged" &&
-              !line.queue_held && (
-                <button
-                  disabled={busy || !queueReason.trim()}
-                  onClick={() => transition(line.id, "preparing", queueReason)}
-                >
-                  ข้ามคิวและเริ่มเตรียม
-                </button>
-              )}
-            {kitchen && line.status === "preparing" && (
-              <button
-                disabled={busy}
-                onClick={() => transition(line.id, "ready")}
-              >
-                อาหารพร้อม
-              </button>
-            )}
-            {cashier && line.status === "ready" && (
-              <button
-                disabled={busy}
-                onClick={() => transition(line.id, "served")}
-              >
-                เสิร์ฟ / ส่งมอบ
-              </button>
-            )}
-            {cashier && line.status === "served" && (
-              <label>
-                <input
-                  type="checkbox"
-                  disabled={busy}
-                  checked={selected.includes(line.id)}
-                  onChange={(e) =>
-                    setSelected((old) =>
-                      e.target.checked
-                        ? [...old, line.id]
-                        : old.filter((id) => id !== line.id),
-                    )
-                  }
-                />
-                เลือกชำระ {line.name}
-              </label>
-            )}
-            {state.staff.role === "manager" &&
-              !["cancelled", "wasted"].includes(line.status) && (
+      <section
+        id="restaurant-kitchen"
+        aria-labelledby="restaurant-kitchen-title"
+      >
+        <h3 id="restaurant-kitchen-title">คิวครัว</h3>
+        {state.staff.role === "manager" && (
+          <label>
+            เหตุผลพัก / คืน / ข้ามคิว{" "}
+            <input
+              maxLength={160}
+              value={queueReason}
+              onChange={(e) => setQueueReason(e.target.value)}
+            />
+          </label>
+        )}
+        {state.restaurant_lines.length === 0 && <p>ยังไม่มีรายการในคิวครัว</p>}
+        <ol className="kitchen-queue">
+          {state.restaurant_lines.map((line, index, lines) => (
+            <li key={line.id} className="panel">
+              <strong>{line.name}</strong> ·{" "}
+              {line.queue_number === null
+                ? "คิวเดิม"
+                : `คิว #${line.queue_number}`}{" "}
+              ·{" "}
+              <time dateTime={line.queued_at}>
+                {new Date(line.queued_at).toLocaleTimeString("th-TH")}
+              </time>{" "}
+              · {statuses[line.status] || line.status} ·{" "}
+              {line.channel === "takeaway"
+                ? "กลับบ้าน"
+                : state.restaurant_tables.find(
+                    (t) => t.session_id === line.table_session_id,
+                  )?.label || "โต๊ะ"}
+              {line.queue_held && <strong> · พักคิว</strong>}
+              {state.staff.role === "manager" &&
+                ["reserved", "sent", "acknowledged"].includes(line.status) &&
+                !lines
+                  .slice(0, index)
+                  .some(
+                    (prior) =>
+                      prior.order_id === line.order_id &&
+                      ["reserved", "sent", "acknowledged"].includes(
+                        prior.status,
+                      ),
+                  ) && (
+                  <button
+                    disabled={busy || !queueReason.trim()}
+                    onClick={() =>
+                      run(async () => {
+                        await api(`/restaurant/orders/${line.order_id}/hold`, {
+                          held: !line.queue_held,
+                          reason: queueReason,
+                        });
+                        setQueueReason("");
+                        await reload();
+                      })
+                    }
+                  >
+                    {line.queue_held ? "คืนคิว" : "พักคิว"}
+                  </button>
+                )}
+              {cashier && line.status === "reserved" && (
                 <button
                   disabled={busy}
-                  onClick={() => {
-                    setCancelLine(line.id);
-                    setWaste(false);
-                    setPassword("");
-                  }}
+                  onClick={() => transition(line.id, "sent")}
                 >
-                  ยกเลิก / ของเสีย
+                  ส่งครัว
                 </button>
               )}
-          </li>
-        ))}
-      </ul>
+              {kitchen && line.status === "sent" && (
+                <button
+                  disabled={busy}
+                  onClick={() => transition(line.id, "acknowledged")}
+                >
+                  ครัวรับออเดอร์
+                </button>
+              )}
+              {kitchen && line.status === "acknowledged" && (
+                <button
+                  disabled={busy || line.queue_held}
+                  onClick={() => transition(line.id, "preparing")}
+                >
+                  เริ่มเตรียม
+                </button>
+              )}
+              {state.staff.role === "manager" &&
+                line.status === "acknowledged" &&
+                !line.queue_held && (
+                  <button
+                    disabled={busy || !queueReason.trim()}
+                    onClick={() =>
+                      transition(line.id, "preparing", queueReason)
+                    }
+                  >
+                    ข้ามคิวและเริ่มเตรียม
+                  </button>
+                )}
+              {kitchen && line.status === "preparing" && (
+                <button
+                  disabled={busy}
+                  onClick={() => transition(line.id, "ready")}
+                >
+                  อาหารพร้อม
+                </button>
+              )}
+              {cashier && line.status === "ready" && (
+                <button
+                  disabled={busy}
+                  onClick={() => transition(line.id, "served")}
+                >
+                  เสิร์ฟ / ส่งมอบ
+                </button>
+              )}
+              {cashier && line.status === "served" && (
+                <label>
+                  <input
+                    type="checkbox"
+                    disabled={busy}
+                    checked={selected.includes(line.id)}
+                    onChange={(e) =>
+                      setSelected((old) =>
+                        e.target.checked
+                          ? [...old, line.id]
+                          : old.filter((id) => id !== line.id),
+                      )
+                    }
+                  />
+                  เลือกชำระ {line.name}
+                </label>
+              )}
+              {state.staff.role === "manager" &&
+                !["cancelled", "wasted"].includes(line.status) && (
+                  <button
+                    disabled={busy}
+                    onClick={() => {
+                      setCancelLine(line.id);
+                      setWaste(false);
+                      setPassword("");
+                    }}
+                  >
+                    ยกเลิก / ของเสีย
+                  </button>
+                )}
+            </li>
+          ))}
+        </ol>
+      </section>
       {cancelLine && (
         <form
           onSubmit={(e) => {

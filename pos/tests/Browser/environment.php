@@ -1,7 +1,11 @@
 <?php
 
 $phase2885 = getenv('POS_BROWSER_PHASE_2885') === '1';
-$fixture = dirname(__DIR__, 3).'/temp/'.($phase2885 ? 'phase2885-restaurant-browser' : 'phase28-pos-browser');
+$run = getenv('POS_BROWSER_UI_RUN') ?: '';
+if ($run !== '' && (! $phase2885 || ! preg_match('/^[a-z0-9-]+$/D', $run))) {
+    throw new RuntimeException('Invalid restaurant browser fixture run.');
+}
+$fixture = dirname(__DIR__, 3).'/temp/'.($phase2885 ? 'phase2885-restaurant-browser' : 'phase28-pos-browser').($run === '' ? '' : '-'.$run);
 if (! is_dir($fixture)) {
     mkdir($fixture, 0777, true);
 }

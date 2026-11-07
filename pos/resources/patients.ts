@@ -148,6 +148,11 @@ function showPatients(data: any, next = false) {
   if (!data.clinical_access) newProfile();
   const list = el("patients");
   if (!next) list.replaceChildren();
+  if (!next && data.items.length === 0) {
+    const empty = document.createElement("p");
+    empty.textContent = "ไม่พบผู้ป่วยในรายการนี้";
+    list.append(empty);
+  }
   for (const patient of data.items) {
     const article = document.createElement("article");
     const label = document.createElement("span");

@@ -6,7 +6,9 @@ import {
     EditorReference,
 } from '@/Components/UI/EditorFields';
 import EditorLineItems from '@/Components/UI/EditorLineItems';
+import EditorFinancialSummary from '@/Components/UI/EditorFinancialSummary';
 import useDiscardGuard from '@/Hooks/useDiscardGuard';
+import useEditorPreview from '@/Hooks/useEditorPreview';
 import useSubmissionKey from '@/Hooks/useSubmissionKey';
 import { PageProps } from '@/Types';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -18,7 +20,8 @@ import PageHeader from '@/Components/UI/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { money } from '@/Utils/format';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
+import axios from 'axios';
+import { FormEvent, useCallback, useState } from 'react';
 
 type Supplier = { id: string; supplier_code: string; name: string };
 type PurchaseOrder = {
@@ -72,6 +75,62 @@ const emptyForm: PurchaseOrderForm = {
     items: [{ ...emptyItem }],
 };
 
+type PreviewRequest = { data: PurchaseOrderForm };
+type PreviewResult = {
+    currency: string;
+    totals: Record<
+        'subtotal' | 'discount_amount' | 'tax_amount' | 'total',
+        string
+    >;
+};
+
+function PurchaseOrderPreview({ request }: { request: PreviewRequest }) {
+    const resolve = useCallback(
+        async (signal: AbortSignal) => {
+            const response = await axios.post<PreviewResult>(
+                route('purchase-orders.preview'),
+                request.data,
+                { signal, headers: { Accept: 'application/json' } },
+            );
+            return response.data;
+        },
+        [request],
+    );
+    const { pending, value, error } = useEditorPreview(resolve);
+    const amounts = value
+        ? [
+              {
+                  label: 'Subtotal',
+                  value: value.totals.subtotal,
+                  currency: value.currency,
+              },
+              {
+                  label: 'Document discount',
+                  value: value.totals.discount_amount,
+                  currency: value.currency,
+              },
+              {
+                  label: 'VAT',
+                  value: value.totals.tax_amount,
+                  currency: value.currency,
+              },
+              {
+                  label: 'Total',
+                  value: value.totals.total,
+                  currency: value.currency,
+              },
+          ]
+        : [];
+
+    return (
+        <EditorFinancialSummary
+            amounts={amounts}
+            pending={pending}
+            error={error}
+        />
+    );
+}
+
 export default function PurchaseOrders({
     purchaseOrders,
     suppliers,
@@ -85,6 +144,7 @@ export default function PurchaseOrders({
 
     const [open, setOpen] = useState(false);
     const [minimized, setMinimized] = useState(false);
+    const [preview, setPreview] = useState<PreviewRequest>();
     const [rowKeys, setRowKeys] = useState([crypto.randomUUID()]);
     const { auth } = usePage<PageProps>().props;
     const canCreate = auth.permissions.includes('purchase_orders.create');
@@ -93,6 +153,7 @@ export default function PurchaseOrders({
     const close = () => {
         setOpen(false);
         setMinimized(false);
+        setPreview(undefined);
         form.setData({ ...emptyForm, items: [{ ...emptyItem }] });
         form.clearErrors();
         setRowKeys([crypto.randomUUID()]);
@@ -301,17 +362,68 @@ export default function PurchaseOrders({
                         status="Save a draft; server calculates taxes and totals"
                         errors={form.errors}
                         onSubmit={submit}
+                        review={
+                            <>
+                                <h2 className="text-base font-bold text-erp-ink">
+                                    Order summary
+                                </h2>
+                                <dl className="space-y-2 text-sm">
+                                    <div className="flex justify-between gap-3">
+                                        <dt>Line items</dt>
+                                        <dd className="font-semibold tabular-nums">
+                                            {form.data.items.length}
+                                        </dd>
+                                    </div>
+                                    <div className="flex justify-between gap-3">
+                                        <dt>Currency</dt>
+                                        <dd className="font-semibold">
+                                            {form.data.currency || '—'}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                <div className="space-y-3 border-t border-gray-200 pt-3 text-sm dark:border-gray-700">
+                                    <button
+                                        type="button"
+                                        disabled={!canCreate || form.processing}
+                                        className="min-h-10 rounded-md border border-teal-700 px-3 font-semibold text-erp-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:opacity-50 dark:border-teal-400 dark:focus-visible:outline-teal-300"
+                                        onClick={() =>
+                                            setPreview({ data: form.data })
+                                        }
+                                    >
+                                        Preview totals
+                                    </button>
+                                    {open &&
+                                    !minimized &&
+                                    preview?.data === form.data ? (
+                                        <PurchaseOrderPreview
+                                            request={preview}
+                                        />
+                                    ) : (
+                                        <p>
+                                            Preview tax and totals for the
+                                            current draft.
+                                        </p>
+                                    )}
+                                </div>
+                            </>
+                        }
                     >
                         {(expanded) => (
-                            <div className="space-y-6 p-4 sm:p-6">
+                            <div className="space-y-6">
                                 <section
-                                    aria-label="Document details"
+                                    aria-labelledby="po-order-details"
                                     className={
                                         expanded
                                             ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
                                             : 'grid gap-4 sm:grid-cols-2'
                                     }
                                 >
+                                    <h2
+                                        id="po-order-details"
+                                        className="col-span-full text-base font-bold text-erp-ink"
+                                    >
+                                        Order details
+                                    </h2>
                                     <EditorReference
                                         id="po-supplier"
                                         label="Supplier"
@@ -407,7 +519,10 @@ export default function PurchaseOrders({
                                             key: 'description',
                                             label: 'Description',
                                         },
-                                        { key: 'quantity', label: 'Quantity' },
+                                        {
+                                            key: 'quantity',
+                                            label: 'Quantity',
+                                        },
                                         { key: 'unit', label: 'Unit' },
                                         {
                                             key: 'unit_price',

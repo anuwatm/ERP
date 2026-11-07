@@ -12,6 +12,8 @@ type Product = {
 };
 function Menu() {
   const [token] = useState(() => location.hash.slice(1));
+  const validLink = /^[a-f\d]{64}$/i.test(token);
+  const [loadingCatalog, setLoadingCatalog] = useState(validLink);
   const [products, setProducts] = useState<Product[]>([]),
     [cart, setCart] = useState<Record<string, string>>({});
   const [version, setVersion] = useState("");
@@ -50,18 +52,28 @@ function Menu() {
     return result;
   }
   useEffect(() => {
+    if (!validLink) return;
     let active = true;
     call("/menu/catalog", {})
       .then((data) => {
         if (active) applyCatalog(data);
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active) {
+          setError(
+            [403, 404, 410, 422].includes(Number(e?.status))
+              ? "เปิดเมนูจากลิงก์นี้ไม่ได้ กรุณาสแกน QR ใหม่หรือติดต่อพนักงาน"
+              : "โหลดเมนูไม่สำเร็จ ตรวจการเชื่อมต่อแล้วลองอีกครั้ง",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingCatalog(false);
       });
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [token, validLink]);
   function applyCatalog(data: {
     items: Product[];
     version: string;
@@ -129,7 +141,7 @@ function Menu() {
         <p role="status">ออฟไลน์ รายการยังรอส่งหรือยืนยันผลจาก POS Server</p>
       )}
       <button
-        disabled={busy || !online || uncertain}
+        disabled={!validLink || loadingCatalog || busy || !online || uncertain}
         onClick={() =>
           run(async () => {
             applyCatalog(await call("/menu/catalog", {}));
@@ -158,6 +170,15 @@ function Menu() {
             ))}
           </select>
         </label>
+      )}
+      {!validLink && (
+        <p role="alert" className="error">
+          กรุณาสแกน QR ที่ร้านเพื่อเปิดเมนู
+        </p>
+      )}
+      {loadingCatalog && <p role="status">กำลังโหลดเมนู…</p>}
+      {version && products.length === 0 && (
+        <p role="status">ยังไม่มีรายการพร้อมสั่ง</p>
       )}
       {error && (
         <p role="alert" className="error">

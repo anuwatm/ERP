@@ -5,6 +5,7 @@ type DashboardLayoutProps = {
     description: string;
     children: ReactNode;
     updatedAt?: string;
+    overview?: boolean;
 };
 
 export default function DashboardLayout({
@@ -12,6 +13,7 @@ export default function DashboardLayout({
     description,
     children,
     updatedAt,
+    overview = false,
 }: DashboardLayoutProps) {
     return (
         <section className="space-y-6" aria-labelledby="dashboard-title">
@@ -19,7 +21,11 @@ export default function DashboardLayout({
                 <div>
                     <h1
                         id="dashboard-title"
-                        className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white"
+                        className={
+                            overview
+                                ? 'text-3xl font-bold tracking-tight text-erp-ink sm:text-4xl'
+                                : 'text-2xl font-bold tracking-tight text-slate-900 dark:text-white'
+                        }
                     >
                         {title}
                     </h1>

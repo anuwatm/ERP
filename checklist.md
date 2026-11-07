@@ -1806,3 +1806,137 @@ Scope revised on 2026-09-10 at the user's request: implement the simplest reusab
 
 - [ ] QR payment/provider/late-callback acceptance; card/EDC/mixed tender — ยังไม่รวมสามงานที่ให้ทำก่อน
 - [ ] Shared-stock real-time reservation หรือ connection model ใหม่ต้อง design/authorize แยก; ไม่ถือว่ารวมโดยอัตโนมัติใน offline sync
+
+
+## Checklist ปรับ Layout ทั้งระบบ — Local Complete
+
+อ้างอิง mockup ล่าสุด 5 หน้า ได้แก่ Dashboard, ฟอร์มสร้างใบสั่งซื้อ และ POS ทั้งสามประเภท ใช้เป็นแนวทางจัดวางและลำดับข้อมูล รายละเอียดของปุ่ม ขั้นตอน และข้อมูลใน mockup ต้องเทียบกับฟังก์ชันจริงก่อนนำไปใช้ ผลการตรวจรับประกอบดู [gemini.md หมวด 6](gemini.md#6-สรุปบันทึกการตรวจรับงานที่เสร็จสมบูรณ์แล้ว-completed-phase--module-acceptance-summary)
+
+### สถานะรอบปัจจุบัน
+
+ตรวจรับ local วันที่ 7 พฤศจิกายน 2026 ด้วย Chrome และฐานข้อมูลสังเคราะห์ [ทะเบียนหน้าจอ](document/design/ui-screen-inventory.md) · [มาตรฐาน UI](document/design/ui-standards.md) · [หลักฐานตรวจรับ](document/design/ui-acceptance-register.md)
+
+| งาน | สถานะ | ผลล่าสุดและงานที่เหลือ |
+| --- | --- | --- |
+| ERP Shell และธีม | ผ่าน Chrome ในขอบเขตที่ตรวจ | พื้นงาช้าง เมนูเขียวเข้ม และ Light / Dark / System จำค่าบนอุปกรณ์ ผ่านการตรวจ reload, สลับธีมระหว่างกรอกข้อมูล และรักษา focus รวมถึง System ในหน้า 404 |
+| Dashboard หลัก | ตรวจตามบทบาทแล้ว | กราฟรายได้และเงินรับแยกกัน ใช้ลายและเส้นประแยกชุดข้อมูล ทดสอบ 51 กรณีทั้งสองธีม รวม filter, reload, drill-down และขอบเขตสิทธิ์ |
+| Create Purchase Order | ลงโค้ด layout และ preview แล้ว | ใช้ dialog เดิม โหมดขยายบนจอกว้างแสดงข้อมูลและรายการซ้าย สรุปเอกสารและ validation ขวา จอเล็กเรียงแนวตั้ง ปุ่ม Preview totals ใช้สูตร server เดียวกับตอนบันทึกและซ่อนยอดเดิมเมื่อแก้ร่าง |
+| Retail / Restaurant / Pharmacy POS | ผ่าน local | ตรวจหน้าขาย กะ ใบเสร็จ ยอดก่อนส่วนลด ส่วนลด คืนเงิน คิวร้านอาหาร QR และแยกบิล ร้านขายยาตรวจล็อต ผู้ป่วยแบบ mask และตรวจรับของคืนตามสิทธิ์ |
+| POS Setup Wizard | ผ่าน Chrome บนฐานสังเคราะห์ | `/setup` ผ่าน Light/Dark ที่ 390/1440 px สร้างสาขา Terminal และ Manager แล้วล็อกการติดตั้งซ้ำและล็อกอินหน้าขายด้วยบัญชีใหม่ได้ |
+| ERP หน้ารายการและฟอร์มรายโมดูล | ผ่าน local | Chrome ตรวจ 60 เส้นทาง 266 กรณี รวม Profile, POS Integration และ Reconciliation ที่ 320/390/1440 px ตามหน้าที่กำหนด ตรวจ CreateEditDialog 152 กรณี และ BOM/Work Order 36 กรณี |
+| Customer/Supplier Portal | ผ่าน Chrome แล้ว | เข้าผ่านลิงก์สังเคราะห์ ตรวจ Light/Dark ที่ 390/1440 px แยกข้อมูลตามประเภทบัญชี ป้องกันเข้า Dashboard พนักงาน และเปิด/ปิด Vendor Bill ด้วยคีย์บอร์ด |
+| Guest/Auth | ผ่าน local | ตรวจ Login, สมัคร, เชิญ, กู้รหัส, ยืนยันอีเมล/รหัสผ่าน, 2FA และรหัสกู้คืนครั้งเดียวทั้งสองธีม รวมชุด Auth 40 กรณี |
+| หน้า standalone และหน้ารอง POS | ผ่าน local | ตรวจ POS Config, Delivery, สมาชิก, ผู้ป่วย, QR Menu และ Offline รวม ERP Recovery Codes, PromptPay จำลอง, สมาชิก ERP, Setup และ Requirements พร้อมสถานะที่ตรวจในทะเบียน |
+| Print/PDF | ตรวจตัวอย่าง ERP/POS ทั้งสองธีมแล้ว | ภาพพิมพ์ใบแจ้งหนี้และ PDF หน้าแรกเหมือนกันทั้งสองธีม เทมเพลต ERP commercial, withholding และ payslip รวม POS ABB, Full, ใบส่งของ และสลิปจากรายการขายสังเคราะห์ขนาด 78 มม. ผ่าน Chrome print media |
+| POS Offline | ผ่าน Chrome ด้วย fixture ทั้งสามประเภท | โหลดซ้ำจาก cache เมื่อปิดเครือข่ายทั้ง Light/Dark ปลดล็อกคิว เชื่อมใหม่ และ replay หลังจำลอง response สูญหาย ร้านค้าทั่วไปและร้านขายยาตรวจรับเงินครั้งเดียว ร้านอาหารเก็บเป็นคำขอ |
+
+- [x] ERP TypeScript/Vite build ผ่านหลังปรับ component กลาง, Profile, Auth, Manufacturing และ POS Integration
+- [x] ERP Frontend tests ผ่าน 39 รายการ และ Chrome ตรวจ component กลางที่ 320/768/1440 px ทั้งสองธีม 6 กรณี
+- [x] POS TypeScript/Vite build ผ่าน
+- [x] POS PHPUnit ผ่าน 116 รายการ 2,171 assertions บน SQLite in-memory รวม Setup และ Config
+- [x] Chrome ตรวจ POS Setup Wizard 5 กรณี รวมติดตั้งบนฐานใหม่ ล็อกอินด้วย Manager และป้องกันติดตั้งซ้ำ ดู `temp/ui-redesign-acceptance/setup-and-module-report.json`
+- [x] Chrome ตรวจเทมเพลตพิมพ์ POS ABB, Full และใบส่งของ พื้นขาวและภาพเหมือนกันทั้ง Light/Dark ดู `temp/ui-redesign-acceptance/pos-print-report.json`
+- [x] Chrome ขายเงินสดใน POS fixture และตรวจสลิป 78 มม. ยอด 10.70 บาท ทอน 9.30 บาท พื้นขาว ภาพตรงกันทั้งสองธีม ดู `temp/ui-redesign-acceptance/pos-receipt-report.json`
+- [x] Chrome ตรวจหน้าขาย POS หลังย้ายเปิดกะ/ตะกร้าและจัดคิวครัวใหม่ ผ่าน 16 กรณีรวม Config ดู `temp/ui-redesign-acceptance/pos-register-final-report.json`
+- [x] Chrome ตรวจ 53 เส้นทางจากเมนู ERP Owner ที่ 390/1440 px ทั้ง Light/Dark และตรวจเพิ่มที่ 320 px ใน 6 หน้าที่แก้จอล้น กรณี Tax Reports ที่ 320 px ผ่านหลังแก้ตัวกรองและปุ่ม Export รอบสุดท้าย ดู `temp/ui-redesign-acceptance/erp-module-final-report.json` และ `temp/ui-redesign-acceptance/tax-reports-final.json`
+- [x] Pharmacy แสดงล็อตและวันหมดอายุในตะกร้า Chrome ผ่าน 4 กรณี และ POS Configuration tests ผ่าน 5 รายการ 30 assertions รวมกรองล็อตหมดอายุ เรียกคืน โควตาหมด และต่างสาขา ดู `temp/ui-redesign-acceptance/pharmacy-cart-lot-report.json`
+- [x] Chrome ตรวจ Product dialog ผ่าน 4 กรณี รักษา draft เมื่อปรับขนาดจอ และ focus อยู่ใน dialog เมื่อกด Tab/Shift+Tab ดู `temp/ui-redesign-acceptance/keyboard-browser.json`
+- [x] Chrome ตรวจ ERP read-only ผ่าน 14 กรณีที่ 375/1280 px รวมซ่อนการแก้ไขบนหน้าที่เปิดดูได้และปฏิเสธ POST โดยตรง ดู `temp/ui-redesign-acceptance/role-workflow.json`
+- [x] Chrome ตรวจ Login/Forgot Password ผ่าน 6 กรณี Light/Dark รวมทดสอบล็อกอินและรักษาอีเมลเมื่อเปลี่ยนธีม ดู `temp/ui-redesign-acceptance/guest-auth-report.json` และ Auth/2FA regression ผ่าน 29 tests / 138 assertions
+- [x] Chrome ตรวจ Customer/Supplier Portal ผ่าน 10 กรณี รวมขอบเขตข้อมูล สิทธิ์เข้า Dashboard พนักงาน และการปิด Vendor Bill ด้วย Escape ดู `temp/ui-redesign-acceptance/portal-report.json`
+- [x] Chrome ตรวจ ERP dialog coordination ผ่าน 8 กรณี รวมการรักษา draft การกันปิด/กดซ้ำระหว่าง processing และการคืน scroll ดู `temp/ui-redesign-acceptance/coordination-browser.json`
+- [x] Chrome ตรวจฟอร์มตามบริบทผ่าน 36 กรณีที่ 375/1280 px ทั้ง Light/Dark ครอบคลุม Expenses, Invoices, Fixed Assets, Commercial Documents, Organization Structure และ Vendor Bill ดู `temp/ui-redesign-acceptance/context-browser.json`
+- [x] Chrome ตรวจ OCR Reviewer ที่ 320/1440 px และหน้า 404 ที่ 320 px ทั้ง Light/Dark รวม 6 กรณี ดู `temp/ui-redesign-acceptance/ocr-error-ui-report.json` ส่วน OCR regression ผ่าน 14 tests และ ErrorPageTest ผ่าน 30 assertions ครอบคลุมสถานะ 403/404/419/429/500/503, Retry-After และ JSON response
+- [x] Chrome ตรวจหน้ารอง POS ผ่าน 24 กรณีที่ 390/1440 px ทั้ง Light/Dark รวม Delivery, สมาชิก, ผู้ป่วย, QR Menu และ 404 เมื่อเข้าหน้าผู้ป่วยจากร้านค้าทั่วไป ทดสอบสร้างร่าง COD และส่งคำขอเมนูสังเคราะห์ผ่าน ดู `temp/ui-redesign-acceptance/pos-secondary-report.json` พร้อม POS regression 25 tests / 219 assertions
+- [x] Chrome ตรวจ Dashboard ตามบทบาทและ System theme ผ่าน 51 กรณี รวมตัวกรองและ reload, keyboard table/drill-down, รักษาค่าและ focus เมื่อธีมระบบเปลี่ยน และหน้า standalone ตาม System ดู `temp/ui-redesign-acceptance/dashboard-role/results.json`
+- [x] Chrome ตรวจ POS System theme ผ่าน 4 กรณี รวมรักษา draft/focus และจำธีมระหว่างหน้าขายกับ QR Menu ดู `temp/ui-redesign-acceptance/pos-system-theme-report.json`
+- [x] POS Offline ทั้งสามประเภทใช้ Sarabun ตัวปกติและตัวหนาจาก cache ได้หลังตัดเครือข่ายทั้ง Light/Dark และ reconnect/replay ผ่าน ดู `temp/phase2883-offline-ui-fonts-v1/browser-report.json` สลิป 78 มม. ตรวจซ้ำผ่าน ดู `temp/ui-redesign-acceptance/pos-receipt-fonts-report.json`
+- [x] POS workflow regression ผ่าน 93 tests / 724 assertions บน SQLite in-memory ครอบคลุม Setup, Config, Checkout, Restaurant, Delivery, Membership และ Patient History
+- [x] Chrome ตรวจภาพพิมพ์ ERP commercial, withholding และ payslip จากเทมเพลตจริงด้วยข้อมูลสังเคราะห์ พื้นขาวและภาพตรงกันทั้ง Light/Dark ดู `temp/ui-redesign-acceptance/erp-print-report.json`
+- [x] ERP Dashboard Feature tests ผ่าน 40 รายการ 1,286 assertions บน SQLite in-memory โดยตั้ง `APP_URL=http://localhost` ใน test process
+- [x] ERP regression ของ Portal/Payroll ผ่าน 16 รายการ และชุดเอกสาร/Installer ผ่าน 23 รายการ หลังปรับหน้า standalone และเทมเพลตพิมพ์
+- [x] ERP Procurement/Master Dialog tests ผ่าน 8 รายการ 128 assertions ครอบคลุมยอด preview ตรงกับยอดบันทึก ไม่มีการสร้างใบสั่งซื้อจาก preview และตรวจสิทธิ์
+- [x] Chrome กับฐานสังเคราะห์ตรวจหน้าขาย Retail, Restaurant และ Pharmacy รวมหน้า POS Config ผ่าน 16 กรณี ที่ความกว้าง 390/1440 px ทั้ง Light/Dark ไม่มี horizontal overflow หรือ page error ดูรายงาน `temp/ui-redesign-acceptance/pos-browser-report.json`
+- [x] Chrome ตรวจหน้ารายการ ERP จาก build ล่าสุด 60 เส้นทาง 266 กรณี ทั้ง Light/Dark ไม่มีจอล้นหรือ page error ดู `temp/ui-redesign-acceptance/erp-current-ui-inventory-report.json`
+- [x] Chrome ตรวจฟอร์ม Create Purchase Order ผ่าน 4 กรณีที่ 390/1440 px ทั้ง Light/Dark ยืนยันยอด 107.00 THB เปลี่ยนเป็น 214.00 THB หลังแก้ราคา ยอดเดิมหายก่อนขอดูยอดใหม่ ดูรายงาน `temp/ui-redesign-acceptance/po-dialog-report.json`
+- [x] Chrome POS Offline ผ่าน 3 ประเภท ครอบคลุม Light/Dark ตอน offline reload และ reconnect/replay ด้วยคิวเข้ารหัส ดูรายงาน `temp/phase2883-offline-ui-135757/browser-report.json`
+- [x] ใบแจ้งหนี้ ERP ผ่าน Chrome print และเทียบพิกเซลจาก PDF หน้าแรกทั้ง Light/Dark ดูรายงาน `temp/ui-redesign-acceptance/print-report.json`
+- [x] เก็บภาพและตรวจรับ ERP Shell, Dashboard และ Create Purchase Order ทั้ง Light/Dark บนเบราว์เซอร์
+
+### ภาพอ้างอิงหลักสำหรับ Redesign
+
+ใช้ภาพชุดล่าสุดเป็นเกณฑ์อ้างอิงการจัดวาง ลำดับการมอง และจุดเน้นของแต่ละหน้า เทียบกับพฤติกรรมจริงก่อนออกแบบรายละเอียด ชื่อเมนู ตัวเลข ตัวอย่างสินค้า และปุ่มในภาพเป็นข้อมูลจำลอง
+
+| หน้า | ภาพอ้างอิง Light | สิ่งที่ต้องรักษาเมื่อออกแบบทั้งสองธีม |
+| --- | --- | --- |
+| ERP Dashboard | [Business overview](document/design/redesign-reference/dashboard-light.png) | ยอดขายเป็นจุดเด่น แยกเงินรับจริง และวางงานเร่งด่วนข้างกราฟ |
+| ERP Input | [New purchase order](document/design/redesign-reference/purchase-order-light.png) | ข้อมูลและรายการย่อยทางซ้าย ยอดรวมและข้อผิดพลาดทางขวา |
+| Retail POS | [Checkout](document/design/redesign-reference/retail-pos-light.png) | ช่องสแกนเด่น สินค้าแตะง่าย ตะกร้า ยอดรวม และรับเงินเห็นพร้อมกัน |
+| Restaurant POS | [Floor map](document/design/redesign-reference/restaurant-pos-light.png) | ผังโต๊ะเป็นพื้นที่หลัก คิวที่นั่งและคิวครัวอยู่ด้านข้าง แยก QR เมนูจากการชำระเงิน |
+| Pharmacy POS | [Pharmacy register](document/design/redesign-reference/pharmacy-pos-light.png) | หน่วย ล็อต วันหมดอายุ และเหตุผลที่ยังรับเงินไม่ได้อยู่ใกล้ตะกร้า |
+
+- [x] เก็บภาพตรวจรับ Light/Dark ทั้ง 5 หน้าเทียบกับ mockup ที่อนุมัติ ใช้โครงและลำดับข้อมูลเดียวกันทั้งสองธีม ดู [ภาพคู่จากแอป](document/design/ui-acceptance-register.md#ภาพคู่-lightdark-ของหน้าอ้างอิง)
+
+### 1. สำรวจหน้าและกำหนดมาตรฐานร่วม
+
+- [x] ลงทะเบียน 69 หน้า Inertia จาก routes จริง แยก component และหน้าทดสอบ พร้อม Blade/PHP/POS entry, role, สถานะและหลักฐานตรวจรับ [ทะเบียนไฟล์และจุดเข้า](document/design/ui-screen-inventory.md)
+- [x] ลงทะเบียนหน้าสาธารณะ Auth/2FA, Portal, Setup, error, พิมพ์ และหน้าที่ขึ้นกับสิทธิ์ รวมรายละเอียด OCR, BOM/Work Order และ POS Reconciliation
+- [x] ยืนยันแนวภาพร่วมจาก mockup: พื้นงาช้าง เมนูเขียวเข้ม สี mint สำหรับสถานะปกติ และสีปะการังสำหรับปุ่มหลักหรือรายการเร่งด่วน ใช้แบรนด์กลางเป็นมาตรฐาน และแสดง branding องค์กรเฉพาะบริบทที่มีสิทธิ์
+- [x] กำหนด design tokens สำหรับ Sarabun จากไฟล์ในแอป สี ระยะ ตาราง ปุ่ม focus และ contrast ใน [มาตรฐาน UI](document/design/ui-standards.md)
+- [x] วาง ERP sidebar/topbar, PageHeader และ action ตามสิทธิ์ ส่วน POS แสดงบริบทสาขา Terminal และกะในหน้าขาย
+- [x] กำหนดรูปแบบตาราง ตัวกรอง pagination ป้ายสถานะ ฟอร์ม dialog และ loading/empty/validation/error/read-only ใช้ component กลางและพฤติกรรมของโมดูลเดิม
+- [x] กำหนด breakpoint, keyboard/focus, ปุ่มและช่องกรอกร่วม 44 px, ช่องกรอกมือถือ 16 px และการแสดงสถานะ วันที่ สกุลเงินและหน่วยตามข้อมูลที่ server ส่ง
+
+### Light / Dark mode
+
+- [x] ออกแบบ semantic tokens ทั้งสองธีม ตรวจ contrast ของคู่สีข้อความ ขอบ focus และกราฟ รวม Badge ทุก variant และสถานะปุ่ม/ข้อความจาก CSS ที่ build จริง ดู `ui-foundation-report.json` และ `ui-status-contrast-report.json`
+- [x] กำหนดตัวเลือก Light / Dark / System และพฤติกรรมจำค่าบนอุปกรณ์ตามขอบเขต ERP, Portal และ POS แยกจาก session และข้อมูลธุรกรรม ทดสอบ reload, เปลี่ยนหน้าจอ, เปลี่ยนธีมระบบ, offline และการสลับธีมระหว่างกรอกข้อมูลโดยไม่เสีย draft หรือ focus
+- [x] โหลด preference ใน head ของ standalone ERP/POS และตรวจธีมหลังเปิดหน้าและเมื่อเปลี่ยน System รวมสถานะ error แยก print/PDF พื้นขาวตามหลักฐานในทะเบียน
+- [x] คงมาตรฐาน Master Dialog ของ Phase 23.1 ผ่าน `CreateEditDialog` และ `useDiscardGuard` ตรวจ Keep/Discard, Escape/backdrop และบล็อกปิด/สลับระหว่าง processing รวม Inventory Operations, Payroll และ Organization Structure ตามรายงาน coordination
+
+### 2. ERP Dashboard และหน้ารายงาน
+
+- [x] ใช้ Dashboard ภาพรวมตาม mockup แสดง KPI งานเร่งด่วน และ drill-down แยกกราฟยอดขายและเงินรับจริง ตรวจตามบทบาท 51 กรณี
+- [x] ไล่ตรวจ Dashboard ผู้บริหาร ผู้ดูแล ฝ่ายขาย การเงิน จัดซื้อ คลัง ส่งมอบ HR และ My Work ตามหน้าในทะเบียน ใช้ KPI ที่เหมาะกับ role และข้อมูลที่ระบบมี
+- [x] จัดตัวกรองและผลรายงานตามข้อมูลที่แต่ละโมดูลรองรับ ตรวจ Dashboard, Tax Reports, Cash Flow, Currencies และ POS Reconciliation รวมช่วงวันผิด การแสดงข้อมูลว่างและการโหลดซ้ำตามหลักฐาน
+- [x] ตรวจว่ายอด นิยาม KPI การคำนวณ และสิทธิ์ drill-down ตรงระบบเดิม รวมถึงการซ่อนข้อมูลการเงินที่ role นั้นไม่มีสิทธิ์
+
+- [x] ใช้ `DashboardMetricsService`, `Metric Dictionary v1` และ `DashboardAccess` ตามเดิม ห้ามเพิ่มการ์ดยอดเงินสดคงเหลือดิบจาก mockup หรือเปิด KPI เพิ่มเพราะเปลี่ยนธีม
+
+### 3. หน้า Input และหน้าปฏิบัติงาน ERP
+
+- [x] ใช้ฟอร์มสร้างใบสั่งซื้อเป็นต้นแบบ จัดข้อมูลหลักกับรายการย่อยทางซ้าย สรุปยอดและข้อผิดพลาดทางขวาบนจอกว้าง และเรียงตามลำดับกรอกบนมือถือ
+- [x] กำหนดรูปแบบ Create/Edit/Detail สำหรับฟอร์มสั้น ฟอร์มหลายรายการ และมุมมองอ่านอย่างเดียว คง action ตาม workflow เดิม
+- [x] ตรวจ required/validation ระดับช่องและแถว ยอดก่อนบันทึก และร่างค้างจาก Editor tests, PO preview และ Browser matrix ฟอร์ม BOM/Work Order เชื่อมข้อความผิดพลาดกับช่องกรอก
+- [x] ตรวจหน้ารายการและฟอร์มตามทะเบียน ERP ทุกโมดูล รวมหน้ารายละเอียด OCR, BOM หลายชั้น, Work Order และ POS Reconciliation
+- [x] ปรับและตรวจ Portal, Profile, การแจ้งเตือน, สิทธิ์, Settings และหน้าพิมพ์/พรีวิว ตรวจทางเข้าและข้อมูลตามบทบาทใน fixture
+- [x] คง route, permission และกติกา validation/อนุมัติ/การเงิน ตรวจ ERP/POS regression บนฐานทดสอบ ฟอร์ม BOM อ่านและส่งข้อมูลด้วย field ของ API เดิม
+
+- [x] คง Split-screen ของ `Finance/OcrReviewer.tsx` ให้เห็นต้นฉบับคู่ฟอร์มตรวจทานและ Confidence Badge บนจอกว้าง เพิ่มทางลัดระหว่างต้นฉบับกับฟอร์มบนจอแคบ และตรวจทั้งสองธีมด้วยไฟล์สังเคราะห์
+- [x] ลงทะเบียน Recovery Codes, PromptPay, สมาชิก ERP และ ERP Setup นอก Inertia แล้ว Chrome ผ่าน 16 กรณีที่ 320 px ทั้ง Light/Dark รวม Setup 403/404 และสมาชิก ERP ตอบ 503 เมื่อปิด feature flag ส่วน Recovery/PromptPay ใช้ Blade สังเคราะห์และมีผล PHPUnit ของ flow แยก ดู `temp/ui-redesign-acceptance/erp-standalone-combined-report.json`
+- [x] หน้า Guest ก่อน login ใช้แบรนด์กลางและ `org=null` ตามเดิม แยก header, navigation และป้าย session ของ Customer/Supplier Portal ออกจากหน้าพนักงาน
+- [x] แยก print/PDF จากธีมหน้าจอ ครอบคลุม `commercial-print`, `official-print`, `withholding-certificate`, `payslip`, `pdf-layout`, `pdf-fonts` และหน้าพิมพ์ POS ตรวจพื้น `#FFFFFF`, เส้นตารางและฟอนต์ Sarabun ที่ระบบฝังสำหรับ PDF ตาม template เดิม รวมถึงตัวอย่างสลิปหน้ากว้างกระดาษโดยใช้ข้อมูลสังเคราะห์
+
+### 4. POS แต่ละประเภท
+
+- [x] **Retail:** หน้าขายจัดช่องค้นหา/สแกน รายการสินค้า ตะกร้า และปุ่มรับเงินไว้ด้วยกัน เพิ่มยอดสินค้า, VAT และยอดรวมก่อนส่วนลดจาก POS Server ตรวจเปิด/ปิดกะ ใบเสร็จ ส่วนลด และคืนเงินด้วย fixture ตรวจยอดก่อนส่วนลดผ่าน Chrome 390/1440 px ทั้ง Light/Dark ดู `temp/ui-redesign-acceptance/pos-cash-preview-report.json`
+- [x] **Restaurant:** ตรวจผังโต๊ะ Walk-in/จองโต๊ะ คิวครัว FIFO การสั่งเพิ่ม ส่งครัว เสิร์ฟ QR สำหรับลูกค้า และแยกบิล ตาม Chrome และ regression Phase 28.8.5
+- [x] **Pharmacy:** ตรวจหน่วย ล็อต วันหมดอายุ เหตุผลที่ขายไม่ได้ ประวัติผู้ป่วย และตรวจของคืนตามสิทธิ์ Chrome ผู้ป่วยสังเคราะห์ผ่าน 23 กรณี รวม 16 กรณีตาม role/viewport/ธีม
+- [x] Chrome fixture ตรวจจองโต๊ะ, Walk-in, QR ประจำโต๊ะ, คิวครัว, กลับมาเชื่อมต่อ, ชำระเงินและแยกบิลร้านอาหาร รวมส่วนลดและคืนเงิน Retail และเภสัชกรตรวจของคืนทั้งรอ ERP และทำลาย ดูรายงานใน `temp/phase2885-restaurant-browser-ui-acceptance/`
+- [x] **หน้าร่วม POS:** ตรวจ Login, Setup/Config, กะ, ใบเสร็จ/ภาษี, สมาชิก, Delivery, offline, sync/review และการเข้าถึงตามประเภทกิจการใน fixture
+- [x] ตรวจขอบเขตสาขา/Terminal/กะ และเงื่อนไขก่อนขายด้วย POS regression และ Browser workflow งาน QR payment, Card/EDC และ mixed tender อยู่ใน Phase 28.8.6
+
+- [x] ลงทะเบียน POS Blade ทั้ง 10 ไฟล์ใน `pos/resources/views/` ได้แก่ `pos.blade.php`, `setup.blade.php`, `configuration.blade.php`, `deliveries.blade.php`, `membership.blade.php`, `patients.blade.php`, `offline.blade.php`, `menu.blade.php` และหน้าพิมพ์ `tax-document.blade.php`, `delivery-slip.blade.php` ตรวจ entry จริงจาก Blade และ Vite config ก่อนแก้
+- [x] ใช้ฟอนต์และไอคอนที่มากับ POS งด runtime CDN และยืนยันว่า offline shell cache v3 เก็บหน้าคิว Vite entry และ Sarabun ตัวปกติ/ตัวหนา ทดสอบโดยตัดเครือข่ายทั้งสองธีม
+- [x] ตรวจสมาชิกแบบ `name_masked` / `phone_masked` และชื่อผู้ป่วยแบบ mask สำหรับ cashier สิทธิ์อ่านรายละเอียดจำกัดเภสัชกร/Manager ที่ `pharmacist_qualified` ตาม browser reports ของ Phase 28.8.2 และ Pharmacy
+
+### 5. ลำดับทำงานและเกณฑ์ปิด checklist
+
+- [x] ปรับ shell และ component กลาง พร้อมหน้าอ้างอิง 5 หน้าตาม mockup แล้วนำรูปแบบร่วมไปใช้ตามโมดูล
+- [x] เก็บภาพเทียบ Git `d66e530` 20 ภาพ และภาพจาก build ปัจจุบัน ตรวจข้อความไทยยาว ตารางกว้าง focus ใน dialog และเส้นทางตามบทบาทด้วยข้อมูลสังเคราะห์
+- [x] ทดสอบ Dashboard, ฟอร์ม/อนุมัติเอกสาร, ขาย/คืนเงิน, โต๊ะ/ครัว, เภสัชกร และ offline/reconnect ผ่าน browser และ regression ตามทะเบียน
+- [x] รัน TypeScript/Vite ทั้งสองแอปและ regression ที่เกี่ยวข้อง ERP 70 tests / 560 assertions และ POS 116 tests / 2,171 assertions ตรวจ overflow, การส่งซ้ำ, draft และขอบเขต role/สาขา
+- [x] รักษา selector หลักและเพิ่ม label/ARIA ของฟอร์มใหม่ แยก browser suite ของ BOM/Work Order จาก CreateEditDialog
+- [x] รัน `node --test tests/Frontend/*.test.mjs`, ERP/POS TypeScript/Vite และ browser acceptance ของ workflow ที่ปรับ ใช้พื้นที่ scroll ของตารางโดยไม่ทำให้หน้าจอล้น
+- [x] เก็บภาพ Light/Dark ของหน้าตามทะเบียนรวม responsive, keyboard และผลเทียบ print/PDF หลักฐานรวมอยู่ในทะเบียนตรวจรับ
+- [x] ปิด Phase UI ในขอบเขต local พร้อมทะเบียนและคู่มือปัจจุบัน สถานะการทดสอบกับระบบและอุปกรณ์จริงดูหมายเหตุใน README

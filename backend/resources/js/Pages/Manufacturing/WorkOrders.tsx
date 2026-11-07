@@ -1,3 +1,7 @@
+import InputError from '@/Components/InputError';
+import Modal from '@/Components/Modal';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import PageHeader from '@/Components/UI/PageHeader';
@@ -226,6 +230,17 @@ export default function WorkOrdersIndex({
         completed_date: getTodayDateString(),
     });
 
+    const guard = useDiscardGuard(
+        (createOpen && createForm.isDirty) ||
+            Boolean(costModalWo && costForm.isDirty) ||
+            Boolean(qcModalWo && qcForm.isDirty) ||
+            Boolean(completeModalWo && completeForm.isDirty),
+        createForm.processing ||
+            costForm.processing ||
+            qcForm.processing ||
+            completeForm.processing,
+    );
+
     const handleFilterSubmit = (e: FormEvent) => {
         e.preventDefault();
         router.get(
@@ -280,12 +295,15 @@ export default function WorkOrdersIndex({
 
     const openQcModal = (wo: WorkOrderRecord) => {
         setQcModalWo(wo);
-        qcForm.setData({
+        const initial: typeof qcForm.data = {
             actual_quantity: Number(wo.planned_quantity),
             scrap_quantity: 0,
             qc_notes: '',
             qc_passed: true,
-        });
+        };
+        qcForm.setDefaults(initial);
+        qcForm.setData(initial);
+        qcForm.clearErrors();
     };
 
     const handleQcSubmit = (e: FormEvent) => {
@@ -305,9 +323,12 @@ export default function WorkOrdersIndex({
 
     const openCompleteModal = (wo: WorkOrderRecord) => {
         setCompleteModalWo(wo);
-        completeForm.setData({
+        const initial: typeof completeForm.data = {
             completed_date: getTodayDateString(),
-        });
+        };
+        completeForm.setDefaults(initial);
+        completeForm.setData(initial);
+        completeForm.clearErrors();
     };
 
     const handleCompleteSubmit = (e: FormEvent) => {
@@ -344,12 +365,15 @@ export default function WorkOrdersIndex({
 
     const openCostModal = (wo: WorkOrderRecord) => {
         setCostModalWo(wo);
-        costForm.setData({
+        const initial: typeof costForm.data = {
             cost_type: 'labor',
             description: '',
             amount: 0,
             cost_date: getTodayDateString(),
-        });
+        };
+        costForm.setDefaults(initial);
+        costForm.setData(initial);
+        costForm.clearErrors();
     };
 
     const handleCostSubmit = (e: FormEvent) => {
@@ -399,9 +423,10 @@ export default function WorkOrdersIndex({
                             <button
                                 onClick={() => {
                                     createForm.reset();
+                                    createForm.clearErrors();
                                     setCreateOpen(true);
                                 }}
-                                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="erp-button erp-primary"
                             >
                                 <IconPlus className="h-4 w-4" />
                                 Create Work Order
@@ -765,15 +790,29 @@ export default function WorkOrdersIndex({
 
                 {/* CREATE WORK ORDER MODAL */}
                 {createOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+                    <Modal
+                        show
+                        title="Create Work Order"
+                        maxWidth="xl"
+                        closeable={!createForm.processing}
+                        onClose={() =>
+                            guard.request(() => setCreateOpen(false))
+                        }
+                    >
                         <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
-                            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     <IconFactory className="h-5 w-5 text-indigo-600" />
                                     Launch New Work Order
                                 </h3>
                                 <button
-                                    onClick={() => setCreateOpen(false)}
+                                    onClick={() =>
+                                        guard.request(() =>
+                                            setCreateOpen(false),
+                                        )
+                                    }
+                                    disabled={createForm.processing}
+                                    aria-label="Close Create Work Order"
                                     className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-500 dark:hover:bg-slate-800"
                                 >
                                     <IconClose className="h-5 w-5" />
@@ -785,10 +824,24 @@ export default function WorkOrdersIndex({
                                 className="p-6 space-y-4"
                             >
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-bom"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         Bill of Materials Recipe *
                                     </label>
                                     <select
+                                        aria-invalid={Boolean(
+                                            createForm.errors
+                                                .bill_of_materials_id,
+                                        )}
+                                        aria-describedby={
+                                            createForm.errors
+                                                .bill_of_materials_id
+                                                ? 'work-order-bom-error'
+                                                : undefined
+                                        }
+                                        id="work-order-bom"
                                         required
                                         value={
                                             createForm.data.bill_of_materials_id
@@ -811,22 +864,36 @@ export default function WorkOrdersIndex({
                                             </option>
                                         ))}
                                     </select>
-                                    {createForm.errors.bill_of_materials_id && (
-                                        <p className="mt-1 text-xs text-rose-500">
-                                            {
-                                                createForm.errors
-                                                    .bill_of_materials_id
-                                            }
-                                        </p>
-                                    )}
+                                    <InputError
+                                        id="work-order-bom-error"
+                                        message={
+                                            createForm.errors
+                                                .bill_of_materials_id
+                                        }
+                                        className="mt-1"
+                                    />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="work-order-planned-quantity"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Planned Quantity *
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                createForm.errors
+                                                    .planned_quantity,
+                                            )}
+                                            aria-describedby={
+                                                createForm.errors
+                                                    .planned_quantity
+                                                    ? 'work-order-planned-quantity-error'
+                                                    : undefined
+                                            }
+                                            id="work-order-planned-quantity"
                                             type="number"
                                             step="0.01"
                                             min="0.01"
@@ -844,13 +911,33 @@ export default function WorkOrdersIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="work-order-planned-quantity-error"
+                                            message={
+                                                createForm.errors
+                                                    .planned_quantity
+                                            }
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="work-order-destination-warehouse"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Output Destination Warehouse *
                                         </label>
                                         <select
+                                            aria-invalid={Boolean(
+                                                createForm.errors.warehouse_id,
+                                            )}
+                                            aria-describedby={
+                                                createForm.errors.warehouse_id
+                                                    ? 'work-order-destination-warehouse-error'
+                                                    : undefined
+                                            }
+                                            id="work-order-destination-warehouse"
                                             value={createForm.data.warehouse_id}
                                             onChange={(e) =>
                                                 createForm.setData(
@@ -866,15 +953,36 @@ export default function WorkOrdersIndex({
                                                 </option>
                                             ))}
                                         </select>
+                                        <InputError
+                                            id="work-order-destination-warehouse-error"
+                                            message={
+                                                createForm.errors.warehouse_id
+                                            }
+                                            className="mt-1"
+                                        />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="work-order-source-warehouse"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Raw Materials Source Warehouse
                                         </label>
                                         <select
+                                            aria-invalid={Boolean(
+                                                createForm.errors
+                                                    .source_warehouse_id,
+                                            )}
+                                            aria-describedby={
+                                                createForm.errors
+                                                    .source_warehouse_id
+                                                    ? 'work-order-source-warehouse-error'
+                                                    : undefined
+                                            }
+                                            id="work-order-source-warehouse"
                                             value={
                                                 createForm.data
                                                     .source_warehouse_id
@@ -893,13 +1001,33 @@ export default function WorkOrdersIndex({
                                                 </option>
                                             ))}
                                         </select>
+                                        <InputError
+                                            id="work-order-source-warehouse-error"
+                                            message={
+                                                createForm.errors
+                                                    .source_warehouse_id
+                                            }
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="work-order-start-date"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Planned Start Date
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                createForm.errors.start_date,
+                                            )}
+                                            aria-describedby={
+                                                createForm.errors.start_date
+                                                    ? 'work-order-start-date-error'
+                                                    : undefined
+                                            }
+                                            id="work-order-start-date"
                                             type="date"
                                             value={createForm.data.start_date}
                                             onChange={(e) =>
@@ -910,14 +1038,33 @@ export default function WorkOrdersIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="work-order-start-date-error"
+                                            message={
+                                                createForm.errors.start_date
+                                            }
+                                            className="mt-1"
+                                        />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-due-date"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         Planned Due Date
                                     </label>
                                     <input
+                                        aria-invalid={Boolean(
+                                            createForm.errors.due_date,
+                                        )}
+                                        aria-describedby={
+                                            createForm.errors.due_date
+                                                ? 'work-order-due-date-error'
+                                                : undefined
+                                        }
+                                        id="work-order-due-date"
                                         type="date"
                                         value={createForm.data.due_date}
                                         onChange={(e) =>
@@ -928,14 +1075,31 @@ export default function WorkOrdersIndex({
                                         }
                                         className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                     />
+                                    <InputError
+                                        id="work-order-due-date-error"
+                                        message={createForm.errors.due_date}
+                                        className="mt-1"
+                                    />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-notes"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         Production Notes / Work Order
                                         Instructions
                                     </label>
                                     <textarea
+                                        aria-invalid={Boolean(
+                                            createForm.errors.notes,
+                                        )}
+                                        aria-describedby={
+                                            createForm.errors.notes
+                                                ? 'work-order-notes-error'
+                                                : undefined
+                                        }
+                                        id="work-order-notes"
                                         rows={2}
                                         value={createForm.data.notes}
                                         onChange={(e) =>
@@ -947,15 +1111,21 @@ export default function WorkOrdersIndex({
                                         placeholder="Priority instructions, technician assignment..."
                                         className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                     />
+                                    <InputError
+                                        id="work-order-notes-error"
+                                        message={createForm.errors.notes}
+                                        className="mt-1"
+                                    />
                                 </div>
 
                                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/40">
                                     <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
                                         <input
                                             type="checkbox"
-                                            checked={
-                                                Boolean(createForm.data.flatten_materials)
-                                            }
+                                            checked={Boolean(
+                                                createForm.data
+                                                    .flatten_materials,
+                                            )}
                                             onChange={(e) =>
                                                 createForm.setData(
                                                     'flatten_materials',
@@ -964,17 +1134,28 @@ export default function WorkOrdersIndex({
                                             }
                                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800"
                                         />
-                                        <span>Flatten Multi-Level BOM into Raw Materials</span>
+                                        <span>
+                                            Flatten Multi-Level BOM into Raw
+                                            Materials
+                                        </span>
                                     </label>
                                     <p className="text-[11px] text-slate-400 mt-1 ml-5">
-                                        Recursively explodes sub-assemblies and issues pure raw materials to this work order directly.
+                                        Recursively explodes sub-assemblies and
+                                        issues pure raw materials to this work
+                                        order directly.
                                     </p>
                                 </div>
 
                                 <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                                     <button
                                         type="button"
-                                        onClick={() => setCreateOpen(false)}
+                                        onClick={() =>
+                                            guard.request(() =>
+                                                setCreateOpen(false),
+                                            )
+                                        }
+                                        disabled={createForm.processing}
+                                        aria-label="Close Create Work Order"
                                         className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                                     >
                                         Cancel
@@ -982,7 +1163,7 @@ export default function WorkOrdersIndex({
                                     <button
                                         type="submit"
                                         disabled={createForm.processing}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:opacity-50"
+                                        className="erp-button erp-primary"
                                     >
                                         {createForm.processing
                                             ? 'Creating...'
@@ -991,20 +1172,34 @@ export default function WorkOrdersIndex({
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </Modal>
                 )}
 
                 {/* RECORD DIRECT COST MODAL */}
                 {costModalWo && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <Modal
+                        show
+                        title="Record Direct Cost"
+                        maxWidth="md"
+                        closeable={!costForm.processing}
+                        onClose={() =>
+                            guard.request(() => setCostModalWo(null))
+                        }
+                    >
                         <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
-                            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     <IconDollar className="h-5 w-5 text-indigo-600" />
                                     Add Production Cost
                                 </h3>
                                 <button
-                                    onClick={() => setCostModalWo(null)}
+                                    onClick={() =>
+                                        guard.request(() =>
+                                            setCostModalWo(null),
+                                        )
+                                    }
+                                    disabled={costForm.processing}
+                                    aria-label="Close Record Direct Cost"
                                     className="rounded-lg p-1.5 text-slate-400"
                                 >
                                     <IconClose className="h-5 w-5" />
@@ -1016,10 +1211,22 @@ export default function WorkOrdersIndex({
                                 className="p-6 space-y-4"
                             >
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-cost-type"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         Cost Type *
                                     </label>
                                     <select
+                                        aria-invalid={Boolean(
+                                            costForm.errors.cost_type,
+                                        )}
+                                        aria-describedby={
+                                            costForm.errors.cost_type
+                                                ? 'work-order-cost-type-error'
+                                                : undefined
+                                        }
+                                        id="work-order-cost-type"
                                         value={costForm.data.cost_type}
                                         onChange={(e) =>
                                             costForm.setData(
@@ -1038,13 +1245,30 @@ export default function WorkOrdersIndex({
                                             5200)
                                         </option>
                                     </select>
+                                    <InputError
+                                        id="work-order-cost-type-error"
+                                        message={costForm.errors.cost_type}
+                                        className="mt-1"
+                                    />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-cost-description"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         Description *
                                     </label>
                                     <input
+                                        aria-invalid={Boolean(
+                                            costForm.errors.description,
+                                        )}
+                                        aria-describedby={
+                                            costForm.errors.description
+                                                ? 'work-order-cost-description-error'
+                                                : undefined
+                                        }
+                                        id="work-order-cost-description"
                                         type="text"
                                         required
                                         value={costForm.data.description}
@@ -1057,13 +1281,30 @@ export default function WorkOrdersIndex({
                                         placeholder="e.g. Overtime assembly shifts or machine calibration"
                                         className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                     />
+                                    <InputError
+                                        id="work-order-cost-description-error"
+                                        message={costForm.errors.description}
+                                        className="mt-1"
+                                    />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-cost-amount"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         Amount (THB) *
                                     </label>
                                     <input
+                                        aria-invalid={Boolean(
+                                            costForm.errors.amount,
+                                        )}
+                                        aria-describedby={
+                                            costForm.errors.amount
+                                                ? 'work-order-cost-amount-error'
+                                                : undefined
+                                        }
+                                        id="work-order-cost-amount"
                                         type="number"
                                         step="0.01"
                                         min="0.01"
@@ -1077,40 +1318,61 @@ export default function WorkOrdersIndex({
                                         }
                                         className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                     />
+                                    <InputError
+                                        id="work-order-cost-amount-error"
+                                        message={costForm.errors.amount}
+                                        className="mt-1"
+                                    />
                                 </div>
 
                                 <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                                     <button
                                         type="button"
-                                        onClick={() => setCostModalWo(null)}
-                                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
+                                        onClick={() =>
+                                            guard.request(() =>
+                                                setCostModalWo(null),
+                                            )
+                                        }
+                                        disabled={costForm.processing}
+                                        aria-label="Close Record Direct Cost"
+                                        className="erp-button erp-secondary"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={costForm.processing}
-                                        className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
+                                        className="erp-button erp-primary"
                                     >
                                         Record Cost
                                     </button>
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </Modal>
                 )}
 
                 {/* QUALITY CHECK MODAL */}
                 {qcModalWo && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <Modal
+                        show
+                        title="Quality Assurance Inspection"
+                        maxWidth="md"
+                        closeable={!qcForm.processing}
+                        onClose={() => guard.request(() => setQcModalWo(null))}
+                    >
                         <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
-                            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     <IconShieldCheck className="h-5 w-5 text-indigo-600" />
                                     Quality Assurance Inspection
                                 </h3>
                                 <button
-                                    onClick={() => setQcModalWo(null)}
+                                    onClick={() =>
+                                        guard.request(() => setQcModalWo(null))
+                                    }
+                                    disabled={qcForm.processing}
+                                    aria-label="Close Quality Assurance Inspection"
                                     className="rounded-lg p-1.5 text-slate-400"
                                 >
                                     <IconClose className="h-5 w-5" />
@@ -1121,12 +1383,24 @@ export default function WorkOrdersIndex({
                                 onSubmit={handleQcSubmit}
                                 className="p-6 space-y-4"
                             >
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="work-order-actual-quantity"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Actual Produced Qty *
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                qcForm.errors.actual_quantity,
+                                            )}
+                                            aria-describedby={
+                                                qcForm.errors.actual_quantity
+                                                    ? 'work-order-actual-quantity-error'
+                                                    : undefined
+                                            }
+                                            id="work-order-actual-quantity"
                                             type="number"
                                             step="0.01"
                                             min="0"
@@ -1142,13 +1416,32 @@ export default function WorkOrdersIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="work-order-actual-quantity-error"
+                                            message={
+                                                qcForm.errors.actual_quantity
+                                            }
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="work-order-scrap-quantity"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Scrap / Defective Qty
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                qcForm.errors.scrap_quantity,
+                                            )}
+                                            aria-describedby={
+                                                qcForm.errors.scrap_quantity
+                                                    ? 'work-order-scrap-quantity-error'
+                                                    : undefined
+                                            }
+                                            id="work-order-scrap-quantity"
                                             type="number"
                                             step="0.01"
                                             min="0"
@@ -1163,14 +1456,33 @@ export default function WorkOrdersIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="work-order-scrap-quantity-error"
+                                            message={
+                                                qcForm.errors.scrap_quantity
+                                            }
+                                            className="mt-1"
+                                        />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-qc-notes"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         QC Inspection Notes
                                     </label>
                                     <textarea
+                                        aria-invalid={Boolean(
+                                            qcForm.errors.qc_notes,
+                                        )}
+                                        aria-describedby={
+                                            qcForm.errors.qc_notes
+                                                ? 'work-order-qc-notes-error'
+                                                : undefined
+                                        }
+                                        id="work-order-qc-notes"
                                         rows={2}
                                         value={qcForm.data.qc_notes}
                                         onChange={(e) =>
@@ -1181,6 +1493,11 @@ export default function WorkOrdersIndex({
                                         }
                                         placeholder="Tolerances, visual inspection, stress tests..."
                                         className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                    />
+                                    <InputError
+                                        id="work-order-qc-notes-error"
+                                        message={qcForm.errors.qc_notes}
+                                        className="mt-1"
                                     />
                                 </div>
 
@@ -1208,35 +1525,55 @@ export default function WorkOrdersIndex({
                                 <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                                     <button
                                         type="button"
-                                        onClick={() => setQcModalWo(null)}
-                                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
+                                        onClick={() =>
+                                            guard.request(() =>
+                                                setQcModalWo(null),
+                                            )
+                                        }
+                                        disabled={qcForm.processing}
+                                        aria-label="Close Quality Assurance Inspection"
+                                        className="erp-button erp-secondary"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={qcForm.processing}
-                                        className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
+                                        className="erp-button erp-primary"
                                     >
                                         Confirm Inspection
                                     </button>
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </Modal>
                 )}
 
                 {/* COMPLETE WORK ORDER MODAL */}
                 {completeModalWo && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <Modal
+                        show
+                        title="Receive Finished Goods"
+                        maxWidth="md"
+                        closeable={!completeForm.processing}
+                        onClose={() =>
+                            guard.request(() => setCompleteModalWo(null))
+                        }
+                    >
                         <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
-                            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     <IconCheck className="h-5 w-5 text-emerald-600" />
                                     Complete Work Order & Receive FG
                                 </h3>
                                 <button
-                                    onClick={() => setCompleteModalWo(null)}
+                                    onClick={() =>
+                                        guard.request(() =>
+                                            setCompleteModalWo(null),
+                                        )
+                                    }
+                                    disabled={completeForm.processing}
+                                    aria-label="Close Receive Finished Goods"
                                     className="rounded-lg p-1.5 text-slate-400"
                                 >
                                     <IconClose className="h-5 w-5" />
@@ -1263,10 +1600,22 @@ export default function WorkOrdersIndex({
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                    <label
+                                        htmlFor="work-order-completion-date"
+                                        className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                    >
                                         Completion Date *
                                     </label>
                                     <input
+                                        aria-invalid={Boolean(
+                                            completeForm.errors.completed_date,
+                                        )}
+                                        aria-describedby={
+                                            completeForm.errors.completed_date
+                                                ? 'work-order-completion-date-error'
+                                                : undefined
+                                        }
+                                        id="work-order-completion-date"
                                         type="date"
                                         required
                                         value={completeForm.data.completed_date}
@@ -1278,13 +1627,26 @@ export default function WorkOrdersIndex({
                                         }
                                         className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                     />
+                                    <InputError
+                                        id="work-order-completion-date-error"
+                                        message={
+                                            completeForm.errors.completed_date
+                                        }
+                                        className="mt-1"
+                                    />
                                 </div>
 
                                 <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                                     <button
                                         type="button"
-                                        onClick={() => setCompleteModalWo(null)}
-                                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
+                                        onClick={() =>
+                                            guard.request(() =>
+                                                setCompleteModalWo(null),
+                                            )
+                                        }
+                                        disabled={completeForm.processing}
+                                        aria-label="Close Receive Finished Goods"
+                                        className="erp-button erp-secondary"
                                     >
                                         Cancel
                                     </button>
@@ -1298,15 +1660,20 @@ export default function WorkOrdersIndex({
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </Modal>
                 )}
 
                 {/* WORK ORDER DETAIL DRAWER / MODAL */}
                 {detailWo && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+                    <Modal
+                        show
+                        title="Work Order Detail"
+                        maxWidth="4xl"
+                        onClose={() => setDetailWo(null)}
+                    >
                         <div className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col overflow-hidden">
                             {/* Header */}
-                            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-mono text-sm font-bold text-indigo-600 dark:text-indigo-400">
@@ -1387,7 +1754,7 @@ export default function WorkOrdersIndex({
                                 </div>
 
                                 {/* Financial Cost Breakdown */}
-                                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:grid-cols-4">
                                     <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                                         <div className="text-xs text-slate-500">
                                             Material Cost
@@ -1563,9 +1930,14 @@ export default function WorkOrdersIndex({
                                     )}
                             </div>
                         </div>
-                    </div>
+                    </Modal>
                 )}
             </div>
+            <DiscardChangesDialog
+                open={guard.confirming}
+                onKeep={guard.keep}
+                onDiscard={guard.discard}
+            />
         </AuthenticatedLayout>
     );
 }

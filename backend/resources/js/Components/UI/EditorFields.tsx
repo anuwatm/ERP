@@ -7,8 +7,7 @@ import {
 } from '@headlessui/react';
 import { useState, type InputHTMLAttributes } from 'react';
 
-const control =
-    'w-full min-w-0 rounded-md border-gray-300 bg-white text-sm text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-900 dark:text-white';
+const control = 'erp-input w-full text-sm disabled:opacity-60';
 type FieldProps = {
     id: string;
     label: string;

@@ -1,6 +1,6 @@
 # ERP Setup Wizard
 
-> 2026-10-29: [POS Config](../../document/POS_CONFIGURATION.md) เป็นหน้าผู้จัดการ local/loopback แยกจาก ERP installer. ไม่สร้างสาขา/manager คนแรกหรือแก้ .env/keys ผ่านหน้านี้. ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+> [POS Setup Wizard](../../document/README_POS.md#pos-setup-wizard-สำหรับสาขาแรก) ใช้สร้างสาขา Terminal และ Manager คนแรกบน POS Server ส่วน [POS Config](../../document/POS_CONFIGURATION.md) ใช้ตั้งค่าหลังติดตั้ง ทั้งสองหน้าแยกจาก ERP installer.
 
 เปิด wizard ได้ที่ `/setup` หลัง copy release folder ขึ้น server แล้ว. รองรับทั้ง Document Root ที่ `backend/public` และ repository root (ผ่าน `setup/index.php`).
 

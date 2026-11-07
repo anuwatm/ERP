@@ -353,7 +353,7 @@ export default function Currencies({
                                 Reversal is posted separately.
                             </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex min-w-0 flex-wrap gap-2">
                             <TextInput
                                 type="month"
                                 value={month}
@@ -412,7 +412,7 @@ export default function Currencies({
                         </Card>
                     ))}
                 </div>
-                <div className="grid gap-6 xl:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <Card>
                         <DataTable
                             keyExtractor={(row) => row.id}

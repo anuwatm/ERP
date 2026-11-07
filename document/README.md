@@ -1,28 +1,18 @@
 # Company OS / Lightweight ERP — System Diagrams & Architecture
 
-> **POS ปัจจุบันถึง Phase 28.8.5 (2026-11-05)** [ติดตั้งและตั้งค่า](README_POS.md) · [Manager Config](POS_CONFIGURATION.md) · [Diagrams แยกประเภทร้าน](24_pos_workflows.html) · [รายงานฐาน POS 25/25](DATABASE_UPDATE_20261105_PHASE28_8_5.md) **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง**
+> **อัปเดตล่าสุด (2026-11-07) — Phase UI Local Complete, POS Setup Wizard (`/setup`) และ Phase 28.8.1–28.8.5**
+> - **UI & Layout Redesign:** ธีม `Light / Dark / System` บนโทนสีพื้นงาช้าง (`Ivory`) / เมนูเขียวเข้ม (`Deep Forest Green`) / สถานะ `Mint` / ปุ่มหลัก `Coral`, ฟอร์มสร้างใบสั่งซื้อ 2 คอลัมน์พร้อม `Preview totals`, แสดงล็อตและวันหมดอายุในตะกร้า Pharmacy POS, และแยกหน้าพิมพ์/PDF พื้นขาวบริสุทธิ์ (`#FFFFFF`) [ทะเบียนตรวจรับ UI](design/ui-acceptance-register.md)
+> - **Full Local Closure & Security Review (2026-11-05):** ERP **566 tests / 10,933 assertions**, MySQL Concurrency/Queue **2 tests / 20 assertions**, POS **115 tests / 2,160 assertions**, Frontend **38 tests**, Apache Loopback **35/35** [รายงานตรวจรับรวม](acceptance/local-closure-20261105/README.md) · [รายงานความปลอดภัย](SECURITY_REVIEW_20261105.md)
+> - **POS ปัจจุบันถึง Phase 28.8.5:** [ติดตั้งและ POS Setup Wizard `/setup`](README_POS.md) · [Manager Config `/config`](POS_CONFIGURATION.md) · [Diagram Server/Setup/Config](23_pos_server_configuration.html) · [Diagrams แยกประเภทร้าน](24_pos_workflows.html) · [รายงานฐาน POS 25/25](DATABASE_UPDATE_20261105_PHASE28_8_5.md) (**ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง**)
 
-> **อัปเดต local 2026-10-30:** [ผลทดสอบและข้อจำกัด](../docs/LOCAL_ACCEPTANCE_20261030.md). ERP538 tests (ข้าม2MySQL), POS45, frontend38; dialog matrix284PASS/0FAIL (อีก60หน้าที่ไม่มีeditorไม่นับผ่าน), diagram18/18. **ยังไม่ได้ทดสอบกับระบบจริง** (snapshot เดิม).
+**คู่มือใช้งาน POS และส่วนขยาย Phase 28.8:**
+- [วิธีเปิดใช้และเลือกประเภทร้าน](README_POS.md) — [Retail](README_POS_RETAIL.md) · [Restaurant](README_POS_RESTAURANT.md) · [Pharmacy](README_POS_PHARMACY.md)
+- [28.8.1 Ordering / Delivery & COD](PHASE_28_8_1_DELIVERY.md) · [28.8.2 Membership & Promotions](PHASE_28_8_2_MEMBERSHIP.md) · [28.8.3 Browser / PWA Offline](PHASE_28_8_3_OFFLINE.md) · [28.8.4 Pharmacy Patient History](PHASE_28_8_4_PATIENT_HISTORY.md) · [28.8.5 Restaurant QR / Kitchen & Seating Queue](PHASE_28_8_5_RESTAURANT.md)
+- **Phase 28 Core References:** [Work Register / Results](PHASE_28_IMPLEMENTATION_STATUS.md) · [POS Workspace](../pos/README.md) · [Local Security & Quota Recovery](PHASE_28_LOCAL_TEST_SECURITY.md) · [POS Network / Security (28.3)](PHASE_28_3_POS_SECURITY.md) · [Architecture Contract (28.2)](PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md)
 
-> **ปรับปรุง 2026-10-29 — POS Config:** [คู่มือ/ขอบเขตและ diagram ปัจจุบัน](POS_CONFIGURATION.md). Manager จัดการเฉพาะสาขาตนผ่าน `/config` (local/loopback); POS 45 tests / 268 assertions. Gemini ตรวจ POS Config เฉพาะ 6 ไฟล์ที่ผู้ใช้อนุญาต วันที่ 2026-10-29 ไม่พบข้อบกพร่องสำคัญสำหรับ Local-only; ยังไม่ได้ทดสอบระบบ/อุปกรณ์จริง.
+**คู่มืออ่านโค้ดและ API:** [Module Reference (31+ โมดูล)](modules/README.md) · [Understand Pipeline](UNDERSTAND_PIPELINE.md) · [External Read API Reference (62 GET Endpoints)](API_Document.md)
 
-**คู่มือใช้งาน POS:** [วิธีเปิดใช้และเลือกประเภทร้าน](README_POS.md) — ร้านค้าทั่วไป ร้านอาหาร และร้านขายยา พร้อมคู่มือแยกแต่ละประเภทใน `document/`
-
-**Phase 28 implementation:** [Work Register / Authorization / Results](PHASE_28_IMPLEMENTATION_STATUS.md) · [POS workspace](../pos/README.md) — Gemini ตรวจรับ local แล้ว; ฐาน ERP/POS ตาม config อัปเดตแล้ว. การเชื่อมต่อระบบและอุปกรณ์จริงยังไม่ได้ทดสอบ ดูหมายเหตุท้าย README นี้
-
-**Local-only ที่ผู้ใช้อนุมัติ:** [Connector / Synthetic Prescription / Pharmacy / Quota Recovery — scope และผลตรวจ](PHASE_28_LOCAL_TEST_SECURITY.md)
-
-**Phase 28.3:** [POS Network / Authentication / Security](PHASE_28_3_POS_SECURITY.md) — local implementation ผ่าน Geminiแล้ว; target firewall/mTLS และอุปกรณ์จริงยังไม่ได้ทดสอบ
-
-**Phase 28.2:** [POS Architecture & Contract / Service Extraction Plan](PHASE_28_2_POS_ARCHITECTURE_CONTRACT.md) — local architecture ผ่าน Geminiแล้ว; signing-owner selector พัฒนาแล้ว ส่วน e-Tax provider/certificate และ adapter ยังรอการเลือกผู้ให้บริการ
-
-**คู่มืออ่านโค้ดทีละโมดูล (2026-10-24):** [Module Reference — Architecture, workflows, source map และข้อจำกัด implementation](modules/README.md)
-
-**Understand ปัจจุบัน (2026-10-30):** [pipeline/coverage/ข้อจำกัด](UNDERSTAND_PIPELINE.md), รวม POS Config และ local closeout; จำนวนจริงอยู่ใน .ua/analysis-report.json. ดู [Config diagram](23_pos_server_configuration.html) และ [Workflow diagrams](24_pos_workflows.html).
-
-**API Reference:** [API_Document](API_Document.md) — ครบ62 GET endpoints พร้อมข้อมูลที่ดึงได้ วิธีเรียก ตัวอย่าง output ความหมาย fields/scopes/parameters และ error reference
-
-เอกสารนี้รวบรวม **Diagram ทั้งหมดของระบบ** ครอบคลุมทั้งระดับสถาปัตยกรรม (Architecture), เวิร์กโฟลว์ธุรกิจ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow), และวงจรสถานะ (Lifecycle) โดยถูกสร้างขึ้นด้วย **Archify Showcase Standard** และบันทึกเป็น Interactive Standalone HTML พร้อม JSON Spec
+เอกสารนี้รวบรวม **Diagram ทั้งหมดของระบบ** ครอบคลุมทั้งระดับสถาปัตยกรรม (Architecture), เวิร์กโฟลว์ธุรกิจ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow), และวงจรสถานะ (Lifecycle) โดยถูกสร้างขึ้นด้วย **Archify Showcase Standard** และบันทึกเป็น Interactive Standalone HTML พร้อม JSON Spec และ Mermaid Diagrams
 
 🌐 **หน้าเมนูรวมไดอะแกรมทั้งหมด:** เปิดไฟล์ [`document/index.html`](./index.html) ในเบราว์เซอร์
 
@@ -30,9 +20,7 @@
 
 ## 📑 สารบัญไดอะแกรมทั้งหมด (Table of Diagrams)
 
-**เพิ่ม 2026-10-19 — External App API:** [Interactive architecture](22_external_api_architecture.html) · [Mermaid: architecture / request sequence / key lifecycle / roadmap](22_external_api_architecture.md) · [JSON spec](specs/22_external_api_architecture.json)
-
-| # | ชื่อไดอะแกรม | ประเภท | ไฟล์ Interactive HTML | ไฟล์ JSON Spec |
+| # | ชื่อไดอะแกรม | ประเภท | ไฟล์ Interactive HTML / เอกสารหลัก | ไฟล์ JSON Spec / อ้างอิง |
 |---|---|---|---|---|
 | **01** | [System & Tech Stack Architecture](#01-system--tech-stack-architecture) | Architecture | [`01_system_architecture.html`](./01_system_architecture.html) | [`specs/01_system_architecture.json`](./specs/01_system_architecture.json) |
 | **02** | [Multi-Tenancy & Org Hierarchy](#02-multi-tenancy--org-hierarchy) | Architecture | [`02_multitenancy_org_hierarchy.html`](./02_multitenancy_org_hierarchy.html) | [`specs/02_multitenancy_org_hierarchy.json`](./specs/02_multitenancy_org_hierarchy.json) |
@@ -55,14 +43,18 @@
 | **19** | [Cash Flow Forecasting & Financial Health Analytics](#19-cash-flow-forecasting--financial-health-analytics) | Workflow / Analytics | [`19_cash_flow_forecasting_engine.md`](./19_cash_flow_forecasting_engine.md) | — |
 | **20** | [AI OCR Document Ingestion](#20-ai-ocr-document-ingestion) | Sequence / Architecture | [`20_ai_ocr_document_ingestion.md`](./20_ai_ocr_document_ingestion.md) | — |
 | **21** | [Web Setup Wizard Architecture & Installer Lifecycle](#21-web-setup-wizard-architecture--installer-lifecycle) | Lifecycle / Security | [`21_setup_wizard_installer_lifecycle.md`](./21_setup_wizard_installer_lifecycle.md) | — |
-| **All** | [Full Database ER Diagram (70+ Tables)](#22-full-database-er-diagram-70-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [Central Database Schema](../docs/database/DATABASE.md) |
-| **Groups** | [6 Domain Group Workflows (31 Modules)](#23-6-domain-group-workflows-31-modules) | Group Workflows | [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md) | — |
+| **22** | [External App Read-only API & Outbound Webhooks](#22-external-app-read-only-api--outbound-webhooks) | Architecture / Sequence | [`22_external_api_architecture.html`](./22_external_api_architecture.html) · [`.md`](./22_external_api_architecture.md) | [`specs/22_external_api_architecture.json`](./specs/22_external_api_architecture.json) |
+| **23** | [POS Server, Setup Wizard (`/setup`) & Manager `/config`](#23-pos-server-setup-wizard-setup--manager-config) | Architecture / Sequence | [`23_pos_server_configuration.html`](./23_pos_server_configuration.html) · [`POS_CONFIGURATION.md`](./POS_CONFIGURATION.md) | [`specs/23_pos_server_configuration.json`](./specs/23_pos_server_configuration.json) |
+| **24** | [POS Workflows (Retail / Restaurant / Pharmacy & Phase 28.8.1–28.8.5)](#24-pos-workflows-retail--restaurant--pharmacy--phase-28812885) | Workflow / State | [`24_pos_workflows.html`](./24_pos_workflows.html) · [`README_POS.md`](./README_POS.md) | [`PHASE_28_8_1`](./PHASE_28_8_1_DELIVERY.md)–[`28_8_5`](./PHASE_28_8_5_RESTAURANT.md) |
+| **25** | [System-wide UI & Layout Redesign (Theme & Print Isolation)](#25-system-wide-ui--layout-redesign-theme--print-isolation) | Architecture / UI | [`design/ui-acceptance-register.md`](./design/ui-acceptance-register.md) | [`checklist.md`](../checklist.md#checklist-ปรับ-layout-ทั้งระบบ--local-complete) |
+| **All** | [Full Database ER Diagram (ERP 173 + POS 56 Tables)](#26-full-database-er-diagram-erp-173--pos-56-ตาราง) | Database ERD | [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) | [`PHASE_28_DATABASE.md`](./PHASE_28_DATABASE.md) |
+| **Groups** | [7 Domain Group Workflows (35 Modules)](#27-7-domain-group-workflows-35-modules) | Group Workflows | [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md) | — |
 
 ---
 
-## 🧩 ไดอะแกรมรายกลุ่มการทำงาน 6 กลุ่ม (31 Modules Workflow)
+## 🧩 ไดอะแกรมรายกลุ่มการทำงาน 7 กลุ่ม (35 Modules Workflow)
 
-นอกจากภาพรวมสถาปัตยกรรมระดับระบบ 13 ชุดด้านบนแล้ว ยังมีเอกสารผังการทำงานเจาะลึกเฉพาะ **6 กลุ่มงานหลัก ครอบคลุม 31 โมดูลทั้งหมด** พร้อมคำอธิบายภาษาไทยและ Mermaid Diagrams รวม 19 ชุด:
+นอกจากภาพรวมสถาปัตยกรรมระดับระบบด้านบนแล้ว ยังมีเอกสารผังการทำงานเจาะลึกเฉพาะ **7 กลุ่มงานหลัก ครอบคลุม 35 โมดูล** พร้อมคำอธิบายภาษาไทยและ Mermaid Diagrams รวม 25+ ชุด:
 
 📄 **ดูรายละเอียดฉบับเต็ม:** [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
 
@@ -73,7 +65,8 @@
 | **Group 3: Project Delivery & Execution** | `09-11` (Projects, Tasks, Milestones) | • Project Delivery Workflow<br>• Task Kanban Lifecycle<br>• Milestone Sign-off Trigger |
 | **Group 4: Finance, Billing & Cost Control** | `12-16` (Products, Suppliers, Invoices, Payments, Expenses) | • Order-to-Cash & Expenses<br>• Invoice Anti-Overpay Sequence<br>• Project Cost Allocation |
 | **Group 5: Insights, Platform & Automation** | `17-23` (Dashboard, Reports, Files, Notifications, Automation, API, Import/Export) | • Event & Automation Engine<br>• Executive Metric Lineage<br>• Tenant File Storage Flow |
-| **Group 6: Operations & Advanced Extensions (Phase 7-18)** | `24-31` (PO, Inventory, Payroll, AI, Accounting, Portal) | • Procurement & Stock Movement<br>• Payroll Policy, Payslip & GL<br>• External Accounting & Portal Grid |
+| **Group 6: Operations & Advanced Extensions (Phase 7-23)** | `24-31` (PO, Inventory, HR/Roster/Attendance, Payroll, Portal, Dialogs) | • Procurement & Stock Movement<br>• HR Employee Master & Overnight Roster<br>• Payroll Policy, Payslip & GL + Dialog Standard |
+| **Group 7: Intelligent Automation, Compliance & Setup (Phase 24-26 & Setup)** | `32-35` (e-Tax Gateway, Cash Flow Forecasting, AI OCR, Setup Wizard) | • e-Tax XML-DSig Pipeline<br>• Cash Flow 3-Scenario Engine<br>• AI OCR Assisted Draft + Web Setup Wizard |
 
 ---
 
@@ -81,19 +74,22 @@
 
 ### 01. System & Tech Stack Architecture
 - **ไฟล์ HTML:** [`01_system_architecture.html`](./01_system_architecture.html)
-- **วัตถุประสงค์:** แสดง Full-Stack Monolith: React + Inertia + Vite + Tailwind CSS ทำงานกับ Laravel ผ่าน Inertia Protocol พร้อม database session, rate limiter, audit log และฐานข้อมูล MySQL/MariaDB
+- **วัตถุประสงค์:** แสดงภาพรวมเทคโนโลยีและสถาปัตยกรรมทั้งระบบ: React 18 + TypeScript + Inertia + Vite + Tailwind CSS (`Light / Dark / System` Theme), POS Offline PWA (`Service Worker` + `IndexedDB` + `WebCrypto PBKDF2/AES-GCM`), Laravel 13 / PHP 8.3+ (`BCMath`, `OpenSSL`, `XML-DSig`, `mTLS`), ฐานข้อมูล ERP MySQL/MariaDB (`88` migrations / `173` ตาราง) และ POS SQLite (`25` migrations / `56` ตาราง)
 - **Mermaid Preview:**
 
 ```mermaid
 flowchart LR
-    Client["Browser / Mobile Client"] -->|HTTPS| ReactInertia["React 18 + Inertia UI"]
-    ReactInertia -->|Login| BreezeAuth["Breeze Local Auth"]
+    Client["Browser / Mobile Client\n(Light / Dark / System)"] -->|HTTPS| ReactInertia["React 18 + TypeScript + Inertia UI\n+ Tailwind Semantic Tokens"]
+    ReactInertia -->|Login + 2FA| BreezeAuth["Breeze Auth + RFC 6238 TOTP"]
     BreezeAuth -->|Create session| SessionStore["Laravel Database Session"]
-    ReactInertia -->|Inertia XHR| LaravelApp["Laravel 13 Core (PHP 8.3)"]
+    ReactInertia -->|Inertia XHR| LaravelApp["ERP Laravel 13 Core (PHP 8.3 + BCMath)"]
     LaravelApp -->|Read session| SessionStore
-    LaravelApp -->|Eloquent ORM| MariaDB[("MySQL / MariaDB (Ordered UUID)")]
-    LaravelApp -->|Attachments| FileStorage["File Storage"]
-    LaravelApp -->|Audit Trail| AuditLog[("Application Audit Logs")]
+    LaravelApp -->|Eloquent ORM| MariaDB[("ERP MySQL / MariaDB\n88 Migrations / 173 Tables (UUIDv7)")]
+    LaravelApp -->|Attachments / Print| FileStorage["Private DMS Storage & DomPDF (#FFFFFF)"]
+    LaravelApp -->|Audit Trail| AuditLog[("Redacted Application Audit Logs")]
+    POSClient["POS Browser & Offline PWA\n(IndexedDB + WebCrypto AES-256-GCM)"] --> POSApp["Standalone POS Laravel 13 (pos/)"]
+    POSApp --> POSDB[("POS SQLite / Isolated DB\n25 Migrations / 56 Tables")]
+    LaravelApp <-->|"HTTPS mTLS + RSA-SHA256"| POSApp
 ```
 
 ---
@@ -750,9 +746,115 @@ flowchart TD
 
 ---
 
-### 22. Full Database ER Diagram (70+ Tables)
-- **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md)
-- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ 70+ ตาราง ครอบคลุม 21 โดเมน พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, กฎ Multi-Tenancy Scoping (`org_id`), และระบบป้องกันส่งซ้ำ `form_submissions`
+### 22. External App Read-only API & Outbound Webhooks
+- **ไฟล์ HTML / เอกสาร:** [`22_external_api_architecture.html`](./22_external_api_architecture.html) · [`22_external_api_architecture.md`](./22_external_api_architecture.md) · [`API_Document.md`](./API_Document.md)
+- **วัตถุประสงค์:** สถาปัตยกรรม External Read API (`/api/v1` รวม 62 GET paths), วงจร Integration Key (One-time reveal, SHA-256 hash, Scopes, Principal/Branch/Document Allowlist), Cursor Watermark Sync, และ Outbound Signed Webhooks (HMAC-SHA256, Retry/Dead-letter)
+- **Mermaid Preview:**
+
+```mermaid
+flowchart LR
+    ExtApp["External App Backend"] -->|"HTTPS GET /api/v1/* + Bearer Secret"| AuthGuard["Integration Key & Rate Limit Guard"]
+    AuthGuard --> ScopeGuard["Scope & Principal / Branch / DMS ACL Guard"]
+    ScopeGuard --> ReadServices["62 Read-only Endpoints\n(Summaries, Catalog, Inventory, HR, Sales, PO, BOM, DMS)"]
+    ReadServices --> ERPDB[("ERP Database (org_id isolated)")]
+
+    DomainEvents["Domain Changes\n(Invoice / Stock / Task / Approval)"] --> Outbox["integration_webhook_events\n(Transactional Outbox)"]
+    Outbox --> Dispatcher["Webhook Dispatcher\n(HMAC-SHA256 + Timestamp)"]
+    Dispatcher -->|"HTTPS 443 Public DNS"| ExtReceiver["Verified External Receiver"]
+```
+
+---
+
+### 23. POS Server, Setup Wizard (`/setup`) & Manager `/config`
+- **ไฟล์ HTML / เอกสาร:** [`23_pos_server_configuration.html`](./23_pos_server_configuration.html) · [`POS_CONFIGURATION.md`](./POS_CONFIGURATION.md) · [`README_POS.md`](./README_POS.md)
+- **วัตถุประสงค์:** แสดงสถาปัตยกรรมแยกส่วนระหว่าง POS Server (`pos/`) กับ ERP (`backend/`), การติดตั้งสาขาแรกผ่าน **POS Setup Wizard (`/setup`)** ด้วย `POS_SETUP_TOKEN` (ล็อกอัตโนมัติเมื่อมีสาขา/Terminal/พนักงานแล้ว), การตั้งค่าสาขา/Terminal/พนักงานโดยผู้จัดการผ่าน **`/config`** (ยืนยันรหัสผ่านผู้จัดการ + Audit ใน Transaction เดียว), และการซิงค์ผ่าน Outbound HTTPS/mTLS Connector
+- **Mermaid Preview:**
+
+```mermaid
+flowchart TB
+    subgraph POSWorkspace["Standalone POS Server (pos/)"]
+        SetupUI["POS Setup Wizard (/setup)\n• local/loopback + POS_SETUP_TOKEN\n• สร้างสาขาแรก + Terminal + Manager\n• ล็อกทันทีเมื่อมีข้อมูลแล้ว"]
+        ConfigUI["Manager Config (/config)\n• local/loopback + Own Branch\n• แก้ชื่อ/ประเภทสาขา (ก่อน provision)\n• เพิ่ม Terminal & พนักงาน + ยืนยันรหัสผ่าน"]
+        RegisterUI["POS Register / Kitchen / QR / Offline\n(/ , /deliveries , /membership , /patients , /offline/app)"]
+        POSCore["POS Laravel 13 Core\n(แยก Session / APP_KEY / Signing Key)"]
+        POSDB[("POS SQLite / DB\n(25 Migrations / 56 Tables)")]
+
+        SetupUI --> POSCore
+        ConfigUI --> POSCore
+        RegisterUI --> POSCore
+        POSCore --> POSDB
+    end
+
+    subgraph ERPWorkspace["Central ERP Server (backend/)"]
+        ERPAdmin["ERP Admin (/pos-integration , /pos-membership)"]
+        ERPConnector["ERP Outbound Connector\n(HTTPS / mTLS Client Cert)"]
+        ERPDB[("ERP MySQL / MariaDB\n(88 Migrations / 173 Tables)")]
+
+        ERPAdmin --> ERPConnector
+        ERPConnector --> ERPDB
+    end
+
+    ERPConnector -->|"Publish Catalog / Quota / Tax Profile / Membership"| POSCore
+    ERPConnector -->|"Pull Signed Events & Checkpoints (RSA-SHA256)"| POSCore
+```
+
+---
+
+### 24. POS Workflows (Retail / Restaurant / Pharmacy & Phase 28.8.1–28.8.5)
+- **ไฟล์ HTML / เอกสาร:** [`24_pos_workflows.html`](./24_pos_workflows.html) · [`README_POS.md`](./README_POS.md) · [`PHASE_28_8_1`](./PHASE_28_8_1_DELIVERY.md)–[`28_8_5`](./PHASE_28_8_5_RESTAURANT.md)
+- **วัตถุประสงค์:** ผังขั้นตอนการทำงานของ POS ทั้ง 3 ประเภทกิจการ (`retail`, `restaurant`, `pharmacy`) พร้อมโมดูลส่วนขยาย Phase 28.8.1–28.8.5 (Delivery/COD, Membership/Promotions, Browser/PWA Offline, Pharmacy Patient History, และ Restaurant QR/Kitchen FIFO/Seating Queue)
+- **Mermaid Preview:**
+
+```mermaid
+flowchart TD
+    Start["เข้าใช้งาน POS (/) หรือสร้างสาขาแรก (/setup)"] --> BranchType{"ประเภทสาขา (business_type)"}
+
+    BranchType -->|"retail"| Retail["Retail POS\n• เปิดกะ / สแกนสินค้า / ตะกร้า\n• รับคำขอ QR Menu / สมาชิก & โปรโมชัน\n• รับเงินสด / ออกสลิป & ABB/Full"]
+    BranchType -->|"restaurant"| Rest["Restaurant POS (Phase 28.8.5)\n• ผังโต๊ะ & คิว Walk-in / จองโต๊ะ 90 นาที (สาย 15 นาที)\n• เปิด Table Session & สร้าง QR สั่งอาหาร\n• คิวครัว FIFO + Manager พัก/ข้ามคิวพร้อมเหตุผล\n• เสิร์ฟ / แยกบิลตามรายการ / ปิดโต๊ะ"]
+    BranchType -->|"pharmacy"| Pharm["Pharmacy POS (Phase 28.8.4)\n• แสดงหน่วย / ล็อต / วันหมดอายุ (FEFO) ข้างตะกร้า\n• บังคับ role pharmacist สำหรับยาควบคุม\n• ประวัติผู้ป่วยสังเคราะห์ (/patients เข้ารหัสเฉพาะสาขา)\n• Manager เภสัชกรตรวจของคืน (restock / destroy)"]
+
+    Retail --> SharedExt["ส่วนขยายร่วมตามสิทธิ์สาขา (Phase 28.8.1–28.8.3)"]
+    Rest --> SharedExt
+    Pharm --> SharedExt
+
+    SharedExt --> Delivery["28.8.1 Delivery (/deliveries)\n• เฉพาะ Retail & Restaurant (บล็อก Pharmacy)\n• Prepaid Cash & COD Custody (collect / remit / refund)"]
+    SharedExt --> Member["28.8.2 Membership (/membership)\n• สมัครสมาชิกเข้ารหัส Hybrid รอ ERP อนุมัติ\n• ส่วนลด Fixed/Percent ก่อน VAT + คืนสิทธิ์เมื่อ Full Refund"]
+    SharedExt --> Offline["28.8.3 Browser Offline (/offline/app)\n• คิวเข้ารหัส PBKDF2 + AES-256-GCM บน Permit ที่จองโควตา\n• Manager ตรวจรับเงินสดเข้ากะปัจจุบันก่อนตัดขายจริง"]
+```
+
+---
+
+### 25. System-wide UI & Layout Redesign (Theme & Print Isolation)
+- **ไฟล์เอกสาร:** [มาตรฐาน UI](./design/ui-standards.md) · [ทะเบียนไฟล์และ routes](./design/ui-screen-inventory.md) · [ทะเบียนตรวจรับ](./design/ui-acceptance-register.md) · [`checklist.md`](../checklist.md#checklist-ปรับ-layout-ทั้งระบบ--local-complete)
+- **วัตถุประสงค์:** สถาปัตยกรรมระบบธีม `Light / Dark / System` ที่ซิงค์ตั้งแต่ก่อนเรนเดอร์หน้าแรก (`erp-theme.js` และ POS Theme Script), โทนสีมาตรฐาน (`Ivory` Canvas / `Deep Forest Green` Navigation / `Mint` Status / `Coral` Primary Action), ฟอร์มใบสั่งซื้อ 2 คอลัมน์พร้อม `Preview totals` จาก Server, และการแยกหน้าพิมพ์เอกสาร/PDF (`paper-colors.blade.php` / `@media print`) ให้ใช้พื้นขาวบริสุทธิ์ (`#FFFFFF`) เสมอ
+- **Mermaid Preview:**
+
+```mermaid
+flowchart LR
+    subgraph ThemeEngine["1. Theme Initialization & Persistence"]
+        Storage["Device Storage\n(Light / Dark / System)"] --> BootScript["Pre-paint Theme Loader\n(erp-theme.js & POS Theme Init)"]
+        BootScript --> Tokens["Semantic CSS Tokens\n• Light: Ivory Canvas + Deep Forest Sidebar\n• Dark: Slate/Forest Dark Surface + High Contrast"]
+    end
+
+    subgraph ScreenUI["2. Screen UI Guardrails (@media screen)"]
+        Tokens --> ERPShell["ERP Shell & 8 Dashboards\n(DashboardAccess + No Cash Balance Guard)"]
+        Tokens --> Dialogs["CreateEditDialog / BOM / Work Order\n(Discard Guard + Keyboard Focus + Server Preview Totals)"]
+        Tokens --> GuestPortal["Guest (org=null Neutral Brand)\n& Isolated Customer/Supplier Portal"]
+        Tokens --> POSShell["POS Register / Config / Standalone Views\n(Bundled Local Assets for Offline PWA)"]
+    end
+
+    subgraph PrintPDF["3. Print & PDF Paper Isolation (@media print & DomPDF)"]
+        ERPShell -.->|"Print / PDF"| PaperGuard["Paper Isolation Guard\n(paper-colors.blade.php / Sarabun Font)"]
+        POSShell -.->|"78mm Slip / ABB / Full"| PaperGuard
+        PaperGuard --> PureWhite["Pure White Paper (#FFFFFF)\nIdentical Output in Light & Dark Mode"]
+    end
+```
+
+---
+
+### 26. Full Database ER Diagram (ERP 173 + POS 56 ตาราง)
+- **ไฟล์เอกสาร:** [`DATABASE_ERD.md`](./DATABASE_ERD.md) · [`PHASE_28_DATABASE.md`](./PHASE_28_DATABASE.md)
+- **วัตถุประสงค์:** ผังโครงสร้างฐานข้อมูลฉบับสมบูรณ์ ครอบคลุม **ERP MySQL 88 Migrations (173 ตาราง)** และ **POS SQLite 25 Migrations (56 ตาราง)** พร้อม Data Types, Primary Keys (UUIDv7), Foreign Keys, กฎ Multi-Tenancy Scoping (`org_id`), ระบบป้องกันส่งซ้ำ `form_submissions`, และตารางส่วนขยาย Phase 28 / 28.8.1–28.8.5
 - **Mermaid Preview (Master Cross-Domain):**
 
 ```mermaid
@@ -805,13 +907,19 @@ erDiagram
     ORGANIZATIONS ||--o| AI_CONFIGURATIONS : "1:1 (Phase 26)"
     ORGANIZATIONS ||--o{ OCR_EXTRACTIONS : "1:N"
     OCR_EXTRACTIONS ||--o{ OCR_FIELD_RESULTS : "1:N"
+    ORGANIZATIONS ||--o{ BILL_OF_MATERIALS : "1:N (Phase 27)"
+    BILL_OF_MATERIALS ||--o{ WORK_ORDERS : "1:N"
+    ORGANIZATIONS ||--o{ POS_INSTANCES : "1:N (Phase 28)"
+    ORGANIZATIONS ||--o{ POS_MEMBERS : "1:N (Phase 28.8.2)"
+    POS_INSTANCES ||--o{ POS_SYNC_INBOX : "1:N"
+    POS_INSTANCES ||--o{ POS_OFFLINE_RECEIPT_CLAIMS : "1:N (Phase 28.8.3)"
 ```
 
 ---
 
-### 23. 6 Domain Group Workflows (31 Modules)
+### 27. 7 Domain Group Workflows (35 Modules)
 - **ไฟล์เอกสาร:** [`GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
-- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 6 กลุ่มงานหลัก ครอบคลุมทั้ง 31 โมดูล พร้อมส่วนต่อขยาย Phase 23.2-26 และ Setup Wizard (รวม 25+ Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
+- **วัตถุประสงค์:** ผังกระบวนการทำงานและวงจรสถานะเจาะลึก 7 กลุ่มงานหลัก ครอบคลุมทั้ง 35 โมดูล พร้อมส่วนต่อขยาย Phase 23.2–28.8.5 และ Setup Wizard (รวม 25+ Mermaid Diagrams พร้อมคำอธิบายภาษาไทย)
 - **Mermaid Preview (Inter-Group Interaction):**
 
 ```mermaid
@@ -821,7 +929,8 @@ flowchart LR
     G2 --> G4["4. Finance & Billing"]
     G3 -. Milestone Done .-> G4
     G4 --> G5["5. Insights & Dashboard"]
-    G4 -. Procure/Sync .-> G6["6. Operations & Extensions"]
+    G4 -. Procure/Sync .-> G6["6. Operations, HR & POS"]
+    G6 --> G7["7. e-Tax, Cash Flow, AI OCR & Setup"]
 ```
 
 ---
@@ -832,14 +941,14 @@ flowchart LR
    - ดับเบิลคลิกไฟล์ [`document/index.html`](./index.html) หรือไฟล์ `.html` ใดๆ เพื่อเปิด interactive viewer ในเบราว์เซอร์
    - สามารถกดปุ่มสลับ **Light / Dark mode**, **Focus View**, **Pan & Zoom**, และ **Export เป็น SVG / PNG / WebP** ได้ทันที
 2. **เปิดดูเอกสารผังรายกลุ่มและ ERD:**
-   - ผังการทำงาน 6 กลุ่มโมดูล (31 Modules): [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
-   - ผังฐานข้อมูล 61+ ตาราง: [`document/DATABASE_ERD.md`](./DATABASE_ERD.md)
+   - ผังการทำงาน 7 กลุ่มโมดูล (35 Modules): [`document/GROUPS_WORKFLOW.md`](./GROUPS_WORKFLOW.md)
+   - ผังฐานข้อมูล ERP (173 ตาราง) + POS (56 ตาราง): [`document/DATABASE_ERD.md`](./DATABASE_ERD.md) และ [`document/PHASE_28_DATABASE.md`](./PHASE_28_DATABASE.md)
 3. **แก้ไขหรือสร้างใหม่:**
    - ไฟล์ JSON Specification อยู่ในโฟลเดอร์ [`document/specs/`](./specs/)
    - สามารถรันคำสั่ง `node <archify-path>/bin/archify.mjs deliver <type> <spec.json> <output.html> --quality showcase --json` เพื่อ render ใหม่ได้ตลอดเวลา
 
-## Phase 28 — หลักฐาน baseline (2026-10-27)
+## Phase 28 & 28.8.1–28.8.5 — หลักฐานและเอกสารอ้างอิงล่าสุด (2026-11-06)
 
-[Local acceptance](PHASE_28_LOCAL_ACCEPTANCE.md) · [Current implementation](../docs/PHASE_28_POS.md) · [API/routes](PHASE_28_API.md) · [Schema/relationships](PHASE_28_DATABASE.md) · [Database upgrade](DATABASE_UPGRADE_20261027.md) · [Operations](../docs/PHASE_28_OPERATIONS.md). Geminiหมวด17รับรอง local; ERP/POSตามconfig current.
+[รายงานตรวจรับรวม Local Closure](acceptance/local-closure-20261105/README.md) · [รายงานความปลอดภัย](SECURITY_REVIEW_20261105.md) · [สถานะ POS ปัจจุบัน](../docs/PHASE_28_POS.md) · [API/routes](PHASE_28_API.md) · [Schema/relationships](PHASE_28_DATABASE.md) · [อัปเดตฐาน ERP 88/88](DATABASE_UPDATE_20261104.md) · [อัปเดตฐาน POS 25/25](DATABASE_UPDATE_20261105_PHASE28_8_5.md) · [Operations](../docs/PHASE_28_OPERATIONS.md) · [ทะเบียนตรวจรับ UI Redesign](design/ui-acceptance-register.md)
 
 > **หมายเหตุ:** ขั้นตอนเชื่อมต่อระบบและอุปกรณ์จริงยังไม่ได้ทดสอบกับระบบจริง ดู [README หลัก](../README.md#phase-28--current-status-2026-10-27) และ [POS integration boundaries](../pos/README.md#integration-boundaries). ผล local ไม่ใช่ผลรับรองการเชื่อมต่อจริง.

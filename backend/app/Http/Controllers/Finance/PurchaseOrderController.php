@@ -14,6 +14,7 @@ use App\Services\NotificationService;
 use App\Services\NumberSequenceService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,16 @@ class PurchaseOrderController extends Controller
             'statuses' => PurchaseOrder::STATUSES,
             'taxModes' => PurchaseOrder::TAX_MODES,
         ]);
+    }
+
+    public function preview(Request $request): JsonResponse
+    {
+        $validated = $this->validatePurchaseOrder($request);
+
+        return response()->json([
+            'currency' => $validated['currency'],
+            'totals' => array_map(fn ($value) => number_format($value, 2, '.', ''), $this->calculateTotals($validated)),
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function store(Request $request, NumberSequenceService $numbers, NotificationService $notifications, FxRateService $fxRates): RedirectResponse

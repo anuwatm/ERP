@@ -2,15 +2,15 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Phase 28 — POS Server และหน้า Config",
+    "title": "Phase 28 — POS Server, Setup Wizard (/setup) และหน้า Config (/config)",
     "quality_profile": "showcase"
   },
   "components": [
     {
       "id": "branch-browsers",
       "type": "frontend",
-      "label": "เครื่องขาย / จอครัว",
-      "sublabel": "บัญชีและ Terminal แยกสาขา",
+      "label": "เครื่องขาย / จอครัว / Offline",
+      "sublabel": "Light/Dark/System · แยกสาขา",
       "pos": [
         40,
         310
@@ -51,7 +51,7 @@
     {
       "id": "manager-config",
       "type": "security",
-      "label": "ผู้จัดการ · /config",
+      "label": "Setup /setup · Config /config",
       "sublabel": "local / loopback / own branch",
       "pos": [
         410,
@@ -65,8 +65,8 @@
     {
       "id": "pos-database",
       "type": "database",
-      "label": "ฐาน POS แยกจาก ERP",
-      "sublabel": "สาขา / Staff / Terminal / Audit",
+      "label": "ฐาน POS (25 Migrations)",
+      "sublabel": "56 ตาราง · แยกจาก ERP",
       "pos": [
         410,
         540
@@ -79,8 +79,8 @@
     {
       "id": "erp-database",
       "type": "database",
-      "label": "ฐาน ERP",
-      "sublabel": "Catalog / quota / GL / authority",
+      "label": "ฐาน ERP (88 Migrations)",
+      "sublabel": "173 ตาราง · Catalog / Quota / GL",
       "pos": [
         800,
         540
@@ -96,7 +96,7 @@
       "id": "browser-pos",
       "from": "branch-browsers",
       "to": "pos-server",
-      "label": "หน้า /",
+      "label": "หน้า / และ /offline/app",
       "variant": "emphasis"
     },
     {
@@ -110,7 +110,7 @@
       "id": "config-pos",
       "from": "manager-config",
       "to": "pos-server",
-      "label": "ยืนยันรหัสผ่าน",
+      "label": "Token / รหัสผ่าน",
       "variant": "security",
       "labelDy": 24
     },

@@ -3,7 +3,9 @@ const {
 } = require("C:/Users/anuwat/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
-const directory = "temp/phase2883-offline-r5";
+const run = process.env.POS_OFFLINE_BROWSER_RUN || "r5";
+assert.match(run, /^[a-z0-9-]+$/);
+const directory = "temp/phase2883-offline-" + run;
 const ids = JSON.parse(fs.readFileSync(directory + "/identities.json", "utf8"));
 const report = {
   scope:
@@ -111,8 +113,44 @@ let currentPage;
         );
         assert.match(await page.locator("#queue").innerText(), /1070|10\.70/);
       }
-      await page.reload();
-      await page.waitForSelector("#unlock");
+      for (const theme of ["light", "dark"]) {
+        await page.evaluate(
+          (value) => localStorage.setItem("pos-theme", value),
+          theme,
+        );
+        await page.reload();
+        await page.waitForSelector("#unlock");
+        assert.equal(
+          await page
+            .locator("html")
+            .evaluate((root) => getComputedStyle(root).colorScheme),
+          theme,
+        );
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth + 1,
+          ),
+          false,
+        );
+        assert.deepEqual(
+          await page.evaluate(async () => {
+            const sample = "ทดสอบ POS";
+            const normal = await document.fonts.load(
+              '400 16px "Sarabun"',
+              sample,
+            );
+            const bold = await document.fonts.load(
+              '700 16px "Sarabun"',
+              sample,
+            );
+            return [normal.length > 0, bold.length > 0];
+          }),
+          [true, true],
+        );
+        await page.screenshot({
+          path: directory + "/" + type + "-offline-" + theme + ".png",
+        });
+      }
       await page.locator("#passphrase").fill("synthetic device unlock");
       await page.locator("#unlock").click();
       await page.waitForFunction(() =>
@@ -202,9 +240,17 @@ let currentPage;
         }
         return urls;
       });
+      const fonts = [
+        "/fonts/sarabun-regular-v1.ttf",
+        "/fonts/sarabun-bold-v1.ttf",
+      ];
+      assert(fonts.every((path) => cacheUrls.includes(path)));
       assert.equal(
         cacheUrls.every(
-          (p) => p === "/offline/app" || p.startsWith("/build/assets/"),
+          (p) =>
+            p === "/offline/app" ||
+            p.startsWith("/build/assets/") ||
+            fonts.includes(p),
         ),
         true,
       );
@@ -212,6 +258,7 @@ let currentPage;
       report.cases.push({
         type,
         offlineReload: true,
+        offlineThemes: ["light", "dark"],
         lostResponseReplayed: true,
         financial:
           type === "restaurant" ? "request only" : "manager accepted once",

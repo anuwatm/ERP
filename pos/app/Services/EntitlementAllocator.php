@@ -7,6 +7,30 @@ use Illuminate\Support\Str;
 
 class EntitlementAllocator
 {
+    public function availableLots(string $branchId, string $timezone): array
+    {
+        return DB::table('pos_grants as g')
+            ->where('g.branch_id', $branchId)
+            ->where('g.status', 'active')
+            ->whereNotNull('g.lot_id')
+            ->where(fn ($query) => $query->whereNull('g.expires_at')->orWhere('g.expires_at', '>=', now($timezone)->toDateString()))
+            ->whereRaw('g.granted_quantity > g.consumed_quantity + g.reserved_quantity')
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('pos_lot_recalls as recall')
+                ->whereColumn('recall.branch_id', 'g.branch_id')
+                ->whereColumn('recall.lot_id', 'g.lot_id'))
+            ->orderByRaw('g.expires_at IS NULL')
+            ->orderBy('g.expires_at')
+            ->orderBy('g.lot_id')
+            ->distinct()
+            ->get(['g.product_id', 'g.lot_id', 'g.expires_at'])
+            ->groupBy('product_id')
+            ->map(fn ($lots) => $lots->map(fn ($lot) => [
+                'lot_id' => $lot->lot_id,
+                'expires_at' => $lot->expires_at,
+            ])->values())
+            ->all();
+    }
+
     public function take(string $branchId, string $productId, string $quantity, string $timezone, ?string $reservationLine = null, ?string $deliveryId = null, ?string $offlinePermitId = null): array
     {
         $this->lockBranch($branchId);

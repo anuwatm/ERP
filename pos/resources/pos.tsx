@@ -42,6 +42,11 @@ type State = RestaurantState & {
   membership_enabled: boolean;
   offline_enabled?: boolean;
   patient_history_enabled?: boolean;
+  cash_preview_available: boolean;
+  pharmacy_lots?: Record<
+    string,
+    { lot_id: string; expires_at: string | null }[]
+  >;
   membership: MembershipOptions;
   staff: { name: string; role: string };
   terminals: { id: string; code: string }[];
@@ -74,6 +79,12 @@ type Receipt = {
   change: string;
   lines: { name: string; quantity: string; total: string }[];
 };
+type CashPreview = {
+  subtotal: string;
+  tax_amount: string;
+  total: string;
+  currency: string;
+};
 
 async function api(path: string, data?: unknown) {
   const response = await fetch(path, {
@@ -101,6 +112,9 @@ async function api(path: string, data?: unknown) {
 }
 
 function App() {
+  const [theme, setTheme] = useState(
+    () => document.documentElement.dataset.posTheme ?? "system",
+  );
   const [state, setState] = useState<State | null>(null),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState("");
@@ -145,8 +159,15 @@ function App() {
     id: string;
     discounted_total: string;
   } | null>(null);
+  const [cashPreview, setCashPreview] = useState<{
+    key: string;
+    value: CashPreview;
+  } | null>(null);
+  const [cashPreviewError, setCashPreviewError] = useState("");
   useEffect(() => {
     setDiscountApproval(null);
+    setCashPreview(null);
+    setCashPreviewError("");
     setDiscountKey(crypto.randomUUID());
   }, [cart, unitChoices, terminal, state?.catalog_version, discountAmounts]);
   const [menuLink, setMenuLink] = useState<{
@@ -235,46 +256,72 @@ function App() {
         state?.items.find((p) => p.product_id === product_id)?.unit,
     })),
   };
+  const cartPreviewKey = JSON.stringify(membershipCart);
+  const currentPreview =
+    cashPreview?.key === cartPreviewKey ? cashPreview.value : null;
   const discountRequested = items.some(
     ([id]) => discountAmounts[id]?.trim() && Number(discountAmounts[id]) !== 0,
   );
   return (
-    <main>
-      <header>
+    <main className="pos-register">
+      <header className="pos-header">
         <div>
           <span className="eyebrow">COMPANY OS</span>
           <h1>จุดขายเงินสด</h1>
         </div>
-        {state && (
-          <div>
-            {state.staff.name}
-            {state.staff.role === "manager" && (
-              <a href="/config">ตั้งค่า POS</a>
-            )}
-            {state.delivery_enabled && <a href="/deliveries">จัดส่ง</a>}
-            {state.membership_enabled && <a href="/membership">สมาชิก</a>}
-            {state.offline_enabled && <a href="/offline/app">Offline</a>}
-            {state.patient_history_enabled && (
-              <a href="/patients">ประวัติผู้ป่วย</a>
-            )}
-            <button
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  if ("BroadcastChannel" in window) {
-                    const channel = new BroadcastChannel("pos-offline-auth-v1");
-                    channel.postMessage("logout");
-                    channel.close();
-                  }
-                  await api("/logout", {});
-                  location.reload();
-                })
+        <div className="pos-header-actions">
+          <select
+            aria-label="ธีมหน้าขาย"
+            value={theme}
+            onChange={(event) => {
+              const preference = event.target.value;
+              setTheme(preference);
+              document.documentElement.dataset.posTheme = preference;
+              try {
+                localStorage.setItem("pos-theme", preference);
+              } catch {
+                // Theme switching still works if storage is unavailable.
               }
-            >
-              ออกจากระบบ
-            </button>
-          </div>
-        )}
+            }}
+          >
+            <option value="system">ตามระบบ</option>
+            <option value="light">สว่าง</option>
+            <option value="dark">มืด</option>
+          </select>
+          {state && (
+            <nav aria-label="เมนู POS">
+              {state.staff.name}
+              <a href="#pos-checkout">ขาย / เปิดกะ</a>
+              {state.staff.role === "manager" && (
+                <a href="/config">ตั้งค่า POS</a>
+              )}
+              {state.delivery_enabled && <a href="/deliveries">จัดส่ง</a>}
+              {state.membership_enabled && <a href="/membership">สมาชิก</a>}
+              {state.offline_enabled && <a href="/offline/app">Offline</a>}
+              {state.patient_history_enabled && (
+                <a href="/patients">ประวัติผู้ป่วย</a>
+              )}
+              <button
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    if ("BroadcastChannel" in window) {
+                      const channel = new BroadcastChannel(
+                        "pos-offline-auth-v1",
+                      );
+                      channel.postMessage("logout");
+                      channel.close();
+                    }
+                    await api("/logout", {});
+                    location.reload();
+                  })
+                }
+              >
+                ออกจากระบบ
+              </button>
+            </nav>
+          )}
+        </div>
       </header>
       <aside className="notice">
         ระบบอยู่ระหว่างพัฒนา · e-Tax และใบกำกับภาษีรอตั้งค่า ·
@@ -365,6 +412,412 @@ function App() {
             <p role="status">
               {kitchenSync || "กำลังเชื่อมต่อจอครัวอัตโนมัติ…"}
             </p>
+          )}
+          {!shift ? (
+            <form
+              id="pos-checkout"
+              className="panel shift"
+              onSubmit={(e) => {
+                e.preventDefault();
+                run(async () => {
+                  await api("/shifts", {
+                    terminal_id: terminal,
+                    opening_cash: opening,
+                  });
+                  await reload();
+                });
+              }}
+            >
+              <h2>เปิดกะ</h2>
+              <label>
+                เงินตั้งต้น
+                <input
+                  inputMode="decimal"
+                  value={opening}
+                  onChange={(e) => setOpening(e.target.value)}
+                />
+              </label>
+              <button disabled={busy || !terminal}>เปิดกะขาย</button>
+            </form>
+          ) : (
+            <div className="workspace" id="pos-checkout">
+              <section className="panel catalog">
+                <h2>สินค้า</h2>
+                <input
+                  aria-label="ค้นหาสินค้าหรือบาร์โค้ด"
+                  placeholder="ค้นหาชื่อ / สแกนบาร์โค้ด"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                <div className="products">
+                  {products.map((p) => (
+                    <button
+                      className="product"
+                      key={p.product_id}
+                      disabled={busy}
+                      onClick={() =>
+                        setCart((old) => ({
+                          ...old,
+                          [p.product_id]: String(
+                            Number(old[p.product_id] || 0) + 1,
+                          ),
+                        }))
+                      }
+                    >
+                      <strong>{p.name}</strong>
+                      <span>
+                        {p.price} / {p.unit}
+                      </span>
+                      <small>VAT {p.tax_rate}% (ยังไม่รวม)</small>
+                      {p.pharmacy?.requires_pharmacist && (
+                        <small className="product-warning">
+                          ต้องตรวจโดยเภสัชกร
+                        </small>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {!state.catalog_version && <p>ยังไม่มี catalog ที่พร้อมขาย</p>}
+              </section>
+              <section className="panel cart">
+                <h2>ตะกร้า</h2>
+                {items.length === 0 && (
+                  <p>เลือกสินค้าหรือสแกนบาร์โค้ดเพื่อเริ่มรายการ</p>
+                )}
+                {items.map(([id, q]) => (
+                  <div className="line" key={id}>
+                    <span>
+                      {state.items.find((p) => p.product_id === id)?.name}
+                    </span>
+                    {state.pharmacy_lots &&
+                      (state.pharmacy_lots[id]?.length ? (
+                        <details className="cart-lots">
+                          <summary>
+                            ล็อตที่มีสิทธิ์ขาย ({state.pharmacy_lots[id].length}
+                            )
+                          </summary>
+                          <ul>
+                            {state.pharmacy_lots[id].map(
+                              ({ lot_id, expires_at }) => (
+                                <li key={lot_id + (expires_at ?? "")}>
+                                  <code>{lot_id}</code> · หมดอายุ{" "}
+                                  {expires_at ?? "ไม่ได้ระบุ"}
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                          <small>POS Server จะยืนยันล็อตตอนรับเงิน</small>
+                        </details>
+                      ) : (
+                        <small className="cart-lots">
+                          ไม่มีข้อมูลล็อตพร้อมขายสำหรับรายการนี้
+                        </small>
+                      ))}
+                    <select
+                      aria-label={`หน่วย ${state.items.find((p) => p.product_id === id)?.name}`}
+                      value={
+                        unitChoices[id] ||
+                        state.items.find((p) => p.product_id === id)?.unit
+                      }
+                      disabled={busy}
+                      onChange={(e) =>
+                        setUnitChoices((old) => ({
+                          ...old,
+                          [id]: e.target.value,
+                        }))
+                      }
+                    >
+                      <option
+                        value={
+                          state.items.find((p) => p.product_id === id)?.unit
+                        }
+                      >
+                        {state.items.find((p) => p.product_id === id)?.unit}
+                      </option>
+                      {state.items
+                        .find((p) => p.product_id === id)
+                        ?.pharmacy?.units.map((unit) => (
+                          <option key={unit.unit} value={unit.unit}>
+                            {unit.unit} · {unit.price}
+                          </option>
+                        ))}
+                    </select>
+                    <input
+                      aria-label="จำนวน"
+                      inputMode="decimal"
+                      value={q}
+                      disabled={busy}
+                      onChange={(e) =>
+                        setCart((old) => ({ ...old, [id]: e.target.value }))
+                      }
+                    />
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        setCart((old) => {
+                          const next = { ...old };
+                          delete next[id];
+                          return next;
+                        })
+                      }
+                    >
+                      ลบ
+                    </button>
+                  </div>
+                ))}
+                {state.cash_preview_available && items.length > 0 && (
+                  <section className="cash-preview" aria-label="ยอดก่อนส่วนลด">
+                    <button
+                      type="button"
+                      disabled={busy || !state.catalog_version}
+                      onClick={() =>
+                        run(async () => {
+                          setCashPreview(null);
+                          setCashPreviewError("");
+                          try {
+                            const value = await api(
+                              "/checkout/preview",
+                              membershipCart,
+                            );
+                            setCashPreview({ key: cartPreviewKey, value });
+                          } catch (error) {
+                            setCashPreviewError(
+                              error instanceof Error
+                                ? error.message
+                                : "ดูยอดไม่สำเร็จ กรุณาลองใหม่",
+                            );
+                          }
+                        })
+                      }
+                    >
+                      ดูยอดก่อนส่วนลด
+                    </button>
+                    {cashPreviewError && (
+                      <p className="error" role="alert">
+                        {cashPreviewError}
+                      </p>
+                    )}
+                    {currentPreview && (
+                      <dl className="cash-preview-totals" aria-live="polite">
+                        <dt>ยอดสินค้า</dt>
+                        <dd>
+                          {currentPreview.subtotal} {currentPreview.currency}
+                        </dd>
+                        <dt>VAT</dt>
+                        <dd>
+                          {currentPreview.tax_amount} {currentPreview.currency}
+                        </dd>
+                        <dt>รวมก่อนส่วนลด</dt>
+                        <dd>
+                          {currentPreview.total} {currentPreview.currency}
+                        </dd>
+                      </dl>
+                    )}
+                  </section>
+                )}
+                {state.patient_history_enabled && (
+                  <PatientPicker
+                    value={patientId}
+                    onChange={setPatientId}
+                    disabled={busy}
+                  />
+                )}
+                {state.membership_enabled && items.length > 0 && (
+                  <MembershipPicker
+                    data={state.membership}
+                    disabled={busy}
+                    manualDiscount={!!discountRequested}
+                    input={membershipCart}
+                    onChange={setMembershipSelection}
+                    refresh={reload}
+                  />
+                )}
+                {state.discounts_enabled &&
+                  !membershipSelection?.payload.promotion_id &&
+                  items.length > 0 && (
+                    <form
+                      className="discount"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        run(async () => {
+                          const result = await api(
+                            "/local-discount-approvals",
+                            {
+                              terminal_id: terminal,
+                              catalog_version: state.catalog_version,
+                              request_key: discountKey,
+                              manager_email: discountManagerEmail,
+                              manager_password: discountPassword,
+                              items: items.map(([product_id, quantity]) => ({
+                                product_id,
+                                quantity,
+                                unit:
+                                  unitChoices[product_id] ||
+                                  state.items.find(
+                                    (p) => p.product_id === product_id,
+                                  )?.unit,
+                                discount_amount:
+                                  discountAmounts[product_id] || "0.00",
+                              })),
+                            },
+                          );
+                          setDiscountPassword("");
+                          setDiscountApproval(result);
+                        });
+                      }}
+                    >
+                      <h3>ส่วนลดที่ Manager อนุมัติ</h3>
+                      {items.map(([id]) => (
+                        <label key={id}>
+                          ส่วนลด{" "}
+                          {state.items.find((p) => p.product_id === id)?.name} ·
+                          เพดาน{" "}
+                          {state.items.find((p) => p.product_id === id)
+                            ?.max_manager_discount_pct || "0.00"}
+                          %
+                          <input
+                            inputMode="decimal"
+                            value={discountAmounts[id] || ""}
+                            disabled={busy}
+                            onChange={(e) =>
+                              setDiscountAmounts({
+                                ...discountAmounts,
+                                [id]: e.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                      <label>
+                        อีเมล Manager อนุมัติส่วนลด
+                        <input
+                          required
+                          type="email"
+                          value={discountManagerEmail}
+                          disabled={busy}
+                          onChange={(e) =>
+                            setDiscountManagerEmail(e.target.value)
+                          }
+                        />
+                      </label>
+                      <label>
+                        รหัสผ่าน Manager อนุมัติส่วนลด
+                        <input
+                          required
+                          type="password"
+                          autoComplete="current-password"
+                          value={discountPassword}
+                          disabled={busy}
+                          onChange={(e) => setDiscountPassword(e.target.value)}
+                        />
+                      </label>
+                      <button
+                        disabled={
+                          busy || !discountRequested || !!discountApproval
+                        }
+                      >
+                        ตรวจและอนุมัติส่วนลด
+                      </button>
+                      {discountApproval && (
+                        <p role="status">
+                          ยอดหลังส่วนลดและ VAT:{" "}
+                          {discountApproval.discounted_total}
+                        </p>
+                      )}
+                    </form>
+                  )}
+                <label>
+                  รับเงินสด
+                  <input
+                    inputMode="decimal"
+                    value={cash}
+                    disabled={busy}
+                    onChange={(e) => setCash(e.target.value)}
+                  />
+                </label>
+                <p>ตรวจราคา ภาษี และสินค้าพร้อมขายก่อนยืนยัน</p>
+                <button
+                  className="primary"
+                  disabled={
+                    busy ||
+                    !items.length ||
+                    !state.catalog_version ||
+                    (!!membershipSelection &&
+                      (!membershipSelection.ready ||
+                        membershipSelection.cartKey !==
+                          JSON.stringify(membershipCart))) ||
+                    (!!discountRequested && !discountApproval)
+                  }
+                  onClick={() =>
+                    run(async () => {
+                      const result = await api("/checkout", {
+                        terminal_id: terminal,
+                        request_key: requestKey,
+                        catalog_version: state.catalog_version,
+                        items: items.map(([product_id, quantity]) => ({
+                          product_id,
+                          quantity,
+                          unit:
+                            unitChoices[product_id] ||
+                            state.items.find((p) => p.product_id === product_id)
+                              ?.unit,
+                        })),
+                        cash_tendered: cash,
+                        ...(state.patient_history_enabled && patientId
+                          ? { patient_id: patientId }
+                          : {}),
+                        ...(membershipSelection?.payload || {}),
+                        ...(customerRequest
+                          ? { customer_request_id: customerRequest }
+                          : {}),
+                        ...(discountApproval
+                          ? { discount_approval_id: discountApproval.id }
+                          : {}),
+                      });
+                      setReceipt(result);
+                      setPatientId("");
+                      setMembershipSelection(null);
+                      setCart({});
+                      setUnitChoices({});
+                      setCustomerRequest(null);
+                      setDiscountApproval(null);
+                      setDiscountAmounts({});
+                      setCash("");
+                      setRequestKey(crypto.randomUUID());
+                      await reload();
+                    })
+                  }
+                >
+                  {busy ? "กำลังตรวจรายการ…" : "ยืนยันรับเงินสด"}
+                </button>
+                <form
+                  className="close"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    run(async () => {
+                      const result = await api(`/shifts/${shift.id}/close`, {
+                        counted_cash: counted,
+                      });
+                      setError(`ผลต่างเงินสด: ${result.over_short}`);
+                      await reload();
+                    });
+                  }}
+                >
+                  <h3>ปิดกะ</h3>
+                  <label>
+                    ยอดนับจริง
+                    <input
+                      inputMode="decimal"
+                      value={counted}
+                      onChange={(e) => setCounted(e.target.value)}
+                    />
+                  </label>
+                  <button disabled={busy || items.length > 0}>
+                    ปิดกะและบันทึกผลต่าง
+                  </button>
+                </form>
+              </section>
+            </div>
           )}
           {state.return_inspections_enabled && (
             <ReturnInspectionPanel
@@ -732,329 +1185,6 @@ function App() {
                 </div>
               ))}
             </section>
-          )}
-          {!shift ? (
-            <form
-              className="panel shift"
-              onSubmit={(e) => {
-                e.preventDefault();
-                run(async () => {
-                  await api("/shifts", {
-                    terminal_id: terminal,
-                    opening_cash: opening,
-                  });
-                  await reload();
-                });
-              }}
-            >
-              <h2>เปิดกะ</h2>
-              <label>
-                เงินตั้งต้น
-                <input
-                  inputMode="decimal"
-                  value={opening}
-                  onChange={(e) => setOpening(e.target.value)}
-                />
-              </label>
-              <button disabled={busy || !terminal}>เปิดกะขาย</button>
-            </form>
-          ) : (
-            <div className="workspace">
-              <section className="panel">
-                <h2>สินค้า</h2>
-                <input
-                  aria-label="ค้นหาสินค้าหรือบาร์โค้ด"
-                  placeholder="ค้นหาชื่อ / สแกนบาร์โค้ด"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <div className="products">
-                  {products.map((p) => (
-                    <button
-                      className="product"
-                      key={p.product_id}
-                      disabled={busy}
-                      onClick={() =>
-                        setCart((old) => ({
-                          ...old,
-                          [p.product_id]: String(
-                            Number(old[p.product_id] || 0) + 1,
-                          ),
-                        }))
-                      }
-                    >
-                      <strong>{p.name}</strong>
-                      <span>
-                        {p.price} / {p.unit}
-                      </span>
-                      <small>VAT {p.tax_rate}% (ยังไม่รวม)</small>
-                    </button>
-                  ))}
-                </div>
-                {!state.catalog_version && <p>ยังไม่มี catalog ที่พร้อมขาย</p>}
-              </section>
-              <section className="panel cart">
-                <h2>ตะกร้า</h2>
-                {items.map(([id, q]) => (
-                  <div className="line" key={id}>
-                    <span>
-                      {state.items.find((p) => p.product_id === id)?.name}
-                    </span>
-                    <select
-                      aria-label={`หน่วย ${state.items.find((p) => p.product_id === id)?.name}`}
-                      value={
-                        unitChoices[id] ||
-                        state.items.find((p) => p.product_id === id)?.unit
-                      }
-                      disabled={busy}
-                      onChange={(e) =>
-                        setUnitChoices((old) => ({
-                          ...old,
-                          [id]: e.target.value,
-                        }))
-                      }
-                    >
-                      <option
-                        value={
-                          state.items.find((p) => p.product_id === id)?.unit
-                        }
-                      >
-                        {state.items.find((p) => p.product_id === id)?.unit}
-                      </option>
-                      {state.items
-                        .find((p) => p.product_id === id)
-                        ?.pharmacy?.units.map((unit) => (
-                          <option key={unit.unit} value={unit.unit}>
-                            {unit.unit} · {unit.price}
-                          </option>
-                        ))}
-                    </select>
-                    <input
-                      aria-label="จำนวน"
-                      inputMode="decimal"
-                      value={q}
-                      disabled={busy}
-                      onChange={(e) =>
-                        setCart((old) => ({ ...old, [id]: e.target.value }))
-                      }
-                    />
-                    <button
-                      disabled={busy}
-                      onClick={() =>
-                        setCart((old) => {
-                          const next = { ...old };
-                          delete next[id];
-                          return next;
-                        })
-                      }
-                    >
-                      ลบ
-                    </button>
-                  </div>
-                ))}
-                {state.patient_history_enabled && (
-                  <PatientPicker
-                    value={patientId}
-                    onChange={setPatientId}
-                    disabled={busy}
-                  />
-                )}
-                {state.membership_enabled && items.length > 0 && (
-                  <MembershipPicker
-                    data={state.membership}
-                    disabled={busy}
-                    manualDiscount={!!discountRequested}
-                    input={membershipCart}
-                    onChange={setMembershipSelection}
-                    refresh={reload}
-                  />
-                )}
-                {state.discounts_enabled &&
-                  !membershipSelection?.payload.promotion_id &&
-                  items.length > 0 && (
-                    <form
-                      className="discount"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        run(async () => {
-                          const result = await api(
-                            "/local-discount-approvals",
-                            {
-                              terminal_id: terminal,
-                              catalog_version: state.catalog_version,
-                              request_key: discountKey,
-                              manager_email: discountManagerEmail,
-                              manager_password: discountPassword,
-                              items: items.map(([product_id, quantity]) => ({
-                                product_id,
-                                quantity,
-                                unit:
-                                  unitChoices[product_id] ||
-                                  state.items.find(
-                                    (p) => p.product_id === product_id,
-                                  )?.unit,
-                                discount_amount:
-                                  discountAmounts[product_id] || "0.00",
-                              })),
-                            },
-                          );
-                          setDiscountPassword("");
-                          setDiscountApproval(result);
-                        });
-                      }}
-                    >
-                      <h3>ส่วนลดที่ Manager อนุมัติ</h3>
-                      {items.map(([id]) => (
-                        <label key={id}>
-                          ส่วนลด{" "}
-                          {state.items.find((p) => p.product_id === id)?.name} ·
-                          เพดาน{" "}
-                          {state.items.find((p) => p.product_id === id)
-                            ?.max_manager_discount_pct || "0.00"}
-                          %
-                          <input
-                            inputMode="decimal"
-                            value={discountAmounts[id] || ""}
-                            disabled={busy}
-                            onChange={(e) =>
-                              setDiscountAmounts({
-                                ...discountAmounts,
-                                [id]: e.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                      ))}
-                      <label>
-                        อีเมล Manager อนุมัติส่วนลด
-                        <input
-                          required
-                          type="email"
-                          value={discountManagerEmail}
-                          disabled={busy}
-                          onChange={(e) =>
-                            setDiscountManagerEmail(e.target.value)
-                          }
-                        />
-                      </label>
-                      <label>
-                        รหัสผ่าน Manager อนุมัติส่วนลด
-                        <input
-                          required
-                          type="password"
-                          autoComplete="current-password"
-                          value={discountPassword}
-                          disabled={busy}
-                          onChange={(e) => setDiscountPassword(e.target.value)}
-                        />
-                      </label>
-                      <button
-                        disabled={
-                          busy || !discountRequested || !!discountApproval
-                        }
-                      >
-                        ตรวจและอนุมัติส่วนลด
-                      </button>
-                      {discountApproval && (
-                        <p role="status">
-                          ยอดหลังส่วนลดและ VAT:{" "}
-                          {discountApproval.discounted_total}
-                        </p>
-                      )}
-                    </form>
-                  )}
-                <label>
-                  รับเงินสด
-                  <input
-                    inputMode="decimal"
-                    value={cash}
-                    disabled={busy}
-                    onChange={(e) => setCash(e.target.value)}
-                  />
-                </label>
-                <p>ตรวจราคา ภาษี และสินค้าพร้อมขายก่อนยืนยัน</p>
-                <button
-                  className="primary"
-                  disabled={
-                    busy ||
-                    !items.length ||
-                    !state.catalog_version ||
-                    (!!membershipSelection &&
-                      (!membershipSelection.ready ||
-                        membershipSelection.cartKey !==
-                          JSON.stringify(membershipCart))) ||
-                    (!!discountRequested && !discountApproval)
-                  }
-                  onClick={() =>
-                    run(async () => {
-                      const result = await api("/checkout", {
-                        terminal_id: terminal,
-                        request_key: requestKey,
-                        catalog_version: state.catalog_version,
-                        items: items.map(([product_id, quantity]) => ({
-                          product_id,
-                          quantity,
-                          unit:
-                            unitChoices[product_id] ||
-                            state.items.find((p) => p.product_id === product_id)
-                              ?.unit,
-                        })),
-                        cash_tendered: cash,
-                        ...(state.patient_history_enabled && patientId
-                          ? { patient_id: patientId }
-                          : {}),
-                        ...(membershipSelection?.payload || {}),
-                        ...(customerRequest
-                          ? { customer_request_id: customerRequest }
-                          : {}),
-                        ...(discountApproval
-                          ? { discount_approval_id: discountApproval.id }
-                          : {}),
-                      });
-                      setReceipt(result);
-                      setPatientId("");
-                      setMembershipSelection(null);
-                      setCart({});
-                      setUnitChoices({});
-                      setCustomerRequest(null);
-                      setDiscountApproval(null);
-                      setDiscountAmounts({});
-                      setCash("");
-                      setRequestKey(crypto.randomUUID());
-                      await reload();
-                    })
-                  }
-                >
-                  {busy ? "กำลังตรวจรายการ…" : "ยืนยันรับเงินสด"}
-                </button>
-                <form
-                  className="close"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    run(async () => {
-                      const result = await api(`/shifts/${shift.id}/close`, {
-                        counted_cash: counted,
-                      });
-                      setError(`ผลต่างเงินสด: ${result.over_short}`);
-                      await reload();
-                    });
-                  }}
-                >
-                  <h3>ปิดกะ</h3>
-                  <label>
-                    ยอดนับจริง
-                    <input
-                      inputMode="decimal"
-                      value={counted}
-                      onChange={(e) => setCounted(e.target.value)}
-                    />
-                  </label>
-                  <button disabled={busy || items.length > 0}>
-                    ปิดกะและบันทึกผลต่าง
-                  </button>
-                </form>
-              </section>
-            </div>
           )}
         </>
       )}

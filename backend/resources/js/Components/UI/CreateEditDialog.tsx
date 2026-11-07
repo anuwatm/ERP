@@ -11,7 +11,7 @@ import {
 } from 'react';
 
 const secondary =
-    'inline-flex min-h-10 items-center justify-center rounded-md border border-gray-300 px-3 text-sm font-medium hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-50 dark:border-gray-600 dark:hover:bg-gray-800';
+    'erp-button erp-secondary';
 
 export default function CreateEditDialog({
     open,
@@ -32,6 +32,7 @@ export default function CreateEditDialog({
     errors,
     onSubmit,
     children,
+    review,
     requiresPasswordConfirmation = true,
 }: {
     open: boolean;
@@ -52,6 +53,7 @@ export default function CreateEditDialog({
     errors: Record<string, string | undefined>;
     onSubmit: (event: FormEvent) => void;
     children: (expanded: boolean) => ReactNode;
+    review?: ReactNode;
     requiresPasswordConfirmation?: boolean;
 }) {
     const [expanded, setExpanded] = useState(() => {
@@ -136,12 +138,28 @@ export default function CreateEditDialog({
             type="submit"
             form={formId}
             disabled={processing || checking || saveDisabled}
-            className="min-h-10 rounded-md bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-50"
+            className="erp-button erp-primary"
         >
             {processing || checking ? 'Saving...' : saveLabel}
         </button>
     );
     if (!open) return null;
+
+    const errorSummary = Object.keys(errors).length > 0 && (
+        <div
+            ref={errorSummaryRef}
+            tabIndex={-1}
+            role="alert"
+            className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
+        >
+            Please correct the highlighted fields before saving.
+            <ul className="mt-2 list-disc space-y-1 break-words pl-5">
+                {Object.entries(errors).map(([field, message]) =>
+                    message ? <li key={field}>{message}</li> : null,
+                )}
+            </ul>
+        </div>
+    );
     return (
         <>
             {minimized && !suspended && (
@@ -372,28 +390,27 @@ export default function CreateEditDialog({
                                 }
                                 className="mx-auto min-w-0 max-w-7xl space-y-6 px-4 py-6 sm:px-6"
                             >
-                                {Object.keys(errors).length > 0 && (
+                                {review ? (
                                     <div
-                                        ref={errorSummaryRef}
-                                        tabIndex={-1}
-                                        role="alert"
-                                        className="border-l-4 border-red-600 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200"
+                                        className={`grid items-start gap-6 ${expanded ? 'xl:grid-cols-[minmax(0,1fr)_18rem]' : ''}`}
                                     >
-                                        Please correct the highlighted fields
-                                        before saving.
-                                        <ul className="mt-2 list-disc space-y-1 pl-5">
-                                            {Object.entries(errors).map(
-                                                ([field, message]) =>
-                                                    message ? (
-                                                        <li key={field}>
-                                                            {message}
-                                                        </li>
-                                                    ) : null,
-                                            )}
-                                        </ul>
+                                        <div className="min-w-0">
+                                            {children(expanded)}
+                                        </div>
+                                        <section
+                                            aria-label="Review"
+                                            className="erp-canvas min-w-0 space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+                                        >
+                                            {review}
+                                            {errorSummary}
+                                        </section>
                                     </div>
+                                ) : (
+                                    <>
+                                        {errorSummary}
+                                        {children(expanded)}
+                                    </>
                                 )}
-                                {children(expanded)}
                             </fieldset>
                         </form>
                         <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-950 sm:px-6">

@@ -84,7 +84,7 @@ export default function PosSetup({
             <select
                 aria-label={label}
                 required
-                className="block w-full rounded border p-2"
+                className="erp-input block w-full"
                 value={value}
                 onChange={(e) => change(e.target.value)}
             >
@@ -98,7 +98,7 @@ export default function PosSetup({
         </label>
     );
     return (
-        <section className="space-y-6 rounded bg-white p-6 shadow">
+        <section className="space-y-6 erp-surface p-4 sm:p-6">
             <h3 className="font-semibold">ตั้งค่า POS instance — local</h3>
             <form
                 className="space-y-3"
@@ -128,7 +128,7 @@ export default function PosSetup({
                     Instance UUID
                     <input
                         required
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.id}
                         onChange={(e) => setup.setData('id', e.target.value)}
                     />
@@ -138,7 +138,7 @@ export default function PosSetup({
                     <input
                         required
                         maxLength={255}
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.name}
                         onChange={(e) => setup.setData('name', e.target.value)}
                     />
@@ -161,7 +161,7 @@ export default function PosSetup({
                     <input
                         required
                         maxLength={30}
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.branch_code}
                         onChange={(e) =>
                             setup.setData('branch_code', e.target.value)
@@ -189,7 +189,7 @@ export default function PosSetup({
                 <label className="block">
                     กิจการ
                     <select
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.business_type}
                         onChange={(e) =>
                             setup.setData('business_type', e.target.value)
@@ -204,7 +204,7 @@ export default function PosSetup({
                     Terminal แต่ละบรรทัด: UUID รหัส
                     <textarea
                         required
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.terminals_text}
                         onChange={(e) =>
                             setup.setData('terminals_text', e.target.value)
@@ -216,7 +216,7 @@ export default function PosSetup({
                     <input
                         required
                         maxLength={100}
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.key_id}
                         onChange={(e) =>
                             setup.setData('key_id', e.target.value)
@@ -227,7 +227,7 @@ export default function PosSetup({
                     RSA public key PEM
                     <textarea
                         required
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.public_key}
                         onChange={(e) =>
                             setup.setData('public_key', e.target.value)
@@ -238,7 +238,7 @@ export default function PosSetup({
                     Recovery generation
                     <input
                         required
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={setup.data.recovery_generation}
                         onChange={(e) =>
                             setup.setData('recovery_generation', e.target.value)
@@ -260,7 +260,7 @@ export default function PosSetup({
                         <select
                             required={!['cash_clearing', 'waste'].includes(key)}
                             aria-label={`บัญชี ${key}`}
-                            className="block w-full rounded border p-2"
+                            className="erp-input block w-full"
                             value={setup.data.account_codes[key]}
                             onChange={(e) =>
                                 setup.setData('account_codes', {
@@ -281,13 +281,13 @@ export default function PosSetup({
                     </label>
                 ))}
                 {Object.values(setup.errors).map((error, i) => (
-                    <p role="alert" className="text-red-700" key={i}>
+                    <p role="alert" className="erp-field-error" key={i}>
                         {error}
                     </p>
                 ))}
                 <button
                     disabled={setup.processing}
-                    className="rounded border px-4 py-2"
+                    className="erp-button erp-secondary"
                 >
                     ลงทะเบียน instance
                 </button>
@@ -296,7 +296,7 @@ export default function PosSetup({
                 {instances.map((i) => (
                     <button
                         key={i.id}
-                        className="mr-2 rounded border px-4 py-2"
+                        className="mr-2 erp-button erp-secondary"
                         onClick={() =>
                             router.post(`/pos-integration/${i.id}/activate`)
                         }
@@ -339,7 +339,7 @@ export default function PosSetup({
                     <input
                         required
                         maxLength={80}
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={catalog.data.version}
                         onChange={(e) =>
                             catalog.setData('version', e.target.value)
@@ -351,7 +351,7 @@ export default function PosSetup({
                     <input
                         required
                         inputMode="decimal"
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={catalog.data.tax_rate}
                         onChange={(e) =>
                             catalog.setData('tax_rate', e.target.value)
@@ -363,7 +363,7 @@ export default function PosSetup({
                     <input
                         required
                         type="datetime-local"
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={catalog.data.valid_until}
                         onChange={(e) =>
                             catalog.setData('valid_until', e.target.value)
@@ -424,7 +424,7 @@ export default function PosSetup({
                                     <label className="block">
                                         สูตรอาหาร {p.name}
                                         <select
-                                            className="block w-full rounded border p-2"
+                                            className="erp-input block w-full"
                                             value={
                                                 catalog.data.recipes[p.id] || ''
                                             }
@@ -459,7 +459,7 @@ export default function PosSetup({
                     ))}
                 </div>
                 {Object.values(catalog.errors).map((error, i) => (
-                    <p role="alert" className="text-red-700" key={i}>
+                    <p role="alert" className="erp-field-error" key={i}>
                         {error}
                     </p>
                 ))}
@@ -467,7 +467,7 @@ export default function PosSetup({
                     disabled={
                         catalog.processing || !catalog.data.selected.length
                     }
-                    className="rounded border px-4 py-2"
+                    className="erp-button erp-secondary"
                 >
                     เตรียม catalog เพื่อ sync
                 </button>
@@ -505,7 +505,7 @@ export default function PosSetup({
                 <label className="block">
                     Lot quota
                     <select
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={grant.data.lot_id}
                         onChange={(e) =>
                             grant.setData('lot_id', e.target.value)
@@ -528,7 +528,7 @@ export default function PosSetup({
                     <input
                         required
                         inputMode="decimal"
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={grant.data.quantity}
                         onChange={(e) =>
                             grant.setData('quantity', e.target.value)
@@ -536,13 +536,13 @@ export default function PosSetup({
                     />
                 </label>
                 {Object.values(grant.errors).map((error, i) => (
-                    <p role="alert" className="text-red-700" key={i}>
+                    <p role="alert" className="erp-field-error" key={i}>
                         {error}
                     </p>
                 ))}
                 <button
                     disabled={grant.processing}
-                    className="rounded border px-4 py-2"
+                    className="erp-button erp-secondary"
                 >
                     กัน stock และเตรียม quota
                 </button>
@@ -568,7 +568,7 @@ export default function PosSetup({
                     Staff UUID จาก POS
                     <input
                         required
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={staff.data.source_staff_id}
                         onChange={(e) =>
                             staff.setData('source_staff_id', e.target.value)
@@ -578,7 +578,7 @@ export default function PosSetup({
                 <label className="block">
                     บทบาท
                     <select
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={staff.data.role}
                         onChange={(e) => staff.setData('role', e.target.value)}
                     >
@@ -613,13 +613,13 @@ export default function PosSetup({
                     ยืนยันตรวจคุณสมบัติเภสัชกรแล้ว
                 </label>
                 {Object.values(staff.errors).map((error, i) => (
-                    <p role="alert" className="text-red-700" key={i}>
+                    <p role="alert" className="erp-field-error" key={i}>
                         {error}
                     </p>
                 ))}
                 <button
                     disabled={staff.processing}
-                    className="rounded border px-4 py-2"
+                    className="erp-button erp-secondary"
                 >
                     บันทึกสิทธิ์พนักงาน
                 </button>
@@ -645,7 +645,7 @@ export default function PosSetup({
                 <label className="block">
                     ลำดับเริ่มต้น checkpoint
                     <input
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         type="number"
                         min="0"
                         value={capture.data.after_sequence}
@@ -660,7 +660,7 @@ export default function PosSetup({
                 <button
                     type="button"
                     disabled={!recovery.data.instance || capture.processing}
-                    className="rounded border px-4 py-2"
+                    className="erp-button erp-secondary"
                     onClick={() =>
                         capture.post(
                             `/pos-integration/${recovery.data.instance}/checkpoint`,
@@ -671,7 +671,7 @@ export default function PosSetup({
                     เก็บ source checkpoint
                 </button>
                 {Object.values(capture.errors).map((error, i) => (
-                    <p role="alert" className="text-red-700" key={i}>
+                    <p role="alert" className="erp-field-error" key={i}>
                         {error}
                     </p>
                 ))}
@@ -685,7 +685,7 @@ export default function PosSetup({
                     Source checkpoint UUID หน้าสุดท้ายที่สร้างใหม่หลัง fence
                     <input
                         required
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={recovery.data.checkpoint_id}
                         onChange={(e) =>
                             recovery.setData('checkpoint_id', e.target.value)
@@ -697,7 +697,7 @@ export default function PosSetup({
                     <input
                         required
                         maxLength={500}
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={recovery.data.reason}
                         onChange={(e) =>
                             recovery.setData('reason', e.target.value)
@@ -705,13 +705,13 @@ export default function PosSetup({
                     />
                 </label>
                 {Object.values(recovery.errors).map((error, i) => (
-                    <p role="alert" className="text-red-700" key={i}>
+                    <p role="alert" className="erp-field-error" key={i}>
                         {error}
                     </p>
                 ))}
                 <button
                     disabled={recovery.processing}
-                    className="rounded border px-4 py-2"
+                    className="erp-button erp-secondary"
                 >
                     ตรวจหลักฐานและปลด fence
                 </button>
@@ -745,7 +745,7 @@ export default function PosSetup({
                     <input
                         required
                         maxLength={100}
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={key.data.key_id}
                         onChange={(e) => key.setData('key_id', e.target.value)}
                     />
@@ -753,7 +753,7 @@ export default function PosSetup({
                 <label>
                     การจัดการ key
                     <select
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={key.data.operation}
                         onChange={(e) =>
                             key.setData('operation', e.target.value)
@@ -768,7 +768,7 @@ export default function PosSetup({
                         Public key PEM ใหม่
                         <textarea
                             required
-                            className="block w-full rounded border p-2"
+                            className="erp-input block w-full"
                             value={key.data.public_key}
                             onChange={(e) =>
                                 key.setData('public_key', e.target.value)
@@ -781,19 +781,19 @@ export default function PosSetup({
                     <input
                         required
                         maxLength={500}
-                        className="block w-full rounded border p-2"
+                        className="erp-input block w-full"
                         value={key.data.reason}
                         onChange={(e) => key.setData('reason', e.target.value)}
                     />
                 </label>
                 {Object.values(key.errors).map((error, i) => (
-                    <p role="alert" className="text-red-700" key={i}>
+                    <p role="alert" className="erp-field-error" key={i}>
                         {error}
                     </p>
                 ))}
                 <button
                     disabled={key.processing}
-                    className="rounded border px-4 py-2"
+                    className="erp-button erp-secondary"
                 >
                     บันทึกสิทธิ์กุญแจ
                 </button>

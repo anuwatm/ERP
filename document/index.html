@@ -238,41 +238,69 @@
   </style>
 </head>
 <body>
-  <p style="padding:12px;text-align:center"><a href="../docs/LOCAL_ACCEPTANCE_20261030.md">Local acceptance 2026-10-30</a> · หลักฐานรอบเดิม · POS local ถึง Phase 28.8.5 · ยังไม่ได้ทดสอบกับระบบจริง</p>
+  <p style="padding:12px;text-align:center"><a href="acceptance/local-closure-20261105/README.md">Local Closure 2026-11-05</a> · <a href="SECURITY_REVIEW_20261105.md">Security Review</a> · <a href="design/ui-acceptance-register.md">UI &amp; Layout Redesign (2026-11-06)</a> · POS local ถึง Phase 28.8.5 · ยังไม่ได้ทดสอบกับระบบจริง</p>
   <div class="container">
     <header class="header">
       <div class="badge-pill">Interactive Archify Diagrams</div>
       <h1>Company OS / Lightweight ERP</h1>
       <p class="subtitle">
-        <a href="DIAGRAM_NOTES.md">รายละเอียดประกอบ diagram</a> · ศูนย์รวมไดอะแกรมระบบทั้งหมด: สถาปัตยกรรม (Architecture), เวิร์กโฟลว์ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow) และวงจรสถานะ (Lifecycle)
+        <a href="DIAGRAM_NOTES.md">รายละเอียดประกอบ diagram</a> · ศูนย์รวมไดอะแกรมระบบทั้งหมด: สถาปัตยกรรม (Architecture), เวิร์กโฟลว์ (Workflow), ลำดับการทำงาน (Sequence), การไหลของข้อมูล (Dataflow), วงจรสถานะ (Lifecycle) และ UI Redesign
       </p>
     </header>
 
-    <div class="section-title">POS Server และการใช้งาน — Phase 28.8.5 local (2026-11-05)</div>
-<section class="diagram-card" style="padding:20px"><h2>23 — POS Server และ Config</h2><p>ผู้จัดการตั้งค่าสาขา ประเภทกิจการ Terminal และพนักงานเฉพาะสาขาตน (local/loopback). Flags และข้อมูล provision จัดการแยกที่ POS Server/ERP ยังไม่ได้ทดสอบกับระบบจริง</p><a href="23_pos_server_configuration.html" class="btn-open">เปิด Diagram</a> <a href="POS_CONFIGURATION.md" class="btn-json">คู่มือ Config</a> <a href="specs/23_pos_server_configuration.json" class="btn-json">JSON Spec</a></section>
-    <section class="diagram-card" style="padding:20px"><h2>24 — ขั้นตอนใช้งาน POS ตามประเภทร้าน</h2><p>Retail ขายและปิดกะ · Restaurant จัดโต๊ะ QR และคิวครัว · Pharmacy จ่ายยาและตรวจของคืน</p><a href="24_pos_workflows.html" class="btn-open">เปิด Diagram</a> <a href="README_POS.md" class="btn-json">ติดตั้งและตั้งค่า</a></section>
+    <div class="section-title">POS Server, ส่วนขยาย Phase 28.8.1–28.8.5 และ UI Redesign (2026-11-06)</div>
     <div class="categories">
       <div class="diagram-card">
         <div class="card-top">
+          <span class="type-tag type-architecture">23 &bull; Architecture &amp; Setup</span>
+          <h2 class="card-title">23. POS Server, Setup Wizard (`/setup`) &amp; Config (`/config`)</h2>
+          <p class="card-desc">สร้างสาขาแรกผ่าน `/setup` พร้อม `POS_SETUP_TOKEN` และให้ผู้จัดการตั้งค่าสาขา ประเภทกิจการ Terminal และพนักงานเฉพาะสาขาตนผ่าน `/config` (local/loopback) แยกจาก ERP</p>
+          <div class="card-meta"><span class="meta-chip">/setup Wizard</span><span class="meta-chip">/config Manager</span><span class="meta-chip">HTTPS / mTLS Connector</span></div>
+        </div>
+        <div class="card-actions">
+          <a href="23_pos_server_configuration.html" class="btn-open">เปิด Diagram &rarr;</a>
+          <a href="POS_CONFIGURATION.md" class="btn-json">คู่มือ Config</a>
+          <a href="specs/23_pos_server_configuration.json" class="btn-json">JSON Spec</a>
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <div class="card-top">
+          <span class="type-tag type-workflow">24 &bull; POS Workflows (28.8.1–28.8.5)</span>
+          <h2 class="card-title">24. ขั้นตอนใช้งาน POS ตามประเภทร้านและส่วนขยาย</h2>
+          <p class="card-desc">Retail ขายและปิดกะ · Restaurant จัดโต๊ะ จองโต๊ะ 90 นาที QR และคิวครัว FIFO · Pharmacy แสดงล็อต/วันหมดอายุ จ่ายยา ประวัติผู้ป่วย และตรวจของคืน · Delivery/COD · สมาชิก · Offline PWA</p>
+          <div class="card-meta"><span class="meta-chip">Retail / Restaurant / Pharmacy</span><span class="meta-chip">Delivery / Membership / Offline</span></div>
+        </div>
+        <div class="card-actions">
+          <a href="24_pos_workflows.html" class="btn-open">เปิด Diagram &rarr;</a>
+          <a href="README_POS.md" class="btn-json">ติดตั้งและตั้งค่า</a>
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <div class="card-top">
           <span class="type-tag type-architecture">Current documentation</span>
-          <h2 class="card-title">Standalone POS &amp; ERP Connector</h2>
-          <p class="card-desc">ERP เผยแพร่ catalog และ quota แล้วดึง signed outbox จาก POS ผ่าน connector ขอบเขต local ถึง Phase 28.8.5</p>
-          <div class="card-meta"><span class="meta-chip">ERP: 88/88 (รายงาน 4 พ.ย.)</span><span class="meta-chip">POS: 25/25 (รายงาน 5 พ.ย.)</span></div>
+          <h2 class="card-title">Standalone POS &amp; ERP Connector (28.8.1–28.8.5)</h2>
+          <p class="card-desc">ERP เผยแพร่ catalog, quota และสมาชิก/โปรโมชัน แล้วดึง signed outbox จาก POS ผ่าน connector ขอบเขต local ถึง Phase 28.8.5</p>
+          <div class="card-meta"><span class="meta-chip">ERP: 88/88 (173 ตาราง)</span><span class="meta-chip">POS: 25/25 (56 ตาราง)</span></div>
         </div>
         <div class="card-actions">
           <a href="../docs/PHASE_28_POS.md" class="btn-open">สถานะและคู่มือ &rarr;</a>
           <a href="../docs/PHASE_28_OPERATIONS.md" class="btn-json">Operations</a>
         </div>
       </div>
+
       <div class="diagram-card">
         <div class="card-top">
-          <span class="type-tag type-architecture">Runtime references</span>
-          <h2 class="card-title">POS API &amp; Database</h2>
-          <p class="card-desc">Routes จาก Laravel metadata, ERP/POS table inventory จาก migrations, source correlation และ privacy/recovery boundaries. ผล backup/migrate/integrity อยู่ใน database upgrade report</p>
+          <span class="type-tag type-dataflow">Runtime &amp; UI Redesign</span>
+          <h2 class="card-title">POS API, Database &amp; UI Redesign Register</h2>
+          <p class="card-desc">Routes จาก Laravel metadata, ตาราง ERP/POS ทั้งหมดจาก migrations, ทะเบียนตรวจรับ UI Light/Dark/System และการแยกหน้าพิมพ์พื้นขาว (#FFFFFF)</p>
+          <div class="card-meta"><span class="meta-chip">Light / Dark / System</span><span class="meta-chip">Print #FFFFFF Isolation</span></div>
         </div>
         <div class="card-actions">
           <a href="PHASE_28_API.md" class="btn-open">API / Routes &rarr;</a>
-          <a href="PHASE_28_DATABASE.md" class="btn-json">Schema / Relationships</a>
+          <a href="PHASE_28_DATABASE.md" class="btn-json">Schema</a>
+          <a href="design/ui-acceptance-register.md" class="btn-json">UI Register</a>
         </div>
       </div>
     </div>

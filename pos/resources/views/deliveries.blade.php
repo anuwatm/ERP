@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>POS Delivery</title>
-<style>body{font-family:system-ui,sans-serif;margin:20px;max-width:1000px;background:#f5f7fa;color:#182334}section,article{background:white;border:1px solid #cbd5e1;border-radius:8px;padding:16px;margin:16px 0;overflow-wrap:anywhere}label{display:block;margin:8px 0}input:not([type=checkbox]),select,textarea{display:block;box-sizing:border-box;max-width:100%;width:100%;padding:8px}button,a{margin:4px}button{padding:8px 12px}form{margin:12px 0}.note{background:#fff4ce;padding:12px}.product{display:flex;gap:8px;align-items:center}.product input[type=number]{width:90px}summary{cursor:pointer}a{color:#174ea6}[role=alert]{color:#9b2424}</style></head>
-<body><a href="/">กลับ POS</a><h1>คำสั่งซื้อ / จัดส่ง</h1>
+<style>body{font-family:system-ui,sans-serif;margin:20px;max-width:1000px;background:#f5f7fa;color:#182334}section,article{background:white;border:1px solid #cbd5e1;border-radius:8px;padding:16px;margin:16px 0;overflow-wrap:anywhere}label{display:block;margin:8px 0}input:not([type=checkbox]),select,textarea{display:block;box-sizing:border-box;max-width:100%;width:100%;padding:8px}button,a{margin:4px}button{padding:8px 12px}form{margin:12px 0}.note{background:#fff4ce;padding:12px}.product{display:flex;gap:8px;align-items:center}.product input[type=number]{width:90px}summary{cursor:pointer}a{color:#174ea6}[role=alert]{color:#9b2424}</style>@include('partials.workspace-theme')</head>
+<body class="pos-workspace"><a href="/">กลับ POS</a><h1>คำสั่งซื้อ / จัดส่ง</h1>
 <p class="note">Local — ยังไม่ได้ทดสอบกับระบบจริง<br>COD และค่าจัดส่งเก็บเป็นหลักฐานเงินรับฝากรอตรวจรับบัญชี/ภาษี ไม่ออก ABB/Payment/GL อัตโนมัติ; Pharmacy Delivery ปิดอยู่</p>
 @if(session('delivery_notice'))<p role="status">{{ session('delivery_notice') }}</p>@endif
 @if($errors->any())<div role="alert">ข้อมูลไม่ครบหรือรูปแบบไม่ถูกต้อง กรุณาตรวจแบบฟอร์มใหม่</div>@endif
@@ -15,7 +15,7 @@
 @foreach($products as $i => $product)<div class="product"><label><input type="checkbox" name="items[{{ $i }}][product_id]" value="{{ $product['product_id'] }}"> {{ $product['name'] }} — {{ $product['price'] }} / {{ $product['unit'] }}</label><input aria-label="จำนวน {{ $product['name'] }}" type="number" name="items[{{ $i }}][quantity]" min="0.0001" step="0.0001" value="1"></div>@endforeach</details>
 <button type="submit">บันทึกงานจัดส่ง</button><p role="alert" aria-live="polite"></p></form></section>
 <h2>งานล่าสุด</h2>
-@foreach($deliveries as $delivery)
+@forelse($deliveries as $delivery)
 @php
 $s=$delivery->snapshot;
 $map=['draft'=>['ready'=>'พร้อมจัดส่ง','cancel'=>'ยกเลิก'],'ready'=>['dispatch'=>'ส่งออก','cancel'=>'ยกเลิก','receive'=>'รับเข้าตรวจคืน'],'dispatched'=>['deliver'=>'ส่งสำเร็จ','fail'=>'ส่งไม่สำเร็จ'],'delivered'=>['collect'=>'รับเงินจากลูกค้า','remit'=>'รับเงินคืนร้าน','receive'=>'รับเข้าตรวจคืน'],'failed'=>['retry'=>'เตรียมส่งใหม่','receive'=>'รับเข้าตรวจคืน'],'return_review'=>['refund'=>'คืนเงิน COD/ค่าจัดส่ง','refund_prepaid'=>'คืนเงินบิลเดิม','inspect'=>'ตรวจรับคืน'],'returned'=>['refund'=>'คืนเงิน COD/ค่าจัดส่ง'],'cancelled'=>['receive'=>'รับเข้าตรวจคืน']];
@@ -65,6 +65,8 @@ $due=bcadd($delivery->settlement_mode==='cod'?($s['total']??'0'):'0',$s['fees_to
 @if(in_array($action,['retry','remit','refund','refund_prepaid','inspect']) || ($action==='cancel' && $branch->business_type==='restaurant' && !empty($s['reserved_at'])))<label>รหัสผ่านผู้จัดการ<input name="manager_password" type="password" required autocomplete="current-password"></label>@endif
 <button type="submit">{{ $label }}</button><p role="alert" aria-live="polite"></p></form>
 @endforeach</article>
-@endforeach
+@empty
+<p>ยังไม่มีงานจัดส่งในหน้านี้</p>
+@endforelse
 {{ $deliveries->links() }}
 <script src="/delivery.js" defer></script></body></html>

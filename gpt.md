@@ -1,24 +1,21 @@
 # GPT Handoff — งานที่ยังเปิด
 
-อัปเดต 2026-11-05 ใช้ [checklist](checklist.md) ติดตามงาน และ [Gemini](gemini.md) ดูผลตรวจรับล่าสุด
-
-[ผลตรวจรับ local และโครงสร้างฐานล่าสุด](document/acceptance/local-closure-20261105/README.md)
+อัปเดต 2026-11-07 ใช้ [checklist](checklist.md) ติดตามงาน และ [Gemini](gemini.md) ดูผลตรวจรับ
 
 ## งานถัดไป
 
 - Phase 28.8.6 ยังเลื่อนไว้ ขอบเขตการจ่าย QR, Card/EDC, mixed tender และ shared-stock connection model อยู่ใน checklist
-- Restaurant POS ยังรอทดสอบมือถือ, HTTPS LAN และอุปกรณ์จริง ใช้คู่มือ Phase 28.8.5 สำหรับตั้งค่า
 
 ## งานที่ยังรอระบบจริงและข้อจำกัด
 
-**ยังไม่ได้ทดสอบกับระบบจริง** — local acceptance ไม่ใช่production sign-off.
+**ยังไม่ได้ทดสอบกับระบบจริง**
 
-- e-Tax provider/channel/certificate/signing adapterและcontractจริง;signing ownerเลือกเป็นบุคคลได้แล้ว แต่ไม่ได้แปลว่ามีcertificateหรือส่งproviderแล้ว.
+- e-Tax ยังรอ provider, channel, certificate, signing adapter และ contract สำหรับเชื่อมระบบจริง
 - ProvisionฐานPOSของสาขาที่จะใช้จริง:branch/terminal/staff/keys/catalog/quota/issuer profile;อย่าสร้างแทนผู้ใช้จากบัญชีsyntheticหรือใช้fixtureเป็นฐานขาย.
 - Two-server deployment/firewall/mTLS/credential rotation,merchant/settlement onboardingและอุปกรณ์printer/scannerจริง.
 - MariaDB concurrent quota/numbering/load/crash,Manufacturing target concurrency;ห้ามใช้SQLiteแทนrow-lock/load proof.
 - Target HTTPS/session/cookie/domain,storage/font permissions,log handlers/queue/scheduler/monitoring-owner,backup retention approvalและproduction ERP/POS restore drill/UAT/SLO/tax acceptance. นโยบายarchivePOS90วันที่อนุมัติแล้วไม่ใช่การอนุมัติbackup retentionทุกระบบ.
-- Browserผลล่าสุดเป็นChrome/responsive emulation;physical mobile keyboard/touch,Safari/WebKitและoperator UATยังไม่รับรอง.
+- ทดสอบ Restaurant POS ผ่าน HTTPS บน LAN และตรวจคีย์บอร์ดกับ touch บนมือถือจริง รวม Safari/WebKit และ operator UAT
 - Notification DLQ replay/resetและquiet-hours defer policyยังต้องกำหนดpermission/org/audit/retry cap/expiry/dedupe/recipient authorizationก่อนเปลี่ยนbehavior;quiet hoursคงsuppressตามเดิม.
 
 ## ข้อกำหนดทำงานต่อ
@@ -67,8 +64,8 @@
 
 - HMAC is a trusted settlement-bridge protocol, not an assumed provider API. Opn requires API verification, 2C2P uses provider JWT and inquiry contracts, GB Prime Pay requires the contracted integration version. No live settlement claim without provider evidence.
 - Opn reserves `creating` before an external API call; ambiguous results become `creation_unknown` and block retries. Pending/unresolved charges block provider, mode and merchant-key changes; uncertain creation also blocks receiver changes after local expiry. Provider callback confirmation alone never posts accounting.
-- Opn `provider_paid_at` comes from authenticated charge retrieval and is distinct from final `settled_at`. QR expiry checks customer payment time; receipt/GL uses settlement date. A two-day payout delay is covered by the native-provider fixture test. Do not collapse these timestamps when implementing the real settlement bridge.
-- Opn test mode never posts Payment/GL, even after a signed settlement with provider confirmation. Accounting tests use mocked live-mode provider responses, not real API calls. Payment/settlement timestamps normalize to the existing application timezone (UTC).
+- Opn uses `provider_paid_at` from authenticated charge retrieval to check QR expiry and final `settled_at` to date receipt/GL. Keep both timestamps when implementing the settlement bridge.
+- Opn test mode never posts Payment/GL, even after a signed settlement with provider confirmation. Normalize payment/settlement timestamps to the application timezone (UTC).
 
 - Portal ใช้ external identity แยกจาก staff session, scoped access, expiry/revocation, rate limit, audit และ private DMS authorization; ไม่มี public document URL.
 - Portal intake ห้ามสร้าง AP/GL อัตโนมัติ; ต้องผ่าน scan และ finance review ก่อน.
@@ -81,3 +78,4 @@
 
 - [Handoffเดิมก่อนcleanup](document/history/GPT_HANDOFF_20261030_PRE_CLEANUP.md):เก็บครบทั้งผลตรวจPhase27เก่า,APIrolloutและPhase28รายวัน. สถานะpending/ข้อกล่าวหาbugเก่าในนั้นต้องตรวจsourceและหลักฐานใหม่ ไม่ยกกลับเป็นงานค้างโดยอัตโนมัติ.
 - [Current implementation](docs/CURRENT_IMPLEMENTATION.md) · [Production runbook](docs/PRODUCTION_RUNBOOK.md) · [Phase28 runtime](docs/PHASE_28_POS.md) · [POS config](document/POS_CONFIGURATION.md).
+- [ผลตรวจรับ local และโครงสร้างฐาน](document/acceptance/local-closure-20261105/README.md) · [ทะเบียนตรวจรับ UI](document/design/ui-acceptance-register.md)

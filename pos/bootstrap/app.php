@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['pos.staff' => StaffAuthentication::class, 'pos.connector' => ConnectorAuthentication::class, 'pos.local-menu' => LocalPublicMenu::class]);
     })->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['member_name', 'member_phone', 'manager_password', 'manager_email', 'token', 'password', 'password_confirmation', 'recipient', 'phone', 'address']);
+        $exceptions->dontFlash(['member_name', 'member_phone', 'manager_password', 'manager_email', 'setup_token', 'token', 'password', 'password_confirmation', 'recipient', 'phone', 'address']);
         $exceptions->report(function (QueryException $exception) {
             Log::error('database_error', ['sqlstate' => (string) $exception->getCode()]);
 

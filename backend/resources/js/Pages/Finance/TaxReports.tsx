@@ -122,10 +122,11 @@ export default function TaxReports({
                 <Card title="Filters" description="Report period and branch">
                     <form
                         onSubmit={submit}
-                        className="grid gap-3 md:grid-cols-[160px_160px_repeat(4,minmax(0,1fr))_auto]"
+                        className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 [&>input]:min-w-0 [&>select]:min-w-0"
                     >
                         <TextInput
                             type="date"
+                            aria-label="From date"
                             value={dateFrom}
                             onChange={(event) =>
                                 setDateFrom(event.target.value)
@@ -133,12 +134,14 @@ export default function TaxReports({
                         />
                         <TextInput
                             type="date"
+                            aria-label="To date"
                             value={dateTo}
                             onChange={(event) => setDateTo(event.target.value)}
                         />
                         <select
                             className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
                             value={branchId}
+                            aria-label="Branch"
                             onChange={(event) =>
                                 setBranchId(event.target.value)
                             }
@@ -153,6 +156,7 @@ export default function TaxReports({
                         <select
                             className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
                             value={status}
+                            aria-label="Status"
                             onChange={(event) => setStatus(event.target.value)}
                         >
                             <option value="">All statuses</option>
@@ -174,6 +178,7 @@ export default function TaxReports({
                         <select
                             className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
                             value={customerId}
+                            aria-label="Customer"
                             onChange={(event) =>
                                 setCustomerId(event.target.value)
                             }
@@ -189,6 +194,7 @@ export default function TaxReports({
                         <select
                             className="rounded-md border-slate-300 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
                             value={supplierId}
+                            aria-label="Supplier"
                             onChange={(event) =>
                                 setSupplierId(event.target.value)
                             }
@@ -226,7 +232,7 @@ export default function TaxReports({
                     excelHref={reportUrl('tax-reports.excel', 'withholding')}
                 />
 
-                <div className="grid gap-6 xl:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <AgingReportTable
                         title="AR Aging"
                         description="Open invoice balances grouped by due date"
@@ -272,7 +278,7 @@ function TaxReportTable({
             title={title}
             description={description}
             action={
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <a href={csvHref}>
                         <SecondaryButton type="button">
                             Export CSV
@@ -353,7 +359,7 @@ function WithholdingReportTable({
             title="Withholding Tax Report"
             description="ภ.ง.ด. 3 / ภ.ง.ด. 53 from approved or paid expenses"
             action={
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <a href={csvHref}>
                         <SecondaryButton type="button">
                             Export CSV

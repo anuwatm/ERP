@@ -9,6 +9,39 @@ use Pos\Support\CanonicalJson;
 
 class CheckoutService
 {
+    private const CART_RULES = [
+        'catalog_version' => 'required|string|max:80',
+        'items' => 'required|array|min:1|max:100',
+        'items.*.product_id' => 'required|uuid|distinct',
+        'items.*.unit' => 'sometimes|string|max:30',
+        'items.*.quantity' => ['required', 'string', 'regex:/^\d{1,10}(\.\d{1,4})?$/D'],
+    ];
+
+    public function preview(Staff $staff, array $input): array
+    {
+        abort_unless($staff->active && in_array($staff->role, ['cashier', 'manager', 'pharmacist'], true), 403);
+        $input = validator($input, self::CART_RULES)->validate();
+        $branch = DB::table('pos_branches')->where('id', $staff->branch_id)->where('active', true)->first();
+        abort_unless($branch && in_array($branch->business_type, ['retail', 'pharmacy'], true), 422, 'Checkout capability unavailable.');
+        $catalog = DB::table('pos_catalogs')->where('branch_id', $branch->id)->where('version', $input['catalog_version'])->where('valid_until', '>', now())->first();
+        abort_unless($catalog, 422, 'Catalog unavailable or stale.');
+        $products = collect(json_decode($catalog->items, true, flags: JSON_THROW_ON_ERROR))->keyBy('product_id');
+        $subtotal = '0.00';
+        $tax = '0.00';
+        foreach ($input['items'] as $item) {
+            $product = $products->get($item['product_id']);
+            abort_unless($product && ($product['active'] ?? false) && bccomp($item['quantity'], '0', 4) > 0, 422, 'Product unavailable.');
+            $resolved = app(PharmacyPolicy::class)->resolve($staff, $branch->business_type, $product, $item);
+            [$amount, $lineTax] = $this->linePrice($item['quantity'], $resolved['unit_price'], $product['tax_rate'], '0.00');
+            $subtotal = bcadd($subtotal, $amount, 2);
+            $tax = bcadd($tax, $lineTax, 2);
+        }
+        $total = bcadd($subtotal, $tax, 2);
+        abort_if(bccomp($total, '9999999999.99', 2) > 0, 422, 'Checkout total exceeds supported limit.');
+
+        return ['subtotal' => $subtotal, 'tax_amount' => $tax, 'total' => $total, 'currency' => $branch->currency];
+    }
+
     public function openShift(Staff $staff, string $terminalId, string $opening): string
     {
         abort_unless(in_array($staff->role, ['cashier', 'manager', 'pharmacist'], true), 403);
@@ -52,7 +85,7 @@ class CheckoutService
         abort_if(app()->isProduction() && ! config('pos.release_approved'), 503, 'POS release acceptance is pending.');
         abort_unless($staff->active && in_array($staff->role, ['cashier', 'manager', 'pharmacist'], true), 403);
         $source = validator($input, ['patient_id' => 'sometimes|nullable|uuid', 'member_id' => 'sometimes|nullable|uuid', 'promotion_id' => 'sometimes|nullable|uuid', 'membership_publication_id' => 'sometimes|nullable|uuid', 'customer_request_id' => 'sometimes|uuid', 'discount_approval_id' => 'sometimes|uuid', 'kitchen_line_ids' => 'sometimes|array|min:1|max:100', 'kitchen_line_ids.*' => 'required|uuid|distinct'])->validate();
-        $input = validator($input, ['terminal_id' => 'required|uuid', 'request_key' => 'required|string|max:100', 'catalog_version' => 'required|string|max:80', 'items' => 'required|array|min:1|max:100', 'items.*.product_id' => 'required|uuid|distinct', 'items.*.unit' => 'sometimes|string|max:30', 'items.*.quantity' => ['required', 'string', 'regex:/^\d{1,10}(\.\d{1,4})?$/D'], 'cash_tendered' => ['required', 'string', 'regex:/^\d{1,10}(\.\d{1,2})?$/D'], 'prescription_ids' => 'sometimes|array|max:10', 'prescription_ids.*' => 'required|uuid|distinct'])->validate();
+        $input = validator($input, self::CART_RULES + ['terminal_id' => 'required|uuid', 'request_key' => 'required|string|max:100', 'cash_tendered' => ['required', 'string', 'regex:/^\d{1,10}(\.\d{1,2})?$/D'], 'prescription_ids' => 'sometimes|array|max:10', 'prescription_ids.*' => 'required|uuid|distinct'])->validate();
         $input = array_merge($input, $source);
         abort_if($offline !== null && ! empty($input['patient_id']), 422, 'Patient history requires online checkout.');
         $hash = hash('sha256', CanonicalJson::encode($input));
@@ -103,10 +136,8 @@ class CheckoutService
                 $product = $catalogItems->get($item['product_id']);
                 abort_unless($product && ($product['active'] ?? false) && bccomp($item['quantity'], '0', 4) > 0, 422, 'Product unavailable.');
                 $resolved = app(PharmacyPolicy::class)->resolve($staff, $branch->business_type, $product, $item);
-                $amount = $this->rounded(bcmul($item['quantity'], $resolved['unit_price'], 8));
                 $discountAmount = $promotionDiscounts[$item['product_id']] ?? $discount['discounts'][$item['product_id']] ?? '0.00';
-                $amount = bcsub($amount, $discountAmount, 2);
-                $lineTax = $this->rounded(bcdiv(bcmul($amount, $product['tax_rate'], 8), '100', 8));
+                [$amount, $lineTax] = $this->linePrice($item['quantity'], $resolved['unit_price'], $product['tax_rate'], $discountAmount);
                 $allocations = $offline ? $offline->consume($staff->branch_id, $item['product_id'], $resolved['base_quantity'], $branch->timezone) : ($restaurantRefs === null ? $this->consume($staff->branch_id, $item['product_id'], $resolved['base_quantity'], $branch->timezone) : []);
                 if ($restaurantRefs !== null) {
                     $resolved += ['stock_effect' => 'prepared', 'kitchen_refs' => $restaurantRefs[$item['product_id']]];
@@ -180,6 +211,14 @@ class CheckoutService
     private function rounded(string $value): string
     {
         return bcadd($value, '0.005', 2);
+    }
+
+    private function linePrice(string $quantity, string $unitPrice, string $taxRate, string $discount): array
+    {
+        $subtotal = bcsub($this->rounded(bcmul($quantity, $unitPrice, 8)), $discount, 2);
+        $tax = $this->rounded(bcdiv(bcmul($subtotal, $taxRate, 8), '100', 8));
+
+        return [$subtotal, $tax];
     }
 
     private function audit(Staff $staff, string $action, string $source, array $metadata = []): void

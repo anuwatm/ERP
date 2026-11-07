@@ -31,10 +31,7 @@ export default forwardRef(function TextInput(
         <input
             {...props}
             type={type}
-            className={
-                'rounded-xl border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-300 font-medium shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-150 ' +
-                className
-            }
+            className={'erp-input font-medium ' + className}
             ref={localRef}
         />
     );

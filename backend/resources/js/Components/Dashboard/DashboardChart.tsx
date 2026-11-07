@@ -1,4 +1,5 @@
 import Card from '@/Components/UI/Card';
+import { useId } from 'react';
 import type { DashboardWidgetState } from './DashboardKpiCard';
 
 export type DashboardChartPoint = {
@@ -36,6 +37,7 @@ export default function DashboardChart({
     visible = true,
     onRetry,
 }: DashboardChartProps) {
+    const secondaryPatternId = useId();
     if (!visible) return null;
 
     if (state !== 'ready') {
@@ -114,6 +116,28 @@ export default function DashboardChart({
                     className="h-64 w-full overflow-visible"
                 >
                     <title>{title}</title>
+                    {kind === 'bar' && secondaryLabel && (
+                        <defs>
+                            <pattern
+                                id={secondaryPatternId}
+                                width="6"
+                                height="6"
+                                patternUnits="userSpaceOnUse"
+                                patternTransform="rotate(45)"
+                            >
+                                <rect
+                                    width="6"
+                                    height="6"
+                                    fill="var(--erp-chart-secondary)"
+                                />
+                                <path
+                                    d="M0 0V6"
+                                    stroke="var(--erp-chart-paper)"
+                                    strokeWidth="2"
+                                />
+                            </pattern>
+                        </defs>
+                    )}
                     <line
                         x1={padding.left}
                         y1={zeroY}
@@ -126,17 +150,16 @@ export default function DashboardChart({
                             <polyline
                                 points={points('value')}
                                 fill="none"
-                                stroke="currentColor"
+                                stroke="var(--erp-chart-primary)"
                                 strokeWidth="3"
-                                className="text-indigo-600"
                             />
                             {secondaryLabel && (
                                 <polyline
                                     points={points('secondaryValue')}
                                     fill="none"
-                                    stroke="currentColor"
+                                    stroke="var(--erp-chart-secondary)"
                                     strokeWidth="3"
-                                    className="text-emerald-600"
+                                    strokeDasharray="7 4"
                                 />
                             )}
                             {data.map((point, index) => (
@@ -145,7 +168,7 @@ export default function DashboardChart({
                                     cx={x(index)}
                                     cy={y(point.value)}
                                     r="4"
-                                    className="fill-indigo-600"
+                                    fill="var(--erp-chart-primary)"
                                 >
                                     <title>{`${point.label}: ${primaryLabel} ${number.format(point.value)}`}</title>
                                 </circle>
@@ -168,7 +191,7 @@ export default function DashboardChart({
                                         width={barWidth}
                                         height={Math.abs(zeroY - primaryY)}
                                         rx="3"
-                                        className="fill-indigo-600"
+                                        fill="var(--erp-chart-primary)"
                                     >
                                         <title>{`${point.label}: ${primaryLabel} ${number.format(point.value)}`}</title>
                                     </rect>
@@ -181,7 +204,7 @@ export default function DashboardChart({
                                                 zeroY - secondaryY,
                                             )}
                                             rx="3"
-                                            className="fill-emerald-600"
+                                            fill={`url(#${secondaryPatternId})`}
                                         >
                                             <title>{`${point.label}: ${secondaryLabel} ${number.format(point.secondaryValue ?? 0)}`}</title>
                                         </rect>
@@ -206,7 +229,7 @@ export default function DashboardChart({
                     <span>
                         <span
                             aria-hidden="true"
-                            className="mr-1 inline-block h-2 w-2 rounded-full bg-indigo-600"
+                            className="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--erp-chart-primary)]"
                         />
                         {primaryLabel}
                     </span>
@@ -214,7 +237,7 @@ export default function DashboardChart({
                         <span>
                             <span
                                 aria-hidden="true"
-                                className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-600"
+                                className="mr-1 inline-block h-2 w-3 border-b-2 border-dashed border-[var(--erp-chart-secondary)]"
                             />
                             {secondaryLabel}
                         </span>

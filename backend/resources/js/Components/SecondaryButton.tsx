@@ -16,11 +16,7 @@ export default function SecondaryButton({
         <button
             {...props}
             type={type}
-            className={
-                `inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/90 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-300 shadow-sm transition-all duration-150 hover:bg-slate-800 hover:text-white hover:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
-                    disabled && 'opacity-50'
-                } ` + className
-            }
+            className={'erp-button erp-secondary ' + className}
             disabled={disabled}
         >
             {icon && (

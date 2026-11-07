@@ -387,6 +387,7 @@ export default function Dashboard({
             <DashboardLayout
                 title={dashboardTitle}
                 description="Permission-scoped operational metrics and follow-up signals."
+                overview
             >
                 {isAdminDashboard && summary && !dashboardWidgets?.admin && (
                     <PageHeader
@@ -399,7 +400,7 @@ export default function Dashboard({
                     <Card>
                         <form
                             onSubmit={submitFilters}
-                            className="grid gap-3 md:grid-cols-[minmax(160px,1fr)_minmax(160px,1fr)_minmax(120px,0.8fr)_minmax(140px,1fr)_minmax(140px,1fr)_auto_auto] md:items-end"
+                            className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5"
                         >
                             <label className="space-y-1 text-sm font-medium text-slate-700 dark:text-slate-200">
                                 <span>Period</span>
@@ -501,19 +502,21 @@ export default function Dashboard({
                                 />
                             </label>
 
-                            <button
-                                type="submit"
-                                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                            >
-                                Apply
-                            </button>
-                            <button
-                                type="button"
-                                onClick={resetFilters}
-                                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
-                            >
-                                Reset
-                            </button>
+                            <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-1 2xl:col-span-5">
+                                <button
+                                    type="submit"
+                                    className="erp-primary rounded-md px-4 py-2 text-sm font-semibold"
+                                >
+                                    Apply
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={resetFilters}
+                                    className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                                >
+                                    Reset
+                                </button>
+                            </div>
                         </form>
                         <div className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                             Dashboard range: {filterLabel}
@@ -792,93 +795,172 @@ export default function Dashboard({
                                     />
                                 )}
                             </div>
-                            <div className="grid gap-4 lg:grid-cols-2">
-                                {dashboardWidgets.executive
-                                    .revenue_expense_trend && (
-                                    <DashboardChart
-                                        title="Invoiced Revenue / Recognized Expense"
-                                        description="Monthly base-currency document flows"
-                                        kind="bar"
-                                        primaryLabel={
-                                            dashboardWidgets.finance?.revenue
-                                                ? 'Invoiced Revenue'
-                                                : 'Recognized Expense'
-                                        }
-                                        secondaryLabel={
-                                            dashboardWidgets.finance?.revenue &&
-                                            dashboardWidgets.finance?.expense
-                                                ? 'Recognized Expense'
-                                                : undefined
-                                        }
-                                        data={dashboardWidgets.executive.revenue_expense_trend.map(
-                                            (point) => ({
-                                                label: point.label,
-                                                value: dashboardWidgets.finance
-                                                    ?.revenue
-                                                    ? (point.revenue ?? 0)
-                                                    : (point.expense ?? 0),
-                                                secondaryValue:
+                            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+                                {(dashboardWidgets.executive
+                                    .revenue_expense_trend ||
+                                    dashboardWidgets.finance
+                                        ?.cash_flow_trend) && (
+                                    <div className="min-w-0 space-y-4">
+                                        {dashboardWidgets.executive
+                                            .revenue_expense_trend && (
+                                            <DashboardChart
+                                                title="Invoiced Revenue / Recognized Expense"
+                                                description="Monthly base-currency document flows"
+                                                kind="bar"
+                                                primaryLabel={
+                                                    dashboardWidgets.finance
+                                                        ?.revenue
+                                                        ? 'Invoiced Revenue'
+                                                        : 'Recognized Expense'
+                                                }
+                                                secondaryLabel={
                                                     dashboardWidgets.finance
                                                         ?.revenue &&
                                                     dashboardWidgets.finance
                                                         ?.expense
-                                                        ? (point.expense ?? 0)
-                                                        : undefined,
-                                            }),
+                                                        ? 'Recognized Expense'
+                                                        : undefined
+                                                }
+                                                data={dashboardWidgets.executive.revenue_expense_trend.map(
+                                                    (point) => ({
+                                                        label: point.label,
+                                                        value: dashboardWidgets
+                                                            .finance?.revenue
+                                                            ? (point.revenue ??
+                                                              0)
+                                                            : (point.expense ??
+                                                              0),
+                                                        secondaryValue:
+                                                            dashboardWidgets
+                                                                .finance
+                                                                ?.revenue &&
+                                                            dashboardWidgets
+                                                                .finance
+                                                                ?.expense
+                                                                ? (point.expense ??
+                                                                  0)
+                                                                : undefined,
+                                                    }),
+                                                )}
+                                            />
                                         )}
-                                    />
-                                )}
-                                {dashboardWidgets.finance?.cash_flow_trend && (
-                                    <DashboardChart
-                                        title="AR Cash In / AP Cash Out"
-                                        description="Monthly net receipts and vendor payments in base currency"
-                                        kind="bar"
-                                        primaryLabel={
-                                            dashboardWidgets.finance?.cash_in
-                                                ? 'AR Cash In'
-                                                : 'AP Cash Out'
-                                        }
-                                        secondaryLabel={
-                                            dashboardWidgets.finance?.cash_in &&
-                                            dashboardWidgets.finance?.expense
-                                                ? 'AP Cash Out'
-                                                : undefined
-                                        }
-                                        data={dashboardWidgets.finance.cash_flow_trend.map(
-                                            (point) => ({
-                                                label: point.label,
-                                                value: dashboardWidgets.finance
-                                                    ?.cash_in
-                                                    ? (point.cash_in ?? 0)
-                                                    : (point.ap_cash_out ?? 0),
-                                                secondaryValue:
-                                                    dashboardWidgets.finance
-                                                        ?.cash_in &&
-                                                    dashboardWidgets.finance
-                                                        ?.expense
-                                                        ? (point.ap_cash_out ??
-                                                          0)
-                                                        : undefined,
-                                                primaryHref: cashMonthHref(
-                                                    point.label,
+                                        {dashboardWidgets.finance
+                                            ?.cash_flow_trend && (
+                                            <DashboardChart
+                                                title="AR Cash In / AP Cash Out"
+                                                description="Monthly net receipts and vendor payments in base currency"
+                                                kind="bar"
+                                                primaryLabel={
                                                     dashboardWidgets.finance
                                                         ?.cash_in
-                                                        ? 'ar'
-                                                        : 'ap',
-                                                ),
-                                                secondaryHref:
+                                                        ? 'AR Cash In'
+                                                        : 'AP Cash Out'
+                                                }
+                                                secondaryLabel={
                                                     dashboardWidgets.finance
                                                         ?.cash_in &&
                                                     dashboardWidgets.finance
                                                         ?.expense
-                                                        ? cashMonthHref(
-                                                              point.label,
-                                                              'ap',
-                                                          )
-                                                        : undefined,
-                                            }),
+                                                        ? 'AP Cash Out'
+                                                        : undefined
+                                                }
+                                                data={dashboardWidgets.finance.cash_flow_trend.map(
+                                                    (point) => ({
+                                                        label: point.label,
+                                                        value: dashboardWidgets
+                                                            .finance?.cash_in
+                                                            ? (point.cash_in ??
+                                                              0)
+                                                            : (point.ap_cash_out ??
+                                                              0),
+                                                        secondaryValue:
+                                                            dashboardWidgets
+                                                                .finance
+                                                                ?.cash_in &&
+                                                            dashboardWidgets
+                                                                .finance
+                                                                ?.expense
+                                                                ? (point.ap_cash_out ??
+                                                                  0)
+                                                                : undefined,
+                                                        primaryHref:
+                                                            cashMonthHref(
+                                                                point.label,
+                                                                dashboardWidgets
+                                                                    .finance
+                                                                    ?.cash_in
+                                                                    ? 'ar'
+                                                                    : 'ap',
+                                                            ),
+                                                        secondaryHref:
+                                                            dashboardWidgets
+                                                                .finance
+                                                                ?.cash_in &&
+                                                            dashboardWidgets
+                                                                .finance
+                                                                ?.expense
+                                                                ? cashMonthHref(
+                                                                      point.label,
+                                                                      'ap',
+                                                                  )
+                                                                : undefined,
+                                                    }),
+                                                )}
+                                            />
                                         )}
-                                    />
+                                    </div>
+                                )}
+                                {(dashboardWidgets.finance?.overdue_invoices ||
+                                    dashboardWidgets.executive
+                                        .project_risks) && (
+                                    <section
+                                        aria-label="Priority actions"
+                                        className="min-w-0 space-y-4"
+                                    >
+                                        <h2 className="text-lg font-bold text-erp-ink">
+                                            Priority actions
+                                        </h2>
+                                        {dashboardWidgets.finance
+                                            ?.overdue_invoices && (
+                                            <DashboardList
+                                                title="Overdue Invoices"
+                                                description="Current overdue receivables"
+                                                items={dashboardWidgets.finance.overdue_invoices.map(
+                                                    (row) => ({
+                                                        id: row.id,
+                                                        title: row.invoice_no,
+                                                        detail: `${row.due_date} · ${money(row.base_balance_due)}`,
+                                                        routeName:
+                                                            'invoices.index',
+                                                        routeParameters: {
+                                                            invoice_id: row.id,
+                                                        },
+                                                    }),
+                                                )}
+                                                emptyMessage="No overdue invoices."
+                                            />
+                                        )}
+                                        {dashboardWidgets.executive
+                                            .project_risks && (
+                                            <DashboardList
+                                                title="Projects at Risk"
+                                                description={`${dashboardWidgets.executive.project_risks.count} projects with visible past-due, high-priority task or same-currency over-budget signals`}
+                                                items={dashboardWidgets.executive.project_risks.items.map(
+                                                    (row) => ({
+                                                        id: row.id,
+                                                        title: row.name,
+                                                        detail: `${row.project_code} · ${row.reasons.join(', ')}`,
+                                                        routeName:
+                                                            'projects.index',
+                                                        routeParameters: {
+                                                            project_id: row.id,
+                                                        },
+                                                    }),
+                                                )}
+                                                emptyMessage="No projects with visible risk signals."
+                                            />
+                                        )}
+                                    </section>
                                 )}
                             </div>
                             <div className="grid gap-4 lg:grid-cols-2">
@@ -966,42 +1048,6 @@ export default function Dashboard({
                                             }),
                                         )}
                                         emptyMessage="No invoiced customers in this period."
-                                    />
-                                )}
-                                {dashboardWidgets.finance?.overdue_invoices && (
-                                    <DashboardList
-                                        title="Overdue Invoices"
-                                        description="Current overdue receivables"
-                                        items={dashboardWidgets.finance.overdue_invoices.map(
-                                            (row) => ({
-                                                id: row.id,
-                                                title: row.invoice_no,
-                                                detail: `${row.due_date} · ${money(row.base_balance_due)}`,
-                                                routeName: 'invoices.index',
-                                                routeParameters: {
-                                                    invoice_id: row.id,
-                                                },
-                                            }),
-                                        )}
-                                        emptyMessage="No overdue invoices."
-                                    />
-                                )}
-                                {dashboardWidgets.executive.project_risks && (
-                                    <DashboardList
-                                        title="Projects at Risk"
-                                        description={`${dashboardWidgets.executive.project_risks.count} projects with visible past-due, high-priority task or same-currency over-budget signals`}
-                                        items={dashboardWidgets.executive.project_risks.items.map(
-                                            (row) => ({
-                                                id: row.id,
-                                                title: row.name,
-                                                detail: `${row.project_code} · ${row.reasons.join(', ')}`,
-                                                routeName: 'projects.index',
-                                                routeParameters: {
-                                                    project_id: row.id,
-                                                },
-                                            }),
-                                        )}
-                                        emptyMessage="No projects with visible risk signals."
                                     />
                                 )}
                             </div>

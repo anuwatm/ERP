@@ -1,6 +1,10 @@
 <?php
 
-$fixture = dirname(__DIR__, 3).'/temp/phase2883-offline-r5';
+$run = getenv('POS_OFFLINE_BROWSER_RUN') ?: 'r5';
+if (! preg_match('/^[a-z0-9-]+$/D', $run)) {
+    throw new RuntimeException('Invalid offline fixture run name.');
+}
+$fixture = dirname(__DIR__, 3).'/temp/phase2883-offline-'.$run;
 if (! is_dir($fixture)) {
     mkdir($fixture, 0700, true);
 }

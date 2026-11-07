@@ -4,13 +4,19 @@ const {
 const fs = require('fs');
 const root = 'temp/remaining-20261029';
 const base = 'http://127.0.0.1:8139';
-const paths = process.env.MATRIX_PATHS
+const requestedPaths = process.env.MATRIX_PATHS
     ? JSON.parse(process.env.MATRIX_PATHS)
     : JSON.parse(fs.readFileSync(root + '/matrix-paths.json'));
+const manufacturingPaths = ['/manufacturing/boms', '/manufacturing/work-orders'];
+const paths = requestedPaths.filter(path => !manufacturingPaths.includes(path));
 const output = process.env.MATRIX_OUTPUT || 'browser-matrix.json';
 const report = {
     status: 'running',
     scope: 'Actual create/edit surfaces; isolated owner role; Chrome only; browser Date fixed for reproducible fresh-draft defaults',
+    specialized: {
+        paths: requestedPaths.filter(path => manufacturingPaths.includes(path)),
+        suite: 'backend/tests/Browser/manufacturing-ui.cjs',
+    },
     cases: [],
     errors: [],
 };
@@ -321,14 +327,16 @@ const save = () =>
             }
         report.status = 'completed';
         save();
+        const failed = report.cases.filter((x) => x.status === 'FAIL').length;
         console.log(
             JSON.stringify({
                 cases: report.cases.length,
                 passed: report.cases.filter((x) => x.status === 'PASS').length,
-                failed: report.cases.filter((x) => x.status === 'FAIL').length,
+                failed,
                 errors: report.errors,
             }),
         );
+        if (failed || report.errors.length) process.exitCode = 1;
     } finally {
         await browser.close();
     }

@@ -1,10 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@font-face {
+    font-family: 'Sarabun';
+    src: url('../../public/fonts/sarabun-regular-v1.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Sarabun';
+    src: url('../../public/fonts/sarabun-bold-v1.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+    :root {
+        color-scheme: light;
+        --erp-canvas: #f5f2ea;
+        --erp-ink: #112e28;
+        --erp-surface: #ffffff;
+        --erp-muted: #52635d;
+        --erp-border: #76867d;
+        --erp-focus: #08765e;
+        --erp-danger: #b42318;
+        --erp-on-danger: #ffffff;
+        --erp-success: #146c43;
+        --erp-warning: #865300;
+        --erp-placeholder: #64746d;
+        --erp-rail: #103a32;
+        --erp-rail-inset: #0d302a;
+        --erp-rail-active: #b8e8d1;
+        --erp-action: #a33b2c;
+        --erp-action-hover: #863022;
+        --erp-on-action: #fff8f1;
+        --erp-chart-primary: #08765e;
+        --erp-chart-secondary: #a33b2c;
+        --erp-chart-paper: #fff8f1;
+    }
+
+    :root.dark {
+        color-scheme: dark;
+        --erp-canvas: #101a18;
+        --erp-ink: #eaf4ef;
+        --erp-surface: #182923;
+        --erp-muted: #bdcec4;
+        --erp-border: #62786c;
+        --erp-focus: #75d5b7;
+        --erp-danger: #ffb4ab;
+        --erp-on-danger: #43120d;
+        --erp-success: #8be0b0;
+        --erp-warning: #ffcf85;
+        --erp-placeholder: #a9bdb0;
+        --erp-rail: #0b2924;
+        --erp-rail-inset: #09231e;
+        --erp-rail-active: #a0d9bf;
+        --erp-action: #ffae9a;
+        --erp-action-hover: #ffc2b3;
+        --erp-on-action: #32140e;
+        --erp-chart-primary: #75d5b7;
+        --erp-chart-secondary: #ffae9a;
+        --erp-chart-paper: #32140e;
+    }
+
     body {
         @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200;
     }
@@ -14,9 +76,133 @@
     select option {
         @apply bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100;
     }
+    :focus-visible {
+        outline: 2px solid var(--erp-focus);
+        outline-offset: 3px;
+    }
+    ::selection {
+        background: var(--erp-rail-active);
+        color: #0d302a;
+    }
+}
+
+@layer components {
+    .erp-button {
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .erp-secondary {
+        color: var(--erp-ink);
+        background-color: var(--erp-surface);
+        border: 1px solid var(--erp-border);
+    }
+
+    .erp-secondary:hover:not(:disabled) {
+        background-color: var(--erp-canvas);
+    }
+
+    .erp-danger {
+        color: var(--erp-on-danger);
+        background-color: var(--erp-danger);
+    }
+
+    .erp-danger:hover:not(:disabled) {
+        filter: brightness(0.9);
+    }
+
+    .erp-input {
+        @apply min-h-11 min-w-0 rounded-xl shadow-sm transition-colors;
+        background-color: var(--erp-surface);
+        color: var(--erp-ink);
+        border-color: var(--erp-border);
+        caret-color: var(--erp-focus);
+    }
+
+    .erp-input::placeholder {
+        color: var(--erp-placeholder);
+        opacity: 1;
+    }
+
+    .erp-input:focus {
+        border-color: var(--erp-focus);
+        --tw-ring-color: var(--erp-focus);
+    }
+
+    .erp-field-error {
+        color: var(--erp-danger);
+    }
+
+    .erp-surface {
+        @apply min-w-0 rounded-xl border border-slate-200 dark:border-slate-700;
+        background-color: var(--erp-surface);
+        color: var(--erp-ink);
+    }
+
+    .text-erp-muted {
+        color: var(--erp-muted);
+    }
+
+    .erp-modal :is(button, input:not([type='checkbox']):not([type='radio']), select) {
+        min-height: 44px;
+    }
+
+    .erp-canvas {
+        background-color: var(--erp-canvas);
+    }
+
+    .text-erp-ink {
+        color: var(--erp-ink);
+    }
+
+    .erp-rail {
+        background-color: var(--erp-rail);
+    }
+
+    .erp-rail-inset,
+    .erp-rail-link:hover:not([aria-current='page']) {
+        background-color: var(--erp-rail-inset);
+    }
+
+    .erp-rail-link[aria-current='page'] {
+        background-color: var(--erp-rail-active);
+        color: #0d302a;
+    }
+
+    .erp-primary {
+        background-color: var(--erp-action);
+        color: var(--erp-on-action);
+    }
+
+    .erp-primary:hover {
+        background-color: var(--erp-action-hover);
+    }
+
+    .erp-primary:focus-visible,
+    .erp-rail-link:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: -4px;
+    }
 }
 
 /* Custom Scrollbars */
+@media (max-width: 639px) {
+    .erp-input,
+    .erp-modal :is(input, select, textarea) {
+        font-size: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -25,11 +211,11 @@
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: var(--erp-border);
     border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: var(--erp-muted);
 }
 
 /* Glassmorphic & Animation Utilities */

@@ -1,3 +1,7 @@
+import InputError from '@/Components/InputError';
+import Modal from '@/Components/Modal';
+import DiscardChangesDialog from '@/Components/UI/DiscardChangesDialog';
+import useDiscardGuard from '@/Hooks/useDiscardGuard';
 import Badge from '@/Components/UI/Badge';
 import Card from '@/Components/UI/Card';
 import PageHeader from '@/Components/UI/PageHeader';
@@ -6,7 +10,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/Types';
 import { money } from '@/Utils/format';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useRef, useState } from 'react';
 import {
     IconActivity,
     IconBoxes,
@@ -44,16 +48,15 @@ export interface SubBomSummary {
 
 export interface BomItemData {
     id?: string;
-    item_type: 'raw_material' | 'sub_assembly';
     product_id?: string | null;
     sub_bom_id?: string | null;
     product?: ProductSummary;
     quantity: number | string;
     unit: string;
     unit_cost: number | string;
-    scrap_percentage: number | string;
+    waste_percent: number | string;
     total_cost?: number | string;
-    notes?: string | null;
+    note?: string | null;
 }
 
 export interface BomRecord {
@@ -65,11 +68,11 @@ export interface BomRecord {
     version: string;
     quantity: string;
     unit: string;
-    material_cost: string;
+    material_cost?: string;
     labor_cost: string;
     overhead_cost: string;
     total_cost: string;
-    unit_cost: string;
+    unit_cost?: string;
     routing_notes?: string | null;
     is_active: boolean;
     created_at: string;
@@ -83,30 +86,23 @@ export interface ExplosionNode {
     level: number;
     bom_id: string;
     bom_no: string;
-    bom_name: string;
+    name: string;
     product_id: string;
     product_name: string;
-    product_sku: string;
-    output_quantity: number;
-    unit: string;
-    unit_cost: number;
-    total_cost: number;
-    labor_cost: number;
-    overhead_cost: number;
+    batch_quantity: number;
     items: Array<{
-        type: 'raw_material' | 'sub_assembly';
+        is_subassembly: boolean;
         level: number;
         product_id: string;
         product_sku: string;
         product_name: string;
-        quantity_per_unit: number;
+        quantity_per_batch: number;
         required_quantity: number;
         unit: string;
         unit_cost: number;
-        scrap_percentage: number;
+        waste_percent: number;
         total_cost: number;
-        sub_bom_id?: string | null;
-        sub_explosion?: ExplosionNode | null;
+        sub_bom?: ExplosionNode | null;
     }>;
 }
 
@@ -114,7 +110,7 @@ export interface FlattenedMaterial {
     product_id: string;
     product_sku: string;
     product_name: string;
-    total_quantity: number;
+    required_quantity: number;
     unit: string;
     unit_cost: number;
     total_cost: number;
@@ -151,11 +147,14 @@ export default function BillOfMaterialsIndex({
     // Explosion modal state
     const [explosionOpen, setExplosionOpen] = useState(false);
     const [explosionLoading, setExplosionLoading] = useState(false);
+    const [failedExplosion, setFailedExplosion] = useState<BomRecord | null>(
+        null,
+    );
+    const explosionRequest = useRef(0);
     const [explosionData, setExplosionData] = useState<{
         bom: BomRecord;
         tree: ExplosionNode;
-        flattened_materials: FlattenedMaterial[];
-        total_calculated_cost: number;
+        materials_summary: FlattenedMaterial[];
     } | null>(null);
 
     // Form setup
@@ -203,10 +202,15 @@ export default function BillOfMaterialsIndex({
         ],
     });
 
+    const guard = useDiscardGuard(builderOpen && form.isDirty, form.processing);
+    const itemErrors = Object.entries(form.errors).filter(
+        ([field]) => field === 'items' || field.startsWith('items.'),
+    );
+
     const openCreateModal = () => {
         setEditingBom(null);
         form.reset();
-        form.setData({
+        const initial: typeof form.data = {
             name: '',
             product_id: products[0]?.id ?? '',
             version: '1.0',
@@ -228,14 +232,17 @@ export default function BillOfMaterialsIndex({
                     notes: '',
                 },
             ],
-        });
+        };
+        form.setDefaults(initial);
+        form.setData(initial);
+        form.clearErrors();
         setBuilderOpen(true);
     };
 
     const openEditModal = (bom: BomRecord) => {
         setEditingBom(bom);
         form.reset();
-        form.setData({
+        const initial: typeof form.data = {
             name: bom.name,
             product_id: bom.product_id,
             version: bom.version,
@@ -246,16 +253,19 @@ export default function BillOfMaterialsIndex({
             routing_notes: bom.routing_notes ?? '',
             is_active: bom.is_active,
             items: (bom.items || []).map((it) => ({
-                item_type: it.item_type,
+                item_type: it.sub_bom_id ? 'sub_assembly' : 'raw_material',
                 product_id: it.product_id ?? '',
                 sub_bom_id: it.sub_bom_id ?? '',
                 quantity: Number(it.quantity) || 1,
                 unit: it.unit || 'pcs',
                 unit_cost: Number(it.unit_cost) || 0,
-                scrap_percentage: Number(it.scrap_percentage) || 0,
-                notes: it.notes ?? '',
+                scrap_percentage: Number(it.waste_percent) || 0,
+                notes: it.note ?? '',
             })),
-        });
+        };
+        form.setDefaults(initial);
+        form.setData(initial);
+        form.clearErrors();
         setBuilderOpen(true);
     };
 
@@ -315,6 +325,14 @@ export default function BillOfMaterialsIndex({
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
+        form.transform((data) => ({
+            ...data,
+            items: data.items.map(({ scrap_percentage, notes, ...item }) => ({
+                ...item,
+                waste_percent: scrap_percentage,
+                note: notes,
+            })),
+        }));
         if (editingBom) {
             form.put(route('manufacturing.boms.update', editingBom.id), {
                 onSuccess: () => setBuilderOpen(false),
@@ -338,24 +356,29 @@ export default function BillOfMaterialsIndex({
     };
 
     const viewExplosion = async (bom: BomRecord) => {
+        const request = ++explosionRequest.current;
         setExplosionOpen(true);
         setExplosionLoading(true);
+        setExplosionData(null);
+        setFailedExplosion(null);
         try {
             const res = await fetch(
                 route('manufacturing.boms.explosion', bom.id),
             );
             if (!res.ok) throw new Error('Failed to load explosion tree');
             const data = await res.json();
-            setExplosionData(data);
-        } catch (err: unknown) {
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : 'Error loading BOM explosion tree';
-            alert(message);
-            setExplosionOpen(false);
+            if (request !== explosionRequest.current) return;
+            setExplosionData({
+                bom,
+                tree: data.tree,
+                materials_summary: data.materials_summary,
+            });
+        } catch {
+            if (request !== explosionRequest.current) return;
+            setFailedExplosion(bom);
         } finally {
-            setExplosionLoading(false);
+            if (request === explosionRequest.current)
+                setExplosionLoading(false);
         }
     };
 
@@ -380,10 +403,10 @@ export default function BillOfMaterialsIndex({
             0,
         );
         const avgUnitCost =
-            total > 0
+            total > 0 && boms.every((bom) => bom.unit_cost !== undefined)
                 ? boms.reduce((acc, b) => acc + Number(b.unit_cost || 0), 0) /
                   total
-                : 0;
+                : null;
         return { total, active, totalItems, avgUnitCost };
     }, [boms]);
 
@@ -399,7 +422,7 @@ export default function BillOfMaterialsIndex({
                         canManage && (
                             <button
                                 onClick={openCreateModal}
-                                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="erp-button erp-primary"
                             >
                                 <IconPlus className="h-4 w-4" />
                                 Create BOM
@@ -432,7 +455,11 @@ export default function BillOfMaterialsIndex({
                     />
                     <StatCard
                         title="Average Unit Cost"
-                        value={money(stats.avgUnitCost)}
+                        value={
+                            stats.avgUnitCost === null
+                                ? '—'
+                                : money(stats.avgUnitCost)
+                        }
                         icon={<IconWrench className="h-5 w-5" />}
                         iconBgColor="bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300"
                         subtitle="Standard batch unit cost"
@@ -570,7 +597,9 @@ export default function BillOfMaterialsIndex({
                                             </td>
 
                                             <td className="px-3 py-4 font-mono">
-                                                {money(bom.material_cost)}
+                                                {bom.material_cost === undefined
+                                                    ? '—'
+                                                    : money(bom.material_cost)}
                                             </td>
 
                                             <td className="px-3 py-4 font-mono">
@@ -586,8 +615,12 @@ export default function BillOfMaterialsIndex({
                                                     {money(bom.total_cost)}
                                                 </div>
                                                 <div className="text-xs text-indigo-600 dark:text-indigo-400 font-mono">
-                                                    {money(bom.unit_cost)} /{' '}
-                                                    {bom.unit}
+                                                    {bom.unit_cost === undefined
+                                                        ? '—'
+                                                        : money(
+                                                              bom.unit_cost,
+                                                          )}{' '}
+                                                    / {bom.unit}
                                                 </div>
                                             </td>
 
@@ -668,10 +701,18 @@ export default function BillOfMaterialsIndex({
 
                 {/* BOM BUILDER MODAL */}
                 {builderOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+                    <Modal
+                        show
+                        title="Bill of Materials"
+                        maxWidth="5xl"
+                        closeable={!form.processing}
+                        onClose={() =>
+                            guard.request(() => setBuilderOpen(false))
+                        }
+                    >
                         <div className="relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl dark:bg-slate-900 max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800">
                             {/* Modal Header */}
-                            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                         <IconLayers className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -686,7 +727,13 @@ export default function BillOfMaterialsIndex({
                                     </p>
                                 </div>
                                 <button
-                                    onClick={() => setBuilderOpen(false)}
+                                    onClick={() =>
+                                        guard.request(() =>
+                                            setBuilderOpen(false),
+                                        )
+                                    }
+                                    disabled={form.processing}
+                                    aria-label="Close Bill of Materials"
                                     className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-500 dark:hover:bg-slate-800"
                                 >
                                     <IconClose className="h-5 w-5" />
@@ -701,10 +748,22 @@ export default function BillOfMaterialsIndex({
                                 {/* Basic Info Section */}
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                     <div className="sm:col-span-2">
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-name"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Recipe / BOM Name *
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                form.errors.name,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.name
+                                                    ? 'bom-name-error'
+                                                    : undefined
+                                            }
+                                            id="bom-name"
                                             type="text"
                                             required
                                             value={form.data.name}
@@ -717,18 +776,30 @@ export default function BillOfMaterialsIndex({
                                             placeholder="e.g. Ergonomic Office Chair Assembly"
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
-                                        {form.errors.name && (
-                                            <p className="mt-1 text-xs text-rose-500">
-                                                {form.errors.name}
-                                            </p>
-                                        )}
+                                        <InputError
+                                            id="bom-name-error"
+                                            message={form.errors.name}
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-product"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Finished Output Product *
                                         </label>
                                         <select
+                                            aria-invalid={Boolean(
+                                                form.errors.product_id,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.product_id
+                                                    ? 'bom-product-error'
+                                                    : undefined
+                                            }
+                                            id="bom-product"
                                             required
                                             value={form.data.product_id}
                                             onChange={(e) => {
@@ -756,18 +827,30 @@ export default function BillOfMaterialsIndex({
                                                 </option>
                                             ))}
                                         </select>
-                                        {form.errors.product_id && (
-                                            <p className="mt-1 text-xs text-rose-500">
-                                                {form.errors.product_id}
-                                            </p>
-                                        )}
+                                        <InputError
+                                            id="bom-product-error"
+                                            message={form.errors.product_id}
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-version"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Version
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                form.errors.version,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.version
+                                                    ? 'bom-version-error'
+                                                    : undefined
+                                            }
+                                            id="bom-version"
                                             type="text"
                                             value={form.data.version}
                                             onChange={(e) =>
@@ -778,13 +861,30 @@ export default function BillOfMaterialsIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="bom-version-error"
+                                            message={form.errors.version}
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-quantity"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Batch Output Quantity *
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                form.errors.quantity,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.quantity
+                                                    ? 'bom-quantity-error'
+                                                    : undefined
+                                            }
+                                            id="bom-quantity"
                                             type="number"
                                             step="0.01"
                                             min="0.01"
@@ -800,13 +900,30 @@ export default function BillOfMaterialsIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="bom-quantity-error"
+                                            message={form.errors.quantity}
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-unit"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Batch Unit
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                form.errors.unit,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.unit
+                                                    ? 'bom-unit-error'
+                                                    : undefined
+                                            }
+                                            id="bom-unit"
                                             type="text"
                                             value={form.data.unit}
                                             onChange={(e) =>
@@ -817,13 +934,30 @@ export default function BillOfMaterialsIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="bom-unit-error"
+                                            message={form.errors.unit}
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-labor-cost"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Direct Labor Cost (THB)
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                form.errors.labor_cost,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.labor_cost
+                                                    ? 'bom-labor-cost-error'
+                                                    : undefined
+                                            }
+                                            id="bom-labor-cost"
                                             type="number"
                                             step="0.01"
                                             min="0"
@@ -838,13 +972,30 @@ export default function BillOfMaterialsIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="bom-labor-cost-error"
+                                            message={form.errors.labor_cost}
+                                            className="mt-1"
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-overhead-cost"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Factory Overhead Cost (THB)
                                         </label>
                                         <input
+                                            aria-invalid={Boolean(
+                                                form.errors.overhead_cost,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.overhead_cost
+                                                    ? 'bom-overhead-cost-error'
+                                                    : undefined
+                                            }
+                                            id="bom-overhead-cost"
                                             type="number"
                                             step="0.01"
                                             min="0"
@@ -859,12 +1010,17 @@ export default function BillOfMaterialsIndex({
                                             }
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
+                                        <InputError
+                                            id="bom-overhead-cost-error"
+                                            message={form.errors.overhead_cost}
+                                            className="mt-1"
+                                        />
                                     </div>
                                 </div>
 
                                 {/* Dynamic Costing Summary Banner */}
                                 <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/20">
-                                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-5 text-center">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:grid-cols-5 text-center">
                                         <div>
                                             <div className="text-xs text-slate-500 dark:text-slate-400">
                                                 Material Cost
@@ -1229,6 +1385,7 @@ export default function BillOfMaterialsIndex({
                                                                                             {
                                                                                                 sb.version
                                                                                             }
+
                                                                                             )
                                                                                         </option>
                                                                                     ),
@@ -1407,13 +1564,39 @@ export default function BillOfMaterialsIndex({
                                     </div>
                                 </div>
 
+                                {itemErrors.length > 0 && (
+                                    <div
+                                        id="bom-item-errors"
+                                        className="space-y-1"
+                                    >
+                                        {itemErrors.map(([field, message]) => (
+                                            <InputError
+                                                key={field}
+                                                message={message}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
                                 {/* Routing Notes and Active Status */}
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-center">
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                                        <label
+                                            htmlFor="bom-routing-notes"
+                                            className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1"
+                                        >
                                             Routing & Work Center Instructions
                                         </label>
                                         <textarea
+                                            aria-invalid={Boolean(
+                                                form.errors.routing_notes,
+                                            )}
+                                            aria-describedby={
+                                                form.errors.routing_notes
+                                                    ? 'bom-routing-notes-error'
+                                                    : undefined
+                                            }
+                                            id="bom-routing-notes"
                                             rows={2}
                                             value={form.data.routing_notes}
                                             onChange={(e) =>
@@ -1424,6 +1607,11 @@ export default function BillOfMaterialsIndex({
                                             }
                                             placeholder="Assembly steps, workstation requirements, calibration notes..."
                                             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                        <InputError
+                                            id="bom-routing-notes-error"
+                                            message={form.errors.routing_notes}
+                                            className="mt-1"
                                         />
                                     </div>
 
@@ -1458,7 +1646,13 @@ export default function BillOfMaterialsIndex({
                                 <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                                     <button
                                         type="button"
-                                        onClick={() => setBuilderOpen(false)}
+                                        onClick={() =>
+                                            guard.request(() =>
+                                                setBuilderOpen(false),
+                                            )
+                                        }
+                                        disabled={form.processing}
+                                        aria-label="Close Bill of Materials"
                                         className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                                     >
                                         Cancel
@@ -1466,7 +1660,7 @@ export default function BillOfMaterialsIndex({
                                     <button
                                         type="submit"
                                         disabled={form.processing}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:opacity-50"
+                                        className="erp-button erp-primary"
                                     >
                                         {form.processing
                                             ? 'Saving...'
@@ -1477,14 +1671,19 @@ export default function BillOfMaterialsIndex({
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </Modal>
                 )}
 
                 {/* EXPLOSION & FLATTENING TREE MODAL */}
                 {explosionOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+                    <Modal
+                        show
+                        title="BOM Explosion"
+                        maxWidth="4xl"
+                        onClose={() => setExplosionOpen(false)}
+                    >
                         <div className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl dark:bg-slate-900 max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800">
-                            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                         <IconFolderTree className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -1515,37 +1714,45 @@ export default function BillOfMaterialsIndex({
                                         Analyzing multi-level BOM explosion and
                                         checking for circular dependencies...
                                     </div>
+                                ) : failedExplosion ? (
+                                    <div className="space-y-3">
+                                        <InputError message="Could not load the material details. Try again." />
+                                        <button
+                                            type="button"
+                                            className="erp-button erp-secondary"
+                                            onClick={() =>
+                                                void viewExplosion(
+                                                    failedExplosion,
+                                                )
+                                            }
+                                        >
+                                            Retry
+                                        </button>
+                                    </div>
                                 ) : explosionData ? (
                                     <>
-                                        {/* Total Calculated Cost Banner */}
+                                        {/* Persisted server-calculated cost for this recipe batch. */}
                                         <div className="flex items-center justify-between rounded-xl bg-indigo-50 p-4 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900">
                                             <div>
                                                 <div className="text-xs text-indigo-700 dark:text-indigo-300 font-semibold uppercase">
-                                                    Fully Absorbed Production
-                                                    Cost
+                                                    Recipe Batch Cost
                                                 </div>
                                                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                                                    Calculated across all nested
-                                                    sub-assemblies and labor
-                                                    lines
+                                                    Stored standard cost for
+                                                    this recipe
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-xl font-bold font-mono text-indigo-700 dark:text-indigo-300">
                                                     {money(
-                                                        explosionData.total_calculated_cost,
+                                                        explosionData.bom
+                                                            .total_cost,
                                                     )}
                                                 </div>
                                                 <div className="text-xs text-slate-500">
-                                                    {money(
-                                                        explosionData.total_calculated_cost /
-                                                            (Number(
-                                                                explosionData
-                                                                    .bom
-                                                                    .quantity,
-                                                            ) || 1),
-                                                    )}{' '}
-                                                    / {explosionData.bom.unit}
+                                                    Batch{' '}
+                                                    {explosionData.bom.quantity}{' '}
+                                                    {explosionData.bom.unit}
                                                 </div>
                                             </div>
                                         </div>
@@ -1570,7 +1777,12 @@ export default function BillOfMaterialsIndex({
                                                 Consolidated Material Demand
                                                 (Flattened MRP)
                                             </h4>
-                                            <div className="rounded-xl border border-slate-200 overflow-hidden dark:border-slate-800">
+                                            <div
+                                                className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800"
+                                                tabIndex={0}
+                                                role="region"
+                                                aria-label="Consolidated material demand"
+                                            >
                                                 <table className="w-full text-left text-xs">
                                                     <thead className="border-b border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
                                                         <tr>
@@ -1596,7 +1808,7 @@ export default function BillOfMaterialsIndex({
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                                        {explosionData.flattened_materials.map(
+                                                        {explosionData.materials_summary.map(
                                                             (m) => (
                                                                 <tr
                                                                     key={
@@ -1616,7 +1828,7 @@ export default function BillOfMaterialsIndex({
                                                                     </td>
                                                                     <td className="px-2 py-2 font-semibold text-slate-900 dark:text-white">
                                                                         {
-                                                                            m.total_quantity
+                                                                            m.required_quantity
                                                                         }
                                                                     </td>
                                                                     <td className="px-2 py-2 text-slate-500">
@@ -1643,9 +1855,14 @@ export default function BillOfMaterialsIndex({
                                 ) : null}
                             </div>
                         </div>
-                    </div>
+                    </Modal>
                 )}
             </div>
+            <DiscardChangesDialog
+                open={guard.confirming}
+                onKeep={guard.keep}
+                onDiscard={guard.discard}
+            />
         </AuthenticatedLayout>
     );
 }
@@ -1653,42 +1870,36 @@ export default function BillOfMaterialsIndex({
 function ExplosionTreeBranch({ node }: { node: ExplosionNode }) {
     return (
         <div className="space-y-1.5">
-            <div className="flex items-center justify-between rounded-lg bg-white p-2.5 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white p-2.5 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <span className="inline-flex items-center justify-center h-6 w-6 rounded bg-indigo-100 dark:bg-indigo-900/60 text-xs font-bold text-indigo-700 dark:text-indigo-300">
                         L{node.level}
                     </span>
                     <span className="font-semibold text-slate-900 dark:text-white text-xs">
-                        {node.bom_name} ({node.bom_no})
-                    </span>
-                    <span className="text-xs text-slate-400 font-mono">
-                        [{node.product_sku}]
+                        {node.name} ({node.bom_no})
                     </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs font-mono">
                     <span className="text-slate-500">
-                        Qty: {node.output_quantity} {node.unit}
-                    </span>
-                    <span className="font-bold text-slate-900 dark:text-white">
-                        {money(node.total_cost)}
+                        Batch output: {node.batch_quantity}
                     </span>
                 </div>
             </div>
 
             {node.items && node.items.length > 0 && (
-                <div className="pl-6 border-l-2 border-slate-200 dark:border-slate-700 ml-3 space-y-1.5 mt-1.5">
+                <div className="ml-1 mt-1.5 space-y-1.5 border-l border-slate-200 pl-2 dark:border-slate-700 sm:ml-3 sm:pl-6">
                     {node.items.map((item, idx) => (
                         <div key={idx} className="space-y-1.5">
-                            <div className="flex items-center justify-between rounded bg-slate-50/80 p-2 text-xs dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded bg-slate-50/80 p-2 text-xs dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
                                     <span
                                         className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                                            item.type === 'sub_assembly'
+                                            item.is_subassembly
                                                 ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300'
                                                 : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
                                         }`}
                                     >
-                                        {item.type === 'sub_assembly'
+                                        {item.is_subassembly
                                             ? 'Sub-Assembly'
                                             : 'Material'}
                                     </span>
@@ -1702,8 +1913,8 @@ function ExplosionTreeBranch({ node }: { node: ExplosionNode }) {
                                 <div className="flex items-center gap-3 font-mono">
                                     <span className="text-slate-500">
                                         {item.required_quantity} {item.unit}
-                                        {item.scrap_percentage > 0 &&
-                                            ` (+${item.scrap_percentage}% scrap)`}
+                                        {item.waste_percent > 0 &&
+                                            ` (+${item.waste_percent}% scrap)`}
                                     </span>
                                     <span className="font-semibold text-slate-800 dark:text-slate-200">
                                         {money(item.total_cost)}
@@ -1711,10 +1922,8 @@ function ExplosionTreeBranch({ node }: { node: ExplosionNode }) {
                                 </div>
                             </div>
 
-                            {item.sub_explosion && (
-                                <ExplosionTreeBranch
-                                    node={item.sub_explosion}
-                                />
+                            {item.sub_bom && (
+                                <ExplosionTreeBranch node={item.sub_bom} />
                             )}
                         </div>
                     ))}

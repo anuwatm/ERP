@@ -5,7 +5,8 @@ const { randomUUID } = require("node:crypto");
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
 const base = "http://127.0.0.1:8147",
-  directory = "temp/phase2884-patients-r3";
+  directory =
+    "temp/phase2884-patients-" + (process.env.POS_PATIENT_BROWSER_RUN || "r3");
 const ids = JSON.parse(fs.readFileSync(directory + "/identities.json", "utf8"));
 const report = {
   scope:
@@ -14,6 +15,58 @@ const report = {
   errors: [],
 };
 let currentPage;
+async function capturePatientLayout(page, role) {
+  for (const width of [390, 1440])
+    for (const theme of ["light", "dark"]) {
+      await page.setViewportSize({ width, height: 950 });
+      await page.evaluate(
+        (theme) => localStorage.setItem("pos-theme", theme),
+        theme,
+      );
+      await page.goto(base + "/patients");
+      await page.locator("#load").click();
+      await page.waitForFunction(() =>
+        /สิทธิ์อ่าน|เห็นเฉพาะ/.test(
+          document.querySelector("#message").textContent,
+        ),
+      );
+      assert.equal(
+        await page
+          .locator("html")
+          .evaluate((el) => getComputedStyle(el).colorScheme),
+        theme,
+      );
+      assert.equal(
+        await page.locator("#clinical").isVisible(),
+        ["pharmacist", "qualified"].includes(role),
+      );
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth + 1,
+        ),
+        false,
+      );
+      if (["cashier", "manager"].includes(role)) {
+        assert.equal(
+          (await page.locator("#patients").innerText()).includes(
+            "SYNTHETIC-PATIENT-B-SECRET",
+          ),
+          false,
+        );
+      }
+      await page.screenshot({
+        path: directory + "/ui-" + role + "-" + width + "-" + theme + ".png",
+        fullPage: true,
+      });
+      report.cases.push({
+        name: "patient layout and masking",
+        role,
+        width,
+        theme,
+        result: "PASS",
+      });
+    }
+}
 async function login(browser, role, width = 1280) {
   const context = await browser.newContext({
     viewport: { width, height: 900 },
@@ -222,6 +275,7 @@ async function request(page, path, body) {
       name: "clinician create/lost-response replay/stale409/append correction/checkout/timeline/no offline storage",
       result: "PASS",
     });
+    await capturePatientLayout(page, "pharmacist");
     await context.close();
     for (const role of [
       "cashier",
@@ -296,6 +350,8 @@ async function request(page, path, body) {
         }
       }
       report.cases.push({ role, result: "PASS" });
+      if (["cashier", "manager", "qualified"].includes(role))
+        await capturePatientLayout(page, role);
       await context.close();
     }
     assert.deepEqual(report.errors, []);

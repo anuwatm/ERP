@@ -617,7 +617,7 @@ export default function CashFlow({
 
                 {/* Tab Navigation & Scenario Tuning Trigger */}
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-700">
-                    <div className="flex gap-2">
+                    <div className="flex min-w-0 flex-wrap gap-2">
                         <button
                             type="button"
                             onClick={() => setActiveTab('chart')}

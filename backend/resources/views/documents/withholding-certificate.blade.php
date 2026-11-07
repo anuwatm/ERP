@@ -5,6 +5,7 @@
     <title>Withholding Tax Certificate {{ $expense['expense_no'] }}</title>
     <style>
 @include('documents.pdf-fonts')
+@include('documents.paper-colors')
 
         @page { size: A4; margin: 16mm; }
         body { color: #111827; font-family: "Sarabun", "DejaVu Sans", sans-serif; font-size: 12px; line-height: 1.5; }

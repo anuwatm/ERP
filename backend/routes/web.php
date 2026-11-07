@@ -199,6 +199,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])
         ->middleware(['permission:purchase_orders.create', 'password.confirm', 'throttle:10,1', EnsureFormSubmission::class])
         ->name('purchase-orders.store');
+    Route::post('/purchase-orders/preview', [PurchaseOrderController::class, 'preview'])
+        ->middleware(['permission:purchase_orders.create', 'throttle:20,1'])
+        ->name('purchase-orders.preview');
     Route::patch('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])
         ->middleware(['permission:purchase_orders.update', 'password.confirm', 'throttle:10,1'])
         ->name('purchase-orders.update');

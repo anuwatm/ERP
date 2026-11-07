@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
 
 const source = (name) =>
     readFileSync(
@@ -10,6 +11,45 @@ const source = (name) =>
         ),
         'utf8',
     );
+
+test('system theme follows color scheme changes on standalone pages and respects explicit choices', () => {
+    const script = readFileSync(
+        new URL('../../public/erp-theme.js', import.meta.url),
+        'utf8',
+    );
+    let dark;
+    let onChange;
+    const root = {
+        dataset: {},
+        classList: {
+            toggle: (name, enabled) => {
+                assert.equal(name, 'dark');
+                dark = enabled;
+            },
+        },
+    };
+
+    runInNewContext(script, {
+        document: { documentElement: root },
+        localStorage: { getItem: () => 'system' },
+        window: {
+            matchMedia: () => ({
+                matches: false,
+                addEventListener: (name, listener) => {
+                    assert.equal(name, 'change');
+                    onChange = listener;
+                },
+            }),
+        },
+    });
+
+    assert.equal(dark, false);
+    onChange({ matches: true });
+    assert.equal(dark, true);
+    root.dataset.themePreference = 'dark';
+    onChange({ matches: false });
+    assert.equal(dark, true);
+});
 
 test('dashboard filter keeps period state in the URL and rejects invalid custom ranges', () => {
     const filter = source('DashboardFilterBar.tsx');

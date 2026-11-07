@@ -1,6 +1,10 @@
 <?php
 
-$fixture = dirname(__DIR__, 3).'/temp/phase2884-patients-r3';
+$run = getenv('POS_PATIENT_BROWSER_RUN') ?: 'r3';
+if (! preg_match('/^[a-z0-9-]+$/D', $run)) {
+    throw new RuntimeException('Invalid patient fixture run name.');
+}
+$fixture = dirname(__DIR__, 3).'/temp/phase2884-patients-'.$run;
 if (! is_dir($fixture)) {
     mkdir($fixture, 0700, true);
 }

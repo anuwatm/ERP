@@ -157,8 +157,21 @@ class CheckoutTest extends TestCase
     public function test_cash_checkout_replay_and_signed_outbox_are_atomic(): void
     {
         $input = $this->input();
+        $this->postJson('/checkout/preview', $input)->assertUnauthorized();
+        $preview = $this->actingAs($this->staff)->withSession([
+            'pos_login_at' => time(),
+            'pos_last_seen' => time(),
+        ])->postJson('/checkout/preview', $input)
+            ->assertOk()
+            ->assertExactJson(['subtotal' => '20.00', 'tax_amount' => '1.40', 'total' => '21.40', 'currency' => 'THB'])
+            ->json();
+        $this->postJson('/checkout/preview', ['catalog_version' => 'not-published'] + $input)->assertUnprocessable();
+        $this->assertDatabaseCount('pos_orders', 0);
+        $this->assertDatabaseCount('pos_outbox', 0);
+        $this->assertDatabaseHas('pos_grants', ['branch_id' => $this->branch, 'consumed_quantity' => 0, 'reserved_quantity' => 0]);
+
         $sale = app(CheckoutService::class)->checkout($this->staff, $input);
-        $this->assertSame('21.40', $sale['total']);
+        $this->assertSame($preview['total'], $sale['total']);
         $this->assertSame('8.60', $sale['change']);
         $again = app(CheckoutService::class)->checkout($this->staff, $input);
         $this->assertSame($sale['sale_id'], $again['sale_id']);

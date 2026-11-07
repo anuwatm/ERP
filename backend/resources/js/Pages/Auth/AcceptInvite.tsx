@@ -28,7 +28,7 @@ export default function AcceptInvite({ invite }: { invite: Invite }) {
         <GuestLayout>
             <Head title="Accept invite" />
             <form onSubmit={submit}>
-                <div className="mb-4 text-sm text-gray-700">
+                <div className="mb-4 break-words text-sm text-gray-700 dark:text-slate-300">
                     Accept invite for {invite.email}
                 </div>
                 <InputLabel htmlFor="password" value="Password" />

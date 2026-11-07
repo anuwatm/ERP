@@ -2,19 +2,19 @@
 
 Standalone POS สำหรับ Retail, Restaurant และ Pharmacy ใช้ Laravel 13 / PHP 8.3+ / React 18 แยกฐานข้อมูล บัญชี session และ APP_KEY จาก ERP
 
-สถานะ local ถึง **Phase 28.8.5** ฐานที่บันทึกไว้ล่าสุด POS SQLite 25/25 migrations และ ERP 88/88 [ผลอัปเดตฐาน](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md) · [หลักฐาน Phase 28.8.5](../document/acceptance/phase28_8_5/README.md) · [ผลตรวจ security ล่าสุด](../document/SECURITY_REVIEW_20261105.md)
+สถานะ local ถึง **Phase 28.8.5** พร้อม **POS Setup Wizard (`/setup`)** และโหมดธีม `Light / Dark / System` แยกจากหน้าพิมพ์สลิปพื้นขาว (`#FFFFFF`) (อัปเดต 2026-11-06; POS PHPUnit **115 tests / 2,160 assertions**) ฐานที่บันทึกไว้ล่าสุด POS SQLite **25/25 migrations** (`56` ตาราง) และ ERP **88/88 migrations** (`173` ตาราง) [ผลอัปเดตฐาน](../document/DATABASE_UPDATE_20261105_PHASE28_8_5.md) · [หลักฐาน Phase 28.8.5](../document/acceptance/phase28_8_5/README.md) · [ผลตรวจรับรวม Local Closure](../document/acceptance/local-closure-20261105/README.md) · [ผลตรวจ security ล่าสุด](../document/SECURITY_REVIEW_20261105.md)
 
 > **ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง** ใช้ขั้นตอน local และข้อมูลสังเคราะห์ในการทดลอง
 
 ## ติดตั้งและเปิดใช้
 
-จาก `pos/` ใช้ `composer install`, `pnpm install --frozen-lockfile` และ `pnpm run build` ก่อนเตรียม config และฐาน ดู [คู่มือติดตั้งและทดลอง](../document/README_POS.md) สำหรับขั้นตอนสร้าง APP_KEY เฉพาะฐานใหม่, migrate, สร้างสาขา, ตั้ง ERP connector และเปิด POS บน loopback
+จาก `pos/` ใช้ `composer install`, `pnpm install --frozen-lockfile` และ `pnpm run build` ก่อนเตรียม config และฐาน ดู [คู่มือติดตั้งและทดลอง](../document/README_POS.md) สำหรับขั้นตอนสร้าง APP_KEY เฉพาะฐานใหม่, migrate, สร้างสาขาแรกผ่าน `/setup` (เฉพาะฐานว่างพร้อม `POS_SETUP_TOKEN`) หรือ CLI, ตั้ง ERP connector และเปิด POS บน loopback
 
-ทั้งสามประเภทเข้า `/` หลังเปิด local server เช่น **http://127.0.0.1:8128/** ด้วยบัญชี POS ของสาขาที่ต้องการ [Manager Config](../document/POS_CONFIGURATION.md) · [Diagrams ทั้งสามประเภท](../document/24_pos_workflows.html)
+ทั้งสามประเภทเข้า `/` หลังเปิด local server เช่น **http://127.0.0.1:8128/** ด้วยบัญชี POS ของสาขาที่ต้องการ [Setup & Manager Config](../document/POS_CONFIGURATION.md) · [Diagrams ทั้งสามประเภท](../document/24_pos_workflows.html) · [ทะเบียนตรวจรับ UI](../document/design/ui-acceptance-register.md)
 
 - [Retail — เปิดกะ ขายสินค้า คืนเงิน ปิดกะ](../document/README_POS_RETAIL.md)
 - [Restaurant — โต๊ะ จองคิว QR ครัว และแยกบิล](../document/README_POS_RESTAURANT.md)
-- [Pharmacy — จ่ายยา ตรวจของคืน และประวัติผู้ป่วย](../document/README_POS_PHARMACY.md)
+- [Pharmacy — แสดงล็อต/วันหมดอายุในตะกร้า จ่ายยา ตรวจของคืน และประวัติผู้ป่วย](../document/README_POS_PHARMACY.md)
 
 ## Dependencies / local development
 

@@ -6,10 +6,11 @@
     <style>
         body{font-family:system-ui,sans-serif;background:#f2f5f8;color:#172b3a;margin:0}main{max-width:1100px;margin:auto;padding:24px}header{display:flex;justify-content:space-between;gap:16px;align-items:center}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:20px}section{background:white;border:1px solid #d5dfe5;border-radius:12px;padding:20px;margin:20px 0}label{display:block;margin:12px 0}input,select,button{box-sizing:border-box;width:100%;padding:11px;font:inherit;border:1px solid #8a9ba7;border-radius:6px}button{background:#165c50;color:white;cursor:pointer;margin-top:12px}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-bottom:1px solid #ddd;overflow-wrap:anywhere}.scroll{overflow:auto}code{overflow-wrap:anywhere}small{display:block;color:#465b69}.notice{background:#fff5db;padding:14px;border-radius:8px}.error{color:#942727}a{color:#165c50}h2{margin-top:0}
     </style>
+    @include('partials.workspace-theme')
 </head>
-<body><main>
+<body class="pos-workspace"><main>
 <header><div><h1>ตั้งค่า POS</h1><p>{{ $branch->name }} · {{ $branch->code }}</p></div><a href="/">กลับหน้าขาย</a></header>
-<p class="notice">สำหรับ local เท่านั้น ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง ผู้จัดการดูแลได้เฉพาะสาขาของตน การเพิ่มสาขา/ผู้จัดการคนแรกใช้ CLI ตามคู่มือ</p>
+<p class="notice">สำหรับ local เท่านั้น ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง ผู้จัดการดูแลได้เฉพาะสาขาของตน สำหรับฐานใหม่ให้สร้างสาขาแรกผ่าน Setup Wizard หรือ CLI ตามคู่มือ</p>
 @if(session('status'))<p role="status">{{ session('status') }}</p>@endif
 @if($errors->any())<div class="error" role="alert"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <div class="grid">

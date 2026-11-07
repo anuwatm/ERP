@@ -14,26 +14,39 @@ export default function PageHeader({
     breadcrumbs,
 }: PageHeaderProps) {
     return (
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
                 {breadcrumbs && breadcrumbs.length > 0 && (
-                    <nav className="mb-1.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-200">
+                    <nav
+                        aria-label="Breadcrumb"
+                        className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600 dark:text-slate-300"
+                    >
                         {breadcrumbs.map((crumb, idx) => (
                             <span key={idx} className="flex items-center gap-2">
                                 {idx > 0 && (
-                                    <span className="text-slate-400 dark:text-slate-400">
+                                    <span
+                                        aria-hidden="true"
+                                        className="text-slate-400"
+                                    >
                                         /
                                     </span>
                                 )}
                                 {crumb.href ? (
                                     <a
                                         href={crumb.href}
-                                        className="hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                                        className="underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-700 dark:focus-visible:outline-teal-300"
                                     >
                                         {crumb.label}
                                     </a>
                                 ) : (
-                                    <span className="text-slate-700 dark:text-white font-bold">
+                                    <span
+                                        aria-current={
+                                            idx === breadcrumbs.length - 1
+                                                ? 'page'
+                                                : undefined
+                                        }
+                                        className="font-semibold text-erp-ink"
+                                    >
                                         {crumb.label}
                                     </span>
                                 )}
@@ -41,18 +54,20 @@ export default function PageHeader({
                         ))}
                     </nav>
                 )}
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">
+                <h1 className="break-words text-2xl font-bold tracking-tight text-erp-ink sm:text-3xl">
                     {title}
                 </h1>
                 {description && (
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-100 font-medium">
+                    <p className="mt-1.5 max-w-prose text-sm text-slate-600 dark:text-slate-300">
                         {description}
                     </p>
                 )}
             </div>
 
             {actions && (
-                <div className="flex items-center gap-3">{actions}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                    {actions}
+                </div>
             )}
         </div>
     );

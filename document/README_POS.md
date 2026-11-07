@@ -85,6 +85,17 @@ php artisan migrate:status
 
 ## สร้างและตั้งค่าสาขา
 
+### POS Setup Wizard สำหรับสาขาแรก
+
+1. ตั้งค่า `pos/.env`, สร้าง `APP_KEY` สำหรับฐานใหม่ และรัน `php artisan migrate` จาก `pos/` ตามขั้นตอนด้านบน
+2. ตั้ง `APP_ENV=local` และเพิ่ม `POS_SETUP_TOKEN` เป็น token สุ่มอย่างน้อย 32 ตัวอักษรใน `pos/.env` แล้วรัน `php artisan config:clear`
+3. เปิด POS บน loopback ตามตัวอย่างด้านล่าง แล้วเข้า `http://127.0.0.1:8128/setup` กรอกรหัสและชื่อสาขา ประเภทกิจการ รหัส Terminal และบัญชี Manager พิมพ์ `INSTALL` เพื่อยืนยัน
+4. เมื่อสำเร็จ ลบ `POS_SETUP_TOKEN` แล้วรัน `php artisan config:clear` เข้าหน้าขายด้วย Manager ที่สร้าง และตั้ง ERP provisioning, catalog และ quota ตามขั้นตอนเดิมก่อนขาย
+
+Wizard ใช้ได้เฉพาะ local/testing จาก loopback และฐานที่ยังไม่มีสาขา Terminal หรือบัญชีพนักงาน การสร้าง Terminal ล็อกประเภทกิจการตามกติกาเดิม และบัญชี Manager สำหรับร้านขายยายังต้อง provision คุณวุฒิแยกตามคู่มือร้านขายยา
+
+### สร้างผ่าน CLI
+
 ตัวอย่างสร้างสาขา Retail ครั้งแรกจาก `pos/` ใช้ UUID เดิมเมื่อสาขาหรือ Terminal มีอยู่แล้ว คำสั่ง `pos:staff` ถามชื่อและรหัสผ่านผ่าน terminal
 
 ```powershell
@@ -114,6 +125,14 @@ php artisan pos:staff $branch cashier.retail@pos.test --role=cashier
 ก่อนขาย ให้ตรวจว่าสาขา Terminal และบัญชีใช้งานได้ มี catalog ที่ยังไม่หมดอายุ มี quota ของสินค้า/วัตถุดิบ และมี issuer profile ถ้าเปิด ABB/FULL สำหรับการเชื่อม ERP ให้ตั้ง connector allowlist และ mTLS ตาม [Operations](../docs/PHASE_28_OPERATIONS.md) แล้วจึงใช้ `php artisan pos:sync <INSTANCE_UUID>` จาก `backend/` ตาม runbook
 
 ## เปิดใช้และตรวจความพร้อม
+
+บนหน้าขาย เลือก **สว่าง / มืด / ตามระบบ** ที่แถบด้านบนของ POS การตั้งค่านี้จำในเบราว์เซอร์ของเครื่องขาย และใช้ต่อในหน้า Config, Delivery, สมาชิก, ผู้ป่วย, เมนู และ Offline บน URL ต้นทางเดียวกัน เอกสารพิมพ์ใช้พื้นขาว
+
+หน้า POS ใช้ Sarabun ที่มากับ release ใน `pos/public/fonts/` พร้อมไฟล์ `OFL.txt` เมื่อเปิดหน้า Offline ทางออนไลน์ครั้งแรก service worker จะเตรียมฟอนต์ตัวปกติและตัวหนาไว้กับหน้าคิว
+
+ลิงก์ **ขาย / เปิดกะ** พาไปยังหน้าที่ใช้เปิดกะหรือเลือกสินค้าและรับเงิน ร้านอาหารมีทางลัดไปผังโต๊ะและคิวครัว ร้านขายยากดดูรหัสล็อตและวันหมดอายุในตะกร้าได้เมื่อสาขามีล็อตที่ยังขายได้
+
+ร้านค้าทั่วไปและร้านขายยาที่เปิดขายบน POS Server กด **ดูยอดก่อนส่วนลด** หลังเพิ่มสินค้าเพื่อดูยอดสินค้า VAT และยอดรวม เมื่อแก้ตะกร้าให้กดดูยอดใหม่ ระบบจะบันทึกการขายเมื่อยืนยันรับเงินสด
 
 ```powershell
 # จาก pos/
