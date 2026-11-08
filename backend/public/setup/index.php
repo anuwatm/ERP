@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Setup\Installer;
+
 use function Setup\renderInstallerStatus;
 
 header('Cache-Control: private, no-store');

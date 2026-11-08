@@ -16,11 +16,7 @@ class EnsurePermission
             abort(403);
         }
 
-        $hasPermission = $user->roles()
-            ->whereHas('permissions', fn ($query) => $query->where('code', $permission))
-            ->exists();
-
-        abort_unless($hasPermission, 403);
+        abort_unless($user->hasPermissionCode($permission), 403);
 
         return $next($request);
     }

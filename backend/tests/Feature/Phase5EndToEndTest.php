@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\AuthenticateIntegrationKey;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Deal;
@@ -12,6 +13,7 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -283,11 +285,11 @@ class Phase5EndToEndTest extends TestCase
         $this->assertNotEmpty($apiRoutes);
         foreach ($apiRoutes as $route) {
             $this->assertSame([], array_diff($route->methods(), ['GET', 'HEAD']));
-            $this->assertStringContainsString(\App\Http\Middleware\AuthenticateIntegrationKey::class, implode(',', app('router')->gatherRouteMiddleware($route)));
+            $this->assertStringContainsString(AuthenticateIntegrationKey::class, implode(',', app('router')->gatherRouteMiddleware($route)));
         }
         foreach (Route::getRoutes() as $route) {
             if (! Str::startsWith($route->uri(), 'api/') && (str_contains($route->uri(), 'export') || Str::startsWith($route->uri(), ['notifications', 'notification-settings']))) {
-                $this->assertContains(\Illuminate\Auth\Middleware\Authenticate::class, app('router')->gatherRouteMiddleware($route));
+                $this->assertContains(Authenticate::class, app('router')->gatherRouteMiddleware($route));
             }
         }
         $this->getJson('/api/v1/products')->assertUnauthorized();

@@ -6,13 +6,16 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Pos\Services\CheckpointService;
 use Pos\Services\LotRecallService;
+use Pos\Services\MembershipService;
+use Pos\Services\OutboxArchiveStore;
 use Pos\Services\ProvisioningService;
 use Pos\Services\TaxDocumentService;
 use Pos\Support\CanonicalJson;
 
 Route::middleware(['pos.connector', 'throttle:pos-connector'])->group(function () {
-    Route::put('membership/{id}', function (Request $r, string $id, \Pos\Services\MembershipService $service) {
+    Route::put('membership/{id}', function (Request $r, string $id, MembershipService $service) {
         $service->provision($id, $r->all());
+
         return response()->json(['status' => 'accepted']);
     });
     Route::put('tax-profile', function (Request $r, TaxDocumentService $service) {
@@ -60,7 +63,7 @@ Route::middleware(['pos.connector', 'throttle:pos-connector'])->group(function (
         $archive = DB::table('pos_outbox_archive')->whereIn('branch_id', config('pos.connector_branch_ids'))->where('sequence', '>', $data['cursor'] ?? 0)->select(['sequence', 'event_id', 'event_type', 'branch_id', 'envelope', 'archive_path', 'envelope_hash']);
         $rows = $hot->unionAll($archive)->orderBy('sequence')->limit($data['limit'] ?? 100)->get();
 
-        return response()->json(['events' => $rows->map(fn ($row) => json_decode(app(\Pos\Services\OutboxArchiveStore::class)->envelope($row), true, flags: JSON_THROW_ON_ERROR))->all(), 'next_cursor' => $rows->last()?->sequence ?? ($data['cursor'] ?? 0)]);
+        return response()->json(['events' => $rows->map(fn ($row) => json_decode(app(OutboxArchiveStore::class)->envelope($row), true, flags: JSON_THROW_ON_ERROR))->all(), 'next_cursor' => $rows->last()?->sequence ?? ($data['cursor'] ?? 0)]);
     });
     Route::put('results/{id}', function (Request $r, string $id) {
         $data = $r->validate(['status' => 'required|in:accepted,rejected,needs_review,inventory_pending,dependency_pending', 'revision' => 'required|integer|min:1', 'reason_code' => 'nullable|string|max:80', 'invoice_id' => 'nullable|uuid']);

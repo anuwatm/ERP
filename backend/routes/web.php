@@ -45,6 +45,7 @@ use App\Http\Controllers\HrDashboardController;
 use App\Http\Controllers\Manufacturing\BillOfMaterialsController;
 use App\Http\Controllers\Manufacturing\WorkOrderController;
 use App\Http\Controllers\PortalController;
+use App\Http\Controllers\PosMembershipController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\ActivityController;
 use App\Http\Controllers\Sales\ContactController;
@@ -739,12 +740,12 @@ Route::post('/pos-integration/{instance}/pause', [PosController::class, 'pause']
 Route::post('/pos-events/{inbox}/replay', [PosController::class, 'replay'])->middleware(['auth', 'verified', 'permission:pos.manage', 'permission:inventory.adjust', 'password.confirm', 'throttle:10,1'])->name('pos.replay');
 
 Route::middleware(['auth', 'verified', 'permission:pos.manage', 'throttle:30,1'])->prefix('pos-membership')->name('pos-membership.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\PosMembershipController::class, 'index'])->name('index');
+    Route::get('/', [PosMembershipController::class, 'index'])->name('index');
     Route::middleware('password.confirm')->group(function () {
         foreach (['register', 'promotion', 'allocate', 'publish'] as $action) {
-            Route::post('/'.$action, [\App\Http\Controllers\PosMembershipController::class, $action])->name($action);
+            Route::post('/'.$action, [PosMembershipController::class, $action])->name($action);
         }
-        Route::post('/requests/{id}', [\App\Http\Controllers\PosMembershipController::class, 'decide'])->name('decide');
-        Route::get('/requests/{id}/contact', [\App\Http\Controllers\PosMembershipController::class, 'contact'])->name('contact');
+        Route::post('/requests/{id}', [PosMembershipController::class, 'decide'])->name('decide');
+        Route::get('/requests/{id}/contact', [PosMembershipController::class, 'contact'])->name('contact');
     });
 });

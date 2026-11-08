@@ -7,9 +7,17 @@ use Pos\Models\Staff;
 use Pos\Services\ProvisioningService;
 use Pos\Services\TaxDocumentService;
 
-$fixture = require __DIR__.'/environment.php'; require dirname(__DIR__, 2).'/bootstrap/autoload.php'; $app = require dirname(__DIR__, 2).'/bootstrap/app.php'; $app->useEnvironmentPath($fixture); $app->make(Kernel::class)->bootstrap();
-if (config('database.default') !== 'sqlite' || config('database.connections.sqlite.database') !== $fixture.'/database.sqlite' || !file_exists($fixture.'/signing.pem')) throw new RuntimeException('Synthetic browser fixture required; run prepare.php first.');
-$branch = '28000000-0000-4000-8000-000000000032'; $terminal = '28000000-0000-4000-8000-000000000033'; $product = '28000000-0000-4000-8000-000000000034';
+$fixture = require __DIR__.'/environment.php';
+require dirname(__DIR__, 2).'/bootstrap/autoload.php';
+$app = require dirname(__DIR__, 2).'/bootstrap/app.php';
+$app->useEnvironmentPath($fixture);
+$app->make(Kernel::class)->bootstrap();
+if (config('database.default') !== 'sqlite' || config('database.connections.sqlite.database') !== $fixture.'/database.sqlite' || ! file_exists($fixture.'/signing.pem')) {
+    throw new RuntimeException('Synthetic browser fixture required; run prepare.php first.');
+}
+$branch = '28000000-0000-4000-8000-000000000032';
+$terminal = '28000000-0000-4000-8000-000000000033';
+$product = '28000000-0000-4000-8000-000000000034';
 DB::table('pos_branches')->insertOrIgnore(['id' => $branch, 'code' => 'TAX-B', 'name' => 'ภาษีจำลอง', 'business_type' => 'retail']);
 DB::table('pos_terminals')->insertOrIgnore(['id' => $terminal, 'branch_id' => $branch, 'code' => 'TAX-PC']);
 Staff::firstOrCreate(['email' => 'tax@pos.test'], ['id' => '28000000-0000-4000-8000-000000000035', 'branch_id' => $branch, 'name' => 'พนักงานภาษีจำลอง', 'password' => 'local-fixture-password', 'role' => 'manager', 'active' => true]);

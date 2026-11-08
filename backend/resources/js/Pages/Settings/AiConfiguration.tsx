@@ -248,7 +248,10 @@ export default function AiConfiguration({
                             />
                             {form.data.provider_type === 'openai' && (
                                 <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400">
-                                    💡 Recommended: <strong>gpt-4o-mini</strong> (fast & low cost) or <strong>gpt-4o</strong>. (Legacy gpt-4 & gpt-3.5 do not support vision).
+                                    💡 Recommended: <strong>gpt-4o-mini</strong>{' '}
+                                    (fast & low cost) or <strong>gpt-4o</strong>
+                                    . (Legacy gpt-4 & gpt-3.5 do not support
+                                    vision).
                                 </p>
                             )}
                         </div>

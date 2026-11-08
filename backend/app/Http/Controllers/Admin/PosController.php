@@ -28,35 +28,44 @@ class PosController extends Controller
 
     public function index(Request $request)
     {
-        $ids = DB::table('pos_instances')->where('org_id', $request->user()->org_id)->select('id');
+        $user = $request->user();
+        $orgId = $user->org_id;
+        $canManage = $user->hasPermissionCode('pos.manage');
+        $ids = DB::table('pos_instances')->where('org_id', $orgId)->select('id');
+        $productOptions = $canManage
+            ? DB::table('products')->where('org_id', $orgId)->whereNull('deleted_at')->where('is_active', true)->orderBy('name')->limit(500)->get(['id', 'name', 'sku'])
+            : collect();
+        $activeUsers = $canManage
+            ? User::where('org_id', $orgId)->where('status', 'active')->orderBy('name')->get(['id', 'name'])
+            : collect();
 
         return Inertia::render('Admin/Pos', [
-            'instances' => DB::table('pos_instances')->where('org_id', $request->user()->org_id)->get(['id', 'name', 'branch_id', 'warehouse_id', 'active', 'durable_cursor', 'updated_at', 'last_sync_at', 'last_sync_error', 'next_sync_at', 'recovery_fenced_at', 'checkpoint_cursor']),
+            'instances' => DB::table('pos_instances')->where('org_id', $orgId)->get(['id', 'name', 'branch_id', 'warehouse_id', 'active', 'durable_cursor', 'updated_at', 'last_sync_at', 'last_sync_error', 'next_sync_at', 'recovery_fenced_at', 'checkpoint_cursor']),
             'events' => DB::table('pos_sync_inbox')->whereIn('pos_instance_id', $ids)->latest('updated_at')->limit(100)->get(['id', 'pos_instance_id', 'event_id', 'source_sequence', 'status', 'reason_code', 'attempts', 'acknowledged_at', 'updated_at']),
             'inventoryPending' => DB::table('pos_import_sales')->whereIn('pos_instance_id', $ids)->where('inventory_status', 'pending')->count(),
             'integrityConflicts' => DB::table('pos_sync_conflicts')->whereIn('pos_instance_id', $ids)->count(),
             'transportEnabled' => false,
-            'canReconcile' => $request->user()->hasPermissionCode('pos.reconcile'),
+            'canReconcile' => $user->hasPermissionCode('pos.reconcile'),
             'membershipEnabled' => app()->environment(['local', 'testing']) && config('pos.local_membership_enabled') === true,
-            'canManage' => $request->user()->hasPermissionCode('pos.manage'),
+            'canManage' => $canManage,
             'taxDocumentsEnabled' => app()->environment(['local', 'testing']) && config('pos.local_tax_documents_enabled') === true,
-            'productOptions' => $request->user()->hasPermissionCode('pos.manage') ? DB::table('products')->where('org_id', $request->user()->org_id)->whereNull('deleted_at')->where('is_active', true)->orderBy('name')->limit(500)->get(['id', 'name', 'sku']) : [],
-            'canProvision' => $request->user()->hasPermissionCode('pos.manage') && $request->user()->hasPermissionCode('inventory.adjust'),
-            'setupOptions' => $request->user()->hasPermissionCode('pos.manage') ? [
-                'branches' => DB::table('branches')->where('org_id', $request->user()->org_id)->whereNull('deleted_at')->where('status', 'active')->get(['id', 'name', 'code']),
-                'warehouses' => DB::table('warehouses')->where('org_id', $request->user()->org_id)->get(['id', 'name']),
-                'customers' => DB::table('customers')->where('org_id', $request->user()->org_id)->whereNull('deleted_at')->limit(500)->get(['id', 'company_name as name']),
-                'actors' => User::where('org_id', $request->user()->org_id)->where('status', 'active')->get(['id', 'name']),
-                'accounts' => DB::table('chart_of_accounts')->where('org_id', $request->user()->org_id)->where('status', 'active')->where('is_postable', true)->get(['code', 'name', 'account_type']),
-                'products' => DB::table('products')->where('org_id', $request->user()->org_id)->whereNull('deleted_at')->where('is_active', true)->orderBy('name')->limit(500)->get(['id', 'name']),
-                'lots' => DB::table('inventory_lots')->where('org_id', $request->user()->org_id)->orderBy('lot_no')->limit(500)->get(['id', 'lot_no as name', 'product_id']),
-                'boms' => DB::table('bill_of_materials')->where('org_id', $request->user()->org_id)->whereNull('deleted_at')->where('is_active', true)->limit(500)->get(['id', 'name', 'product_id']),
+            'productOptions' => $productOptions,
+            'canProvision' => $canManage && $user->hasPermissionCode('inventory.adjust'),
+            'setupOptions' => $canManage ? [
+                'branches' => DB::table('branches')->where('org_id', $orgId)->whereNull('deleted_at')->where('status', 'active')->get(['id', 'name', 'code']),
+                'warehouses' => DB::table('warehouses')->where('org_id', $orgId)->get(['id', 'name']),
+                'customers' => DB::table('customers')->where('org_id', $orgId)->whereNull('deleted_at')->limit(500)->get(['id', 'company_name as name']),
+                'actors' => $activeUsers,
+                'accounts' => DB::table('chart_of_accounts')->where('org_id', $orgId)->where('status', 'active')->where('is_postable', true)->get(['code', 'name', 'account_type']),
+                'products' => $productOptions->map(fn($product) => (object) ['id' => $product->id, 'name' => $product->name])->all(),
+                'lots' => DB::table('inventory_lots')->where('org_id', $orgId)->orderBy('lot_no')->limit(500)->get(['id', 'lot_no as name', 'product_id']),
+                'boms' => DB::table('bill_of_materials')->where('org_id', $orgId)->whereNull('deleted_at')->where('is_active', true)->limit(500)->get(['id', 'name', 'product_id']),
             ] : null,
             'recallsEnabled' => app()->environment(['local', 'testing']) && config('pos.local_recalls_enabled') === true,
-            'lotOptions' => $request->user()->hasPermissionCode('pos.manage') ? DB::table('inventory_lots as l')->join('products as p', 'p.id', '=', 'l.product_id')->where('l.org_id', $request->user()->org_id)->where('p.org_id', $request->user()->org_id)->orderBy('l.lot_no')->limit(500)->get(['l.id', 'l.lot_no', 'p.name']) : [],
-            'lotRecalls' => DB::table('pos_lot_recalls')->where('org_id', $request->user()->org_id)->latest()->limit(100)->get(['id', 'inventory_lot_id', 'reason', 'created_at']),
-            'taxSigningOwnerId' => DB::table('pos_tax_settings')->where('org_id', $request->user()->org_id)->value('signing_owner_id'),
-            'taxSigningOwners' => $request->user()->hasPermissionCode('pos.manage') ? User::where('org_id', $request->user()->org_id)->where('status', 'active')->orderBy('name')->get(['id', 'name']) : [],
+            'lotOptions' => $canManage ? DB::table('inventory_lots as l')->join('products as p', 'p.id', '=', 'l.product_id')->where('l.org_id', $orgId)->where('p.org_id', $orgId)->orderBy('l.lot_no')->limit(500)->get(['l.id', 'l.lot_no', 'p.name']) : [],
+            'lotRecalls' => DB::table('pos_lot_recalls')->where('org_id', $orgId)->latest()->limit(100)->get(['id', 'inventory_lot_id', 'reason', 'created_at']),
+            'taxSigningOwnerId' => DB::table('pos_tax_settings')->where('org_id', $orgId)->value('signing_owner_id'),
+            'taxSigningOwners' => $activeUsers,
         ]);
     }
 
@@ -90,7 +99,7 @@ class PosController extends Controller
         abort_unless(app()->environment(['local', 'testing']), 403);
         DB::table('pos_instances')->where('id', $instance)->where('org_id', $request->user()->org_id)->firstOrFail();
         $d = $request->validate(['version' => ['required', 'string', 'regex:/^[A-Za-z0-9_-]{1,80}$/D'], 'product_ids' => 'required|array|min:1|max:5000', 'product_ids.*' => 'required|uuid|distinct', 'tax_rate' => ['required', 'string', 'regex:/^\d{1,2}(\.\d{1,2})?$/D'], 'valid_until' => 'required|date|after:now', 'online_product_ids' => 'present|array|max:5000', 'online_product_ids.*' => 'required|uuid|distinct', 'recipes' => 'present|array|max:5000', 'recipes.*.product_id' => 'required|uuid|distinct', 'recipes.*.bom_id' => 'nullable|uuid']);
-        $service->catalog($instance, $d['version'], $d['product_ids'], $d['tax_rate'], new \DateTimeImmutable($d['valid_until']), $d['online_product_ids'], [], array_filter(array_column($d['recipes'], 'bom_id', 'product_id'), fn ($id) => $id !== null));
+        $service->catalog($instance, $d['version'], $d['product_ids'], $d['tax_rate'], new \DateTimeImmutable($d['valid_until']), $d['online_product_ids'], [], array_filter(array_column($d['recipes'], 'bom_id', 'product_id'), fn($id) => $id !== null));
         $this->audit($request, 'pos.catalog.prepared', $instance, ['version' => $d['version'], 'product_count' => count($d['product_ids'])]);
 
         return back()->with('success', 'เตรียม catalog แล้ว รอ Connector เผยแพร่');
@@ -144,7 +153,7 @@ class PosController extends Controller
         $result = $service->verify($instance, $snapshot);
         $this->audit($request, 'pos.checkpoint.captured', $instance, ['checkpoint_id' => $result['checkpoint_id'], 'status' => $result['status']]);
 
-        return back()->with('success', 'Checkpoint '.$result['checkpoint_id'].' · '.$result['status'].' · through '.$result['through_sequence'].' / '.$result['high_watermark']);
+        return back()->with('success', 'Checkpoint ' . $result['checkpoint_id'] . ' · ' . $result['status'] . ' · through ' . $result['through_sequence'] . ' / ' . $result['high_watermark']);
     }
 
     public function restaurantVariant(Request $request, PosProvisioningService $service)

@@ -88,6 +88,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasPermissionCode(string $permission): bool
     {
+        if (app()->bound('request')) {
+            $request = request();
+            $cached = $request->user()?->id === $this->id
+                && $request->user()?->org_id === $this->org_id
+                ? $request->attributes->get('auth.permissions')
+                : null;
+
+            if (is_array($cached)) {
+                return in_array($permission, $cached, true);
+            }
+        }
+
         return $this->roles()
             ->whereHas('permissions', fn ($query) => $query->where('code', $permission))
             ->exists();

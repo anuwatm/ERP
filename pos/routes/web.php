@@ -5,8 +5,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Pos\Models\Staff;
 use Pos\Http\SetupController;
+use Pos\Models\Staff;
 use Pos\Services\CashMovementService;
 use Pos\Services\CheckoutService;
 use Pos\Services\DiscountService;
@@ -21,17 +21,17 @@ use Pos\Services\ReturnInspectionService;
 use Pos\Services\TaxDocumentService;
 use Pos\Support\LocalFeatureGate;
 
-require __DIR__.'/configuration.php';
-require __DIR__.'/membership.php';
-require __DIR__.'/offline.php';
-require __DIR__.'/patients.php';
-require __DIR__.'/delivery.php';
+require __DIR__ . '/configuration.php';
+require __DIR__ . '/membership.php';
+require __DIR__ . '/offline.php';
+require __DIR__ . '/patients.php';
+require __DIR__ . '/delivery.php';
 
-Route::get('/', fn () => view('pos'));
+Route::get('/', fn() => view('pos'));
 Route::get('/setup', [SetupController::class, 'show'])->name('setup.show');
 Route::post('/setup', [SetupController::class, 'install'])->middleware('throttle:5,1')->name('setup.install');
 Route::middleware(['pos.local-menu', 'throttle:pos-public'])->group(function () {
-    Route::get('/menu', fn () => view('menu'));
+    Route::get('/menu', fn() => view('menu'));
     Route::post('/menu/catalog', function (Request $r, PublicMenuService $service) {
         $d = $r->validate(['token' => 'required|string|size:64']);
 
@@ -72,10 +72,10 @@ Route::middleware('pos.staff')->group(function () {
             $order = DB::table('pos_orders')->where('id', $d['order_id'])->where('branch_id', $r->user()->branch_id)->where('status', 'completed')->firstOrFail();
             abort_if(DB::table('pos_refunds')->where('order_id', $order->id)->where('request_key', '!=', $d['request_key'])->exists(), 409, 'A partially refunded sale must use the original refund workflow.');
             $source = json_decode($order->snapshot, true);
-            $command = $service->command(['order_id' => $order->id, 'terminal_id' => $d['terminal_id'], 'request_key' => $d['request_key'], 'reason' => 'sale_error', 'items' => array_map(fn ($line) => ['line_id' => $line['line_id'], 'quantity' => $line['quantity'], 'returned_quantity' => '0.0000'], $source['lines'])]);
+            $command = $service->command(['order_id' => $order->id, 'terminal_id' => $d['terminal_id'], 'request_key' => $d['request_key'], 'reason' => 'sale_error', 'items' => array_map(fn($line) => ['line_id' => $line['line_id'], 'quantity' => $line['quantity'], 'returned_quantity' => '0.0000'], $source['lines'])]);
             $approval = ManagerApproval::verify($r->user(), $d['manager_password'], $command);
             $result = $service->refund($r->user(), $command, $approval);
-            if (! DB::table('pos_audit')->where('source_id', $result['refund_id'])->where('action', 'sale.void')->exists()) {
+            if (!DB::table('pos_audit')->where('source_id', $result['refund_id'])->where('action', 'sale.void')->exists()) {
                 DB::table('pos_audit')->insert(['actor_id' => $r->user()->id, 'branch_id' => $r->user()->branch_id, 'action' => 'sale.void', 'source_id' => $result['refund_id'], 'metadata' => json_encode(['sale_id' => $order->id, 'stock_policy' => 'no_automatic_restock']), 'created_at' => now()]);
             }
 
@@ -91,7 +91,7 @@ Route::middleware('pos.staff')->group(function () {
             return $sale;
         }));
     });
-    Route::post('/tax-documents', fn (Request $r, TaxDocumentService $s) => response()->json($s->issue($r->user(), $r->all())))->middleware('throttle:20,1');
+    Route::post('/tax-documents', fn(Request $r, TaxDocumentService $s) => response()->json($s->issue($r->user(), $r->all())))->middleware('throttle:20,1');
     Route::get('/tax-documents/{id}/print', function (Request $r, string $id) {
         abort_unless(app()->environment(['local', 'testing']) && config('pos.local_tax_documents_enabled') === true && in_array($r->user()->role, ['cashier', 'manager', 'pharmacist'], true), 403);
         $row = DB::table('pos_tax_documents')->where('id', $id)->where('branch_id', $r->user()->branch_id)->firstOrFail();
@@ -112,10 +112,10 @@ Route::middleware('pos.staff')->group(function () {
                     continue;
                 }
                 $source = $sources->get($line['source_line_id']);
-                if (! $source || ! isset($source['conversion_factor'])) {
+                if (!$source || !isset($source['conversion_factor'])) {
                     continue;
                 }
-                $inspected = DB::table('pos_return_inspections')->where('refund_id', $refund->id)->where('source_line_id', $line['source_line_id'])->get()->reduce(fn ($sum, $i) => bcadd($sum, (string) $i->base_quantity, 4), '0.0000');
+                $inspected = DB::table('pos_return_inspections')->where('refund_id', $refund->id)->where('source_line_id', $line['source_line_id'])->get()->reduce(fn($sum, $i) => bcadd($sum, (string) $i->base_quantity, 4), '0.0000');
                 $remaining = bcsub(bcmul($line['returned_quantity'], $source['conversion_factor'], 4), $inspected, 4);
                 if (bccomp($remaining, '0', 4) <= 0) {
                     continue;
@@ -150,13 +150,13 @@ Route::middleware('pos.staff')->group(function () {
 
             return response()->json(['id' => $s->createTable($r->user(), $d['label'], (int) ($d['capacity'] ?? 4))]);
         });
-        Route::post('/tables/{id}/open', fn (Request $r, string $id, RestaurantService $s) => response()->json(['id' => $s->openTable($r->user(), $id)]));
+        Route::post('/tables/{id}/open', fn(Request $r, string $id, RestaurantService $s) => response()->json(['id' => $s->openTable($r->user(), $id)]));
         Route::post('/sessions/{id}/close', function (Request $r, string $id, RestaurantService $s) {
             $s->closeTable($r->user(), $id);
 
             return response()->json(['status' => 'closed']);
         });
-        Route::post('/orders', fn (Request $r, RestaurantService $s) => response()->json($s->createOrder($r->user(), $r->all())));
+        Route::post('/orders', fn(Request $r, RestaurantService $s) => response()->json($s->createOrder($r->user(), $r->all())));
         Route::post('/lines/{id}/{action}', function (Request $r, string $id, string $action, RestaurantService $s) {
             $d = $r->validate(['reason' => 'nullable|string|max:160']);
 
@@ -167,7 +167,7 @@ Route::middleware('pos.staff')->group(function () {
 
             return response()->json($s->holdOrder($r->user(), $id, (bool) $d['held'], $d['reason']));
         });
-        Route::get('/seating', fn (Request $r, RestaurantService $s) => response()->json(['entries' => $s->seating($r->user())])->header('Cache-Control', 'private, no-store'));
+        Route::get('/seating', fn(Request $r, RestaurantService $s) => response()->json(['entries' => $s->seating($r->user())])->header('Cache-Control', 'private, no-store'));
         Route::post('/seating', function (Request $r, RestaurantService $s) {
             abort_unless($r->expectsJson(), 406);
 
@@ -178,8 +178,8 @@ Route::middleware('pos.staff')->group(function () {
 
             return response()->json($s->changeSeating($r->user(), $id, $action, $d['table_id'] ?? null));
         });
-        Route::post('/bill-preview', fn (Request $r, RestaurantService $s) => response()->json($s->preview($r->user(), $r->all())));
-        Route::post('/checkout', fn (Request $r, RestaurantService $s, CheckoutService $checkout) => response()->json($checkout->checkout($r->user(), $s->billingInput($r->user(), $r->all()))));
+        Route::post('/bill-preview', fn(Request $r, RestaurantService $s) => response()->json($s->preview($r->user(), $r->all())));
+        Route::post('/checkout', fn(Request $r, RestaurantService $s, CheckoutService $checkout) => response()->json($checkout->checkout($r->user(), $s->billingInput($r->user(), $r->all()))));
         Route::post('/cancel', function (Request $r, RestaurantService $s) {
             $d = $r->validate(['manager_password' => 'required|string|max:1000']);
             $command = $s->cancelCommand($r->except('manager_password'));
@@ -225,7 +225,7 @@ Route::middleware('pos.staff')->group(function () {
 
             return response()->json(['status' => 'revoked']);
         });
-        Route::post('/customer-requests/{id}/accept', fn (Request $r, string $id, PublicMenuService $service) => response()->json($service->accept($r->user(), $id)));
+        Route::post('/customer-requests/{id}/accept', fn(Request $r, string $id, PublicMenuService $service) => response()->json($service->accept($r->user(), $id)));
         Route::post('/customer-requests/{id}/reject', function (Request $r, string $id, PublicMenuService $service) {
             $service->reject($r->user(), $id);
 
@@ -247,25 +247,36 @@ Route::middleware('pos.staff')->group(function () {
         $user = $r->user();
         $discountData = ['discounts_enabled' => app()->environment(['local', 'testing']) && config('pos.local_discounts_enabled') === true && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true)];
         $refundsEnabled = app()->environment(['local', 'testing']) && config('pos.local_refunds_enabled') === true && $user->role === 'manager';
-        $refundable = $refundsEnabled ? DB::table('pos_orders')->where('branch_id', $user->branch_id)->where('status', 'completed')->latest()->limit(20)->get()->map(function ($order) {
-            $snapshot = json_decode($order->snapshot, true);
-            $lines = collect($snapshot['lines'])->map(function ($line) {
-                $refunded = DB::table('pos_refund_lines')->where('order_item_id', $line['line_id'])->get()->reduce(fn ($sum, $r) => bcadd($sum, (string) $r->quantity, 4), '0.0000');
+        $refundable = [];
+        if ($refundsEnabled) {
+            $refundableOrders = DB::table('pos_orders')->where('branch_id', $user->branch_id)->where('status', 'completed')->latest()->limit(20)->get();
+            $parsedOrders = $refundableOrders->map(fn($order) => ['order' => $order, 'snapshot' => json_decode($order->snapshot, true)]);
+            $lineIds = $parsedOrders->flatMap(fn(array $item) => collect($item['snapshot']['lines'] ?? [])->pluck('line_id'))->filter()->values()->all();
+            $refundedByLine = $lineIds === [] ? collect() : DB::table('pos_refund_lines')->whereIn('order_item_id', $lineIds)->get(['order_item_id', 'quantity'])->groupBy('order_item_id');
 
-                return ['line_id' => $line['line_id'], 'name' => $line['name'], 'unit' => $line['unit'], 'remaining' => bcsub($line['quantity'], $refunded, 4)];
+            $refundable = $parsedOrders->map(function (array $item) use ($refundedByLine) {
+                $order = $item['order'];
+                $snapshot = $item['snapshot'];
+                $lines = collect($snapshot['lines'])->map(function ($line) use ($refundedByLine) {
+                    $refunded = ($refundedByLine->get($line['line_id']) ?? collect())->reduce(fn($sum, $r) => bcadd($sum, (string) $r->quantity, 4), '0.0000');
+
+                    return ['line_id' => $line['line_id'], 'name' => $line['name'], 'unit' => $line['unit'], 'remaining' => bcsub($line['quantity'], $refunded, 4)];
+                });
+
+                return ['id' => $order->id, 'receipt_no' => $order->receipt_no, 'lines' => $lines];
             });
-
-            return ['id' => $order->id, 'receipt_no' => $order->receipt_no, 'lines' => $lines];
-        }) : [];
+        }
         $refundData = ['refunds_enabled' => $refundsEnabled, 'refundable_sales' => $refundable, 'cash_movements_enabled' => app()->environment(['local', 'testing']) && config('pos.local_cash_movements_enabled') === true && $user->role === 'manager'];
         $branch = DB::table('pos_branches')->where('id', $user->branch_id)->firstOrFail();
         $refundData['cash_preview_available'] = $branch->active
             && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true)
             && ($branch->business_type === 'retail' || ($branch->business_type === 'pharmacy'
                 && app()->environment(['local', 'testing']) && config('pos.local_pharmacy_enabled') === true));
-        if (app()->environment(['local', 'testing']) && config('pos.local_pharmacy_enabled') === true
+        if (
+            app()->environment(['local', 'testing']) && config('pos.local_pharmacy_enabled') === true
             && $branch->active && $branch->business_type === 'pharmacy'
-            && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true)) {
+            && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true)
+        ) {
             $refundData['pharmacy_lots'] = (object) app(EntitlementAllocator::class)->availableLots($branch->id, $branch->timezone);
         }
         $membershipEnabled = app()->environment(['local', 'testing']) && config('pos.local_membership_enabled') === true && $branch->active && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true);
@@ -277,7 +288,7 @@ Route::middleware('pos.staff')->group(function () {
         $refundData['tax_documents_enabled'] = app()->environment(['local', 'testing']) && config('pos.local_tax_documents_enabled') === true && in_array($user->role, ['cashier', 'manager', 'pharmacist'], true);
         $refundData['return_inspections_enabled'] = app()->environment(['local', 'testing']) && config('pos.local_return_inspections_enabled') === true && $user->role === 'manager' && $user->pharmacist_qualified && $branch->business_type === 'pharmacy' && $branch->active;
         $restaurantEnabled = app()->environment(['local', 'testing']) && config('pos.local_restaurant_enabled') === true && $branch->business_type === 'restaurant' && $branch->active && in_array($user->role, ['cashier', 'manager', 'kitchen'], true);
-        $tables = $restaurantEnabled ? DB::table('pos_restaurant_tables as t')->leftJoin('pos_table_sessions as s', fn ($join) => $join->on('s.table_id', '=', 't.id')->whereNotNull('s.active_slot'))->where('t.branch_id', $user->branch_id)->where('t.active', true)->orderBy('t.label')->get(['t.id', 't.label', 't.capacity', 's.id as session_id']) : [];
+        $tables = $restaurantEnabled ? DB::table('pos_restaurant_tables as t')->leftJoin('pos_table_sessions as s', fn($join) => $join->on('s.table_id', '=', 't.id')->whereNotNull('s.active_slot'))->where('t.branch_id', $user->branch_id)->where('t.active', true)->orderBy('t.label')->get(['t.id', 't.label', 't.capacity', 's.id as session_id']) : [];
         $kitchen = $restaurantEnabled ? DB::table('pos_kitchen_lines as k')->join('pos_kitchen_orders as o', 'o.id', '=', 'k.order_id')->where('o.branch_id', $user->branch_id)->whereNull('k.billed_sale_id')->whereNotIn('k.status', ['cancelled', 'wasted'])->orderByRaw('CASE WHEN o.queue_number IS NULL THEN 0 ELSE 1 END')->orderBy('o.queue_number')->orderBy('o.created_at')->orderBy('o.id')->orderBy('k.id')->limit(100)->get(['o.queue_number', 'o.queue_held', 'o.created_at as queued_at', 'k.id', 'k.product_id', 'k.status', 'k.snapshot', 'o.id as order_id', 'o.catalog_version', 'o.channel', 'o.table_session_id'])->map(function ($line) {
             $product = json_decode($line->snapshot, true)['product'];
 
@@ -286,7 +297,7 @@ Route::middleware('pos.staff')->group(function () {
         $restaurantData = ['restaurant_enabled' => (bool) $restaurantEnabled, 'restaurant_tables' => $tables, 'restaurant_lines' => $kitchen];
         $q = DB::table('pos_catalogs')->where('branch_id', $user->branch_id)->where('valid_until', '>', now());
         $catalog = ($branch->active_catalog_version ? $q->where('version', $branch->active_catalog_version) : $q->latest('created_at'))->first();
-        $requests = in_array($user->role, ['cashier', 'manager'], true) ? DB::table('pos_customer_requests')->where('branch_id', $user->branch_id)->whereIn('status', ['pending', 'accepted'])->latest()->limit(50)->get()->map(fn ($row) => ['id' => $row->id, 'status' => $row->status, 'catalog_version' => $row->catalog_version, 'items' => json_decode($row->items, true)]) : [];
+        $requests = in_array($user->role, ['cashier', 'manager'], true) ? DB::table('pos_customer_requests')->where('branch_id', $user->branch_id)->whereIn('status', ['pending', 'accepted'])->latest()->limit(50)->get()->map(fn($row) => ['id' => $row->id, 'status' => $row->status, 'catalog_version' => $row->catalog_version, 'items' => json_decode($row->items, true)]) : [];
 
         return response()->json(['staff' => ['name' => $user->name, 'role' => $user->role], 'terminals' => DB::table('pos_terminals')->where('branch_id', $user->branch_id)->where('active', true)->get(['id', 'code']), 'catalog_version' => $catalog?->version, 'items' => $catalog ? json_decode($catalog->items, true) : [], 'shifts' => DB::table('pos_shifts')->where('staff_id', $user->id)->where('status', 'open')->get(['id', 'terminal_id']), 'pending_sync' => DB::table('pos_outbox')->where('branch_id', $user->branch_id)->where('result_status', '!=', 'accepted')->count(), 'tax_setup' => 'pending_provider', 'customer_requests' => $requests, 'public_menu_enabled' => app()->environment(['local', 'testing']) && config('pos.local_public_menu_enabled') === true] + $refundData + $discountData + $restaurantData);
     });
@@ -300,7 +311,7 @@ Route::middleware('pos.staff')->group(function () {
 
         return response()->json($s->closeShift($r->user(), $id, $d['counted_cash']));
     });
-    Route::post('/checkout/preview', fn (Request $r, CheckoutService $s) => response()
+    Route::post('/checkout/preview', fn(Request $r, CheckoutService $s) => response()
         ->json($s->preview($r->user(), $r->all()))->header('Cache-Control', 'private, no-store'))
         ->middleware('throttle:30,1');
     Route::post('/checkout', function (Request $r, CheckoutService $s) {

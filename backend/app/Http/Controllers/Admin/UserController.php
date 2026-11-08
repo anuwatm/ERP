@@ -25,7 +25,7 @@ class UserController extends Controller
     public function index(Request $request): Response
     {
         $user = auth()->user();
-        $canViewFullPersonId = $user->roles()->whereHas('permissions', fn ($query) => $query->where('code', 'person_id.view_full'))->exists();
+        $canViewFullPersonId = $user->hasPermissionCode('person_id.view_full');
         $filters = $request->validate([
             'user_id' => ['nullable', 'uuid'],
             'status' => ['nullable', Rule::in(['active', 'invited', 'inactive'])],
@@ -35,11 +35,11 @@ class UserController extends Controller
 
         return Inertia::render('Admin/Users', [
             'users' => User::where('org_id', $user->org_id)
-                ->when($filters['user_id'] ?? null, fn ($query, $userId) => $query->whereKey($userId))
-                ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
-                ->when($filters['role_id'] ?? null, fn ($query, $roleId) => $query->whereHas('roles', fn ($roles) => $roles->whereKey($roleId)))
-                ->when(($filters['expired'] ?? null) === '1', fn ($query) => $query->where('status', 'invited')->where('invite_expires_at', '<', now()))
-                ->with('roles:id,code,name')->orderBy('name')->get()->map(fn (User $item) => [
+                ->when($filters['user_id'] ?? null, fn($query, $userId) => $query->whereKey($userId))
+                ->when($filters['status'] ?? null, fn($query, $status) => $query->where('status', $status))
+                ->when($filters['role_id'] ?? null, fn($query, $roleId) => $query->whereHas('roles', fn($roles) => $roles->whereKey($roleId)))
+                ->when(($filters['expired'] ?? null) === '1', fn($query) => $query->where('status', 'invited')->where('invite_expires_at', '<', now()))
+                ->with('roles:id,code,name')->orderBy('name')->get()->map(fn(User $item) => [
                     'id' => $item->id,
                     'name' => $item->name,
                     'email' => $item->email,
@@ -124,7 +124,7 @@ class UserController extends Controller
             return back()->with('success', 'Invite created.');
         }
 
-        return back()->with('success', 'Invite created. Accept token: '.$plainToken)->with('invite_url', route('invites.accept', ['user' => $invited->id, 'token' => $plainToken], absolute: false));
+        return back()->with('success', 'Invite created. Accept token: ' . $plainToken)->with('invite_url', route('invites.accept', ['user' => $invited->id, 'token' => $plainToken], absolute: false));
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -132,7 +132,7 @@ class UserController extends Controller
         $actor = $request->user();
         abort_unless($user->org_id === $actor->org_id, 404);
 
-        $canEditPersonId = $actor->roles()->whereHas('permissions', fn ($query) => $query->where('code', 'person_id.view_full'))->exists();
+        $canEditPersonId = $actor->roles()->whereHas('permissions', fn($query) => $query->where('code', 'person_id.view_full'))->exists();
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -169,7 +169,7 @@ class UserController extends Controller
             ]);
             $user->roles()->sync([$newRole->id => ['assigned_at' => now(), 'assigned_by' => $actor->id]]);
 
-            $roleChanged = count($oldRoleIds) !== 1 || ! in_array($newRole->id, $oldRoleIds);
+            $roleChanged = count($oldRoleIds) !== 1 || !in_array($newRole->id, $oldRoleIds);
             if ($roleChanged) {
                 $user->forceFill(['remember_token' => Str::random(60)])->save();
                 if (Schema::hasTable('sessions')) {
@@ -255,13 +255,13 @@ class UserController extends Controller
 
     private function isLastOwner(User $user): bool
     {
-        if (! $user->roles()->where('code', 'owner')->exists()) {
+        if (!$user->roles()->where('code', 'owner')->exists()) {
             return false;
         }
 
         return User::where('org_id', $user->org_id)
             ->where('status', 'active')
-            ->whereHas('roles', fn ($query) => $query->where('code', 'owner'))
+            ->whereHas('roles', fn($query) => $query->where('code', 'owner'))
             ->count() <= 1;
     }
 
@@ -270,14 +270,14 @@ class UserController extends Controller
         $wasOwner = Role::whereIn('id', $oldRoleIds)->where('code', 'owner')->exists();
         $willBeOwner = Role::where('id', $newRoleId)->where('code', 'owner')->exists();
 
-        if (! $wasOwner || $willBeOwner) {
+        if (!$wasOwner || $willBeOwner) {
             return false;
         }
 
         return User::where('org_id', $user->org_id)
             ->where('status', 'active')
             ->where('id', '!=', $user->id)
-            ->whereHas('roles', fn ($query) => $query->where('code', 'owner'))
+            ->whereHas('roles', fn($query) => $query->where('code', 'owner'))
             ->count() === 0;
     }
 

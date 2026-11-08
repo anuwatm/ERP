@@ -10,4 +10,23 @@ export default defineConfig({
         }),
         react(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (
+                        id.includes('node_modules/react/') ||
+                        id.includes('node_modules/react-dom/') ||
+                        id.includes('node_modules/scheduler/') ||
+                        id.includes('node_modules/@inertiajs/')
+                    ) {
+                        return 'vendor-react';
+                    }
+                    if (id.includes('node_modules/@headlessui/')) {
+                        return 'vendor-ui';
+                    }
+                },
+            },
+        },
+    },
 });

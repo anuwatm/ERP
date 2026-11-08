@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\Pos\PosCheckpointService;
 use App\Services\Pos\PosImportService;
+use App\Services\Pos\PosMembershipPublicationService;
 use App\Services\Pos\PosRecallService;
 use App\Services\Pos\PosTransport;
 use App\Support\PosCanonicalJson;
@@ -57,7 +58,7 @@ class PosSync extends Command
                 abort_unless(($published['status'] ?? null) === 'accepted', 502, 'Issuer profile was not acknowledged.');
             }
             if (config('pos.local_membership_enabled') === true) {
-                $membership = app(\App\Services\Pos\PosMembershipPublicationService::class)->forSync($id);
+                $membership = app(PosMembershipPublicationService::class)->forSync($id);
                 if ($membership) {
                     $ack = $transport->request($id, 'membership', $membership, $membership['id']);
                     abort_unless(($ack['status'] ?? null) === 'accepted', 502, 'Membership publication was not acknowledged.');

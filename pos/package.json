@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.34.5",
-  "scripts": {"build": "vite build"},
+  "scripts": {
+    "build": "node ../backend/node_modules/vite/bin/vite.js build",
+    "tsc": "node ../backend/node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
+  },
   "dependencies": {"react": "^18.2.0", "react-dom": "^18.2.0"},
   "devDependencies": {"vite": "^7.0.7", "typescript": "^5.0.2", "@types/react": "^18.0.28", "@types/react-dom": "^18.0.10"}
 }

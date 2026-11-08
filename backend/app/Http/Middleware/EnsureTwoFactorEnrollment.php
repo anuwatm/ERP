@@ -21,13 +21,15 @@ class EnsureTwoFactorEnrollment
         'verification.send',
     ];
 
-    public function __construct(private readonly TwoFactorPolicyService $policy) {}
+    public function __construct(private readonly TwoFactorPolicyService $policy)
+    {
+    }
 
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if ($user && $this->policy->requiresEnrollment($user) && ! $user->two_factor_confirmed_at && ! $request->routeIs(self::ALLOWED_ROUTES)) {
+        if ($user && !$user->two_factor_confirmed_at && !$request->routeIs(self::ALLOWED_ROUTES) && $this->policy->requiresEnrollment($user)) {
             return redirect()->route('two-factor.setup');
         }
 

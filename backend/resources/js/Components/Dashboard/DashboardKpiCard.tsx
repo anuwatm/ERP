@@ -43,10 +43,7 @@ export default function DashboardKpiCard({
                 : (value ?? 0);
 
     return (
-        <Card
-            className={tones[tone]}
-            bodyClassName="space-y-2 p-5"
-        >
+        <Card className={tones[tone]} bodyClassName="space-y-2 p-5">
             <h3 className="text-sm font-semibold text-erp-ink">{question}</h3>
             <output
                 aria-label={question}

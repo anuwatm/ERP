@@ -10,8 +10,7 @@ import {
     useState,
 } from 'react';
 
-const secondary =
-    'erp-button erp-secondary';
+const secondary = 'erp-button erp-secondary';
 
 export default function CreateEditDialog({
     open,

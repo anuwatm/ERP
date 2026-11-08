@@ -38,8 +38,12 @@ class EntitlementAllocator
         $remaining = $quantity;
         $allocations = [];
         $grants = DB::table('pos_grants')->where('branch_id', $branchId)->where('product_id', $productId)->where('status', 'active')->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>=', now($timezone)->toDateString()))->orderByRaw('expires_at IS NULL')->orderBy('expires_at')->orderBy('id')->lockForUpdate()->get();
+        $lotIds = $grants->pluck('lot_id')->filter()->unique()->values()->all();
+        $recalledLots = $lotIds === []
+            ? []
+            : DB::table('pos_lot_recalls')->where('branch_id', $branchId)->whereIn('lot_id', $lotIds)->pluck('lot_id')->flip()->all();
         foreach ($grants as $grant) {
-            if (DB::table('pos_lot_recalls')->where('branch_id', $branchId)->where('lot_id', $grant->lot_id)->exists()) {
+            if ($grant->lot_id !== null && isset($recalledLots[$grant->lot_id])) {
                 continue;
             }
             abort_unless(bccomp((string) $grant->reserved_quantity, '0', 4) >= 0 && bccomp((string) $grant->consumed_quantity, '0', 4) >= 0 && bccomp(bcadd((string) $grant->reserved_quantity, (string) $grant->consumed_quantity, 4), (string) $grant->granted_quantity, 4) <= 0, 409, 'Entitlement counters conflict.');

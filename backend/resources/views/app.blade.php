@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preload" href="{{ asset('fonts/sarabun-regular-v1.ttf') }}" as="font" type="font/ttf" crossorigin>
         <script src="{{ asset('erp-theme.js') }}"></script>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>

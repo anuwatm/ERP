@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -189,7 +190,7 @@ class Phase5ExecutiveDashboardTest extends TestCase
         $user = User::factory()->create();
         $this->attachRole($user, 'director', ['dashboard.view', 'executive.dashboard.view', 'invoices.view', 'expenses.view']);
         foreach (['2026-10-29' => '2025-11', '2026-03-31' => '2025-04', '2026-02-28' => '2025-03'] as $day => $start) {
-            $this->travelTo(\Carbon\CarbonImmutable::parse($day.' 12:00:00'));
+            $this->travelTo(CarbonImmutable::parse($day.' 12:00:00'));
             $this->actingAsOrgUser($user)->get(route('executive.dashboard'))->assertOk()
                 ->assertInertia(fn (Assert $page) => $page
                     ->has('dashboardWidgets.executive.revenue_expense_trend', 12)

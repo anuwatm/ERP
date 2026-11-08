@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class Phase7ProcurementAndMembersTest extends TestCase
@@ -77,7 +78,7 @@ class Phase7ProcurementAndMembersTest extends TestCase
             ]]);
         $this->assertDatabaseCount('purchase_orders', 0);
         $this->actingAsOrgUser($finance)
-            ->postJson(route('purchase-orders.preview'), array_replace($payload, ['supplier_id' => (string) \Illuminate\Support\Str::uuid()]))
+            ->postJson(route('purchase-orders.preview'), array_replace($payload, ['supplier_id' => (string) Str::uuid()]))
             ->assertUnprocessable()
             ->assertJsonValidationErrors('supplier_id');
         $viewer = User::factory()->create(['org_id' => $finance->org_id]);
