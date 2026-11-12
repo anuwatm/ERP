@@ -1,7 +1,7 @@
 # Phase 23.1: Create/Edit Dialog Rollout
 
 เริ่ม implementation: 2026-09-11. สถานะกลางอยู่ใน `../checklist.md`.
-อ้างอิงภาพและ layout: `../create-edit-dialog-template-concept.md`.
+อ้างอิงภาพและ layout ตาม [มาตรฐาน UI ปัจจุบัน](../document/design/ui-standards.md) แนวคิดเดิมเก็บที่ `temp/cleanup-20261112/create-edit-dialog-template-concept.md` จาก root โปรเจกต์
 
 สถานะล่าสุด 2026-09-13: **23.1.3 Customer/Contact pilot เสร็จ** ดู [acceptance](PHASE_23_1_CUSTOMER_CONTACT_ACCEPTANCE.md); ข้อความ browser pending ใน verification log เป็นประวัติเดิม. Rollout โมดูลอื่นยังไม่ปิด
 

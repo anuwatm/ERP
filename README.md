@@ -1,6 +1,6 @@
 # Company OS / Lightweight ERP
 
-> **อัปเดตล่าสุด (2026-11-07) — Phase UI Local Complete, POS Setup Wizard (`/setup`), Phase 28 Local Closure และ Security Hardening**
+> **อัปเดตล่าสุด (2026-11-12) — Stack Diagram ERP/POS และ Phase UI Local Complete, POS Setup Wizard (`/setup`), Phase 28 Local Closure และ Security Hardening**
 > - **UI & Layout Redesign (Light / Dark / System Theme & Print Isolation):** ปรับโฉม ERP Shell (พื้นสีงาช้าง Ivory, แถบข้างสีเขียวเข้ม Deep Forest Green, สถานะสี Mint, ปุ่มหลักสี Coral) รองรับสลับโหมด `Light / Dark / System` โดยจำค่าบนอุปกรณ์ (`erp-theme.js` และ POS Theme Sync), ฟอร์มสร้างใบสั่งซื้อแบบ 2 คอลัมน์พร้อม `Preview totals` ฝั่ง Server, แสดงล็อตและวันหมดอายุในตะกร้า Pharmacy POS, และแยกหน้าพิมพ์เอกสาร/PDF พื้นขาวบริสุทธิ์ (`#FFFFFF`) ออกจากธีมหน้าจอ [ทะเบียนตรวจรับ UI](document/design/ui-acceptance-register.md) · [สถานะ Checklist](checklist.md#checklist-ปรับ-layout-ทั้งระบบ--local-complete)
 > - **Full Local Project Closure & Security Hardening (2026-11-05 — 2026-11-07):** ผ่านการตรวจรับ Local Scope ครบทุกโมดูล (ERP **566+ tests / 10,933+ assertions**, Isolated MySQL Concurrency/Queue **2 tests / 20 assertions**, Standalone POS **116 tests / 2,171 assertions**, Frontend **39 tests**, Apache Loopback Security **35/35**, Dependency Audit **0 advisories**) [รายงานตรวจรับรวม](document/acceptance/local-closure-20261105/README.md) · [บทวิเคราะห์สถาปัตยกรรม](document/acceptance/local-closure-20261105/ANTIGRAVITY_REVIEW.md) · [รายงานความปลอดภัย](document/SECURITY_REVIEW_20261105.md)
 > - **Standalone POS & Phase 28.8.1–28.8.5 (Local Scope Complete):** ครอบคลุม [POS Setup Wizard `/setup` & ติดตั้ง](document/README_POS.md) · [Manager `/config`](document/POS_CONFIGURATION.md) · [28.8.1 Delivery & COD](document/PHASE_28_8_1_DELIVERY.md) · [28.8.2 สมาชิกและโปรโมชัน](document/PHASE_28_8_2_MEMBERSHIP.md) · [28.8.3 Browser / PWA Offline](document/PHASE_28_8_3_OFFLINE.md) · [28.8.4 ประวัติผู้ป่วยสังเคราะห์ Pharmacy](document/PHASE_28_8_4_PATIENT_HISTORY.md) · [28.8.5 คิวครัว คิวที่นั่ง จองโต๊ะ และ QR สั่งอาหาร](document/PHASE_28_8_5_RESTAURANT.md) (**ยังไม่ได้ทดสอบกับระบบและอุปกรณ์จริง**)
@@ -453,49 +453,16 @@ ERP/
 
 ### ภาพรวมเทคโนโลยีที่ใช้ในระบบ (Technology Stack Overview Diagram)
 
-```mermaid
-flowchart TB
-    subgraph FrontendLayer["1. Frontend, UI & Offline PWA Layer"]
-        ReactTS["React 18 + TypeScript 5\n• Component-Driven UI & Strict Typing"]
-        InertiaJS["Inertia.js Protocol\n• Monolith SPA Routing (ERP & Portal)\n• Zero Client-Side State Drift"]
-        Styling["Tailwind CSS + Semantic CSS Tokens\n• Light / Dark / System Theme (erp-theme.js)\n• Ivory / Deep Forest Green / Mint / Coral\n•Accessible SVG Charts & Responsive 320–1440px"]
-        OfflinePWA["POS Offline PWA & Web APIs\n• Service Worker (offline-sw.js Precache)\n• IndexedDB Atomic Transactions + Revision CAS\n• WebCrypto API (PBKDF2-SHA256 600k + AES-256-GCM)\n• StorageManager.persist & Monotonic Clock Guard"]
-    end
+แผนภาพแยก ERP ส่วนกลาง, POS ประจำสาขา, ฐานข้อมูล, คิว Offline ในเบราว์เซอร์ และเครื่องมือพัฒนา โดย POS Connector เป็น service ฝั่ง ERP เส้นประแสดงขั้นตอน build และตรวจสอบ เวอร์ชันอ้างอิง dependency manifests และ lockfiles ของโปรเจกต์
 
-    subgraph BackendLayer["2. Application & Domain Runtime Layer (ERP & Standalone POS)"]
-        PHP83["PHP 8.3+ Runtime\n• BCMath (Exact Decimal & Satang Arithmetic)\n• OpenSSL, DOM / SimpleXML (LIBXML_NONET), ZipArchive, cURL"]
-        Laravel13["Laravel 13 Framework\n• Separate Workspaces: backend/ (ERP) & pos/ (POS)\n• Eloquent ORM, Transactions & Pessimistic Locking\n• Queue Worker, Task Scheduler & Transactional Outbox"]
-    end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="document/design/stack-overview-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="document/design/stack-overview.png">
+  <img src="document/design/stack-overview.png" alt="Stack Diagram ของ Company OS แยก ERP, POS, Connector, ฐานข้อมูล และเครื่องมือพัฒนา" width="1200">
+</picture>
 
-    subgraph SecurityLayer["3. Security, Identity & Cryptography Layer"]
-        AuthRBAC["Authentication & Access Control\n• Laravel Breeze + Session Regeneration\n• RFC 6238 TOTP 2FA + Hashed Recovery Codes\n• 7-Role RBAC + Tenant Isolation (org_id)\n• Single-Use SHA-256 Magic Links (Portals)"]
-        CryptoEngine["Encryption & Digital Signatures\n• Laravel Crypt (AES-256-CBC / GCM Casts)\n• Hybrid Envelope (AES-256-GCM + RSA-OAEP for POS Members)\n• RSA-SHA256 Signed POS Events, Checkpoints & e-Tax XML-DSig\n• HMAC-SHA256 Webhooks, Settlement Bridge & Branch Lookups\n• mTLS Client Certificate Verification (ERP ↔ POS Connector)"]
-    end
+[แผนภาพ HTML แบบ offline พร้อมสลับธีม](document/design/stack-overview.html) · [ภาพ Light](document/design/stack-overview.png) · [ภาพ Dark](document/design/stack-overview-dark.png)
 
-    subgraph DataLayer["4. Database, Storage & Document Engine Layer"]
-        ERPSQL[("ERP MySQL / MariaDB\n• 88 Migrations (173 Tables)\n• Ordered UUIDv7 Primary Keys\n• DECIMAL(18,2) / DECIMAL(18,4)")]
-        POSSQL[("POS SQLite / Isolated DB\n• 25 Migrations (56 Tables)\n• WAL / Foreign Key / Integrity Guard\n• Independent Recovery Fence")]
-        DocEngine["Document, Print & Archive Engine\n• DomPDF + Embedded Sarabun Font\n• Print Paper Isolation (#FFFFFF paper-colors)\n• Private Tenant DMS + Antivirus Scan Gate\n• Gzip + Authenticated Encrypted 90-Day POS Archive"]
-    end
-
-    subgraph IntegrationLayer["5. External APIs, Gateways & AI Integration Layer"]
-        OpenAPI["External Read-only API (/api/v1)\n• OpenAPI 3.1 Contract (62 GET Paths)\n• Bearer Secret (SHA-256) + Cursor Watermark Sync"]
-        FinGateways["Financial & Tax Gateways\n• EMVCo Thai PromptPay QR (Tag 29/30 Exact Satang)\n• Opn Checkout & Signed Settlement Bridge\n• ETDA e-Tax Invoice XML-DSig (RD API / INET / Sandbox)"]
-        AIVision["AI OCR & Notification Channels\n• OpenAI-Compatible Vision API (Ollama / LM Studio / Cloud)\n• Thai Tax ID Modulo 11 & Math Reconciler\n• LINE OA / Slack / Telegram Encrypted Outbox"]
-    end
-
-    subgraph ToolingLayer["6. Build, Testing & Quality Assurance Layer"]
-        BuildTools["Build & Package Management\n• Vite Bundler + pnpm (Frozen Lockfiles)\n• Composer Locked Dependencies (0 Advisories)"]
-        TestTools["Automated Verification Suites\n• PHPUnit 11 (ERP 566 + POS 115 + MySQL Concurrency Tests)\n• Node Test Runner (Frontend 38 + API/Webhook Client Tests)\n• Playwright / Chrome Headless Browser Acceptance\n• Laravel Pint, ESLint, Prettier & Archify Showcase Diagrams"]
-    end
-
-    FrontendLayer --> BackendLayer
-    BackendLayer --> SecurityLayer
-    SecurityLayer --> DataLayer
-    BackendLayer --> IntegrationLayer
-    ToolingLayer -.->|"Build, Lint & Verify"| FrontendLayer
-    ToolingLayer -.->|"Test & Audit"| BackendLayer
-```
 
 ### ตารางสรุปเทคโนโลยีแยกตามส่วนงาน
 

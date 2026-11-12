@@ -8,7 +8,7 @@
 
 | รายการ | Source of truth |
 | --- | --- |
-| เป้าหมาย UX/widget | `erp-dashboard-design-concept.md` |
+| เป้าหมาย UX/widget | [มาตรฐาน UI ปัจจุบัน](../document/design/ui-standards.md) แนวคิดเดิมเก็บที่ `temp/cleanup-20261112/erp-dashboard-design-concept.md` จาก root โปรเจกต์ |
 | route และ middleware ปัจจุบัน | `backend/routes/web.php` |
 | aggregate ภายใน | `backend/app/Http/Controllers/Admin/DashboardController.php`, `backend/app/Http/Controllers/Sales/SalesDashboardController.php` |
 | internal UI ปัจจุบัน | `backend/resources/js/Pages/Dashboard.tsx`, `backend/resources/js/Pages/Sales/Dashboard.tsx` |

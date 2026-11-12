@@ -1154,7 +1154,7 @@ These items are deferred, not completed or cancelled. Existing signature, reconc
 
 ## Phase 23.1: System-wide Create/Edit Dialog Standardization
 
-เป้าหมาย: เปลี่ยนการเพิ่มและแก้ไขข้อมูลจากฟอร์มเดิมด้านข้าง, inline form, popup และหน้าแยก ให้เป็น dialog แบบใหม่ทั้งระบบ โดยเหลือช่องทาง Create/Edit มาตรฐานเดียวต่อรายการ อ้างอิง `create-edit-dialog-template-concept.md`
+เป้าหมาย: เปลี่ยนการเพิ่มและแก้ไขข้อมูลจากฟอร์มเดิมด้านข้าง, inline form, popup และหน้าแยก ให้เป็น dialog แบบใหม่ทั้งระบบ โดยเหลือช่องทาง Create/Edit มาตรฐานเดียวต่อรายการ แนวคิดเดิมเก็บที่ `temp/cleanup-20261112/create-edit-dialog-template-concept.md` และดู [มาตรฐาน UI ปัจจุบัน](document/design/ui-standards.md)
 
 สถานะ ณ 2026-09-14: Module Rollout (23.1.4) ครบทุกกลุ่มโมดูลแล้ว ทั้ง 20 หมวดหมู่ได้รับการจัดการตามมาตรฐาน (ย้าย entry points มาใช้ `CreateEditDialog` และ dialog เฉพาะทาง หรือบันทึกเป็น Documented Exceptions สำหรับ full-page settings/security tabs) ถอด sidebar/inline editor เก่าในกลุ่มที่ย้ายออกทั้งหมด คง backend rules, permissions และ validation contracts; ผลทดสอบ backend regression ผ่าน 305 tests / 2,524 assertions (2 skipped), TypeScript & production build ผ่านสมบูรณ์, ESLint ผ่าน 0 errors / 0 warnings, และ Pint ผ่าน; ขั้นตอนถัดไปคือการตรวจรับรอง browser regression และ cross-module compatibility ใน 23.1.5
 
@@ -1286,7 +1286,7 @@ Deals/Activities implementation แล้ว: ย้าย sidebar เป็น 
 
 ## Phase 23.2: System-wide Dashboard Redesign
 
-เป้าหมาย: เปลี่ยน Dashboard ทั้งระบบเป็นแบบใหม่ตาม `erp-dashboard-design-concept.md` ให้ตอบคำถามการทำงานของแต่ละส่วนงานได้ทันที ใช้ข้อมูลจริง มี KPI พร้อมบริบท กราฟ และรายการที่กดไปทำงานต่อได้ โดยไม่เหลือ dashboard เก่าซ้ำสำหรับ workflow เดียวกัน
+เป้าหมาย: เปลี่ยน Dashboard ทั้งระบบเป็นแบบใหม่ ให้ตอบคำถามการทำงานของแต่ละส่วนงานได้ทันที ใช้ข้อมูลจริง มี KPI พร้อมบริบท กราฟ และรายการที่กดไปทำงานต่อได้ โดยไม่เหลือ dashboard เก่าซ้ำสำหรับ workflow เดียวกัน แนวคิดเดิมเก็บที่ `temp/cleanup-20261112/erp-dashboard-design-concept.md` และดู [มาตรฐาน UI ปัจจุบัน](document/design/ui-standards.md)
 
 สถานะ ณ 2026-09-20: **Done / Complete.** ทุกข้อย่อย 23.2.1–23.2.7 ผ่านการตรวจสอบและเกณฑ์ exit criteria ครบถ้วน: backend 344 passed / 3,558 assertions (2 skipped), frontend 38 passed, typecheck, lint, Pint, build และ browser matrix 60 checks ผ่าน (รายการ metric ที่ source ไม่พร้อมบันทึกเป็นทางการใน `docs/PHASE_23_2_5_DEFERRED.md` เพื่อต่อยอดใน Phase 23.3).
 
