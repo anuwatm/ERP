@@ -15,6 +15,9 @@
 - [สถาปัตยกรรมระบบ (System Architecture)](#สถาปัตยกรรมระบบ-system-architecture) · [Diagrams ทั้งหมด (27 หมวด)](#diagrams-และเอกสารสถาปัตยกรรม)
 - [Technology Stack & Overview Diagram](#technology-stack--overview-diagram)
 - [โครงสร้างฐานข้อมูลและ ER Diagram (ครบ 225 ตาราง)](#โครงสร้างฐานข้อมูลและ-er-diagram-database-schema--table-reference)
+  - [Architecture-Level ER Domain Diagram](#แผนภาพความสัมพันธ์ระดับสถาปัตยกรรม-architecture-level-er-domain-diagram)
+  - [ERP Core & Enterprise Domain ER Diagram](#1-erp-core--enterprise-domain-er-diagram-backend)
+  - [Standalone POS & ERP Connector ER Diagram](#2-standalone-pos--erp-connector-er-diagram-pos--backend)
   - [ERP Table Dictionary (170 Application Tables)](#3-คำอธิบายตารางฐานข้อมูล-erp-ทั้งหมด-complete-erp-table-dictionary--170-application-tables)
   - [Standalone POS Table Dictionary (55 Application Tables)](#4-คำอธิบายตารางฐานข้อมูล-standalone-pos-ทั้งหมด-complete-pos-table-dictionary--55-application-tables)
 - [การติดตั้ง (Web Setup Wizard, Local Dev, Ports & `.env` Reference)](#การติดตั้ง)
@@ -488,7 +491,19 @@ ERP/
 1. **ฐานข้อมูลหลัก ERP (`backend/`)** — **88 Migrations / 170 Application Tables** (รวมตารางระบบ `migrations` และ RBAC pivots เป็น **173 ตารางจริงใน MySQL**) ทุกตารางธุรกิจมี `org_id` สำหรับ Multi-tenant Isolation
 2. **ฐานข้อมูล Standalone POS (`pos/`)** — **25 Migrations / 55 Application Tables** (รวมตาราง `migrations` เป็น **56 ตารางจริงใน SQLite / MySQL**) แยกตามสาขา (`branch_id`) และเครื่องจุดขาย (`terminal_id`)
 
-> ดูรายละเอียด ER Diagram แยกตามโดเมนย่อยเพิ่มเติมได้ที่ [`document/DATABASE_ERD.md`](file:///c:/LocalDevine/www/ERP/document/DATABASE_ERD.md) และ [`document/PHASE_28_DATABASE.md`](file:///c:/LocalDevine/www/ERP/document/PHASE_28_DATABASE.md)
+> ดูรายละเอียด ER Diagram แยกตามโดเมนย่อยเพิ่มเติมได้ที่ [`document/DATABASE_ERD.md`](document/DATABASE_ERD.md) และ [`document/PHASE_28_DATABASE.md`](document/PHASE_28_DATABASE.md)
+
+### แผนภาพความสัมพันธ์ระดับสถาปัตยกรรม (Architecture-Level ER Domain Diagram)
+
+แผนภาพแสดงโมเดลความสัมพันธ์ของ Entity หลักในโดเมนธุรกิจของ ERP ทั้งโครงสร้างองค์กร, ลูกค้า, การขาย, การเงิน, บัญชีคู่, สินค้าคงคลัง, จัดซื้อ, บุคลากร, เอกสารองค์กร, และระบบความปลอดภัย รองรับทั้งโหมดสว่าง (Light) และโหมดมืด (Dark):
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="document/design/database-erd-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="document/design/database-erd.png">
+  <img src="document/design/database-erd.png" alt="ER Domain Model Diagram ของ Company OS ครอบคลุมโดเมนหลักในระบบ" width="1200">
+</picture>
+
+[เปิดแผนภาพ Interactive ERD แบบ HTML (Archify)](document/10_database_er_domain_model.html) · [ภาพ Light](document/design/database-erd.png) · [ภาพ Dark](document/design/database-erd-dark.png) · [รายละเอียดความสัมพันธ์แยก 22 โดเมนย่อย (Markdown)](document/DATABASE_ERD.md)
 
 ### 1. ERP Core & Enterprise Domain ER Diagram (`backend/`)
 
